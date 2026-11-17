@@ -27,7 +27,6 @@ class DatabaseOptimization @Inject constructor(
         
         // Data retention settings
         private const val DEFAULT_RETENTION_DAYS = 365 // 1 year
-        private const val MIN_EVENTS_TO_KEEP = 1000 // Always keep at least this many events
         
         // Health check thresholds
         private const val SLOW_QUERY_THRESHOLD_MS = 500L
@@ -203,38 +202,17 @@ class DatabaseOptimization @Inject constructor(
     }
     
     /**
-     * Removes old events while preserving important data.
+     * Retained as a no-op compatibility entry point. The listening archive is
+     * user-owned: database maintenance must never implement implicit retention.
+     * A future destructive cleanup would need a separate explicit, undo-aware
+     * user action with an export/backup preflight.
      */
+    @Deprecated("Automatic history deletion is disabled to preserve All Time listening data")
     suspend fun cleanupOldData(retentionDays: Int = DEFAULT_RETENTION_DAYS): Int = withContext(Dispatchers.IO) {
-        try {
-            val cutoffTimestamp = System.currentTimeMillis() - (retentionDays.toLong() * 24 * 60 * 60 * 1000)
-            
-            // Count total events
-            val totalEvents = countEvents()
-            
-            // Don't delete if we'd go below minimum threshold
-            val eventsOlderThanCutoff = countEventsOlderThan(cutoffTimestamp)
-            val eventsAfterDelete = totalEvents - eventsOlderThanCutoff
-            
-            if (eventsAfterDelete < MIN_EVENTS_TO_KEEP) {
-                Log.i(TAG, "Skipping cleanup: would leave only $eventsAfterDelete events (minimum: $MIN_EVENTS_TO_KEEP)")
-                return@withContext 0
-            }
-            
-            // Delete old events
-            val deleted = deleteEventsOlderThan(cutoffTimestamp)
-            Log.i(TAG, "Cleaned up $deleted old events (cutoff: ${formatDate(cutoffTimestamp)})")
-            
-            // Run analyze after cleanup
-            analyzeDatabase()
-            
-            deleted
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to cleanup old data", e)
-            0
-        }
+        Log.i(TAG, "Requested cleanup of $retentionDays-day history ignored; no events deleted")
+        0
     }
-    
+
     suspend fun getDiagnostics(): DatabaseDiagnostics = withContext(Dispatchers.IO) {
         val stats = getDatabaseStats()
         val integrityOk = integrityCheck()
@@ -291,8 +269,9 @@ class DatabaseOptimization @Inject constructor(
         // Analyze for query optimization
         analyzeDatabase()
         
-        // Cleanup old data
-        val deletedEvents = cleanupOldData()
+        // History retention is intentionally disabled for background
+        // maintenance; maintain SQLite structure without deleting user data.
+        val deletedEvents = 0
         
         // Vacuum if needed
         val statsBeforeVacuum = getDatabaseStats()
@@ -319,47 +298,6 @@ class DatabaseOptimization @Inject constructor(
         result
     }
     
-    
-    private suspend fun countEvents(): Int = withContext(Dispatchers.IO) {
-        try {
-            database.openHelper.readableDatabase.query("SELECT COUNT(*) FROM listening_events").use { cursor ->
-                if (cursor.moveToFirst()) cursor.getInt(0) else 0
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to count events", e)
-            0
-        }
-    }
-    
-    private suspend fun countEventsOlderThan(timestamp: Long): Int = withContext(Dispatchers.IO) {
-        try {
-            database.openHelper.readableDatabase.query(
-                "SELECT COUNT(*) FROM listening_events WHERE timestamp < ?",
-                arrayOf(timestamp.toString())
-            ).use { cursor ->
-                if (cursor.moveToFirst()) cursor.getInt(0) else 0
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to count old events", e)
-            0
-        }
-    }
-    
-    private suspend fun deleteEventsOlderThan(timestamp: Long): Int = withContext(Dispatchers.IO) {
-        try {
-            database.openHelper.writableDatabase.execSQL(
-                "DELETE FROM listening_events WHERE timestamp < ?",
-                arrayOf(timestamp)
-            )
-            // Get affected rows count
-            database.openHelper.readableDatabase.query("SELECT changes()").use { cursor ->
-                if (cursor.moveToFirst()) cursor.getInt(0) else 0
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to delete old events", e)
-            0
-        }
-    }
     
     private suspend fun getTableStats(): List<TableStats> = withContext(Dispatchers.IO) {
         val tables = listOf("tracks", "listening_events", "artists", "albums", "enriched_metadata", "track_artists")
