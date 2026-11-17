@@ -453,7 +453,13 @@ class MusicTrackingManager(
         if (offlineQueue.size >= MAX_OFFLINE_QUEUE_SIZE) {
             Log.w(TAG, "Offline queue past soft capacity; preserving unsaved events")
         }
-        offlineQueue[pending.key()] = pending.copy(retryCount = (pending.retryCount + 1).coerceAtMost(64))
+        val nextRetryCount = (pending.retryCount + 1).coerceAtMost(64)
+        // Persist a deadline rather than sleeping inside the replay loop.
+        // One unhealthy event must never delay unrelated due events.
+        offlineQueue[pending.key()] = pending.copy(
+            retryCount = nextRetryCount,
+            nextRetryAtMs = System.currentTimeMillis() + calculateRetryDelay(nextRetryCount)
+        )
         updateMetrics { it.copy(eventsInOfflineQueue = offlineQueue.size) }
         persistOfflineQueue()
     }
@@ -506,10 +512,11 @@ class MusicTrackingManager(
         val toProcess = offlineQueue.values.toList()
 
         for (pending in toProcess) {
+            // A pending event may have been saved or rescheduled by the
+            // foreground batch processor since this snapshot was taken.
+            if (offlineQueue[pending.key()] != pending) continue
+            if (pending.nextRetryAtMs > System.currentTimeMillis()) continue
             try {
-                val delay = calculateRetryDelay(pending.retryCount)
-                delay(delay)
-
                 if (!shouldPersistEvent(pending.event)) {
                     offlineQueue.remove(pending.key())
                     Log.d(TAG, "Discarded offline event rejected by current rules: trackId=${pending.event.track_id}")
@@ -645,7 +652,9 @@ data class PendingEvent(
     val event: ListeningEvent,
     val sessionId: String,
     val queuedAt: Long,
-    val retryCount: Int
+    val retryCount: Int,
+    /** Persisted retry deadline; missing field in pre-upgrade JSON means immediately due. */
+    val nextRetryAtMs: Long = 0L
 ) {
     /** Stable identity for the offline queue map and durable storage. */
     fun key(): String = "${sessionId}_${event.track_id}_${event.timestamp}"
