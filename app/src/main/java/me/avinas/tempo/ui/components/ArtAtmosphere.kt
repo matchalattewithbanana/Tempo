@@ -154,11 +154,18 @@ fun ArtAtmosphereLayer(
                 drawRect(
                     alpha = roomAlpha,
                     brush = Brush.verticalGradient(
-                        colors = listOf(
+                        colors = if (appearancePalette.isDark) listOf(
                             appearancePalette.background.copy(alpha = 0.80f),
                             appearancePalette.background.copy(alpha = 0.55f),
                             appearancePalette.background.copy(alpha = 0.74f),
                             appearancePalette.background.copy(alpha = 0.92f),
+                        ) else listOf(
+                            // A stronger paper wash keeps dark labels legible
+                            // even with unusually dark or saturated album art.
+                            appearancePalette.background.copy(alpha = 0.96f),
+                            appearancePalette.background.copy(alpha = 0.91f),
+                            appearancePalette.background.copy(alpha = 0.94f),
+                            appearancePalette.background.copy(alpha = 0.98f),
                         ),
                         startY = 0f,
                         endY = h,
