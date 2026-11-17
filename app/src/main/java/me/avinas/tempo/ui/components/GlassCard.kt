@@ -93,14 +93,28 @@ fun GlassCard(
     ) else contentPadding
     val customPalette = palette != AppearancePaletteResolver.forPreset(AppearancePreset.ABYSS)
     val accent = accentColor ?: palette.accent
+    // Older cards request fixed near-black/frost surfaces. Respect their role
+    // rather than their historical dark ARGB when a true light tone is active.
+    val themedBackgroundColor = if (!palette.isDark) when (backgroundColor) {
+        GlassFrostSoft -> palette.surface.copy(alpha = 0.94f)
+        TempoDarkSurface -> palette.surface
+        TempoDarkSurfaceElevated -> palette.elevatedSurface
+        TempoDarkSurfaceSunken -> palette.surfaceSunken
+        me.avinas.tempo.ui.theme.TempoDarkBackground -> palette.background
+        else -> backgroundColor
+    } else backgroundColor
+    val themedBorderColor = if (!palette.isDark &&
+        (borderColor == GlassBorderSoft || borderColor == GlassBorderMedium)) {
+        palette.border.copy(alpha = 0.76f)
+    } else borderColor
 
     val surface =
-        remember(backgroundColor, accentColor, accentStrength, variant, palette, policy.solidSurfaces) {
+        remember(themedBackgroundColor, accentColor, accentStrength, variant, palette, policy.solidSurfaces) {
             when {
                 // Solid finish removes translucent layers but preserves explicit opaque designs.
-                policy.solidSurfaces && backgroundColor.alpha < 1f -> palette.surface
-                // Explicit surface wins; accent then only tints the border.
-                backgroundColor != GlassFrostMedium -> backgroundColor
+                policy.solidSurfaces && themedBackgroundColor.alpha < 1f -> palette.surface
+                // Explicit surface wins, after mapping old dark surface roles.
+                themedBackgroundColor != GlassFrostMedium -> themedBackgroundColor
 
                 customPalette && variant == GlassCardVariant.Obsidian -> palette.surfaceSunken
                 customPalette && variant == GlassCardVariant.QuietGlass -> palette.surface
@@ -124,12 +138,12 @@ fun GlassCard(
             }
         }
 
-    val isTinted = accentColor != null || backgroundColor != GlassFrostMedium
+    val isTinted = accentColor != null || themedBackgroundColor != GlassFrostMedium
 
     val borderBrush =
-        remember(variant, borderColor, accentColor, isTinted, palette) {
+        remember(variant, themedBorderColor, accentColor, isTinted, palette) {
             when {
-                borderColor != null -> {
+                themedBorderColor != null -> {
                     null
                 }
 
@@ -191,10 +205,10 @@ fun GlassCard(
         }
 
     val borderStroke =
-        remember(variant, borderColor, borderWidth, borderBrush) {
+        remember(variant, themedBorderColor, borderWidth, borderBrush) {
             val width = borderWidth ?: (if (variant == GlassCardVariant.HighProminence) 1.dp else 0.5.dp)
-            if (borderColor != null) {
-                BorderStroke(width, borderColor)
+            if (themedBorderColor != null) {
+                BorderStroke(width, themedBorderColor)
             } else {
                 BorderStroke(width, borderBrush!!)
             }
@@ -230,7 +244,9 @@ fun GlassCard(
                     if (showsSheen && !policy.solidSurfaces) {
                         drawRect(
                             brush = Brush.horizontalGradient(
-                                colors = listOf(Color.Transparent, GlassHighlightTop, Color.Transparent),
+                                colors = listOf(Color.Transparent,
+                                    if (palette.isDark) GlassHighlightTop else palette.onSurface.copy(alpha = 0.06f),
+                                    Color.Transparent),
                             ),
                             topLeft = Offset.Zero,
                             size = Size(size.width, 1.dp.toPx()),
