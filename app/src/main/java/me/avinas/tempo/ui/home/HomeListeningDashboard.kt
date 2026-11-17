@@ -143,7 +143,10 @@ internal fun HomeListeningDashboard(
                 )
                 DashboardMetric(
                     label = stringResource(R.string.dashboard_tracks_played),
-                    value = todayOverview?.totalPlayCount?.toString() ?: "—",
+                    // "Tracks played" counts distinct songs, not repeated
+                    // play events. Today's full play count remains in the
+                    // expanded Today overview.
+                    value = todayOverview?.uniqueTracksCount?.toString() ?: "—",
                     modifier = Modifier.weight(1f),
                     enabled = true,
                     onClick = onNavigateToHistory,
