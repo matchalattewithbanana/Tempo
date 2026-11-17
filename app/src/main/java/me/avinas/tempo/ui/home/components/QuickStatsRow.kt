@@ -59,7 +59,7 @@ fun QuickStatsRow(
                 ),
             variant = GlassCardVariant.QuietGlass,
             shape = RoundedCornerShape(20.dp),
-            borderColor = GlassBorderSoft,
+            borderColor = MaterialTheme.colorScheme.outlineVariant,
             borderWidth = 0.8.dp,
             contentPadding = PaddingValues(14.dp)
         ) {
@@ -71,7 +71,7 @@ fun QuickStatsRow(
                 Text(
                     text = stringResource(R.string.home_top_artist).uppercase(Locale.getDefault()),
                     style = KickerSmall,
-                    color = TextTertiary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.fillMaxWidth()
@@ -84,8 +84,8 @@ fun QuickStatsRow(
                     modifier = Modifier
                         .size(62.dp)
                         .clip(CircleShape)
-                        .background(TempoDarkSurfaceSunken)
-                        .border(1.dp, GlassBorderMedium, CircleShape)
+                        .background(MaterialTheme.colorScheme.surfaceContainerLowest)
+                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape)
                 ) {
                     CachedAsyncImage(
                         imageUrl = topArtistImage,
@@ -97,7 +97,7 @@ fun QuickStatsRow(
                                 Icon(
                                     Icons.Default.Person,
                                     contentDescription = null,
-                                    tint = Color.White.copy(alpha = 0.22f),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.56f),
                                     modifier = Modifier.size(26.dp)
                                 )
                             }
@@ -114,7 +114,7 @@ fun QuickStatsRow(
                         fontWeight = FontWeight.Bold,
                         letterSpacing = (-0.3).sp
                     ),
-                    color = TextPrimary,
+                    color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     textAlign = TextAlign.Center
@@ -131,7 +131,7 @@ fun QuickStatsRow(
                 Text(
                     text = artistSubtitle,
                     style = CaptionSmall,
-                    color = TextSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     textAlign = TextAlign.Center
@@ -150,7 +150,7 @@ fun QuickStatsRow(
                 ),
             variant = GlassCardVariant.QuietGlass,
             shape = RoundedCornerShape(20.dp),
-            borderColor = GlassBorderSoft,
+            borderColor = MaterialTheme.colorScheme.outlineVariant,
             borderWidth = 0.8.dp,
             contentPadding = PaddingValues(14.dp)
         ) {
@@ -162,7 +162,7 @@ fun QuickStatsRow(
                 Text(
                     text = stringResource(R.string.home_on_repeat).uppercase(Locale.getDefault()),
                     style = KickerSmall,
-                    color = TextTertiary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.fillMaxWidth()
@@ -175,8 +175,8 @@ fun QuickStatsRow(
                     modifier = Modifier
                         .size(62.dp)
                         .clip(RoundedCornerShape(14.dp))
-                        .background(TempoDarkSurfaceSunken)
-                        .border(1.dp, GlassBorderMedium, RoundedCornerShape(14.dp))
+                        .background(MaterialTheme.colorScheme.surfaceContainerLowest)
+                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(14.dp))
                 ) {
                     CachedAsyncImage(
                         imageUrl = topTrackImage,
@@ -188,7 +188,7 @@ fun QuickStatsRow(
                                 Icon(
                                     Icons.Default.MusicNote,
                                     contentDescription = null,
-                                    tint = Color.White.copy(alpha = 0.22f),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.56f),
                                     modifier = Modifier.size(26.dp)
                                 )
                             }
@@ -205,7 +205,7 @@ fun QuickStatsRow(
                         fontWeight = FontWeight.Bold,
                         letterSpacing = (-0.3).sp
                     ),
-                    color = TextPrimary,
+                    color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     textAlign = TextAlign.Center
@@ -224,7 +224,7 @@ fun QuickStatsRow(
                 Text(
                     text = trackSubtitle,
                     style = CaptionSmall,
-                    color = TextSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     textAlign = TextAlign.Center
