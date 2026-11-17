@@ -59,6 +59,23 @@ class AppearancePaletteTest {
         }
     }
 
+    @Test fun `six light looks use distinct backgrounds and readable surfaces`() {
+        val palettes = AppearancePreset.entries.map { preset ->
+            AppearancePaletteResolver.resolve(AppearanceSettings(preset = preset, tone = AppearanceTone.LIGHT))
+        }
+        assertEquals(palettes.size, palettes.map { it.background }.distinct().size)
+        palettes.forEach { palette ->
+            val preset = palette.preset
+            assertTrue("$preset light background text", contrast(palette.onSurface, palette.background) >= 7.0)
+            assertTrue("$preset light surface text", contrast(palette.onSurface, palette.surface) >= 7.0)
+            assertTrue("$preset light elevated text", contrast(palette.onSurface, palette.elevatedSurface) >= 7.0)
+            assertTrue("$preset light secondary text", contrast(palette.mutedText, palette.surface) >= 4.5)
+            assertTrue("$preset light accent on surface", contrast(palette.accent, palette.surface) >= 4.5)
+            assertTrue("$preset light button label", contrast(palette.onAccent, palette.accent) >= 4.5)
+            assertTrue("$preset light surface is not dark", !palette.isDark)
+        }
+    }
+
     @Test fun `system tone observes dark and light OS preference`() {
         AppearancePreset.entries.forEach { preset ->
             val settings = AppearanceSettings(preset = preset, tone = AppearanceTone.SYSTEM)
