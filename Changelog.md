@@ -2,6 +2,31 @@
 
 All notable changes to Tempo are documented in this file.
 
+## [4.8.16-fork.2-beta.1] — 2026-11-17
+
+**Appearance Studio beta.** Six curated looks, experimental Light/System, OLED,
+typography and accessibility preferences, layout controls and saved looks.
+
+### Added
+- Abyss, Obsidian Gold, Aurora, Glacier, Ember and Solstice themes, with OLED
+  and opt-in Light/Follow System beta tones.
+- Typography, bold text, density, corner and finish options; optional wallpaper
+  and cache-only current-artwork accents; adaptive effects and reduce motion.
+- Home layout preferences, opening Stats filters, and a compact playback strip
+  with thumbnail artwork and stale-status handling.
+- Named appearance looks and bounded appearance-only JSON import/export.
+
+### Improved
+- Semantic text, surface and accent colors across navigation, history, stats,
+  settings, backup/import screens, dialogs and shared components.
+- Prevented duplicate Now Playing UI and reserved safe scroll space.
+
+### Known limitations
+- Debug signing may differ from prior APKs; export data before reinstalling.
+- Light/System still need physical-device visual, large-font and accessibility feedback.
+- Google OAuth/Drive backup requires correct per-signer configuration.
+- GPU-heavy progressive blur/refraction and rebranding are not included.
+
 ## [4.8.16-fork.1] — 2026-11-16
 
 **First fork preview** of Tempo with more responsive local music tracking and

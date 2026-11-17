@@ -1,23 +1,23 @@
 # Tempo — Appearance & Personalization Design RFC
 
-**Status (2026-11-17):** Source implementation now covers six dark-compatible presets, OLED, isolated Light/System previews, typography/density/shape, adaptive effects, scoped artwork and wallpaper accents, Home arrangement, Stats defaults, saved looks and appearance-only import/export. This is **not a completed release or validation sign-off**. Full-app Light/System remains gated while legacy surfaces are migrated. Experimental blur/refraction and a floating strip remain deferred. Builds, automated test execution, device checks and benchmarks have not run.
+**Status (2026-11-17, Beta 1):** Six appearance presets, Dark/OLED, **opt-in experimental Light/System**, typography/density/shape, adaptive effects, scoped wallpaper/artwork accents, Home arrangement, Stats defaults, saved looks and appearance-only import/export are implemented. The compact navigation Now Playing strip now includes cover art and freshness handling. The beta release requires unit-test, Android lint, APK assembly and emulator test success before publication. Physical-device appearance, accessibility and performance testing remain open; advanced blur/refraction remains deferred.
 
 ### Current delivery checklist
 
 | Area | Source status | Remaining gate |
 | --- | --- | --- |
 | Six curated looks, Dark/OLED | Implemented; Abyss remains default | Device screenshots and contrast across all screens |
-| Light/System | Resolver and isolated preview implemented; live app falls back to Dark | Migrate remaining fixed dark/white surfaces, then full-screen validation |
+| Light/System | Opt-in beta tones available live; system follows OS dark preference | Physical device contrast review for overlays, imagery, large fonts and TalkBack |
 | Typography, bold text, density, corners | Implemented in Material typography and shared cards; compact changes default card padding only | Legacy explicit font/shape overrides; 320dp, RTL and 2x font checks |
 | Preview, Apply/Cancel, reset | Whole draft, atomic persistence, schema v2 with legacy fallback | Process-death, rotation and storage failure instrumentation |
 | Wallpaper/artwork accents | API 31+ wallpaper; cache-only current-track artwork accent | Device wallpaper refresh, missing/stale artwork cases |
 | Motion/effects | User/system motion, power/thermal/background gates, optional low-RAM adaptation, Solid/Satin | Benchmarks and navigation/legacy effect audit |
 | Home and Stats arrangement | Reorder/hide optional cards; inline/compact/hidden Now Listening; initial Stats tab/range | Interactive navigation and accessibility checks |
 | Saved looks and transfer | Up to 12 named looks; bounded versioned JSON; import edits draft only | Document-provider and old backup restore checks |
-| Floating strip, progressive blur/refraction | Not implemented; optional and deliberately deferred | Freshness/overlap design and measured device performance |
-| Tests and release | Regression test sources added; static review only | User-requested build/test/device cycle; separate release approval |
+| Floating strip, progressive blur/refraction | Compact cover-art strip implemented with stale expiry; advanced blur/refraction deferred | Device inset/freshness checks and GPU performance measurements |
+| Tests and release | Dedicated beta branch runs test/lint/build/emulator; prerelease only after success | Physical-device beta feedback and production-signing readiness |
 
-**Next sequence:** finish the legacy semantic-color/effect audit; run the authorized build and test matrix when requested; resolve device findings; enable live Light/System only after those checks; consider optional experimental effects after benchmarks.
+**Next sequence:** collect physical-device beta feedback on Light/System contrast and compact playback insets; fix regressions before promoting beyond beta; consider advanced visual effects only after performance benchmarks.
 
 **Scope:** Visual design system, appearance settings, performance profiles, accessibility, rollout, testing.
 **Out of scope:** Rebranding, player controls, altering music-tracking/event persistence, changing Android app ID, generating/publishing APKs.

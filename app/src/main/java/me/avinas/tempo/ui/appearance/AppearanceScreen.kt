@@ -62,8 +62,6 @@ fun AppearanceScreen(onNavigateBack: () -> Unit, viewModel: AppearanceViewModel 
         return
     }
     var draft by rememberSaveable(saved, stateSaver = DraftSaver) { mutableStateOf(saved) }
-    var previewLight by rememberSaveable { mutableStateOf(false) }
-    var previewSystem by rememberSaveable { mutableStateOf(false) }
     var lookName by rememberSaveable { mutableStateOf("") }
     var transferFailed by rememberSaveable { mutableStateOf(false) }
     var transferDone by rememberSaveable { mutableStateOf(false) }
@@ -111,11 +109,7 @@ fun AppearanceScreen(onNavigateBack: () -> Unit, viewModel: AppearanceViewModel 
             }
         }
     }
-    val preview = draft.copy(tone = when {
-        previewSystem -> AppearanceTone.SYSTEM
-        previewLight -> AppearanceTone.LIGHT
-        else -> draft.tone
-    })
+    val preview = draft
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = { TopAppBar(
@@ -164,17 +158,14 @@ fun AppearanceScreen(onNavigateBack: () -> Unit, viewModel: AppearanceViewModel 
                         onClick = { if (!busy) draft = draft.copy(preset = preset) }, modifier = Modifier.weight(1f), tone = preview.tone) }
                 }
             }
-            ChoiceRow(R.string.appearance_tone_heading, listOf(AppearanceTone.DARK, AppearanceTone.OLED), draft.tone, !busy,
-                { if (it == AppearanceTone.OLED) R.string.appearance_oled else R.string.appearance_dark }) {
+            ChoiceRow(R.string.appearance_tone_heading, AppearanceTone.entries, draft.tone, !busy,
+                { when (it) {
+                    AppearanceTone.DARK -> R.string.appearance_dark
+                    AppearanceTone.OLED -> R.string.appearance_oled
+                    AppearanceTone.LIGHT -> R.string.appearance_light
+                    AppearanceTone.SYSTEM -> R.string.appearance_system
+                } }) {
                 draft = draft.copy(tone = it)
-            }
-            SettingToggle(R.string.appearance_preview_light, previewLight, !busy) {
-                previewLight = it
-                if (it) previewSystem = false
-            }
-            SettingToggle(R.string.appearance_preview_system, previewSystem, !busy) {
-                previewSystem = it
-                if (it) previewLight = false
             }
             Text(stringResource(R.string.appearance_light_preview_notice), style = MaterialTheme.typography.bodySmall)
             AppearanceSection(R.string.appearance_layout_heading) {
@@ -261,7 +252,7 @@ fun AppearanceScreen(onNavigateBack: () -> Unit, viewModel: AppearanceViewModel 
                     }) { Text(stringResource(R.string.appearance_export)) }
                 }
             }
-            OutlinedButton(enabled = !busy, onClick = { draft = AppearanceSettings(); previewLight = false; previewSystem = false }) {
+            OutlinedButton(enabled = !busy, onClick = { draft = AppearanceSettings() }) {
                 Text(stringResource(R.string.appearance_restore))
             }
             if (saveFailed) Text(stringResource(R.string.appearance_save_failed), color = MaterialTheme.colorScheme.error)

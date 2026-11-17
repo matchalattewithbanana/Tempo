@@ -20,8 +20,8 @@ val localProperties =
 // Declared once so archiveReleaseMapping below names the archived mapping file after the
 // exact version it deobfuscates. Without the matching mapping.txt a release stack trace
 // cannot be read back, so these two must never drift apart.
-val appVersionCode = 4816
-val appVersionName = "4.8.16-fork.1"
+val appVersionCode = 4817
+val appVersionName = "4.8.16-fork.2-beta.1"
 
 android {
     namespace = "me.avinas.tempo"

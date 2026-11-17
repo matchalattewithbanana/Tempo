@@ -1168,10 +1168,12 @@
     <string name="appearance_ember_desc">Koralllicht auf Burgunder</string>
     <string name="appearance_solstice_desc">Warmer Bernstein und ruhige Töne</string>
     <string name="appearance_dark">Dunkel</string>
+    <string name="appearance_light">Hell (Beta)</string>
+    <string name="appearance_system">System folgen (Beta)</string>
     <string name="appearance_oled">OLED-Schwarz</string>
     <string name="appearance_preview_light">Helle Vorschau</string>
     <string name="appearance_preview_system">Systemdarstellung als Vorschau</string>
-    <string name="appearance_light_preview_notice">Hell und System gelten nur für diese Vorschau. Die appweite Darstellung wird noch geprüft.</string>
+    <string name="appearance_light_preview_notice">Hell und System sind in dieser Beta experimentell. Falls eine Ansicht schwer lesbar ist, zu Dunkel oder OLED wechseln und den Fehler melden.</string>
     <string name="appearance_tone_heading">App-Darstellung</string>
     <string name="appearance_layout_heading">Schrift und Layout</string>
     <string name="appearance_density">Kartenabstände</string>

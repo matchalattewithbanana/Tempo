@@ -10,6 +10,10 @@ import me.avinas.tempo.ui.theme.LocalTempoAppearance
 import me.avinas.tempo.ui.appearance.AppearanceNowListening
 import me.avinas.tempo.ui.appearance.shouldShowCompactStrip
 import me.avinas.tempo.service.SpotifyBroadcastPresence
+import me.avinas.tempo.ui.components.AlbumArtImage
+import me.avinas.tempo.ui.components.NowPlayingArtworkViewModel
+import me.avinas.tempo.ui.components.NowPlayingArtworkIdentity
+import androidx.hilt.navigation.compose.hiltViewModel
 import me.avinas.tempo.ui.theme.rememberReducedMotion
 
 import androidx.compose.animation.animateColorAsState
@@ -178,6 +182,12 @@ private fun CompactNowPlayingStrip() {
     if (!shouldShowCompactStrip(AppearanceNowListening.COMPACT, current.title, current.updatedAtMs, checkedAtMs)) return
 
     val palette = LocalTempoPalette.current
+    val artworkViewModel: NowPlayingArtworkViewModel = hiltViewModel()
+    val artwork by artworkViewModel.artwork.collectAsStateWithLifecycle()
+    val choice = artwork?.takeIf {
+        it.identity == NowPlayingArtworkIdentity(current.packageName, current.title, current.artist, current.album)
+    }
+    val preferredArtwork = current.albumArtUri ?: choice?.localUrl
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -189,11 +199,13 @@ private fun CompactNowPlayingStrip() {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        Icon(
-            imageVector = Icons.Rounded.MusicNote,
+        AlbumArtImage(
+            albumArtUrl = preferredArtwork ?: choice?.remoteUrl,
+            localArtUrl = if (preferredArtwork != null) choice?.remoteUrl else null,
             contentDescription = null,
-            tint = if (current.playing) palette.accent else palette.mutedText,
-            modifier = Modifier.size(20.dp),
+            targetSizePx = 128,
+            placeholderEmoji = "♫",
+            modifier = Modifier.size(40.dp).clip(RoundedCornerShape(10.dp)),
         )
         Column(modifier = Modifier.weight(1f)) {
             Text(
@@ -211,12 +223,21 @@ private fun CompactNowPlayingStrip() {
                 overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
             )
         }
-        Box(
-            modifier = Modifier.size(7.dp).background(
-                if (current.playing) palette.accent else palette.mutedText,
-                CircleShape,
-            ),
-        )
+        if (checkedAtMs - current.updatedAtMs > 2 * 60_000L) {
+            Text(
+                text = stringResource(R.string.now_playing_last_detected),
+                color = palette.mutedText,
+                style = MaterialTheme.typography.labelSmall,
+                maxLines = 1,
+            )
+        } else {
+            Box(
+                modifier = Modifier.size(7.dp).background(
+                    if (current.playing) palette.accent else palette.mutedText,
+                    CircleShape,
+                ),
+            )
+        }
     }
 }
 

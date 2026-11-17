@@ -1166,10 +1166,12 @@
     <string name="appearance_ember_desc">Corail sur fond bordeaux</string>
     <string name="appearance_solstice_desc">Ambre chaud et tons éditoriaux</string>
     <string name="appearance_dark">Sombre</string>
+    <string name="appearance_light">Clair (bêta)</string>
+    <string name="appearance_system">Thème système (bêta)</string>
     <string name="appearance_oled">Noir OLED</string>
     <string name="appearance_preview_light">Aperçu clair</string>
     <string name="appearance_preview_system">Aperçu du thème système</string>
-    <string name="appearance_light_preview_notice">Clair et Système concernent cet aperçu uniquement. La validation visuelle globale reste à faire.</string>
+    <string name="appearance_light_preview_notice">Les modes Clair et Système sont expérimentaux dans cette bêta. Si un écran est difficile à lire, choisir Sombre ou OLED et signaler le problème.</string>
     <string name="appearance_tone_heading">Thème de l’application</string>
     <string name="appearance_layout_heading">Typographie et disposition</string>
     <string name="appearance_density">Espacement des cartes</string>

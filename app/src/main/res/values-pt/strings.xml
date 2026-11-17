@@ -1277,10 +1277,12 @@
     <string name="appearance_ember_desc">Coral sobre bordô</string>
     <string name="appearance_solstice_desc">Âmbar quente e tons editoriais</string>
     <string name="appearance_dark">Escuro</string>
+    <string name="appearance_light">Claro (beta)</string>
+    <string name="appearance_system">Seguir sistema (beta)</string>
     <string name="appearance_oled">Preto OLED</string>
     <string name="appearance_preview_light">Pré-visualizar tema claro</string>
     <string name="appearance_preview_system">Pré-visualizar tema do sistema</string>
-    <string name="appearance_light_preview_notice">Claro e Sistema afetam apenas esta pré-visualização. Falta validar o aspeto de toda a aplicação.</string>
+    <string name="appearance_light_preview_notice">Os modos Claro e Sistema são experimentais nesta versão beta. Se um ecrã for difícil de ler, mudar para Escuro ou OLED e comunicar o problema.</string>
     <string name="appearance_tone_heading">Tema da aplicação</string>
     <string name="appearance_layout_heading">Tipografia e disposição</string>
     <string name="appearance_density">Espaçamento dos cartões</string>

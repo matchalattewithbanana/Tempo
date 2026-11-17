@@ -1394,10 +1394,12 @@
     <string name="appearance_ember_desc">Коралловый на бордовом</string>
     <string name="appearance_solstice_desc">Тёплый янтарь и мягкие тона</string>
     <string name="appearance_dark">Тёмная</string>
+    <string name="appearance_light">Светлая (бета)</string>
+    <string name="appearance_system">Как в системе (бета)</string>
     <string name="appearance_oled">Чёрная OLED</string>
     <string name="appearance_preview_light">Предпросмотр светлой темы</string>
     <string name="appearance_preview_system">Предпросмотр системной темы</string>
-    <string name="appearance_light_preview_notice">Светлая и системная темы пока доступны только в предпросмотре. Проверка всего приложения ещё не завершена.</string>
+    <string name="appearance_light_preview_notice">Светлая и системная темы в этой бета-версии экспериментальные. Если текст плохо читается, вернитесь к тёмной или OLED-теме и сообщите об ошибке.</string>
     <string name="appearance_tone_heading">Тема приложения</string>
     <string name="appearance_layout_heading">Шрифты и расположение</string>
     <string name="appearance_density">Отступы карточек</string>

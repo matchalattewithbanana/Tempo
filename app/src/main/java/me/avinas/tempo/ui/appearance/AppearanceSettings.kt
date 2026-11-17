@@ -40,9 +40,8 @@ data class AppearanceSettings(
     val statsTab: AppearanceStatsTab = AppearanceStatsTab.SONGS,
     val statsRange: AppearanceStatsRange = AppearanceStatsRange.WEEK,
 ) {
-    /** Light/system are available in isolated preview until full-app visual validation passes. */
-    fun forLiveApp(): AppearanceSettings = if (tone == AppearanceTone.LIGHT || tone == AppearanceTone.SYSTEM)
-        copy(tone = AppearanceTone.DARK) else this
+    /** Retain opt-in beta tones when applying or importing an appearance. */
+    fun forLiveApp(): AppearanceSettings = this
 }
 internal fun decodeAppearanceTone(raw: String?): AppearanceTone = enumOrDefault(raw, AppearanceTone.DARK)
 internal inline fun <reified T : Enum<T>> enumOrDefault(raw: String?, fallback: T): T =

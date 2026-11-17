@@ -802,10 +802,12 @@
     <string name="appearance_ember_desc">Korallfény bordó alapon</string>
     <string name="appearance_solstice_desc">Meleg borostyán és lágy tónusok</string>
     <string name="appearance_dark">Sötét</string>
+    <string name="appearance_light">Világos (béta)</string>
+    <string name="appearance_system">Rendszer szerint (béta)</string>
     <string name="appearance_oled">OLED-fekete</string>
     <string name="appearance_preview_light">Világos előnézet</string>
     <string name="appearance_preview_system">Rendszertéma előnézete</string>
-    <string name="appearance_light_preview_notice">A Világos és Rendszer csak az előnézetre hat. Az egész alkalmazás ellenőrzése még hátravan.</string>
+    <string name="appearance_light_preview_notice">A Világos és a Rendszer mód ebben a bétában kísérleti. Olvashatósági hiba esetén válassz Sötét vagy OLED módot, és jelezd a hibát.</string>
     <string name="appearance_tone_heading">Alkalmazástéma</string>
     <string name="appearance_layout_heading">Betűk és elrendezés</string>
     <string name="appearance_density">Kártyák térköze</string>

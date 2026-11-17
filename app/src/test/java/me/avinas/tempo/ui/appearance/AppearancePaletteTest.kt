@@ -59,9 +59,20 @@ class AppearancePaletteTest {
         }
     }
 
-    @Test fun `unsafe live tones remain preview only`() {
-        assertEquals(AppearanceTone.DARK, AppearanceSettings(tone = AppearanceTone.LIGHT).forLiveApp().tone)
-        assertEquals(AppearanceTone.DARK, AppearanceSettings(tone = AppearanceTone.SYSTEM).forLiveApp().tone)
+    @Test fun `system tone observes dark and light OS preference`() {
+        AppearancePreset.entries.forEach { preset ->
+            val settings = AppearanceSettings(preset = preset, tone = AppearanceTone.SYSTEM)
+            val light = AppearancePaletteResolver.resolve(settings, systemDark = false)
+            val dark = AppearancePaletteResolver.resolve(settings, systemDark = true)
+            assertTrue("$preset should be light", !light.isDark)
+            assertTrue("$preset should be dark", dark.isDark)
+            assertNotEquals(light.background, dark.background)
+        }
+    }
+
+    @Test fun `opt in beta tones survive live settings`() {
+        assertEquals(AppearanceTone.LIGHT, AppearanceSettings(tone = AppearanceTone.LIGHT).forLiveApp().tone)
+        assertEquals(AppearanceTone.SYSTEM, AppearanceSettings(tone = AppearanceTone.SYSTEM).forLiveApp().tone)
         assertEquals(AppearanceTone.OLED, AppearanceSettings(tone = AppearanceTone.OLED).forLiveApp().tone)
     }
 

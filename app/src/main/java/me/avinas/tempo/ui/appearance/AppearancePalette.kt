@@ -9,8 +9,8 @@ import androidx.compose.ui.graphics.Color
 
 /**
  * Shared design tokens. These intentionally keep the legacy Abyss values unchanged.
- * All six live options run on dark compatible surfaces so older screens with
- * fixed white text remain legible. True light mode is the next migration stage.
+ * The six presets support dark and opt-in beta light/system surface roles.
+ * Some artwork-specific illustrations intentionally retain their design colors.
  */
 data class AppearancePalette(
     val preset: AppearancePreset,
@@ -102,8 +102,7 @@ object AppearancePaletteResolver {
             onSurface = Color(0xFFF2ECFF), mutedText = Color(0xFFB7AFD2),
             border = Color(0xFF544776),
         )
-        // Glacier is initially offered as an ice-blue *dark-compatible* style.
-        // Light Glacier is preview-only until the rest of the UI uses semantic tokens.
+        // Glacier Night can also resolve to the experimental Glacier Light palette.
         AppearancePreset.GLACIER -> AppearancePalette(
             preset = preset,
             accent = Color(0xFF72D0F2), onAccent = Color(0xFF082638),
