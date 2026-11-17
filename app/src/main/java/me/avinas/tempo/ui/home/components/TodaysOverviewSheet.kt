@@ -201,7 +201,7 @@ fun TodaysOverviewOverlay(
                 modifier = Modifier
                     .fillMaxSize()
                     .graphicsLayer { alpha = progress.value }
-                    .background(TempoDarkBackground.copy(alpha = 0.94f))
+                    .background(MaterialTheme.colorScheme.background.copy(alpha = 0.94f))
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null
@@ -216,13 +216,17 @@ fun TodaysOverviewOverlay(
                         translationY = (1f - progress.value) * size.height
                         alpha = progress.value
                     }
-                    .background(TempoDarkBackground)
+                    .background(MaterialTheme.colorScheme.background)
             ) {
-                // Ambient album art background layer tinted with extracted accent
-                ArtAtmosphereLayer(
-                    artUrl = topArtUrl,
-                    tint = accent
-                )
+                // The artwork atmosphere is tuned for dark surfaces. On
+                // Light/System-light, let the light background and readable
+                // semantic text win instead of laying dark art beneath them.
+                if (LocalTempoPalette.current.isDark) {
+                    ArtAtmosphereLayer(
+                        artUrl = topArtUrl,
+                        tint = accent
+                    )
+                }
 
                 // Top gradient scrim for scroll readability
                 Box(
@@ -234,8 +238,8 @@ fun TodaysOverviewOverlay(
                         .background(
                             Brush.verticalGradient(
                                 colors = listOf(
-                                    TempoDarkBackground.copy(alpha = 0.95f),
-                                    TempoDarkBackground.copy(alpha = 0.65f),
+                                    MaterialTheme.colorScheme.background.copy(alpha = 0.95f),
+                                    MaterialTheme.colorScheme.background.copy(alpha = 0.65f),
                                     Color.Transparent
                                 )
                             )
@@ -250,7 +254,7 @@ fun TodaysOverviewOverlay(
                         .fillMaxHeight(0.20f)
                         .background(
                             Brush.verticalGradient(
-                                listOf(Color.Transparent, TempoDarkBackground.copy(alpha = 0.88f))
+                                listOf(Color.Transparent, MaterialTheme.colorScheme.background.copy(alpha = 0.88f))
                             )
                         )
                 )
@@ -404,7 +408,7 @@ private fun TodaysTopBarNavigation(
             icon = Icons.Default.Close,
             contentDescription = "Close today's overview",
             onClick = onClose,
-            iconTint = TextPrimary
+            iconTint = MaterialTheme.colorScheme.onSurface
         )
 
         AnimatedVisibility(
@@ -429,7 +433,7 @@ private fun TodaysTopBarNavigation(
                     text = "Daily Listening",
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
-                    color = TextPrimary,
+                    color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     textAlign = TextAlign.Center
@@ -441,7 +445,7 @@ private fun TodaysTopBarNavigation(
             icon = Icons.Default.Share,
             contentDescription = "Share today's listening",
             onClick = onShare,
-            iconTint = TextPrimary
+            iconTint = MaterialTheme.colorScheme.onSurface
         )
     }
 }
@@ -487,14 +491,14 @@ private fun TodaysEditorialHeader(
             fontSize = 32.sp,
             lineHeight = 36.sp,
             letterSpacing = (-0.5).sp,
-            color = TextPrimary
+            color = MaterialTheme.colorScheme.onSurface
         )
         Spacer(modifier = Modifier.height(6.dp))
         Box(
             modifier = Modifier
                 .width(32.dp)
                 .height(0.8.dp)
-                .background(GlassBorderMedium)
+                .background(MaterialTheme.colorScheme.outline)
         )
     }
 }
@@ -525,7 +529,7 @@ private fun TodaysAnthemHeroCard(
         shape = RoundedCornerShape(22.dp),
         variant = GlassCardVariant.QuietGlass,
         accentColor = accent,
-        borderColor = GlassBorderSoft,
+        borderColor = MaterialTheme.colorScheme.outlineVariant,
         borderWidth = 0.8.dp,
         contentPadding = PaddingValues(16.dp)
     ) {
@@ -555,8 +559,8 @@ private fun TodaysAnthemHeroCard(
                             spotColor = accent.copy(alpha = 0.25f)
                         )
                         .clip(RoundedCornerShape(16.dp))
-                        .background(TempoDarkSurfaceSunken)
-                        .border(1.dp, GlassBorderStrong, RoundedCornerShape(16.dp)),
+                        .background(MaterialTheme.colorScheme.surfaceContainerLowest)
+                        .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(16.dp)),
                     contentAlignment = Alignment.Center
                 ) {
                     CachedAsyncImage(
@@ -615,7 +619,7 @@ private fun TodaysAnthemHeroCard(
                     fontWeight = FontWeight.Bold,
                     fontSize = 17.sp,
                     lineHeight = 21.sp,
-                    color = TextPrimary,
+                    color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -624,7 +628,7 @@ private fun TodaysAnthemHeroCard(
                     text = track.artist,
                     style = MaterialTheme.typography.bodySmall,
                     fontSize = 12.5.sp,
-                    color = TextSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -635,7 +639,7 @@ private fun TodaysAnthemHeroCard(
                     modifier = Modifier
                         .width(22.dp)
                         .height(0.8.dp)
-                        .background(GlassBorderMedium)
+                        .background(MaterialTheme.colorScheme.outline)
                 )
 
                 Spacer(modifier = Modifier.height(2.dp))
@@ -646,7 +650,7 @@ private fun TodaysAnthemHeroCard(
                     fontSize = 9.5.sp,
                     fontWeight = FontWeight.Medium,
                     letterSpacing = 0.6.sp,
-                    color = TextTertiary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1
                 )
             }
@@ -654,7 +658,7 @@ private fun TodaysAnthemHeroCard(
             Icon(
                 imageVector = Icons.AutoMirrored.Rounded.ArrowForwardIos,
                 contentDescription = null,
-                tint = TextTertiary,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(13.dp)
             )
         }
@@ -675,7 +679,7 @@ private fun HeroListeningCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
         variant = GlassCardVariant.Obsidian,
-        borderColor = GlassBorderSoft,
+        borderColor = MaterialTheme.colorScheme.outlineVariant,
         borderWidth = 0.8.dp,
         contentPadding = PaddingValues(0.dp)
     ) {
@@ -704,7 +708,7 @@ private fun HeroListeningCard(
                         Text(
                             text = "TOTAL LISTENING TIME",
                             style = KickerSmall,
-                            color = TextTertiary
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
 
@@ -720,7 +724,7 @@ private fun HeroListeningCard(
                     fontSize = 44.sp,
                     lineHeight = 48.sp,
                     letterSpacing = (-1).sp,
-                    color = TextPrimary,
+                    color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     softWrap = false
                 )
@@ -730,7 +734,7 @@ private fun HeroListeningCard(
                 Text(
                     text = "${overview.totalPlayCount} ${if (overview.totalPlayCount == 1) "play" else "plays"} recorded across today",
                     style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -741,7 +745,7 @@ private fun HeroListeningCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(0.8.dp)
-                    .background(GlassBorderSoft)
+                    .background(MaterialTheme.colorScheme.outlineVariant)
             )
 
             // Secondary metrics — stat columns split by vertical hairlines
@@ -763,7 +767,7 @@ private fun HeroListeningCard(
                     modifier = Modifier
                         .fillMaxHeight()
                         .width(0.8.dp)
-                        .background(GlassBorderSoft)
+                        .background(MaterialTheme.colorScheme.outlineVariant)
                 )
 
                 MastheadSecondaryStat(
@@ -777,7 +781,7 @@ private fun HeroListeningCard(
                     modifier = Modifier
                         .fillMaxHeight()
                         .width(0.8.dp)
-                        .background(GlassBorderSoft)
+                        .background(MaterialTheme.colorScheme.outlineVariant)
                 )
 
                 MastheadSecondaryStat(
@@ -795,7 +799,7 @@ private fun HeroListeningCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(0.8.dp)
-                        .background(GlassBorderSoft)
+                        .background(MaterialTheme.colorScheme.outlineVariant)
                 )
 
                 Box(
@@ -819,13 +823,13 @@ private fun MastheadSecondaryStat(
     value: String,
     subtext: String,
     modifier: Modifier = Modifier,
-    valueColor: Color = TextPrimary
+    valueColor: Color = MaterialTheme.colorScheme.onSurface
 ) {
     Column(modifier = modifier.padding(horizontal = 10.dp)) {
         Text(
             text = label,
             style = KickerSmall,
-            color = TextTertiary
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Spacer(modifier = Modifier.height(3.dp))
         Text(
@@ -836,7 +840,7 @@ private fun MastheadSecondaryStat(
                     SpanStyle(
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Medium,
-                        color = TextTertiary
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 ) {
                     append(subtext)
@@ -917,7 +921,7 @@ private fun TodayVsYesterdayBar(
                 fontSize = 8.5.sp,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 0.7.sp,
-                color = TextQuaternary
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -938,12 +942,12 @@ private fun DayOverDayChip(
         change < -0.5 -> TrendChip(
             iconVector = Icons.AutoMirrored.Rounded.TrendingDown,
             text = "-${abs(change.roundToInt())}% vs yesterday",
-            color = TextSecondary
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         else -> TrendChip(
             iconVector = Icons.AutoMirrored.Rounded.TrendingFlat,
             text = "Same as yesterday",
-            color = TextSecondary
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }
@@ -955,8 +959,8 @@ private fun TrendChip(iconVector: ImageVector, text: String, color: Color) {
         horizontalArrangement = Arrangement.spacedBy(4.dp),
         modifier = Modifier
             .clip(RoundedCornerShape(100.dp))
-            .background(GlassFrostSoft)
-            .border(0.5.dp, GlassBorderSoft, RoundedCornerShape(100.dp))
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(100.dp))
             .padding(horizontal = 9.dp, vertical = 4.dp)
     ) {
         Icon(
@@ -995,7 +999,7 @@ private fun PeakHoursCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
         variant = GlassCardVariant.Obsidian,
-        borderColor = GlassBorderSoft,
+        borderColor = MaterialTheme.colorScheme.outlineVariant,
         borderWidth = 0.8.dp,
         contentPadding = PaddingValues(16.dp)
     ) {
@@ -1098,7 +1102,7 @@ private fun TodaysHoursChart(
                                     val alpha = 0.45f + (0.50f * (playCount.toFloat() / maxPlays))
                                     accent.copy(alpha = alpha)
                                 }
-                                else -> Color.White.copy(alpha = 0.07f)
+                                else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f)
                             }
                         )
                 )
@@ -1116,7 +1120,7 @@ private fun TodaysHoursChart(
                     style = KickerSmall,
                     fontSize = 8.5.sp,
                     fontWeight = FontWeight.Bold,
-                    color = TextQuaternary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     letterSpacing = 0.4.sp,
                     textAlign = if (index == 0) TextAlign.Start else TextAlign.End,
                     maxLines = 1,
@@ -1157,8 +1161,8 @@ private fun DayQuadrantRow(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(GlassFrostSoft)
-            .border(0.5.dp, GlassBorderSoft, RoundedCornerShape(12.dp))
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp))
             .padding(horizontal = 8.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -1172,7 +1176,7 @@ private fun DayQuadrantRow(
                     style = KickerSmall,
                     fontSize = 7.5.sp,
                     fontWeight = FontWeight.Bold,
-                    color = TextQuaternary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
@@ -1180,7 +1184,7 @@ private fun DayQuadrantRow(
                     style = MaterialTheme.typography.titleSmall.copy(fontFamily = DisplayFontFamily),
                     fontWeight = FontWeight.Bold,
                     fontSize = 13.sp,
-                    color = if (q.plays > 0) TextPrimary else TextQuaternary
+                    color = if (q.plays > 0) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -1204,7 +1208,7 @@ private fun TopTracksSection(
         shape = RoundedCornerShape(22.dp),
         variant = GlassCardVariant.QuietGlass,
         accentColor = accent,
-        borderColor = GlassBorderSoft,
+        borderColor = MaterialTheme.colorScheme.outlineVariant,
         borderWidth = 0.8.dp,
         contentPadding = PaddingValues(0.dp)
     ) {
@@ -1225,7 +1229,7 @@ private fun TopTracksSection(
                     text = "${tracks.size} ${if (tracks.size == 1) "track" else "tracks"}",
                     style = MaterialTheme.typography.labelSmall,
                     fontSize = 10.sp,
-                    color = TextTertiary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
@@ -1242,7 +1246,7 @@ private fun TopTracksSection(
                             .padding(start = 74.dp)
                             .fillMaxWidth()
                             .height(0.6.dp)
-                            .background(GlassBorderSoft)
+                            .background(MaterialTheme.colorScheme.outlineVariant)
                     )
                 }
             }
@@ -1311,7 +1315,7 @@ private fun TrackRankRow(
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 13.5.sp,
-                color = TextPrimary,
+                color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -1319,7 +1323,7 @@ private fun TrackRankRow(
                 text = track.artist,
                 style = CaptionSmall,
                 fontSize = 11.5.sp,
-                color = TextTertiary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -1335,20 +1339,20 @@ private fun TrackRankRow(
                 style = MaterialTheme.typography.titleSmall.copy(fontFamily = DisplayFontFamily),
                 fontWeight = FontWeight.Bold,
                 fontSize = 14.sp,
-                color = if (rank == 1) accent else TextPrimary
+                color = if (rank == 1) accent else MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = formatTrackDuration(track.totalTimeMs),
                 style = CaptionSmall,
                 fontSize = 10.sp,
-                color = TextTertiary
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
 
         Icon(
             imageVector = Icons.AutoMirrored.Rounded.ArrowForwardIos,
             contentDescription = null,
-            tint = TextQuaternary,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(11.dp)
         )
     }
@@ -1369,7 +1373,7 @@ private fun TopArtistsSection(
         shape = RoundedCornerShape(22.dp),
         variant = GlassCardVariant.QuietGlass,
         accentColor = accent,
-        borderColor = GlassBorderSoft,
+        borderColor = MaterialTheme.colorScheme.outlineVariant,
         borderWidth = 0.8.dp,
         contentPadding = PaddingValues(0.dp)
     ) {
@@ -1390,7 +1394,7 @@ private fun TopArtistsSection(
                     text = "${artists.size} ${if (artists.size == 1) "artist" else "artists"}",
                     style = MaterialTheme.typography.labelSmall,
                     fontSize = 10.sp,
-                    color = TextTertiary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
@@ -1407,7 +1411,7 @@ private fun TopArtistsSection(
                             .padding(start = 74.dp)
                             .fillMaxWidth()
                             .height(0.6.dp)
-                            .background(GlassBorderSoft)
+                            .background(MaterialTheme.colorScheme.outlineVariant)
                     )
                 }
             }
@@ -1440,8 +1444,8 @@ private fun ArtistRankRow(
             modifier = Modifier
                 .size(46.dp)
                 .clip(CircleShape)
-                .background(TempoDarkSurfaceSunken)
-                .border(1.dp, GlassBorderSoft, CircleShape)
+                .background(MaterialTheme.colorScheme.surfaceContainerLowest)
+                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape)
         ) {
             CachedAsyncImage(
                 imageUrl = artist.imageUrl,
@@ -1477,7 +1481,7 @@ private fun ArtistRankRow(
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 13.5.sp,
-                color = TextPrimary,
+                color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -1485,7 +1489,7 @@ private fun ArtistRankRow(
                 text = "${artist.uniqueTracks} ${if (artist.uniqueTracks == 1) "track" else "tracks"} today",
                 style = CaptionSmall,
                 fontSize = 11.5.sp,
-                color = TextTertiary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -1501,21 +1505,21 @@ private fun ArtistRankRow(
                 style = MaterialTheme.typography.titleSmall.copy(fontFamily = DisplayFontFamily),
                 fontWeight = FontWeight.Bold,
                 fontSize = 14.sp,
-                color = if (rank == 1) accent else TextPrimary
+                color = if (rank == 1) accent else MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = "${artist.playCount} PLAYS",
                 style = CaptionSmall,
                 fontSize = 9.sp,
                 letterSpacing = 0.5.sp,
-                color = TextTertiary
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
 
         Icon(
             imageVector = Icons.AutoMirrored.Rounded.ArrowForwardIos,
             contentDescription = null,
-            tint = TextQuaternary,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(11.dp)
         )
     }
@@ -1550,7 +1554,7 @@ private fun RankMedalOrNumeral(rank: Int, accent: Color) {
             style = MaterialTheme.typography.titleSmall.copy(fontFamily = DisplayFontFamily),
             fontSize = 12.sp,
             fontWeight = FontWeight.Bold,
-            color = TextQuaternary,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
             modifier = Modifier.width(22.dp)
         )
@@ -1578,7 +1582,8 @@ private fun FooterActions(
                 .clip(RoundedCornerShape(25.dp))
                 .background(
                     Brush.horizontalGradient(
-                        listOf(accent, TempoPrimary)
+                        listOf(MaterialTheme.colorScheme.primary,
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.83f))
                     )
                 )
                 .premiumClickable(onClick = onViewAllStats)
@@ -1588,13 +1593,13 @@ private fun FooterActions(
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 14.sp,
-                color = TextOnAccent
+                color = MaterialTheme.colorScheme.onPrimary
             )
             Spacer(modifier = Modifier.width(6.dp))
             Icon(
                 imageVector = Icons.AutoMirrored.Rounded.ArrowForwardIos,
                 contentDescription = null,
-                tint = TextOnAccent.copy(alpha = 0.85f),
+                tint = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f),
                 modifier = Modifier.size(11.dp)
             )
         }
@@ -1606,14 +1611,14 @@ private fun FooterActions(
                 .weight(1f)
                 .height(50.dp)
                 .clip(RoundedCornerShape(25.dp))
-                .background(GlassFrostSoft)
-                .border(0.8.dp, GlassBorderSoft, RoundedCornerShape(25.dp))
+                .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                .border(0.8.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(25.dp))
                 .premiumClickable(onClick = onClose)
         ) {
             Icon(
                 imageVector = Icons.Default.Close,
                 contentDescription = null,
-                tint = TextSecondary,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(14.dp)
             )
             Spacer(modifier = Modifier.width(5.dp))
@@ -1622,7 +1627,7 @@ private fun FooterActions(
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Medium,
                 fontSize = 14.sp,
-                color = TextSecondary
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -1638,13 +1643,13 @@ private fun TodaysOverviewFooter() {
             modifier = Modifier
                 .width(36.dp)
                 .height(0.8.dp)
-                .background(GlassBorderSoft)
+                .background(MaterialTheme.colorScheme.outlineVariant)
         )
         Spacer(modifier = Modifier.height(12.dp))
         Text(
             text = "TEMPO · TODAY'S OVERVIEW",
             style = KickerSmall,
-            color = TextTertiary,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             letterSpacing = 2.sp
         )
     }
