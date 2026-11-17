@@ -34,11 +34,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
 import me.avinas.tempo.ui.components.DeepOceanBackground
-import me.avinas.tempo.ui.components.LiveNowPlayingCard
-import me.avinas.tempo.service.SpotifyBroadcastPresence
 import me.avinas.tempo.ui.components.TimePeriodSelector
 import me.avinas.tempo.ui.stats.StatsShareDialog
 import me.avinas.tempo.ui.stats.StatsTab
@@ -130,69 +127,55 @@ fun HomeScreen(
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    item(key = "header") {
-                        VibeHeader(
-                            energy = uiState.audioFeatures?.averageEnergy ?: 0.5f,
-                            valence = uiState.audioFeatures?.averageValence ?: 0.5f,
-                            userName = uiState.userName ?: stringResource(R.string.home_user_default),
-                            profileImagePath = uiState.profileImagePath,
-                            isNewUser = uiState.isNewUser,
-                            userLevel = userLevel?.currentLevel,
-                            levelProgress = userLevel?.levelProgress ?: 0f,
-                            levelTitle = userLevel?.title,
-                            isGamificationEnabled = uiState.isGamificationEnabled,
-                            onLevelClick = onNavigateToProfile,
-                            onSettingsClick = onNavigateToSettings
-                        )
-                    }
-                    
-                    if (appearance.nowListening == AppearanceNowListening.INLINE) {
-                        item(key = "now_playing") { HomeNowPlaying() }
-                    }
-
-                    item(key = "period_selector") {
-                        TimePeriodSelector(
-                            selectedRange = uiState.selectedTimeRange,
-                            onRangeSelected = viewModel::onTimeRangeSelected,
-                            availableRanges = listOf(
-                                TimeRange.THIS_WEEK, TimeRange.THIS_MONTH,
-                                TimeRange.THIS_YEAR, TimeRange.ALL_TIME,
-                            ),
+                    item(key = "listening_dashboard") {
+                        HomeListeningDashboard(
+                            todayOverview = uiState.todayOverview,
+                            weeklyListening = uiState.weeklyListening,
+                            expanded = showExtendedInsights,
+                            isLoading = flags.isLoading,
+                            onNavigateToHistory = onNavigateToHistory,
+                            onNavigateToSettings = onNavigateToSettings,
+                            onNavigateToProfile = onNavigateToProfile,
+                            onOpenToday = { showTodaysOverview = true },
+                            onNavigateToStats = onNavigateToStats,
+                            onToggleInsights = {
+                                viewModel.setExtendedInsightsVisible(!showExtendedInsights)
+                            },
                             modifier = Modifier.padding(horizontal = 16.dp),
                         )
                     }
 
-                    if (uiState.hasData) {
-                        item(key = "insights_toggle") {
-                            Row(
-                                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                                horizontalArrangement = Arrangement.End,
-                            ) {
-                                TextButton(onClick = {
-                                    viewModel.setExtendedInsightsVisible(!showExtendedInsights)
-                                }) {
-                                    Text(
-                                        text = stringResource(
-                                            if (showExtendedInsights) R.string.home_hide_more_insights
-                                            else R.string.home_show_more_insights
-                                        ),
-                                        color = MaterialTheme.colorScheme.primary,
-                                    )
-                                }
-                            }
-                        }
-                    } else if (!flags.isLoading) {
+                    if (!uiState.hasData && !flags.isLoading) {
                         item(key = "empty") {
                             me.avinas.tempo.ui.components.EmptyState(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(me.avinas.tempo.ui.utils.rememberScreenHeightPercentage(0.7f)),
                                 timeRange = if (uiState.isNewUser) null else uiState.selectedTimeRange,
-                                onCheckSupportedApps = onNavigateToSupportedApps
+                                onCheckSupportedApps = onNavigateToSupportedApps,
                             )
                         }
                     }
-                    appearance.homeOrder.filter { it !in appearance.hiddenHomeSections }.forEach { section ->
+
+                    // Keep the old detailed cards for users who expand the
+                    // dashboard. Their visibility/order settings still apply,
+                    // but they no longer overwhelm the default Home view.
+                    if (showExtendedInsights) {
+                        item(key = "period_selector") {
+                            TimePeriodSelector(
+                                selectedRange = uiState.selectedTimeRange,
+                                onRangeSelected = viewModel::onTimeRangeSelected,
+                                availableRanges = listOf(
+                                    TimeRange.THIS_WEEK, TimeRange.THIS_MONTH,
+                                    TimeRange.THIS_YEAR, TimeRange.ALL_TIME,
+                                ),
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                            )
+                        }
+                    }
+                    appearance.homeOrder.filter {
+                        showExtendedInsights && it !in appearance.hiddenHomeSections
+                    }.forEach { section ->
                         when (section) {
                             AppearanceHomeSection.SUMMARY -> if (uiState.hasData) { item(key = "hero") {
                             
@@ -483,17 +466,6 @@ item(key = "insights_feed") {
                 viewModel = analyticsDisclosureViewModel,
             )
         }
-    }
-}
-
-@Composable
-private fun HomeNowPlaying() {
-    // Subscribing inside this list item prevents high-frequency local presence
-    // updates from recomposing the entire Home dashboard.
-    val presence by SpotifyBroadcastPresence.presence.collectAsStateWithLifecycle()
-    if (presence != null) {
-        LiveNowPlayingCard(modifier = Modifier.padding(horizontal = 16.dp),
-            compact = LocalTempoAppearance.current.nowListening == AppearanceNowListening.COMPACT)
     }
 }
 
