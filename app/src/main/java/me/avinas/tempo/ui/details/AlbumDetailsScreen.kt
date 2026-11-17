@@ -872,7 +872,7 @@ private fun AlbumTrackRow(
                             fontFamily = DisplayFontFamily,
                         ),
                         fontWeight = FontWeight.Bold,
-                        color = if (track.playCount > 0) tint else TextQuaternary,
+                        color = if (track.playCount > 0) tint else MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.End,
                         modifier = Modifier.width(28.dp),
                     )
@@ -1085,7 +1085,7 @@ private fun AddTrackToAlbumDialog(
                         unfocusedTextColor = appearancePalette.onSurface,
                         cursorColor = appearancePalette.accent,
                         focusedBorderColor = appearancePalette.accent,
-                        unfocusedBorderColor = TextQuaternary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
                     ),
                 )
                 Spacer(modifier = Modifier.height(16.dp))
