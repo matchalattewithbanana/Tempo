@@ -16,8 +16,14 @@ const SYNC_HISTORY_STORE = 'syncHistory';
 
 // Maximum age for synced/failed records before auto-cleanup (7 days)
 const MAX_RECORD_AGE_MS = 7 * 24 * 60 * 60 * 1000;
-// Maximum number of play records to keep
+// A soft cap on *synced* history. Unsent and retryable failures are
+// user-owned listening events and must survive offline periods indefinitely.
 const MAX_PLAY_RECORDS = 5000;
+
+/** Only acknowledged syncs can be disposed by automatic retention policies. */
+export function isAutoPrunablePlay(status: Play['status']): boolean {
+  return status === 'synced';
+}
 
 // Cheap in-memory lower-bound-ish estimate of total plays, used by
 // enforceMaxRecords() to skip the store.count() + cursor scan entirely while
@@ -375,7 +381,7 @@ export async function hasRecentPlay(title: string, artist: string, timestampUtc:
 }
 
 /**
- * Clean up old synced/failed records and enforce max record count.
+ * Clean up old acknowledged records and enforce the soft max record count.
  * Called periodically to prevent unbounded DB growth.
  * Optimized: uses the timestampUtc index to skip non-matching records.
  */
@@ -396,7 +402,7 @@ export async function cleanupOldRecords(): Promise<number> {
       const cursor = request.result;
       if (cursor) {
         const play = cursor.value as Play;
-        if (play.status === 'synced' || play.status === 'failed') {
+        if (isAutoPrunablePlay(play.status)) {
           cursor.delete();
           deleted++;
         }
@@ -422,9 +428,10 @@ export async function cleanupOldRecords(): Promise<number> {
 }
 
 /**
- * Enforce maximum record count by deleting oldest entries.
- * Optimized: uses reverse cursor to find excess records directly
- * instead of loading all records into memory.
+ * Bound acknowledged-history size, never the durable unsent outbox.
+ * Records awaiting sync (queued OR failed/retryable) are not disposable.
+ * If the outbox itself exceeds the soft cap, retain it and surface its count
+ * in the existing queue/connection UI rather than deleting its contents.
  */
 export async function enforceMaxRecords(): Promise<void> {
   // Skip the store.count() + cursor scan entirely while our estimate says the
@@ -450,7 +457,7 @@ export async function enforceMaxRecords(): Promise<void> {
   const excess = totalCount - MAX_PLAY_RECORDS;
   const toDelete: number[] = [];
 
-  // Collect oldest record IDs (ascending order = oldest first)
+  // Collect the oldest *synced* IDs; unsynced records can exceed the soft cap.
   await new Promise<void>((resolve, reject) => {
     const tx = db.transaction(PLAYS_STORE, 'readonly');
     const store = tx.objectStore(PLAYS_STORE);
@@ -462,7 +469,7 @@ export async function enforceMaxRecords(): Promise<void> {
       const cursor = request.result;
       if (cursor && collected < excess) {
         const play = cursor.value as Play;
-        if (play.id != null) {
+        if (play.id != null && isAutoPrunablePlay(play.status)) {
           toDelete.push(play.id);
           collected++;
         }
@@ -474,7 +481,10 @@ export async function enforceMaxRecords(): Promise<void> {
     request.onerror = () => reject(request.error);
   });
 
-  if (toDelete.length === 0) return;
+  if (toDelete.length === 0) {
+    console.warn('[Tempo] Retention cap exceeded by unsynced plays; preserving all pending data');
+    return;
+  }
 
   // Delete in a single transaction
   await new Promise<void>((resolve, reject) => {
