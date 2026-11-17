@@ -27,6 +27,8 @@
 
 The audit adds automated light-palette assertions for each preset: distinct backgrounds; primary text against background/surface/elevated surface; secondary text against surface; primary accent against surface; and button text against accent.
 
-An explicitly requested, **non-publishing** one-shot GitHub Actions workflow runs unit tests, Android lint, debug APK assembly, APK signer verification, SHA-256 hashing, and Android emulator instrumentation. Build artifact `tempo-home-light-audit-debug-apk` is retained for 30 days if validation succeeds.
+The explicitly requested, **non-publishing** one-shot GitHub Actions workflow **passed every gate**: unit tests, Android lint, debug APK assembly, APK signer verification, SHA-256 hashing, and Android emulator instrumentation. Run: https://github.com/matchalattewithbanana/Tempo/actions/runs/44062427544. Artifact: `tempo-home-light-audit-debug-apk`, 30-day retention. APK SHA-256: `61acd4cfda57ed60780b03aa2e20c0d6b4f61bb88e617b2cf389697b88c8d0d4`.
+
+The temporary workflow has been removed from its build branch following successful validation. The normal `main` CI and APK workflows remain manual-only. No GitHub release was created.
 
 Physical-device visual, font scaling/TalkBack, background playback endurance, Google Drive/OAuth configuration and install-over-existing-APK verification still require tester feedback. No production/stable release is authorized in this pass.
