@@ -1218,4 +1218,18 @@
     <string name="appearance_insights">Analyses</string>
     <string name="appearance_transfer_failed">Impossible de transférer ce fichier d’apparence. Vérifiez le fichier et réessayez.</string>
     <string name="now_playing_last_detected">Dernière détection</string>
+    <!-- Compact, data-backed Home listening dashboard -->
+    <string name="dashboard_title">Vos écoutes</string>
+    <string name="dashboard_browse_history">Consulter l’historique</string>
+    <string name="dashboard_profile">Ouvrir le profil</string>
+    <string name="dashboard_listening_today">Écoute aujourd’hui</string>
+    <string name="dashboard_tracks_played">Titres écoutés aujourd’hui</string>
+    <string name="dashboard_trends">Vos tendances d’écoute</string>
+    <string name="dashboard_this_week">Cette semaine</string>
+    <string name="dashboard_activity">Activité d’écoute</string>
+    <string name="dashboard_no_activity">Aucune écoute cette semaine</string>
+    <string name="dashboard_more_insights">Plus de statistiques</string>
+    <string name="dashboard_less_insights">Moins de statistiques</string>
+    <string name="dashboard_view_all">Tout voir</string>
+    <string name="dashboard_bar_accessibility">%1$s : %2$s écoutées, %3$d lectures</string>
 </resources>

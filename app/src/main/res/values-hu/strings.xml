@@ -854,4 +854,18 @@
     <string name="appearance_insights">Elemzések</string>
     <string name="appearance_transfer_failed">A megjelenési fájl átvitele sikertelen. Ellenőrizd a fájlt, és próbáld újra.</string>
     <string name="now_playing_last_detected">Utoljára észlelve</string>
+    <!-- Compact, data-backed Home listening dashboard -->
+    <string name="dashboard_title">Zenehallgatásod</string>
+    <string name="dashboard_browse_history">Hallgatási előzmények</string>
+    <string name="dashboard_profile">Profil megnyitása</string>
+    <string name="dashboard_listening_today">Mai zenehallgatás</string>
+    <string name="dashboard_tracks_played">Ma lejátszott dalok</string>
+    <string name="dashboard_trends">Hallgatási trendek</string>
+    <string name="dashboard_this_week">Ezen a héten</string>
+    <string name="dashboard_activity">Hallgatási aktivitás</string>
+    <string name="dashboard_no_activity">Ezen a héten még nincs hallgatás</string>
+    <string name="dashboard_more_insights">További elemzések</string>
+    <string name="dashboard_less_insights">Kevesebb elemzés</string>
+    <string name="dashboard_view_all">Összes megtekintése</string>
+    <string name="dashboard_bar_accessibility">%1$s: %2$s hallgatás, %3$d lejátszás</string>
 </resources>

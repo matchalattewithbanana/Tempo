@@ -1446,4 +1446,18 @@
     <string name="appearance_insights">Аналитика</string>
     <string name="appearance_transfer_failed">Не удалось передать файл оформления. Проверьте файл и повторите попытку.</string>
     <string name="now_playing_last_detected">Последнее обнаружение</string>
+    <!-- Compact, data-backed Home listening dashboard -->
+    <string name="dashboard_title">Ваше прослушивание</string>
+    <string name="dashboard_browse_history">Открыть историю</string>
+    <string name="dashboard_profile">Открыть профиль</string>
+    <string name="dashboard_listening_today">Прослушано сегодня</string>
+    <string name="dashboard_tracks_played">Треков сегодня</string>
+    <string name="dashboard_trends">Тенденции прослушивания</string>
+    <string name="dashboard_this_week">Эта неделя</string>
+    <string name="dashboard_activity">Активность прослушивания</string>
+    <string name="dashboard_no_activity">На этой неделе прослушиваний нет</string>
+    <string name="dashboard_more_insights">Больше статистики</string>
+    <string name="dashboard_less_insights">Меньше статистики</string>
+    <string name="dashboard_view_all">Смотреть всё</string>
+    <string name="dashboard_bar_accessibility">%1$s: %2$s прослушивания, %3$d воспроизведений</string>
 </resources>

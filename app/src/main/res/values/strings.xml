@@ -1657,7 +1657,7 @@
     <string name="appearance_now_listening">Now Listening on Home</string>
     <string name="appearance_inline">Full card</string>
     <string name="appearance_hidden">Hidden</string>
-    <string name="appearance_home_order">Home card order and visibility</string>
+    <string name="appearance_home_order">Expanded Home sections: order and visibility</string>
     <string name="appearance_move_up">Move up</string>
     <string name="appearance_stats_start">Initial Stats tab</string>
     <string name="appearance_stats_period">Initial Stats period</string>
@@ -1672,10 +1672,24 @@
     <string name="appearance_export">Export</string>
     <string name="appearance_transfer_hint">Files contain appearance preferences only. Imported looks remain a draft until Apply. Up to 12 named looks can be saved.</string>
     <string name="appearance_transfer_done">File processed. Imported changes still need Apply.</string>
-    <string name="appearance_summary">Summary</string>
+    <string name="appearance_summary">Detailed period summary</string>
     <string name="appearance_spotlight">Spotlight</string>
     <string name="appearance_quick_stats">Top song and artist</string>
     <string name="appearance_insights">Insights</string>
     <string name="appearance_transfer_failed">Could not transfer this appearance file. Check the file and try again.</string>
     <string name="now_playing_last_detected">Last detected</string>
+    <!-- Compact, data-backed Home listening dashboard -->
+    <string name="dashboard_title">Your listening</string>
+    <string name="dashboard_browse_history">Browse listening history</string>
+    <string name="dashboard_profile">Open profile</string>
+    <string name="dashboard_listening_today">Listening today</string>
+    <string name="dashboard_tracks_played">Tracks played today</string>
+    <string name="dashboard_trends">Your listening trends</string>
+    <string name="dashboard_this_week">This week</string>
+    <string name="dashboard_activity">Listening activity</string>
+    <string name="dashboard_no_activity">No listening recorded this week</string>
+    <string name="dashboard_more_insights">More insights</string>
+    <string name="dashboard_less_insights">Fewer insights</string>
+    <string name="dashboard_view_all">View all</string>
+    <string name="dashboard_bar_accessibility">%1$s: %2$s listened, %3$d plays</string>
 </resources>

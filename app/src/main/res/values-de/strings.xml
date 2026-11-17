@@ -1220,4 +1220,18 @@
     <string name="appearance_insights">Einblicke</string>
     <string name="appearance_transfer_failed">Diese Darstellungsdatei konnte nicht übertragen werden. Prüfe die Datei und versuche es erneut.</string>
     <string name="now_playing_last_detected">Zuletzt erkannt</string>
+    <!-- Compact, data-backed Home listening dashboard -->
+    <string name="dashboard_title">Dein Hören</string>
+    <string name="dashboard_browse_history">Hörverlauf öffnen</string>
+    <string name="dashboard_profile">Profil öffnen</string>
+    <string name="dashboard_listening_today">Heute gehört</string>
+    <string name="dashboard_tracks_played">Titel heute abgespielt</string>
+    <string name="dashboard_trends">Deine Hörtrends</string>
+    <string name="dashboard_this_week">Diese Woche</string>
+    <string name="dashboard_activity">Höraktivität</string>
+    <string name="dashboard_no_activity">Diese Woche noch nichts gehört</string>
+    <string name="dashboard_more_insights">Mehr Einblicke</string>
+    <string name="dashboard_less_insights">Weniger Einblicke</string>
+    <string name="dashboard_view_all">Alle ansehen</string>
+    <string name="dashboard_bar_accessibility">%1$s: %2$s gehört, %3$d Wiedergaben</string>
 </resources>

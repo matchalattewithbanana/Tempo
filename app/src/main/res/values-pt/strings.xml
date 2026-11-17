@@ -1329,4 +1329,18 @@
     <string name="appearance_insights">Análises</string>
     <string name="appearance_transfer_failed">Não foi possível transferir este ficheiro de aparência. Verifique o ficheiro e tente novamente.</string>
     <string name="now_playing_last_detected">Última deteção</string>
+    <!-- Compact, data-backed Home listening dashboard -->
+    <string name="dashboard_title">As tuas audições</string>
+    <string name="dashboard_browse_history">Ver histórico</string>
+    <string name="dashboard_profile">Abrir perfil</string>
+    <string name="dashboard_listening_today">Audição de hoje</string>
+    <string name="dashboard_tracks_played">Faixas reproduzidas hoje</string>
+    <string name="dashboard_trends">Tendências de audição</string>
+    <string name="dashboard_this_week">Esta semana</string>
+    <string name="dashboard_activity">Atividade de audição</string>
+    <string name="dashboard_no_activity">Sem audições esta semana</string>
+    <string name="dashboard_more_insights">Mais análises</string>
+    <string name="dashboard_less_insights">Menos análises</string>
+    <string name="dashboard_view_all">Ver tudo</string>
+    <string name="dashboard_bar_accessibility">%1$s: %2$s de audição, %3$d reproduções</string>
 </resources>
