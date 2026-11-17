@@ -855,6 +855,14 @@ fun SettingsScreen(
                             },
                             onClick = {
                                 if (!spotifyConnected) scope.launch {
+                                    if (!viewModel.canSecurelyStoreSpotifyCredentials()) {
+                                        Toast.makeText(
+                                            context,
+                                            "Secure Spotify storage is unavailable. Unlock the device and restart Tempo before reconnecting.",
+                                            Toast.LENGTH_LONG
+                                        ).show()
+                                        return@launch
+                                    }
                                     val intent = viewModel.startSpotifyAuthorization(spotifyClientId)
                                     if (intent == null) {
                                         Toast.makeText(context, "Enter a valid Spotify Client ID first.", Toast.LENGTH_LONG).show()
