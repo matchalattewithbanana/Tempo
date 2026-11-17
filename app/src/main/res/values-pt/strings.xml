@@ -1308,7 +1308,7 @@
     <string name="appearance_now_listening">A ouvir no Início</string>
     <string name="appearance_inline">Cartão completo</string>
     <string name="appearance_hidden">Oculto</string>
-    <string name="appearance_home_order">Ordem e visibilidade dos cartões</string>
+    <string name="appearance_home_order">Secções expandidas da página inicial: ordem e visibilidade</string>
     <string name="appearance_move_up">Subir</string>
     <string name="appearance_stats_start">Separador inicial das estatísticas</string>
     <string name="appearance_stats_period">Período inicial das estatísticas</string>
@@ -1323,7 +1323,7 @@
     <string name="appearance_export">Exportar</string>
     <string name="appearance_transfer_hint">Os ficheiros contêm apenas preferências de aparência. As importações ficam em rascunho até Aplicar. Pode guardar 12 estilos.</string>
     <string name="appearance_transfer_done">Ficheiro processado. As alterações importadas ainda precisam de Aplicar.</string>
-    <string name="appearance_summary">Resumo</string>
+    <string name="appearance_summary">Resumo detalhado do período</string>
     <string name="appearance_spotlight">Spotlight</string>
     <string name="appearance_quick_stats">Música e artista em destaque</string>
     <string name="appearance_insights">Análises</string>

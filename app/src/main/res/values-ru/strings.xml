@@ -1425,7 +1425,7 @@
     <string name="appearance_now_listening">Текущее воспроизведение на главной</string>
     <string name="appearance_inline">Полная карточка</string>
     <string name="appearance_hidden">Скрыто</string>
-    <string name="appearance_home_order">Порядок и видимость карточек</string>
+    <string name="appearance_home_order">Разделы расширенной главной: порядок и видимость</string>
     <string name="appearance_move_up">Выше</string>
     <string name="appearance_stats_start">Начальная вкладка статистики</string>
     <string name="appearance_stats_period">Начальный период статистики</string>
@@ -1440,7 +1440,7 @@
     <string name="appearance_export">Экспорт</string>
     <string name="appearance_transfer_hint">Файлы содержат только настройки оформления. Импорт остаётся черновиком до применения. Можно сохранить до 12 стилей.</string>
     <string name="appearance_transfer_done">Файл обработан. Импортированные изменения ещё нужно применить.</string>
-    <string name="appearance_summary">Сводка</string>
+    <string name="appearance_summary">Подробная сводка за период</string>
     <string name="appearance_spotlight">Spotlight</string>
     <string name="appearance_quick_stats">Лучшая песня и исполнитель</string>
     <string name="appearance_insights">Аналитика</string>

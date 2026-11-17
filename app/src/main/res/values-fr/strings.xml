@@ -1197,7 +1197,7 @@
     <string name="appearance_now_listening">Lecture en cours sur l’accueil</string>
     <string name="appearance_inline">Carte complète</string>
     <string name="appearance_hidden">Masqué</string>
-    <string name="appearance_home_order">Ordre et visibilité des cartes</string>
+    <string name="appearance_home_order">Sections détaillées de l’accueil : ordre et visibilité</string>
     <string name="appearance_move_up">Monter</string>
     <string name="appearance_stats_start">Onglet initial des statistiques</string>
     <string name="appearance_stats_period">Période initiale des statistiques</string>
@@ -1212,7 +1212,7 @@
     <string name="appearance_export">Exporter</string>
     <string name="appearance_transfer_hint">Les fichiers ne contiennent que l’apparence. Les styles importés restent un brouillon jusqu’à Appliquer. Vous pouvez enregistrer 12 styles.</string>
     <string name="appearance_transfer_done">Fichier traité. Les modifications importées doivent encore être appliquées.</string>
-    <string name="appearance_summary">Résumé</string>
+    <string name="appearance_summary">Résumé détaillé de la période</string>
     <string name="appearance_spotlight">Spotlight</string>
     <string name="appearance_quick_stats">Titre et artiste favoris</string>
     <string name="appearance_insights">Analyses</string>

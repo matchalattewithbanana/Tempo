@@ -1199,7 +1199,7 @@
     <string name="appearance_now_listening">Aktuelle Wiedergabe auf Startseite</string>
     <string name="appearance_inline">Ganze Karte</string>
     <string name="appearance_hidden">Ausgeblendet</string>
-    <string name="appearance_home_order">Reihenfolge und Sichtbarkeit der Startkarten</string>
+    <string name="appearance_home_order">Erweiterte Startseiten-Bereiche: Reihenfolge und Sichtbarkeit</string>
     <string name="appearance_move_up">Nach oben</string>
     <string name="appearance_stats_start">Erster Statistikreiter</string>
     <string name="appearance_stats_period">Erster Statistikzeitraum</string>
@@ -1214,7 +1214,7 @@
     <string name="appearance_export">Exportieren</string>
     <string name="appearance_transfer_hint">Dateien enthalten nur Darstellungsoptionen. Importierte Stile bleiben bis Anwenden ein Entwurf. Bis zu 12 Stile sind möglich.</string>
     <string name="appearance_transfer_done">Datei verarbeitet. Importierte Änderungen müssen noch angewendet werden.</string>
-    <string name="appearance_summary">Übersicht</string>
+    <string name="appearance_summary">Detaillierte Zeitraumübersicht</string>
     <string name="appearance_spotlight">Spotlight</string>
     <string name="appearance_quick_stats">Top-Titel und Interpret</string>
     <string name="appearance_insights">Einblicke</string>

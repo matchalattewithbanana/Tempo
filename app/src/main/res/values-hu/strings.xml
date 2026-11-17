@@ -833,7 +833,7 @@
     <string name="appearance_now_listening">Aktuális lejátszás a kezdőlapon</string>
     <string name="appearance_inline">Teljes kártya</string>
     <string name="appearance_hidden">Rejtett</string>
-    <string name="appearance_home_order">Kezdőkártyák sorrendje és láthatósága</string>
+    <string name="appearance_home_order">Kibontott kezdőlaprészek: sorrend és láthatóság</string>
     <string name="appearance_move_up">Feljebb</string>
     <string name="appearance_stats_start">Kezdeti statisztikafül</string>
     <string name="appearance_stats_period">Kezdeti statisztikai időszak</string>
@@ -848,7 +848,7 @@
     <string name="appearance_export">Exportálás</string>
     <string name="appearance_transfer_hint">A fájlok csak megjelenési beállításokat tartalmaznak. Az importálás az Alkalmaz gombig piszkozat. Legfeljebb 12 stílus menthető.</string>
     <string name="appearance_transfer_done">Fájl feldolgozva. Az importált módosításokat még alkalmazni kell.</string>
-    <string name="appearance_summary">Összegzés</string>
+    <string name="appearance_summary">Részletes időszaki összegzés</string>
     <string name="appearance_spotlight">Spotlight</string>
     <string name="appearance_quick_stats">Legjobb dal és előadó</string>
     <string name="appearance_insights">Elemzések</string>
