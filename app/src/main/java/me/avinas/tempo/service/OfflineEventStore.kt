@@ -23,6 +23,9 @@ class OfflineEventStore(context: Context) {
         private const val TAG = "OfflineEventStore"
         private const val PREFS_NAME = "tempo_offline_event_queue"
         private const val KEY_EVENTS = "offline_events"
+        // This key is intentionally NOT cleared by normal queue saves. It
+        // preserves the raw bytes of malformed pending history for recovery.
+        private const val KEY_QUARANTINED = "offline_events_corrupt_backup"
     }
 
     private val prefs: SharedPreferences =
@@ -54,16 +57,33 @@ class OfflineEventStore(context: Context) {
         }
     }
 
-    /** Load previously persisted events. Returns an empty list on any failure. */
+    /**
+     * Restore the pending queue. Never silently discard malformed stored data:
+     * preserve the original JSON under a separate key *before* allowing a
+     * new queue snapshot to replace it.
+     *
+     * An unreadable preference or failed quarantine write is fatal to queue
+     * restoration; callers must avoid overwriting the original entry.
+     */
     @Synchronized fun load(): List<PendingEvent> {
+        val json = prefs.getString(KEY_EVENTS, null) ?: return emptyList()
         return try {
-            val json = prefs.getString(KEY_EVENTS, null) ?: return emptyList()
-            adapter.fromJson(json) ?: emptyList()
+            adapter.fromJson(json) ?: error("Offline event JSON unexpectedly null")
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to load offline events", e)
+            val alreadyPreserved = prefs.contains(KEY_QUARANTINED)
+            if (!alreadyPreserved) {
+                check(prefs.edit().putString(KEY_QUARANTINED, json).commit()) {
+                    "Unable to quarantine the unreadable offline event queue"
+                }
+            }
+            Log.e(TAG, "Offline listening events could not be decoded; original queue preserved for recovery", e)
             emptyList()
         }
     }
+
+    /** Used by tracking diagnostics to distinguish corruption from no events. */
+    @Synchronized fun hasQuarantinedEvents(): Boolean =
+        prefs.contains(KEY_QUARANTINED)
 
     @Synchronized fun clear() {
         check(prefs.edit().remove(KEY_EVENTS).commit()) { "Unable to clear offline events" }
