@@ -234,6 +234,16 @@ class HomeViewModel @Inject constructor(
                     TimeRange.ALL_TIME -> 5000
                 }
                 val rawDailyListeningDeferred = async { dbSemaphore.withPermit { statsRepository.getDailyListening(timeRange, dataLimit, withLeeway = false) } }
+                // The default Home dashboard always charts THIS_WEEK. Reuse the
+                // detailed period query when it is also weekly, avoiding another
+                // Room request on the common path.
+                val weeklyListeningDeferred = if (timeRange == TimeRange.THIS_WEEK) {
+                    rawDailyListeningDeferred
+                } else {
+                    async { dbSemaphore.withPermit {
+                        statsRepository.getDailyListening(TimeRange.THIS_WEEK, 7, withLeeway = false)
+                    } }
+                }
                 val activeDaysDeferred = async { dbSemaphore.withPermit { statsRepository.getActiveDaysCount(timeRange, withLeeway = false) } }
                 val peakDayMsDeferred = async { dbSemaphore.withPermit { statsRepository.getPeakDayListeningMs(timeRange, withLeeway = false) } }
                 val topTracksDeferred = if (loadExtended) async { dbSemaphore.withPermit { statsRepository.getTopTracks(timeRange, sortBy = me.avinas.tempo.data.repository.SortBy.COMBINED_SCORE, pageSize = 1, withLeeway = false) } } else null
@@ -280,6 +290,7 @@ class HomeViewModel @Inject constructor(
                 val overview = overviewDeferred.await()
                 val periodComparison = periodComparisonDeferred.await()
                 val rawDailyListening = rawDailyListeningDeferred.await()
+                val weeklyListening = weeklyListeningDeferred.await()
                 val topTracks = topTracksDeferred?.await()
                 val topArtists = topArtistsDeferred?.await()
                 val discoveryStats = discoveryStatsDeferred?.await()
@@ -362,6 +373,7 @@ class HomeViewModel @Inject constructor(
                         periodComparison = periodComparison,
                         chartLabels = chartLabels,
                         dailyListening = dailyListening,
+                        weeklyListening = weeklyListening,
                         dailyAvgMinutes = dailyAvgMinutes,
                         activeDaysCount = activeDaysCount,
                         totalDaysCount = totalDaysCount,
@@ -964,6 +976,8 @@ data class HomeUiState(
     val listeningOverview: me.avinas.tempo.data.stats.ListeningOverview? = null,
     val periodComparison: me.avinas.tempo.data.stats.PeriodComparison? = null,
     val dailyListening: List<me.avinas.tempo.data.stats.DailyListening> = emptyList(),
+    /** Always the current Monday–Sunday week, independent of detailed stats filters. */
+    val weeklyListening: List<me.avinas.tempo.data.stats.DailyListening> = emptyList(),
     val chartLabels: List<String> = emptyList(),
     val dailyAvgMinutes: Long = 0L,
     val activeDaysCount: Int = 0,
