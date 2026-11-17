@@ -64,6 +64,8 @@ class MusicTrackingManager(
     private val isProcessing = MutableStateFlow(false)
     private val processingMutex = Mutex()
     private var batchJob: Job? = null
+    // If durable storage couldn't even be read/quarantined, don't overwrite it.
+    @Volatile private var offlineStoreWriteBlocked = false
     
     init {
         // Restore events that failed to persist in a previous process lifetime.
@@ -71,12 +73,21 @@ class MusicTrackingManager(
         offlineEventStore?.let { store ->
             try {
                 val restored = store.load()
+                if (store.hasQuarantinedEvents()) {
+                    Log.e(TAG, "Unrecoverable-format offline events are preserved in quarantine; diagnostics required")
+                    updateMetrics { it.copy(offlineQueueRecoveryWarning = true) }
+                }
                 if (restored.isNotEmpty()) {
                     restored.forEach { pending -> offlineQueue[pending.key()] = pending }
                     Log.i(TAG, "Restored ${restored.size} offline events from durable storage")
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to restore offline events", e)
+                // If we failed to read OR quarantine the old queue, preserve
+                // that original preference data rather than rewriting it with
+                // a new (possibly empty) in-memory snapshot.
+                offlineStoreWriteBlocked = true
+                updateMetrics { it.copy(offlineQueueRecoveryWarning = true) }
+                Log.e(TAG, "Offline queue recovery blocked; preserving original disk data", e)
             }
         }
         startBatchProcessor()
@@ -449,6 +460,10 @@ class MusicTrackingManager(
 
     /** Mirror the in-memory offline queue to durable storage (best effort). */
     private fun persistOfflineQueue() {
+        if (offlineStoreWriteBlocked) {
+            Log.e(TAG, "Offline durable queue is unreadable; refusing destructive overwrite")
+            return
+        }
         try {
             offlineEventStore?.save(offlineQueue.values)
         } catch (e: Exception) {
@@ -673,11 +688,14 @@ data class TrackingMetrics(
     val batchesProcessed: Int = 0,
     val batchErrors: Int = 0,
     val sessionsRecovered: Int = 0,
+    /** Quarantined or unreadable events may require manual recovery. */
+    val offlineQueueRecoveryWarning: Boolean = false,
     val lastUpdated: Long = System.currentTimeMillis()
 ) {
     override fun toString(): String {
         return "TrackingMetrics(queued=$eventsQueued, saved=$eventsSaved, dropped=$eventsDropped, " +
                 "offline=$eventsInOfflineQueue, duplicates=$duplicatesSkipped, batches=$batchesProcessed, " +
-                "errors=$batchErrors, recovered=$sessionsRecovered)"
+                "errors=$batchErrors, recovered=$sessionsRecovered, " +
+                "offlineRecoveryWarning=$offlineQueueRecoveryWarning)"
     }
 }
