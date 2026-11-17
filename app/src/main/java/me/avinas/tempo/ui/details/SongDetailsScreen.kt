@@ -2178,11 +2178,14 @@ fun ListeningOdysseySection(
     // Pick high-contrast text color based on background luminance
     val ink = remember(tint, appearancePalette) {
         val backdrop = lerp(tint, appearancePalette.background, 0.65f)
-        if (backdrop.luminance() > 0.25f) BrightRoomInk else FlatTimelineInk(
+        // The old bright-room ink was tuned for a dark artwork overlay.
+        // In Light/System-light, use the resolved palette instead of fixed
+        // near-black tokens with translucent labels.
+        if (appearancePalette.isDark && backdrop.luminance() > 0.25f) BrightRoomInk else FlatTimelineInk(
             title = appearancePalette.mutedText,
             value = appearancePalette.onSurface,
             icon = appearancePalette.mutedText,
-            divider = appearancePalette.border.copy(alpha = 0.45f),
+            divider = appearancePalette.border.copy(alpha = 0.55f),
         )
     }
 
