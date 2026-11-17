@@ -125,7 +125,48 @@ object AppearancePaletteResolver {
             background = Color.Black, topBackground = Color.Black, surfaceSunken = Color.Black,
         )
         if (dark) return base
-        val warm = settings.preset == AppearancePreset.SOLSTICE || settings.preset == AppearancePreset.EMBER
+        // Give every curated look its own light identity instead of only
+        // alternating between a shared warm and shared cool background.
+        // Text/borders are selected against the actual pale surface so the
+        // legacy bright-accent palette does not bleed into low-contrast text.
+        val surfaces = when (settings.preset) {
+            AppearancePreset.ABYSS -> base.copy(
+                background = Color(0xFFF0FAF6), topBackground = Color(0xFFF9FFFC),
+                surface = Color(0xFFFFFFFF), elevatedSurface = Color(0xFFDFEEE7),
+                surfaceSunken = Color(0xFFD6E7E0), onSurface = Color(0xFF17352C),
+                mutedText = Color(0xFF466257), border = Color(0xFF829E95),
+            )
+            AppearancePreset.OBSIDIAN_GOLD -> base.copy(
+                background = Color(0xFFFAF7F1), topBackground = Color(0xFFFFFDF8),
+                surface = Color(0xFFFFFEFC), elevatedSurface = Color(0xFFEEE5D7),
+                surfaceSunken = Color(0xFFE3D8C9), onSurface = Color(0xFF2A261E),
+                mutedText = Color(0xFF655647), border = Color(0xFFAC9780),
+            )
+            AppearancePreset.AURORA -> base.copy(
+                background = Color(0xFFF5F2FD), topBackground = Color(0xFFFCFAFF),
+                surface = Color(0xFFFFFEFF), elevatedSurface = Color(0xFFE9E3F6),
+                surfaceSunken = Color(0xFFDFD5EE), onSurface = Color(0xFF28213B),
+                mutedText = Color(0xFF645779), border = Color(0xFF9C8BB9),
+            )
+            AppearancePreset.GLACIER -> base.copy(
+                background = Color(0xFFEFF8FF), topBackground = Color(0xFFF9FDFF),
+                surface = Color(0xFFFFFFFF), elevatedSurface = Color(0xFFE0EDF6),
+                surfaceSunken = Color(0xFFD5E5F1), onSurface = Color(0xFF182E3D),
+                mutedText = Color(0xFF486071), border = Color(0xFF879FAF),
+            )
+            AppearancePreset.EMBER -> base.copy(
+                background = Color(0xFFFFF3F6), topBackground = Color(0xFFFFFAFC),
+                surface = Color(0xFFFFFFFF), elevatedSurface = Color(0xFFF5E1E9),
+                surfaceSunken = Color(0xFFEBD4DE), onSurface = Color(0xFF3A2130),
+                mutedText = Color(0xFF775364), border = Color(0xFFB78A9D),
+            )
+            AppearancePreset.SOLSTICE -> base.copy(
+                background = Color(0xFFFFF7EE), topBackground = Color(0xFFFFFCF7),
+                surface = Color(0xFFFFFFFF), elevatedSurface = Color(0xFFF3E5D4),
+                surfaceSunken = Color(0xFFE9D8C5), onSurface = Color(0xFF35271C),
+                mutedText = Color(0xFF715744), border = Color(0xFFB49B80),
+            )
+        }
         val accent = when (settings.preset) {
             AppearancePreset.ABYSS -> Color(0xFF006B57)
             AppearancePreset.OBSIDIAN_GOLD -> Color(0xFF73530B)
@@ -134,18 +175,7 @@ object AppearancePaletteResolver {
             AppearancePreset.EMBER -> Color(0xFFA22B48)
             AppearancePreset.SOLSTICE -> Color(0xFF994421)
         }
-        return base.copy(
-            accent = accent, onAccent = Color.White,
-            background = if (warm) Color(0xFFFFF7EA) else Color(0xFFEFF6FC),
-            topBackground = if (warm) Color(0xFFFFFBF4) else Color(0xFFF8FCFF),
-            surface = if (warm) Color(0xFFFFFBF4) else Color(0xFFF8FCFF),
-            elevatedSurface = if (warm) Color(0xFFF3E7D5) else Color(0xFFE1EDF5),
-            surfaceSunken = if (warm) Color(0xFFF0E2CF) else Color(0xFFDCE8F1),
-            onSurface = if (warm) Color(0xFF2B2118) else Color(0xFF172C3C),
-            mutedText = if (warm) Color(0xFF61503F) else Color(0xFF455967),
-            border = if (warm) Color(0xFF8A745D) else Color(0xFF647E91),
-            isDark = false,
-        )
+        return surfaces.copy(accent = accent, onAccent = Color.White, isDark = false)
     }
 
     /** Adjust decorative accent until it is readable against its actual surface. */
