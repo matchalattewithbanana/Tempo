@@ -31,6 +31,10 @@ internal class SpotifyBroadcastBridge(
     )
 
     companion object {
+        /** Album/edition and duration are part of recording identity for broadcast reconciliation. */
+        internal fun spotifyMetadataChanged(previous: Track?, next: Track): Boolean =
+            previous != next
+
         private const val TAG = "SpotifyBroadcastBridge"
         private const val PACKAGE = "com.spotify.music"
         private const val METADATA = "$PACKAGE.metadatachanged"
@@ -91,7 +95,7 @@ internal class SpotifyBroadcastBridge(
                     // The last PLAYBACK state belongs to the *previous* track.
                     // Do not start a new track with stale playing=true or old position
                     // until the matching playback broadcast (or MediaSession) arrives.
-                    if (track?.title != candidate.title || track?.artist != candidate.artist) {
+                    if (spotifyMetadataChanged(track, candidate)) {
                         playing = null
                     }
                     track = candidate
