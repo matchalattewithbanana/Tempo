@@ -1610,7 +1610,7 @@ private fun ChallengeCard(challenge: DailyChallenge) {
                     Text(
                         text = "·",
                         style = MaterialTheme.typography.labelSmall,
-                        color = TextQuaternary,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Text(
                         text = challenge.category.replace("_", " ").uppercase(Locale.getDefault()),
