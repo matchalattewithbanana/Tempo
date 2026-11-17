@@ -225,7 +225,9 @@ class HomeViewModel @Inject constructor(
             // Parallel fetch for dashboard metrics
             coroutineScope {
                 val overviewDeferred = async { dbSemaphore.withPermit { statsRepository.getListeningOverview(timeRange, withLeeway = false) } }
-                val periodComparisonDeferred = async { dbSemaphore.withPermit { statsRepository.getPeriodComparison(timeRange, withLeeway = false) } }
+                val periodComparisonDeferred = if (loadExtended) async {
+                    dbSemaphore.withPermit { statsRepository.getPeriodComparison(timeRange, withLeeway = false) }
+                } else null
                 // Point limit by time range for chart display
                 val dataLimit = when (timeRange) {
                     TimeRange.TODAY, TimeRange.THIS_WEEK -> 7
@@ -244,25 +246,43 @@ class HomeViewModel @Inject constructor(
                         statsRepository.getDailyListening(TimeRange.THIS_WEEK, 7, withLeeway = false)
                     } }
                 }
-                val activeDaysDeferred = async { dbSemaphore.withPermit { statsRepository.getActiveDaysCount(timeRange, withLeeway = false) } }
-                val peakDayMsDeferred = async { dbSemaphore.withPermit { statsRepository.getPeakDayListeningMs(timeRange, withLeeway = false) } }
+                val activeDaysDeferred = if (loadExtended) async {
+                    dbSemaphore.withPermit { statsRepository.getActiveDaysCount(timeRange, withLeeway = false) }
+                } else null
+                val peakDayMsDeferred = if (loadExtended) async {
+                    dbSemaphore.withPermit { statsRepository.getPeakDayListeningMs(timeRange, withLeeway = false) }
+                } else null
                 val topTracksDeferred = if (loadExtended) async { dbSemaphore.withPermit { statsRepository.getTopTracks(timeRange, sortBy = me.avinas.tempo.data.repository.SortBy.COMBINED_SCORE, pageSize = 1, withLeeway = false) } } else null
                 val topArtistsDeferred = if (loadExtended) async { dbSemaphore.withPermit { statsRepository.getTopArtists(timeRange, sortBy = me.avinas.tempo.data.repository.SortBy.COMBINED_SCORE, pageSize = 1, withLeeway = false) } } else null
                 // Both are secondary discovery metrics; Home's compact cards do
                 // not display them and should not incur these queries.
                 val discoveryStatsDeferred = if (loadExtended) async { dbSemaphore.withPermit { statsRepository.getDiscoveryStats(timeRange, withLeeway = false) } } else null
                 val mostActiveHourDeferred = if (loadExtended) async { dbSemaphore.withPermit { statsRepository.getMostActiveHour(timeRange, withLeeway = false) } } else null
-                val audioFeaturesDeferred = async { dbSemaphore.withPermit { statsRepository.getAudioFeaturesStats(timeRange, withLeeway = false) } }
+                val audioFeaturesDeferred = if (loadExtended) async {
+                    dbSemaphore.withPermit { statsRepository.getAudioFeaturesStats(timeRange, withLeeway = false) }
+                } else null
                 val insightsDeferred = if (loadExtended) async { dbSemaphore.withPermit { statsRepository.getInsights(timeRange, withLeeway = false) } } else null
-                val profileIdentityDeferred = async { profileIdentityManager.getProfileIdentity() }
+                val profileIdentityDeferred = if (loadExtended) async {
+                    profileIdentityManager.getProfileIdentity()
+                } else null
                 val earliestTimestampDeferred = async { dbSemaphore.withPermit { statsRepository.getEarliestDataTimestamp() } }
                 
                 // Today's Listen Widget data
                 val todayOverviewDeferred = async { dbSemaphore.withPermit { statsRepository.getListeningOverview(TimeRange.TODAY) } }
-                val todayTopTracksDeferred = async { dbSemaphore.withPermit { statsRepository.getTopTracks(TimeRange.TODAY, sortBy = me.avinas.tempo.data.repository.SortBy.PLAY_COUNT, pageSize = 5) } }
-                val todayTopArtistsDeferred = async { dbSemaphore.withPermit { statsRepository.getTopArtists(TimeRange.TODAY, sortBy = me.avinas.tempo.data.repository.SortBy.PLAY_COUNT, pageSize = 5) } }
-                val todayHourlyDeferred = async { dbSemaphore.withPermit { statsRepository.getHourlyDistribution(TimeRange.TODAY) } }
-                val todayPeriodComparisonDeferred = async { dbSemaphore.withPermit { statsRepository.getPeriodComparison(TimeRange.TODAY, withLeeway = false) } }
+                // Detailed Today cards are collapsed by default. Avoid four
+                // unnecessary Room queries during the normal Home refresh.
+                val todayTopTracksDeferred = if (loadExtended) async { dbSemaphore.withPermit {
+                    statsRepository.getTopTracks(TimeRange.TODAY, sortBy = me.avinas.tempo.data.repository.SortBy.PLAY_COUNT, pageSize = 5)
+                } } else null
+                val todayTopArtistsDeferred = if (loadExtended) async { dbSemaphore.withPermit {
+                    statsRepository.getTopArtists(TimeRange.TODAY, sortBy = me.avinas.tempo.data.repository.SortBy.PLAY_COUNT, pageSize = 5)
+                } } else null
+                val todayHourlyDeferred = if (loadExtended) async { dbSemaphore.withPermit {
+                    statsRepository.getHourlyDistribution(TimeRange.TODAY)
+                } } else null
+                val todayPeriodComparisonDeferred = if (loadExtended) async { dbSemaphore.withPermit {
+                    statsRepository.getPeriodComparison(TimeRange.TODAY, withLeeway = false)
+                } } else null
                 
                 // Read isGamificationEnabled setting
                 val isGamificationEnabledDeferred = async {
@@ -288,26 +308,27 @@ class HomeViewModel @Inject constructor(
                 } else null
                 
                 val overview = overviewDeferred.await()
-                val periodComparison = periodComparisonDeferred.await()
+                val periodComparison = periodComparisonDeferred?.await()
                 val rawDailyListening = rawDailyListeningDeferred.await()
                 val weeklyListening = weeklyListeningDeferred.await()
                 val topTracks = topTracksDeferred?.await()
                 val topArtists = topArtistsDeferred?.await()
                 val discoveryStats = discoveryStatsDeferred?.await()
                 val mostActiveHour = mostActiveHourDeferred?.await()
-                val audioFeatures = audioFeaturesDeferred.await()
-                val profileIdentity = profileIdentityDeferred.await()
+                val audioFeatures = audioFeaturesDeferred?.await()
+                val profileIdentity = profileIdentityDeferred?.await()
                 val spotlightTopTrack = spotlightTopTrackDeferred?.await()?.items?.firstOrNull()
-                val userName = profileIdentity.userName
-                    .takeIf { it.isNotBlank() }
-                    ?: tokenStorage.getUserDisplayName()?.split(" ")?.firstOrNull()
-                    ?: "User"
+                val userName = if (loadExtended) {
+                    profileIdentity?.userName?.takeIf { it.isNotBlank() }
+                        ?: tokenStorage.getUserDisplayName()?.split(" ")?.firstOrNull()
+                        ?: "User"
+                } else null
                 
                 val todayOverview = todayOverviewDeferred.await()
-                val todayTopTracks = todayTopTracksDeferred.await()
-                val todayTopArtists = todayTopArtistsDeferred.await()
-                val todayHourly = todayHourlyDeferred.await()
-                val todayPeriodComparison = todayPeriodComparisonDeferred.await()
+                val todayTopTracks = todayTopTracksDeferred?.await()
+                val todayTopArtists = todayTopArtistsDeferred?.await()
+                val todayHourly = todayHourlyDeferred?.await().orEmpty()
+                val todayPeriodComparison = todayPeriodComparisonDeferred?.await()
                 
                 val isGamificationEnabled = isGamificationEnabledDeferred.await()
                 val userLevel = if (isGamificationEnabled && loadExtended) gamificationRepository.getUserLevel() else null
@@ -333,8 +354,8 @@ class HomeViewModel @Inject constructor(
                 // Combine insights (Gamification Card first, then others)
                 combinedInsights.addAll(insightsDeferred?.await().orEmpty())
 
-                val activeDaysCount = activeDaysDeferred.await()
-                val peakDayMs = peakDayMsDeferred.await()
+                val activeDaysCount = activeDaysDeferred?.await() ?: 0
+                val peakDayMs = peakDayMsDeferred?.await() ?: 0L
                 val peakDayMinutes = peakDayMs / 1000 / 60
                 val earliestTimestamp = earliestTimestampDeferred.await()
 
@@ -386,15 +407,15 @@ class HomeViewModel @Inject constructor(
                         audioFeatures = audioFeatures,
                         insights = combinedInsights,
                         userName = userName,
-                        profileImagePath = profileIdentity.profileImagePath,
+                        profileImagePath = profileIdentity?.profileImagePath,
                         hasData = hasData,
                         isNewUser = isNewUser,
                         isGamificationEnabled = isGamificationEnabled,
                         todayOverview = todayOverview,
-                        todayTopTrack = todayTopTracks.items.firstOrNull(),
-                        todayTopArtist = todayTopArtists.items.firstOrNull(),
-                        todayTopTracks = todayTopTracks.items.take(5),
-                        todayTopArtists = todayTopArtists.items.take(5),
+                        todayTopTrack = todayTopTracks?.items?.firstOrNull(),
+                        todayTopArtist = todayTopArtists?.items?.firstOrNull(),
+                        todayTopTracks = todayTopTracks?.items?.take(5).orEmpty(),
+                        todayTopArtists = todayTopArtists?.items?.take(5).orEmpty(),
                         todayHourlyDistribution = todayHourly,
                         todayPeriodComparison = todayPeriodComparison
                     )
