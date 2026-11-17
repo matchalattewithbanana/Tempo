@@ -70,10 +70,21 @@ class OfflineEventStore(context: Context) {
         return try {
             adapter.fromJson(json) ?: error("Offline event JSON unexpectedly null")
         } catch (e: Exception) {
-            val alreadyPreserved = prefs.contains(KEY_QUARANTINED)
-            if (!alreadyPreserved) {
-                check(prefs.edit().putString(KEY_QUARANTINED, json).commit()) {
-                    "Unable to quarantine the unreadable offline event queue"
+            val priorQuarantine = prefs.getString(KEY_QUARANTINED, null)
+            when {
+                priorQuarantine == null -> {
+                    check(prefs.edit().putString(KEY_QUARANTINED, json).commit()) {
+                        "Unable to quarantine the unreadable offline event queue"
+                    }
+                }
+                priorQuarantine != json -> {
+                    // A second distinct corrupt snapshot must not overwrite
+                    // the first quarantined copy or itself be cleared by the
+                    // normal persistence path. Make the manager block writes.
+                    throw IllegalStateException(
+                        "A different offline event queue is already quarantined; manual recovery required",
+                        e
+                    )
                 }
             }
             Log.e(TAG, "Offline listening events could not be decoded; original queue preserved for recovery", e)
