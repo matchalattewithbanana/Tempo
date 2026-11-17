@@ -445,7 +445,12 @@ class SettingsViewModel
             Pair(auth.isConnected(), spotifyTokenStorage.get().getCustomClientId().orEmpty())
         }
 
+        /** Exposes Keystore availability without ever revealing stored credentials. */
+        fun canSecurelyStoreSpotifyCredentials(): Boolean =
+            spotifyTokenStorage.get().isSecureStorageAvailable()
+
         suspend fun startSpotifyAuthorization(clientId: String): Intent? = withContext(Dispatchers.IO) {
+            if (!spotifyTokenStorage.get().isSecureStorageAvailable()) return@withContext null
             val auth = spotifyAuthManager.get()
             val storage = spotifyTokenStorage.get()
             val value = clientId.trim()
