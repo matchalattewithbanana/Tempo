@@ -52,6 +52,12 @@ class SpotifyTokenStorage @Inject constructor(
             return synchronized(this) {
                 _encryptedPrefs ?: if (initializationFailed) null else {
                     try {
+                        // Erase previous insecure credentials independently of Keystore recovery.
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                            runCatching {
+                                context.deleteSharedPreferences("${PREFS_NAME}_fallback")
+                            }.onFailure { Log.w(TAG, "Could not erase legacy plaintext store", it) }
+                        }
                         val masterKey = MasterKey.Builder(context)
                             .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
                             .build()
@@ -59,16 +65,7 @@ class SpotifyTokenStorage @Inject constructor(
                             context, PREFS_NAME, masterKey,
                             EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
                             EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-                        ).also { prefs ->
-                            _encryptedPrefs = prefs
-                            // Old builds may have persisted secrets to this unsafe
-                            // fallback. Erase it only after secure storage has opened.
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                                runCatching {
-                                    context.deleteSharedPreferences("${PREFS_NAME}_fallback")
-                                }.onFailure { Log.w(TAG, "Could not clear legacy plaintext token store", it) }
-                            }
-                        }
+                        ).also { prefs -> _encryptedPrefs = prefs }
                     } catch (e: Exception) {
                         initializationFailed = true
                         Log.e(TAG, "Spotify secure storage is unavailable; credentials will not be persisted", e)
@@ -86,6 +83,21 @@ class SpotifyTokenStorage @Inject constructor(
             "Secure Spotify credential storage is unavailable. Restart the app or reconnect after device unlock."
         )
 
+    /** Broken ciphertext disables auth without erasing recoverable Keystore data. */
+    private inline fun <T> readEncrypted(default: T, read: (SharedPreferences) -> T): T {
+        val prefs = encryptedPrefs ?: return default
+        return try {
+            read(prefs)
+        } catch (e: Exception) {
+            Log.e(TAG, "Encrypted Spotify prefs unreadable; secure storage disabled", e)
+            synchronized(this) {
+                initializationFailed = true
+                _encryptedPrefs = null
+            }
+            default
+        }
+    }
+
     /**
      * Save OAuth tokens and metadata.
      */
@@ -100,7 +112,7 @@ class SpotifyTokenStorage @Inject constructor(
             refreshToken?.let { putString(KEY_REFRESH_TOKEN, it) }
             putLong(KEY_EXPIRES_AT, expiresAt)
             scope?.let { putString(KEY_SCOPE, it) }
-            apply()
+            check(commit()) { "Unable to persist secure Spotify authentication state" }
         }
         Log.d(TAG, "Tokens saved, expires at: $expiresAt")
     }
@@ -120,18 +132,18 @@ class SpotifyTokenStorage @Inject constructor(
     /**
      * Get the stored access token.
      */
-    fun getAccessToken(): String? = encryptedPrefs?.getString(KEY_ACCESS_TOKEN, null)
+    fun getAccessToken(): String? = readEncrypted<String?>(null) { it.getString(KEY_ACCESS_TOKEN, null) }
 
     /**
      * Get the stored refresh token.
      */
-    fun getRefreshToken(): String? = encryptedPrefs?.getString(KEY_REFRESH_TOKEN, null)
+    fun getRefreshToken(): String? = readEncrypted<String?>(null) { it.getString(KEY_REFRESH_TOKEN, null) }
 
     /**
      * Get the token expiry timestamp.
      */
     fun getTokenExpiresAt(): Long? {
-        val expiresAt = encryptedPrefs?.getLong(KEY_EXPIRES_AT, -1) ?: -1L
+        val expiresAt = readEncrypted(-1L) { it.getLong(KEY_EXPIRES_AT, -1L) }
         return if (expiresAt > 0) expiresAt else null
     }
 
@@ -139,28 +151,28 @@ class SpotifyTokenStorage @Inject constructor(
      * Get the stored scope.
      */
     fun getScope(): String? {
-        return encryptedPrefs?.getString(KEY_SCOPE, null)
+        return readEncrypted<String?>(null) { it.getString(KEY_SCOPE, null) }
     }
 
     /**
      * Get stored user ID.
      */
     fun getUserId(): String? {
-        return encryptedPrefs?.getString(KEY_USER_ID, null)
+        return readEncrypted<String?>(null) { it.getString(KEY_USER_ID, null) }
     }
 
     /**
      * Get stored user display name.
      */
     fun getUserDisplayName(): String? {
-        return encryptedPrefs?.getString(KEY_USER_DISPLAY_NAME, null)
+        return readEncrypted<String?>(null) { it.getString(KEY_USER_DISPLAY_NAME, null) }
     }
 
     /**
      * Get stored user country.
      */
     fun getUserCountry(): String? {
-        return encryptedPrefs?.getString(KEY_USER_COUNTRY, null)
+        return readEncrypted<String?>(null) { it.getString(KEY_USER_COUNTRY, null) }
     }
 
     /**
@@ -182,9 +194,9 @@ class SpotifyTokenStorage @Inject constructor(
      * Clear all stored tokens and user data.
      */
     /** Client ID is public OAuth configuration; store alongside the user's encrypted tokens. */
-    fun getCustomClientId(): String? = encryptedPrefs
-        ?.getString(KEY_CUSTOM_CLIENT_ID, null)
-        ?.takeIf { it.matches(Regex("[0-9a-fA-F]{32}")) }
+    fun getCustomClientId(): String? = readEncrypted<String?>(null) {
+        it.getString(KEY_CUSTOM_CLIENT_ID, null)
+    }?.takeIf { it.matches(Regex("[0-9a-fA-F]{32}")) }
 
     fun setCustomClientId(id: String) {
         require(id.isEmpty() || id.matches(Regex("[0-9a-fA-F]{32}")))
@@ -220,7 +232,7 @@ class SpotifyTokenStorage @Inject constructor(
             putString(KEY_CODE_VERIFIER, codeVerifier)
             putString(KEY_AUTH_STATE, state)
             putLong(KEY_AUTH_TIMESTAMP, System.currentTimeMillis())
-            apply()
+            check(commit()) { "Unable to persist secure Spotify authentication state" }
         }
         Log.d(TAG, "Pending auth saved")
     }
@@ -230,9 +242,9 @@ class SpotifyTokenStorage @Inject constructor(
      * Returns null if state doesn't match, expired, or not found.
      */
     fun getPendingAuth(state: String): PendingAuth? {
-        val storedState = encryptedPrefs?.getString(KEY_AUTH_STATE, null)
-        val codeVerifier = encryptedPrefs?.getString(KEY_CODE_VERIFIER, null)
-        val timestamp = encryptedPrefs?.getLong(KEY_AUTH_TIMESTAMP, -1) ?: -1L
+        val storedState = readEncrypted<String?>(null) { it.getString(KEY_AUTH_STATE, null) }
+        val codeVerifier = readEncrypted<String?>(null) { it.getString(KEY_CODE_VERIFIER, null) }
+        val timestamp = readEncrypted(-1L) { it.getLong(KEY_AUTH_TIMESTAMP, -1L) }
         
         // Check if state matches
         if (storedState != state) {
@@ -273,9 +285,9 @@ class SpotifyTokenStorage @Inject constructor(
      * Returns true if there's valid non-expired pending auth data.
      */
     fun hasPendingAuth(): Boolean {
-        val state = encryptedPrefs?.getString(KEY_AUTH_STATE, null) ?: return false
-        val codeVerifier = encryptedPrefs?.getString(KEY_CODE_VERIFIER, null) ?: return false
-        val timestamp = encryptedPrefs?.getLong(KEY_AUTH_TIMESTAMP, -1) ?: -1L
+        val state = readEncrypted<String?>(null) { it.getString(KEY_AUTH_STATE, null) } ?: return false
+        val codeVerifier = readEncrypted<String?>(null) { it.getString(KEY_CODE_VERIFIER, null) } ?: return false
+        val timestamp = readEncrypted(-1L) { it.getLong(KEY_AUTH_TIMESTAMP, -1L) }
         
         // Check if expired (older than 10 minutes)
         if (timestamp > 0 && System.currentTimeMillis() - timestamp > AUTH_TIMEOUT_MS) {
