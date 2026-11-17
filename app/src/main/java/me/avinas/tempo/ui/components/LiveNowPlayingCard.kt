@@ -20,6 +20,7 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -43,6 +44,7 @@ fun LiveNowPlayingCard(
     modifier: Modifier = Modifier,
     artworkViewModel: NowPlayingArtworkViewModel = hiltViewModel(),
     compact: Boolean = false,
+    embedded: Boolean = false,
 ) {
     val current by SpotifyBroadcastPresence.presence.collectAsStateWithLifecycle()
     val artwork by artworkViewModel.artwork.collectAsStateWithLifecycle()
@@ -77,11 +79,12 @@ fun LiveNowPlayingCard(
         modifier = modifier.fillMaxWidth(),
         shape = appearanceCardShape(),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.66f)
+            containerColor = if (embedded) Color.Transparent
+                else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.66f)
         ),
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth().padding(if (compact) 12.dp else 16.dp),
+            modifier = Modifier.fillMaxWidth().padding(if (embedded) 0.dp else if (compact) 12.dp else 16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Text(
