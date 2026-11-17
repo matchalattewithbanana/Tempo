@@ -569,18 +569,21 @@ private fun ProfileLoadingSkeleton(
     heroTopClearance: Dp,
 ) {
     val reducedMotion = rememberReducedMotion()
-    val pulse =
+    // Do not construct an infinite animation clock if accessibility or
+    // runtime policy requests reduced motion.
+    val currentAlpha = if (reducedMotion) {
+        0.65f
+    } else {
         rememberInfiniteTransition(label = "profileSkeleton").animateFloat(
             initialValue = 0.40f,
             targetValue = 0.85f,
-            animationSpec =
-                infiniteRepeatable(
-                    tween(900, easing = FastOutSlowInEasing),
-                    RepeatMode.Reverse,
-                ),
+            animationSpec = infiniteRepeatable(
+                tween(900, easing = FastOutSlowInEasing),
+                RepeatMode.Reverse,
+            ),
             label = "profileSkeletonAlpha",
-        )
-    val currentAlpha = if (reducedMotion) 0.65f else pulse.value
+        ).value
+    }
 
     Column(
         modifier = contentModifier,
