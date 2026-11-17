@@ -42,95 +42,51 @@ class SpotifyTokenStorage @Inject constructor(
         private const val AUTH_TIMEOUT_MS = 10 * 60 * 1000L
     }
 
-    private var _encryptedPrefs: SharedPreferences? = null
+    // Never store OAuth credentials in unencrypted preferences as an error
+    // fallback. Keystore failures are fail-closed and do not wipe good data.
+    @Volatile private var _encryptedPrefs: SharedPreferences? = null
+    @Volatile private var initializationFailed = false
 
-    private val encryptedPrefs: SharedPreferences
-        get() = _encryptedPrefs ?: createEncryptedPrefs().also { _encryptedPrefs = it }
-
-    private fun createEncryptedPrefs(): SharedPreferences {
-        try {
-            val masterKey = MasterKey.Builder(context)
-                .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-                .build()
-
-            return EncryptedSharedPreferences.create(
-                context,
-                PREFS_NAME,
-                masterKey,
-                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-            ).also {
-                // ponytail: wipe any cleartext fallback left by a past Keystore failure.
-                try {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        context.deleteSharedPreferences("${PREFS_NAME}_fallback")
+    private val encryptedPrefs: SharedPreferences?
+        get() {
+            _encryptedPrefs?.let { return it }
+            if (initializationFailed) return null
+            return synchronized(this) {
+                _encryptedPrefs ?: if (initializationFailed) null else {
+                    try {
+                        val masterKey = MasterKey.Builder(context)
+                            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+                            .build()
+                        EncryptedSharedPreferences.create(
+                            context, PREFS_NAME, masterKey,
+                            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+                        ).also { prefs ->
+                            _encryptedPrefs = prefs
+                            // Old builds may have persisted secrets to this unsafe
+                            // fallback. Erase it only after secure storage has opened.
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                                runCatching {
+                                    context.deleteSharedPreferences("${PREFS_NAME}_fallback")
+                                }.onFailure { Log.w(TAG, "Could not clear legacy plaintext token store", it) }
+                            }
+                        }
+                    } catch (e: Exception) {
+                        initializationFailed = true
+                        Log.e(TAG, "Spotify secure storage is unavailable; credentials will not be persisted", e)
+                        null
                     }
-                } catch (e: Exception) {
-                    Log.w(TAG, "Failed to delete fallback prefs", e)
                 }
             }
-        } catch (e: Exception) {
-            Log.w(TAG, "Failed to open encrypted prefs, clearing and retrying", e)
-            return resetEncryptedPrefs()
         }
-    }
 
-    private fun resetEncryptedPrefs(): SharedPreferences {
-        deleteEncryptedPrefsFiles()
-        deleteMasterKey()
+    /** A failed Keystore must never cause a plaintext token store fallback. */
+    fun isSecureStorageAvailable(): Boolean = encryptedPrefs != null
 
-        // Wrap in try/catch: on some OEM devices (Samsung, etc.) the Keystore can be in a
-        // corrupted or locked state after a fresh install, causing MasterKey.Builder.build() or
-        // EncryptedSharedPreferences.create() to throw GeneralSecurityException even after the
-        // key+file cleanup above.  Without this guard the exception escapes into the Hilt
-        // component graph initialisation and crashes the app on every subsequent cold start.
-        return try {
-            val masterKey = MasterKey.Builder(context)
-                .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-                .build()
-
-            EncryptedSharedPreferences.create(
-                context,
-                PREFS_NAME,
-                masterKey,
-                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-            )
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to reset encrypted prefs, falling back to plain prefs", e)
-            context.getSharedPreferences("${PREFS_NAME}_fallback", android.content.Context.MODE_PRIVATE)
-        }
-    }
-
-    private fun deleteEncryptedPrefsFiles() {
-        try {
-            val prefsDir = File(context.filesDir, "../shared_prefs")
-            File(prefsDir, "$PREFS_NAME.xml").delete()
-            File(prefsDir, "$PREFS_NAME.xml.bak").delete()
-        } catch (e: IOException) {
-            Log.w(TAG, "Failed to delete encrypted prefs files", e)
-        }
-    }
-
-    private fun deleteMasterKey() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return
-        try {
-            val keyStore = java.security.KeyStore.getInstance("AndroidKeyStore")
-            keyStore.load(null)
-            val aliases = listOf(
-                "_androidx_security_crypto_encryption_master_key",
-                "_androidx_security_crypto_encryption_master_key_256"
-            )
-            for (alias in aliases) {
-                if (keyStore.containsAlias(alias)) {
-                    keyStore.deleteEntry(alias)
-                    Log.d(TAG, "Deleted keystore entry: $alias")
-                }
-            }
-        } catch (e: Exception) {
-            Log.w(TAG, "Failed to delete master key from keystore", e)
-        }
-    }
+    private fun requireEncryptedPrefs(): SharedPreferences =
+        encryptedPrefs ?: throw IllegalStateException(
+            "Secure Spotify credential storage is unavailable. Restart the app or reconnect after device unlock."
+        )
 
     /**
      * Save OAuth tokens and metadata.
@@ -141,7 +97,7 @@ class SpotifyTokenStorage @Inject constructor(
         expiresAt: Long,
         scope: String?
     ) {
-        encryptedPrefs.edit().apply {
+        requireEncryptedPrefs().edit().apply {
             putString(KEY_ACCESS_TOKEN, accessToken)
             refreshToken?.let { putString(KEY_REFRESH_TOKEN, it) }
             putLong(KEY_EXPIRES_AT, expiresAt)
@@ -155,7 +111,7 @@ class SpotifyTokenStorage @Inject constructor(
      * Save user profile information.
      */
     fun saveUserInfo(userId: String, displayName: String?, country: String?) {
-        encryptedPrefs.edit().apply {
+        requireEncryptedPrefs().edit().apply {
             putString(KEY_USER_ID, userId)
             displayName?.let { putString(KEY_USER_DISPLAY_NAME, it) }
             country?.let { putString(KEY_USER_COUNTRY, it) }
@@ -166,22 +122,18 @@ class SpotifyTokenStorage @Inject constructor(
     /**
      * Get the stored access token.
      */
-    fun getAccessToken(): String? {
-        return encryptedPrefs.getString(KEY_ACCESS_TOKEN, null)
-    }
+    fun getAccessToken(): String? = encryptedPrefs?.getString(KEY_ACCESS_TOKEN, null)
 
     /**
      * Get the stored refresh token.
      */
-    fun getRefreshToken(): String? {
-        return encryptedPrefs.getString(KEY_REFRESH_TOKEN, null)
-    }
+    fun getRefreshToken(): String? = encryptedPrefs?.getString(KEY_REFRESH_TOKEN, null)
 
     /**
      * Get the token expiry timestamp.
      */
     fun getTokenExpiresAt(): Long? {
-        val expiresAt = encryptedPrefs.getLong(KEY_EXPIRES_AT, -1)
+        val expiresAt = encryptedPrefs?.getLong(KEY_EXPIRES_AT, -1) ?: -1L
         return if (expiresAt > 0) expiresAt else null
     }
 
@@ -189,28 +141,28 @@ class SpotifyTokenStorage @Inject constructor(
      * Get the stored scope.
      */
     fun getScope(): String? {
-        return encryptedPrefs.getString(KEY_SCOPE, null)
+        return encryptedPrefs?.getString(KEY_SCOPE, null)
     }
 
     /**
      * Get stored user ID.
      */
     fun getUserId(): String? {
-        return encryptedPrefs.getString(KEY_USER_ID, null)
+        return encryptedPrefs?.getString(KEY_USER_ID, null)
     }
 
     /**
      * Get stored user display name.
      */
     fun getUserDisplayName(): String? {
-        return encryptedPrefs.getString(KEY_USER_DISPLAY_NAME, null)
+        return encryptedPrefs?.getString(KEY_USER_DISPLAY_NAME, null)
     }
 
     /**
      * Get stored user country.
      */
     fun getUserCountry(): String? {
-        return encryptedPrefs.getString(KEY_USER_COUNTRY, null)
+        return encryptedPrefs?.getString(KEY_USER_COUNTRY, null)
     }
 
     /**
@@ -233,13 +185,13 @@ class SpotifyTokenStorage @Inject constructor(
      */
     /** Client ID is public OAuth configuration; store alongside the user's encrypted tokens. */
     fun getCustomClientId(): String? = encryptedPrefs
-        .getString(KEY_CUSTOM_CLIENT_ID, null)
+        ?.getString(KEY_CUSTOM_CLIENT_ID, null)
         ?.takeIf { it.matches(Regex("[0-9a-fA-F]{32}")) }
 
     fun setCustomClientId(id: String) {
         require(id.isEmpty() || id.matches(Regex("[0-9a-fA-F]{32}")))
         check(getAccessToken() == null) { "Disconnect Spotify before changing the Client ID" }
-        encryptedPrefs.edit().apply {
+        requireEncryptedPrefs().edit().apply {
             if (id.isEmpty()) remove(KEY_CUSTOM_CLIENT_ID)
             else putString(KEY_CUSTOM_CLIENT_ID, id)
             apply()
@@ -247,7 +199,8 @@ class SpotifyTokenStorage @Inject constructor(
     }
 
     fun clearTokens() {
-        encryptedPrefs.edit().apply {
+        val prefs = encryptedPrefs ?: return
+        prefs.edit().apply {
             remove(KEY_ACCESS_TOKEN)
             remove(KEY_REFRESH_TOKEN)
             remove(KEY_EXPIRES_AT)
@@ -265,7 +218,7 @@ class SpotifyTokenStorage @Inject constructor(
      * Automatically expires after 10 minutes.
      */
     fun savePendingAuth(codeVerifier: String, state: String) {
-        encryptedPrefs.edit().apply {
+        requireEncryptedPrefs().edit().apply {
             putString(KEY_CODE_VERIFIER, codeVerifier)
             putString(KEY_AUTH_STATE, state)
             putLong(KEY_AUTH_TIMESTAMP, System.currentTimeMillis())
@@ -279,9 +232,9 @@ class SpotifyTokenStorage @Inject constructor(
      * Returns null if state doesn't match, expired, or not found.
      */
     fun getPendingAuth(state: String): PendingAuth? {
-        val storedState = encryptedPrefs.getString(KEY_AUTH_STATE, null)
-        val codeVerifier = encryptedPrefs.getString(KEY_CODE_VERIFIER, null)
-        val timestamp = encryptedPrefs.getLong(KEY_AUTH_TIMESTAMP, -1)
+        val storedState = encryptedPrefs?.getString(KEY_AUTH_STATE, null)
+        val codeVerifier = encryptedPrefs?.getString(KEY_CODE_VERIFIER, null)
+        val timestamp = encryptedPrefs?.getLong(KEY_AUTH_TIMESTAMP, -1) ?: -1L
         
         // Check if state matches
         if (storedState != state) {
@@ -307,7 +260,8 @@ class SpotifyTokenStorage @Inject constructor(
      * Clear pending auth data.
      */
     fun clearPendingAuth() {
-        encryptedPrefs.edit().apply {
+        val prefs = encryptedPrefs ?: return
+        prefs.edit().apply {
             remove(KEY_CODE_VERIFIER)
             remove(KEY_AUTH_STATE)
             remove(KEY_AUTH_TIMESTAMP)
@@ -321,9 +275,9 @@ class SpotifyTokenStorage @Inject constructor(
      * Returns true if there's valid non-expired pending auth data.
      */
     fun hasPendingAuth(): Boolean {
-        val state = encryptedPrefs.getString(KEY_AUTH_STATE, null) ?: return false
-        val codeVerifier = encryptedPrefs.getString(KEY_CODE_VERIFIER, null) ?: return false
-        val timestamp = encryptedPrefs.getLong(KEY_AUTH_TIMESTAMP, -1)
+        val state = encryptedPrefs?.getString(KEY_AUTH_STATE, null) ?: return false
+        val codeVerifier = encryptedPrefs?.getString(KEY_CODE_VERIFIER, null) ?: return false
+        val timestamp = encryptedPrefs?.getLong(KEY_AUTH_TIMESTAMP, -1) ?: -1L
         
         // Check if expired (older than 10 minutes)
         if (timestamp > 0 && System.currentTimeMillis() - timestamp > AUTH_TIMEOUT_MS) {
