@@ -178,11 +178,29 @@ class HomeViewModel @Inject constructor(
         if (visible) {
             loadData()
         } else {
-            // Cancel the optional query burst and release heavy cards immediately.
+            // Discard optional results and replace any in-flight expanded load
+            // with a lightweight fetch. Without this, collapsing during the
+            // first load could leave today's dashboard metrics uninitialized.
             loadJob?.cancel()
             _uiState.update {
-                it.copy(topTrack = null, topArtist = null, spotlightTopTrack = null, insights = emptyList())
+                it.copy(
+                    topTrack = null,
+                    topArtist = null,
+                    spotlightTopTrack = null,
+                    insights = emptyList(),
+                    discoveryStats = null,
+                    mostActiveHour = null,
+                    audioFeatures = null,
+                    periodComparison = null,
+                    todayTopTrack = null,
+                    todayTopArtist = null,
+                    todayTopTracks = emptyList(),
+                    todayTopArtists = emptyList(),
+                    todayHourlyDistribution = emptyList(),
+                    todayPeriodComparison = null,
+                )
             }
+            loadData()
         }
         viewModelScope.launch {
             context.dataStore.edit { preferences ->
