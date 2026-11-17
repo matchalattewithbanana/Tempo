@@ -96,7 +96,9 @@ internal fun HomeListeningDashboard(
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = palette.onSurface,
-                    maxLines = 1,
+                    // Keep the full title readable on 320dp phones and at
+                    // larger accessibility font scales next to the actions.
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f),
                 )
