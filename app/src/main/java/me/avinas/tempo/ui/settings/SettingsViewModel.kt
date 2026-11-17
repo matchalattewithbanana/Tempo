@@ -446,8 +446,10 @@ class SettingsViewModel
         }
 
         /** Exposes Keystore availability without ever revealing stored credentials. */
-        fun canSecurelyStoreSpotifyCredentials(): Boolean =
+        suspend fun canSecurelyStoreSpotifyCredentials(): Boolean = withContext(Dispatchers.IO) {
+            // Keystore initialization can block; never probe on the UI thread.
             spotifyTokenStorage.get().isSecureStorageAvailable()
+        }
 
         suspend fun startSpotifyAuthorization(clientId: String): Intent? = withContext(Dispatchers.IO) {
             if (!spotifyTokenStorage.get().isSecureStorageAvailable()) return@withContext null
