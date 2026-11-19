@@ -538,8 +538,16 @@ fun SongDetailsContent(
     }
 
     if (showShareDialog) {
+        val spotifyLabel = stringResource(R.string.share_copy_spotify_link)
+        val appleLabel = stringResource(R.string.share_copy_apple_link)
         SharePreviewDialog(
             onDismiss = { showShareDialog = false },
+            text = listOf(trackDetails.track.title, trackDetails.track.artist, trackDetails.track.album.orEmpty())
+                .filter(String::isNotBlank).joinToString("\n"),
+            links = listOfNotNull(
+                trackDetails.spotifyUrl?.takeIf(String::isNotBlank)?.let { spotifyLabel to it },
+                trackDetails.appleMusicUrl?.takeIf(String::isNotBlank)?.let { appleLabel to it },
+            ),
             contentToShare = { theme ->
                 val engagement = uiState.engagement
                 val completionFraction = engagement?.let { it.averageCompletionPercent / 100f }

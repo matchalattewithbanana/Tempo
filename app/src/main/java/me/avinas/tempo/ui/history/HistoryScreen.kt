@@ -1,5 +1,6 @@
 package me.avinas.tempo.ui.history
 
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -75,6 +76,16 @@ fun HistoryScreen(
     onNavigateToTrack: (Long) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    var shareHistory by remember { mutableStateOf<List<Pair<String, String>>>(emptyList()) }
+    if (shareHistory.isNotEmpty()) {
+        SnapshotShareDialog(
+            snapshot = ShareSnapshot(
+                title = stringResource(R.string.share_history_title),
+                rows = shareHistory,
+            ),
+            onDismiss = { shareHistory = emptyList() },
+        )
+    }
     // New search = new list: reset scroll synchronously via state recreation
     // (parent remember includes searchQuery). No manual scroll-to-item here:
     // issuing a scroll request mid-fling fights the fling's own remeasure and
@@ -318,6 +329,21 @@ fun HistoryScreen(
                                         }
                                     }
                                 }
+                            }
+
+                            IconButton(
+                                enabled = !uiState.isLoading && !uiState.isRefreshing && !uiState.isMarking &&
+                                    !uiState.searchPending && !uiState.loadFailed &&
+                                    (uiState.rawItems.isNotEmpty() || uiState.lastFmItems.isNotEmpty() || uiState.archiveItems.isNotEmpty()),
+                                onClick = {
+                                    val events = (uiState.rawItems.take(5) + uiState.lastFmItems.take(5))
+                                        .distinctBy { it.id }.map { it.timestamp to (it.title to it.artist) }
+                                    val archived = uiState.archiveItems.take(5)
+                                        .map { it.timestamp to (it.trackTitle to it.artistName) }
+                                    shareHistory = (events + archived).sortedByDescending { it.first }.take(5).map { it.second }
+                                },
+                            ) {
+                                Icon(Icons.Default.Share, contentDescription = stringResource(R.string.share_history))
                             }
 
                             // Filter Button

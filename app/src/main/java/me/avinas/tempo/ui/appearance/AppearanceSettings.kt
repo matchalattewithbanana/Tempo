@@ -1,5 +1,7 @@
 package me.avinas.tempo.ui.appearance
 
+import me.avinas.tempo.ui.components.ShareTheme
+
 /** Stable persisted identifiers. Unknown values fall back without touching listening data. */
 enum class AppearancePreset {
     ABYSS, OBSIDIAN_GOLD, AURORA, GLACIER, EMBER, SOLSTICE, VERDANT, SLATE;
@@ -22,7 +24,9 @@ enum class AppearanceBackdrop { GRADIENT, FLAT, WASH }
 enum class AppearanceNowListening { INLINE, COMPACT, HIDDEN }
 enum class AppearanceHomeSection { SUMMARY, SPOTLIGHT, QUICK_STATS, TODAY, INSIGHTS }
 enum class AppearanceStatsTab { SONGS, ARTISTS, ALBUMS }
-enum class AppearanceStatsRange { WEEK, MONTH, YEAR, ALL_TIME }
+enum class AppearanceStatsRange { WEEK, MONTH, YEAR, ALL_TIME, TODAY }
+enum class AppearanceStatsSort { COMBINED, PLAYS, TIME }
+enum class AppearanceProfileTab { CHALLENGES, BADGES }
 
 data class AppearanceSettings(
     val preset: AppearancePreset = AppearancePreset.ABYSS,
@@ -42,6 +46,13 @@ data class AppearanceSettings(
     val statsRange: AppearanceStatsRange = AppearanceStatsRange.WEEK,
     val customAccent: String? = null,
     val backdrop: AppearanceBackdrop = AppearanceBackdrop.GRADIENT,
+    val statsSort: AppearanceStatsSort = AppearanceStatsSort.COMBINED,
+    val showStatsSummary: Boolean = true,
+    val highlightTopResult: Boolean = true,
+    val profileTab: AppearanceProfileTab = AppearanceProfileTab.CHALLENGES,
+    val showProfileNowPlaying: Boolean = true,
+    val showProfileProgress: Boolean = true,
+    val defaultShareTheme: ShareTheme = ShareTheme.MIDNIGHT,
 ) {
     /** Retain opt-in beta tones when applying or importing an appearance. */
     fun forLiveApp(): AppearanceSettings = this

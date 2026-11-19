@@ -7,6 +7,9 @@ package me.avinas.tempo.ui.details
  * the album's track sheet and inline edit mode.
  */
 
+import me.avinas.tempo.ui.components.ShareSnapshot
+import me.avinas.tempo.ui.components.SnapshotShareDialog
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -201,6 +204,7 @@ private fun AlbumDetailsContent(
     val dominantColor = rememberArtworkAccent(albumDetails.album.artworkUrl)
     var showMenu by remember { mutableStateOf(false) }
     var showMergeDialog by remember { mutableStateOf(false) }
+    var showShareDialog by remember { mutableStateOf(false) }
 
     // Collapsed header title appears when the hero title itself scrolls under
     // the top bar — anchored to its live position, not a scroll-pixel guess.
@@ -356,6 +360,14 @@ private fun AlbumDetailsContent(
                     onDismissRequest = { showMenu = false }
                 ) {
                     TempoDropdownMenuItem(
+                        title = stringResource(R.string.share_album),
+                        leadingIcon = Icons.Filled.Share,
+                        onClick = {
+                            showMenu = false
+                            showShareDialog = true
+                        },
+                    )
+                    TempoDropdownMenuItem(
                         title = stringResource(R.string.details_merge_album),
                         leadingIcon = TempoIcons.MergeStreams,
                         onClick = {
@@ -364,6 +376,26 @@ private fun AlbumDetailsContent(
                         }
                     )
                 }
+            }
+
+            if (showShareDialog) {
+                val duration = if (albumDetails.totalTimeMs > 0) formatListeningTime(albumDetails.totalTimeMs)
+                    else stringResource(R.string.stats_period_zero_time)
+                SnapshotShareDialog(
+                    snapshot = ShareSnapshot(
+                        title = albumDetails.album.title,
+                        subtitle = albumDetails.artistName,
+                        artUrl = atmosphereArtUrl,
+                        metrics = listOf(
+                            stringResource(R.string.stats_period_plays) to stringResource(R.string.stats_period_number, albumDetails.totalPlayCount),
+                            stringResource(R.string.stats_period_listening_time) to duration,
+                        ),
+                        rows = albumDetails.tracks.sortedByDescending { it.playCount }.take(5).map { track ->
+                            track.track.title to track.track.artist
+                        },
+                    ),
+                    onDismiss = { showShareDialog = false },
+                )
             }
 
             if (showMergeDialog) {

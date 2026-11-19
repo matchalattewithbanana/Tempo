@@ -13,6 +13,7 @@ import me.avinas.tempo.ui.theme.TextOnAccent
 import me.avinas.tempo.ui.theme.GoldDark
 import me.avinas.tempo.ui.theme.TextPrimary
 import me.avinas.tempo.ui.theme.TextSecondary
+import me.avinas.tempo.ui.theme.LocalTempoAppearance
 import me.avinas.tempo.ui.theme.LocalTempoPalette
 import me.avinas.tempo.ui.theme.innerShadow
 import me.avinas.tempo.ui.theme.premiumClickable
@@ -120,6 +121,7 @@ fun StatsScreen(
     onWidgetPeriodHandled: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val appearance = LocalTempoAppearance.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     LaunchedEffect(lifecycle, viewModel) {
         lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
@@ -258,7 +260,7 @@ fun StatsScreen(
                     )
                 }
 
-                if (uiState.searchQuery.isBlank()) {
+                if (appearance.showStatsSummary && uiState.searchQuery.isBlank()) {
                     uiState.periodTotals?.let { totals ->
                         item(key = "period_summary") {
                             StatsPeriodSummary(totals)
@@ -323,8 +325,8 @@ fun StatsScreen(
                     // In search mode there is no hero: every match is shown with its
                     // global ranking position, which is the point of the search.
                     val isSearching = uiState.searchQuery.isNotBlank()
-                    val firstItem = if (isSearching) null else uiState.items.firstOrNull()
-                    val remainingItems = if (isSearching) uiState.items else uiState.items.drop(1)
+                    val firstItem = uiState.items.firstOrNull().takeIf { appearance.highlightTopResult && !isSearching }
+                    val remainingItems = if (firstItem == null) uiState.items else uiState.items.drop(1)
 
 
                     // Rank 1 Hero
@@ -365,7 +367,7 @@ fun StatsScreen(
                             }
                         }
                     ) { index, item ->
-                        val rank = if (isSearching) (itemRank(item) ?: (index + 1)) else (index + 2) // Search shows global rank
+                        val rank = if (isSearching) (itemRank(item) ?: (index + 1)) else (index + if (firstItem == null) 1 else 2) // Search shows global rank
                         GlassStatItem(
                             rank = rank,
                             item = item,

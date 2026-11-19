@@ -38,6 +38,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import me.avinas.tempo.R
+import me.avinas.tempo.ui.components.ShareTheme
+import me.avinas.tempo.ui.components.shareThemeLabel
 import me.avinas.tempo.ui.components.appearanceBackdropBrush
 import me.avinas.tempo.ui.components.GlassCard
 import me.avinas.tempo.ui.theme.AppFontFamily
@@ -324,17 +326,48 @@ fun AppearanceScreen(onNavigateBack: () -> Unit, viewModel: AppearanceViewModel 
                         }) { Text(stringResource(R.string.appearance_move_up)) }
                     }
                 }
+            }
+            AppearanceSection(R.string.appearance_stats_settings) {
                 ChoiceRow(R.string.appearance_stats_start, AppearanceStatsTab.entries, draft.statsTab, !busy, { when (it) {
                     AppearanceStatsTab.SONGS -> R.string.appearance_songs
                     AppearanceStatsTab.ARTISTS -> R.string.appearance_artists
                     AppearanceStatsTab.ALBUMS -> R.string.appearance_albums
                 } }) { draft = draft.copy(statsTab = it) }
                 ChoiceRow(R.string.appearance_stats_period, AppearanceStatsRange.entries, draft.statsRange, !busy, { when (it) {
+                    AppearanceStatsRange.TODAY -> R.string.stats_share_period_today
                     AppearanceStatsRange.WEEK -> R.string.period_this_week
                     AppearanceStatsRange.MONTH -> R.string.period_this_month
                     AppearanceStatsRange.YEAR -> R.string.period_this_year
                     AppearanceStatsRange.ALL_TIME -> R.string.period_all_time
                 } }) { draft = draft.copy(statsRange = it) }
+                ChoiceRow(R.string.appearance_stats_sort, AppearanceStatsSort.entries, draft.statsSort, !busy, { when (it) {
+                    AppearanceStatsSort.COMBINED -> R.string.stats_sort_combined
+                    AppearanceStatsSort.PLAYS -> R.string.stats_sort_play_count
+                    AppearanceStatsSort.TIME -> R.string.stats_sort_total_time
+                } }) { draft = draft.copy(statsSort = it) }
+                SettingToggle(R.string.appearance_stats_summary, draft.showStatsSummary, !busy) {
+                    draft = draft.copy(showStatsSummary = it)
+                }
+                SettingToggle(R.string.appearance_stats_highlight, draft.highlightTopResult, !busy) {
+                    draft = draft.copy(highlightTopResult = it)
+                }
+            }
+            AppearanceSection(R.string.appearance_profile_settings) {
+                ChoiceRow(R.string.appearance_profile_start, AppearanceProfileTab.entries, draft.profileTab, !busy, { when (it) {
+                    AppearanceProfileTab.CHALLENGES -> R.string.share_profile_challenges
+                    AppearanceProfileTab.BADGES -> R.string.profile_badges
+                } }) { draft = draft.copy(profileTab = it) }
+                SettingToggle(R.string.appearance_profile_now_playing, draft.showProfileNowPlaying, !busy) {
+                    draft = draft.copy(showProfileNowPlaying = it)
+                }
+                SettingToggle(R.string.appearance_profile_progress, draft.showProfileProgress, !busy) {
+                    draft = draft.copy(showProfileProgress = it)
+                }
+            }
+            AppearanceSection(R.string.appearance_sharing_settings) {
+                ChoiceRow(
+                    R.string.appearance_share_theme, ShareTheme.entries, draft.defaultShareTheme, !busy, ::shareThemeLabel,
+                ) { draft = draft.copy(defaultShareTheme = it) }
             }
             AppearanceSection(R.string.appearance_saved_looks) {
                 OutlinedTextField(value = lookName, onValueChange = { lookName = it.take(40) }, enabled = !busy,

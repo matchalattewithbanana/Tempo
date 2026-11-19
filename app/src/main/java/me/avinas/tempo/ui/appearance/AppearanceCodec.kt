@@ -1,5 +1,6 @@
 package me.avinas.tempo.ui.appearance
 
+import me.avinas.tempo.ui.components.ShareTheme
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -20,6 +21,13 @@ object AppearanceCodec {
         put("hiddenHome", JSONArray(value.hiddenHomeSections.map { it.name }))
         put("homeOrder", JSONArray(value.homeOrder.map { it.name }))
         put("statsTab", value.statsTab.name); put("statsRange", value.statsRange.name)
+        put("statsSort", value.statsSort.name)
+        put("showStatsSummary", value.showStatsSummary)
+        put("highlightTopResult", value.highlightTopResult)
+        put("profileTab", value.profileTab.name)
+        put("showProfileNowPlaying", value.showProfileNowPlaying)
+        put("showProfileProgress", value.showProfileProgress)
+        put("defaultShareTheme", value.defaultShareTheme.name)
     }.toString()
 
     fun decode(raw: String): AppearanceSettings {
@@ -51,6 +59,13 @@ object AppearanceCodec {
             statsRange = enumOrDefault(json.optString("statsRange"), AppearanceStatsRange.WEEK),
             customAccent = normalizeAccentHex(json.optString("customAccent")),
             backdrop = enumOrDefault(json.optString("backdrop"), AppearanceBackdrop.GRADIENT),
+            statsSort = enumOrDefault(json.optString("statsSort"), AppearanceStatsSort.COMBINED),
+            showStatsSummary = json.optBoolean("showStatsSummary", true),
+            highlightTopResult = json.optBoolean("highlightTopResult", true),
+            profileTab = enumOrDefault(json.optString("profileTab"), AppearanceProfileTab.CHALLENGES),
+            showProfileNowPlaying = json.optBoolean("showProfileNowPlaying", true),
+            showProfileProgress = json.optBoolean("showProfileProgress", true),
+            defaultShareTheme = enumOrDefault(json.optString("defaultShareTheme"), ShareTheme.MIDNIGHT),
         )
     }
 }

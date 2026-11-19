@@ -32,7 +32,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
@@ -46,11 +45,11 @@ import me.avinas.tempo.ui.components.GlassCard
 import me.avinas.tempo.ui.components.GlassCardVariant
 import me.avinas.tempo.ui.components.CaptureWrapper
 import me.avinas.tempo.ui.components.rememberCaptureController
+import me.avinas.tempo.ui.components.rememberCardShareActions
 import me.avinas.tempo.ui.spotlight.SpotlightPeriodFormatter
 import me.avinas.tempo.ui.spotlight.SpotlightCardData
 import me.avinas.tempo.ui.theme.*
 import me.avinas.tempo.data.analytics.TempoFeature
-import me.avinas.tempo.utils.ShareUtils
 
 /** Composes shareable card collages on an Instagram Story 9:16 canvas (1080x1920). */
 @Composable
@@ -60,9 +59,10 @@ fun ShareCanvasScreen(
     viewModel: ShareCanvasViewModel = hiltViewModel()
 ) {
     val appearancePalette = LocalTempoPalette.current
-    val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val captureController = rememberCaptureController()
+    val shareActions = rememberCardShareActions(captureController, "tempo-canvas.png", TempoFeature.SHARE_CANVAS)
+    var showExportMenu by remember { mutableStateOf(false) }
     val configuration = LocalConfiguration.current
     val density = LocalDensity.current
     
@@ -102,7 +102,7 @@ fun ShareCanvasScreen(
     var savingDraft by remember { mutableStateOf(false) }
     var saveFailed by rememberSaveable { mutableStateOf(false) }
     val requestClose: () -> Unit = {
-        if (!savingDraft) {
+        if (!savingDraft && !shareActions.busy) {
             if (viewModel.isDirty()) showExitDialog = true else onClose()
         }
     }
@@ -141,19 +141,6 @@ fun ShareCanvasScreen(
         )
     }
 
-    LaunchedEffect(Unit) {
-        captureController.capturedBitmap.collect { bitmap ->
-            val success = ShareUtils.shareBitmap(context, bitmap, TempoFeature.SHARE_CANVAS)
-            if (!success) {
-                android.widget.Toast.makeText(
-                    context,
-                    "Failed to share canvas",
-                    android.widget.Toast.LENGTH_SHORT
-                ).show()
-            }
-        }
-    }
-    
     me.avinas.tempo.ui.components.DeepOceanBackground(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -489,39 +476,30 @@ fun ShareCanvasScreen(
 
                         Spacer(Modifier.width(8.dp))
                         
-                        Box(
-                            modifier = Modifier
-                                .height(56.dp)
-                                .clip(RoundedCornerShape(28.dp))
-                                .background(appearancePalette.accent)
-                                .clickable(
-                                    enabled = canvasState.canvasItems.isNotEmpty() || canvasState.textItems.isNotEmpty(),
-                                    onClick = {
-                                        canvasState = canvasState.copy(selectedItemId = null, selectedItemType = SelectedItemType.None)
-                                        coroutineScope.launch {
-                                            delay(150)
-                                            captureController.capture()
-                                        }
+                        Box {
+                            Button(
+                                enabled = !shareActions.busy && (canvasState.canvasItems.isNotEmpty() || canvasState.textItems.isNotEmpty()),
+                                onClick = { showExportMenu = true },
+                            ) {
+                                if (shareActions.busy) CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                                else Icon(Icons.Default.Share, contentDescription = stringResource(R.string.share_export_options))
+                            }
+                            DropdownMenu(expanded = showExportMenu, onDismissRequest = { showExportMenu = false }) {
+                                fun clearSelection() {
+                                    canvasState = canvasState.copy(selectedItemId = null, selectedItemType = SelectedItemType.None)
+                                    showExportMenu = false
+                                }
+                                DropdownMenuItem(text = { Text(stringResource(R.string.share_image)) }, onClick = {
+                                    clearSelection()
+                                    coroutineScope.launch {
+                                        delay(150)
+                                        shareActions.share()
                                     }
-                                )
-                                .padding(horizontal = 20.dp), // Slightly reduced horizontal padding
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                    "Share",
-                                    color = appearancePalette.onAccent,
-                                    fontWeight = FontWeight.Bold,
-                                    style = MaterialTheme.typography.titleSmall,
-                                    maxLines = 1 // Prevent wrapping
-                                )
-                                Spacer(Modifier.width(8.dp))
-                                Icon(
-                                    imageVector = Icons.Default.Share,
-                                    contentDescription = null,
-                                    tint = appearancePalette.onAccent,
-                                    modifier = Modifier.size(18.dp)
-                                )
+                                })
+                                DropdownMenuItem(text = { Text(stringResource(R.string.share_save_png)) }, onClick = {
+                                    clearSelection()
+                                    shareActions.save()
+                                })
                             }
                         }
                     }

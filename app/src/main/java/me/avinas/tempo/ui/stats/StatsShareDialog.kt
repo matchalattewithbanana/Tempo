@@ -1,7 +1,6 @@
 package me.avinas.tempo.ui.stats
 
 import me.avinas.tempo.ui.theme.LocalTempoPalette
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -36,6 +35,10 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
 import me.avinas.tempo.R
+import me.avinas.tempo.ui.components.ShareOutputButtons
+import me.avinas.tempo.ui.components.rememberCardShareActions
+import me.avinas.tempo.ui.details.formatListeningTime
+import me.avinas.tempo.ui.theme.LocalTempoAppearance
 import me.avinas.tempo.data.stats.CombinedBasicStats
 import me.avinas.tempo.data.stats.TimeRange
 import me.avinas.tempo.ui.components.CaptureWrapper
@@ -43,7 +46,6 @@ import me.avinas.tempo.ui.components.ShareTheme
 import me.avinas.tempo.ui.components.ThemeSwatch
 import me.avinas.tempo.ui.components.rememberCaptureController
 import me.avinas.tempo.ui.onboarding.dataStore
-import me.avinas.tempo.utils.ShareUtils
 
 private val CardDesignWidth = 360.dp
 private val CardDesignHeight = 640.dp
@@ -64,40 +66,17 @@ fun StatsShareDialog(
 ) {
     val context = LocalContext.current
     val captureController = rememberCaptureController()
-    var isSharing by remember { mutableStateOf(false) }
-    var config by remember { mutableStateOf(StatsShareConfig()) }
-
-    LaunchedEffect(Unit) {
-        captureController.capturedBitmap.collect { bitmap ->
-            val success =
-                try {
-                    ShareUtils.shareBitmap(context, bitmap)
-                } finally {
-                    if (!bitmap.isRecycled) {
-                        bitmap.recycle()
-                    }
-                    isSharing = false
-                }
-            if (!success) {
-                Toast.makeText(context, "Failed to share image", Toast.LENGTH_SHORT).show()
-            } else {
-                // Record the successful share so promotional nudges can back off.
-                runCatching {
-                    context.dataStore.edit { prefs ->
-                        prefs[longPreferencesKey("share_last_success")] = System.currentTimeMillis()
-                    }
-                }
-                if (onShared != null) onShared() else onDismiss()
+    val defaultTheme = LocalTempoAppearance.current.defaultShareTheme
+    var config by remember(defaultTheme) { mutableStateOf(StatsShareConfig(theme = defaultTheme)) }
+    val actions = rememberCardShareActions(captureController, fileName = "tempo-stats.png") {
+        runCatching {
+            context.dataStore.edit { prefs ->
+                prefs[longPreferencesKey("share_last_success")] = System.currentTimeMillis()
             }
         }
+        if (onShared != null) onShared() else onDismiss()
     }
-    // Safety timeout: in case capture fails to emit, reset loading indicator after 8 seconds
-    LaunchedEffect(isSharing) {
-        if (isSharing) {
-            kotlinx.coroutines.delay(8000L)
-            isSharing = false
-        }
-    }
+    val text = statsShareText(context, tab, timeRange, items, totals, config)
 
     val contentToShare: @Composable () -> Unit = {
         StatsShareCard(
@@ -111,7 +90,7 @@ fun StatsShareDialog(
     }
 
     Dialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = { if (!actions.busy) onDismiss() },
         properties =
             DialogProperties(
                 usePlatformDefaultWidth = false,
@@ -157,6 +136,7 @@ fun StatsShareDialog(
                     )
                     IconButton(
                         onClick = onDismiss,
+                        enabled = !actions.busy,
                         modifier = Modifier.background(Color.White.copy(alpha = 0.1f), CircleShape),
                     ) {
                         Icon(Icons.Default.Close, contentDescription = stringResource(R.string.stats_share_close), tint = Color.White)
@@ -186,7 +166,7 @@ fun StatsShareDialog(
                 // Config controls
                 ConfigPanel(
                     config = config,
-                    onConfigChange = { config = it },
+                    onConfigChange = { if (!actions.busy) config = it },
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
                 )
 
@@ -219,34 +199,49 @@ fun StatsShareDialog(
                     }
                 }
 
-                // Share button
-                Button(
-                    onClick = {
-                        if (!isSharing) {
-                            isSharing = true
-                            captureController.capture()
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).height(56.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color.Black),
-                    shape = RoundedCornerShape(28.dp),
-                ) {
-                    if (isSharing) {
-                        CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Color.Black, strokeWidth = 2.dp)
-                    } else {
-                        Icon(Icons.Default.Share, contentDescription = null)
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(
-                            text = stringResource(R.string.stats_share_button),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                        )
-                    }
-                }
+                ShareOutputButtons(
+                    actions = actions,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                    text = text,
+                )
             }
         }
     }
 }
+
+private fun statsShareText(
+    context: android.content.Context,
+    tab: StatsTab,
+    period: TimeRange,
+    items: List<Any>,
+    totals: CombinedBasicStats?,
+    config: StatsShareConfig,
+): String = buildString {
+    val title = when (tab) {
+        StatsTab.TOP_SONGS -> R.string.stats_share_top_songs
+        StatsTab.TOP_ARTISTS -> R.string.stats_share_top_artists
+        StatsTab.TOP_ALBUMS -> R.string.stats_share_top_albums
+    }
+    val range = when (period) {
+        TimeRange.TODAY -> R.string.stats_share_period_today
+        TimeRange.THIS_WEEK -> R.string.stats_share_period_this_week
+        TimeRange.THIS_MONTH -> R.string.stats_share_period_this_month
+        TimeRange.THIS_YEAR -> R.string.stats_share_period_this_year
+        TimeRange.ALL_TIME -> R.string.stats_share_period_all_time
+    }
+    appendLine(context.getString(title))
+    appendLine(context.getString(range))
+    if (config.showSummary && totals != null) {
+        val duration = if (totals.totalTimeMs > 0) formatListeningTime(totals.totalTimeMs)
+            else context.getString(R.string.stats_period_zero_time)
+        appendLine(context.getString(R.string.share_text_metric, context.getString(R.string.stats_period_listening_time), duration))
+        appendLine(context.getString(R.string.share_text_metric, context.getString(R.string.stats_period_plays), context.getString(R.string.stats_period_number, totals.playCount)))
+    }
+    items.asSequence().mapNotNull(::statsItemInfo).take(config.count.count).forEachIndexed { index, item ->
+        val name = listOf(item.title, item.subtitle).filter(String::isNotBlank).joinToString(" — ")
+        appendLine(context.getString(R.string.share_ranked_text, index + 1, name))
+    }
+}.trim()
 
 @Composable
 private fun ConfigPanel(

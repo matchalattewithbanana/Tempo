@@ -430,8 +430,12 @@ fun ArtistDetailsContent(
         }
 
         if (showShareDialog) {
+            val count = stringResource(R.string.stats_period_number, artistDetails.personalPlayCount)
+            val plays = stringResource(R.string.share_text_metric, stringResource(R.string.stats_period_plays), count)
             SharePreviewDialog(
                 onDismiss = { showShareDialog = false },
+                text = (listOf(artistDetails.artist.name, plays) + artistDetails.topSongs.take(5).map { it.title })
+                    .joinToString("\n"),
                 contentToShare = { theme ->
                     ArtistShareCard(artistDetails = artistDetails, percentile = uiState.artistPercentile, theme = theme)
                 }

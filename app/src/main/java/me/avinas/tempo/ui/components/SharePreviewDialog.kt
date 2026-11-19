@@ -1,15 +1,14 @@
 package me.avinas.tempo.ui.components
 
 import me.avinas.tempo.ui.theme.LocalTempoPalette
-import android.graphics.Bitmap
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,15 +20,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import kotlinx.coroutines.launch
 import me.avinas.tempo.R
-import me.avinas.tempo.utils.ShareUtils
 
 /** Fixed design resolution for the share card. Both the hidden capture source and the
  * visible preview are laid out at this size so the captured bitmap is WYSIWYG with the
@@ -43,31 +42,21 @@ private val CardDesignHeight = 640.dp
 @Composable
 fun SharePreviewDialog(
     onDismiss: () -> Unit,
+    text: String? = null,
+    links: List<Pair<String, String>> = emptyList(),
+    settings: (@Composable () -> Unit)? = null,
     contentToShare: @Composable (theme: ShareTheme) -> Unit
 ) {
     val palette = LocalTempoPalette.current
-    val context = LocalContext.current
+    val resources = LocalContext.current.resources
+    val themeNames = ShareTheme.entries.associateWith { resources.getString(shareThemeLabel(it)) }
     val captureController = rememberCaptureController()
-    val coroutineScope = rememberCoroutineScope()
-    var isSharing by remember { mutableStateOf(false) }
-    var theme by remember { mutableStateOf(ShareTheme.MIDNIGHT) }
-    val shareFailedText = stringResource(R.string.share_failed)
-
-    LaunchedEffect(Unit) {
-        captureController.capturedBitmap.collect { bitmap ->
-            isSharing = true
-            val success = ShareUtils.shareBitmap(context, bitmap)
-            isSharing = false
-            if (!success) {
-                Toast.makeText(context, shareFailedText, Toast.LENGTH_SHORT).show()
-            } else {
-                onDismiss() // Close dialog on successful share launch
-            }
-        }
-    }
+    val defaultTheme = me.avinas.tempo.ui.theme.LocalTempoAppearance.current.defaultShareTheme
+    var theme by remember(defaultTheme) { mutableStateOf(defaultTheme) }
+    val actions = rememberCardShareActions(captureController, onShared = { onDismiss() })
 
     Dialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = { if (!actions.busy) onDismiss() },
         properties = DialogProperties(
             usePlatformDefaultWidth = false, // Full screen width
             decorFitsSystemWindows = false
@@ -131,6 +120,7 @@ fun SharePreviewDialog(
 
                     IconButton(
                         onClick = onDismiss,
+                        enabled = !actions.busy,
                         modifier = Modifier
                             .size(36.dp)
                             .background(
@@ -187,16 +177,19 @@ fun SharePreviewDialog(
                     }
                 }
 
-                // Theme picker with selected theme name indicator
+                settings?.invoke()
+
+                // Theme picker
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 4.dp),
+                        .padding(horizontal = 16.dp, vertical = 4.dp)
+                        .horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "${stringResource(R.string.share_theme_label).uppercase()} • ${theme.name}",
+                        text = "${stringResource(R.string.share_theme_label).uppercase()} • ${stringResource(shareThemeLabel(theme))}",
                         style = MaterialTheme.typography.labelSmall,
                         color = palette.mutedText,
                         letterSpacing = 1.2.sp,
@@ -208,49 +201,21 @@ fun SharePreviewDialog(
                             ThemeSwatch(
                                 theme = t,
                                 selected = theme == t,
-                                onClick = { theme = t }
+                                onClick = { if (!actions.busy) theme = t },
+                                modifier = Modifier.semantics {
+                                    contentDescription = themeNames.getValue(t)
+                                },
                             )
                         }
                     }
                 }
 
-                // Share Button
-                Button(
-                    onClick = {
-                        if (!isSharing) {
-                            captureController.capture()
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                        .height(52.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = palette.accent,
-                        contentColor = palette.onAccent
-                    ),
-                    shape = RoundedCornerShape(26.dp)
-                ) {
-                    if (isSharing) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(22.dp),
-                            color = palette.onAccent,
-                            strokeWidth = 2.dp
-                        )
-                    } else {
-                        Icon(
-                            imageVector = Icons.Default.Share,
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text(
-                            text = stringResource(R.string.spotlight_share_instagram),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
+                ShareOutputButtons(
+                    actions = actions,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                    text = text,
+                    links = links,
+                )
             }
         }
     }

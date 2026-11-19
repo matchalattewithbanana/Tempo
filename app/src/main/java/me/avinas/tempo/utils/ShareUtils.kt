@@ -1,22 +1,20 @@
 package me.avinas.tempo.utils
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
-import android.graphics.Rect
 import android.net.Uri
-import android.view.View
-import androidx.compose.ui.graphics.toArgb
 import androidx.core.content.FileProvider
 import dagger.hilt.android.EntryPointAccessors
 import me.avinas.tempo.data.analytics.FeatureFirstUsed
 import me.avinas.tempo.data.analytics.TempoFeature
 import me.avinas.tempo.di.AnalyticsEntryPoint
 import java.io.File
-import java.io.FileOutputStream
-import java.io.BufferedOutputStream
+import me.avinas.tempo.R
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -50,66 +48,82 @@ object ShareUtils {
         launchChooser: ((Intent) -> Unit)? = null
     ): Boolean = withContext(Dispatchers.IO) {
         try {
-            android.util.Log.d("ShareUtils", "Starting share process. Bitmap: ${bitmap.width}x${bitmap.height}")
-            val file = saveBitmapToCache(context, bitmap)
-            if (file != null && file.exists()) {
-                val uri = FileProvider.getUriForFile(
-                    context,
-                    "${context.packageName}.provider",
-                    file
-                )
-                android.util.Log.d("ShareUtils", "File saved at $uri. Launching share intent.")
-                
+            val directory = File(context.cacheDir, "images")
+            if (!directory.isDirectory && !directory.mkdirs() && !directory.isDirectory) return@withContext false
+            val now = System.currentTimeMillis()
+            directory.listFiles()?.forEach { entry ->
+                if (entry.name.startsWith("tempo-card-") && now - entry.lastModified() > SHARE_CACHE_AGE_MS) {
+                    entry.delete()
+                }
+            }
+            val file = File.createTempFile("tempo-card-", ".png", directory)
+            try {
+                val encoded = file.outputStream().buffered().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+                if (!encoded) {
+                    file.delete()
+                    return@withContext false
+                }
+                val uri = FileProvider.getUriForFile(context, "${context.packageName}.provider", file)
                 val intent = Intent(Intent.ACTION_SEND).apply {
                     type = "image/png"
                     putExtra(Intent.EXTRA_STREAM, uri)
+                    clipData = ClipData.newUri(context.contentResolver, context.getString(R.string.share_image), uri)
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 }
-                
-                // Create chooser to avoid direct app launch issues
-                val chooser = Intent.createChooser(intent, "Share Spotlight")
                 withContext(Dispatchers.Main) {
-                    if (launchChooser != null) {
-                        launchChooser(chooser)
-                    } else {
-                        chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        context.startActivity(chooser)
-                    }
+                    val chooser = Intent.createChooser(intent, context.getString(R.string.share_image))
+                    if (launchChooser != null) launchChooser(chooser)
+                    else context.startActivity(chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                    reportShare(context, feature)
                 }
-                return@withContext true
-            } else {
-                android.util.Log.e("ShareUtils", "Failed to save bitmap to cache.")
+                true
+            } catch (cancelled: CancellationException) {
+                // Cancellation after placing the chooser must leave its attachment readable.
+                throw cancelled
+            } catch (failure: Exception) {
+                file.delete()
+                throw failure
             }
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            android.util.Log.e("ShareUtils", "Exception during share", e)
-            e.printStackTrace()
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (failure: Exception) {
+            android.util.Log.w("ShareUtils", "Could not open image share", failure)
+            false
         }
-        return@withContext false
     }
 
-    private fun saveBitmapToCache(context: Context, bitmap: Bitmap): File? {
-        return try {
-            val cachePath = File(context.cacheDir, "images")
-            if (!cachePath.exists()) {
-                val created = cachePath.mkdirs()
-                android.util.Log.d("ShareUtils", "Created cache dir: $created")
+    suspend fun saveBitmap(context: Context, bitmap: Bitmap, destination: Uri): Boolean =
+        withContext(Dispatchers.IO) {
+            try {
+                context.contentResolver.openOutputStream(destination, "wt")?.buffered()?.use {
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, it)
+                } == true
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (failure: Exception) {
+                android.util.Log.w("ShareUtils", "Could not save share image", failure)
+                false
             }
-            // Overwrite existing file to save space
-            val file = File(cachePath, "spotlight_share.png")
-            val stream = BufferedOutputStream(FileOutputStream(file), 32768)
-            bitmap.compress(Bitmap.CompressFormat.PNG, 90, stream) // Slight compression to reduce memory pressure
-            stream.flush()
-            stream.close()
-            android.util.Log.d("ShareUtils", "Bitmap saved to ${file.absolutePath}, size: ${file.length()}")
-            file
-        } catch (e: Exception) {
-            android.util.Log.e("ShareUtils", "Error saving bitmap", e)
-            e.printStackTrace()
-            null
         }
-    }
+
+    fun shareText(context: Context, text: String): Boolean = runCatching {
+        val send = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_TEXT, text)
+        }
+        context.startActivity(
+            Intent.createChooser(send, context.getString(R.string.share_as_text))
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+        )
+        reportShare(context, TempoFeature.SHARE_CARD)
+    }.isSuccess
+
+    fun copyText(context: Context, text: String): Boolean = runCatching {
+        val clipboard = checkNotNull(context.getSystemService(ClipboardManager::class.java))
+        clipboard.setPrimaryClip(ClipData.newPlainText(context.getString(R.string.share_brand), text))
+    }.isSuccess
+
+    private const val SHARE_CACHE_AGE_MS = 24 * 60 * 60 * 1000L
 
     fun addBrandingToBitmap(original: Bitmap, brandingText: String = "Tempo"): Bitmap {
         val result = original.copy(Bitmap.Config.ARGB_8888, true)

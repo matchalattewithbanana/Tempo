@@ -31,13 +31,19 @@ class CaptureController {
     
     private val _capturedBitmap = MutableSharedFlow<Bitmap>(extraBufferCapacity = 1)
     val capturedBitmap = _capturedBitmap.asSharedFlow()
+    private val _captureFailed = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    val captureFailed = _captureFailed.asSharedFlow()
 
     fun capture() {
         _captureRequest.tryEmit(Unit)
     }
     
     fun onCaptured(bitmap: Bitmap) {
-        _capturedBitmap.tryEmit(bitmap)
+        if (_capturedBitmap.subscriptionCount.value == 0 || !_capturedBitmap.tryEmit(bitmap)) bitmap.recycle()
+    }
+
+    fun onCaptureFailed() {
+        _captureFailed.tryEmit(Unit)
     }
 }
 
@@ -57,6 +63,7 @@ fun CaptureWrapper(
     LaunchedEffect(controller) {
         controller.captureRequest.collectLatest {
             capturedView?.let { view ->
+                var allocatedBitmap: Bitmap? = null
                 try {
                     android.util.Log.d("CaptureWrapper", "Capture requested. View dims: ${view.width}x${view.height}")
                     if (view.width > 0 && view.height > 0) {
@@ -76,6 +83,7 @@ fun CaptureWrapper(
                             bitmapHeight,
                             Bitmap.Config.ARGB_8888
                         )
+                        allocatedBitmap = bitmap
                         val canvas = android.graphics.Canvas(bitmap)
                         if (scale != 1f) {
                             // Scales the drawn output without changing the view's own layout,
@@ -97,14 +105,18 @@ fun CaptureWrapper(
                                 "(${bitmapWidth}x${bitmapHeight}, scale=$scale)"
                         )
                         controller.onCaptured(bitmap)
+                        allocatedBitmap = null
                     } else {
+                        controller.onCaptureFailed()
                         android.util.Log.e("CaptureWrapper", "View has 0 dimensions: w=${view.width}, h=${view.height}")
                     }
                 } catch (e: Exception) {
-                    e.printStackTrace()
+                    allocatedBitmap?.recycle()
+                    controller.onCaptureFailed()
                     android.util.Log.e("CaptureWrapper", "Error capturing view", e)
                 }
             } ?: run {
+                 controller.onCaptureFailed()
                  android.util.Log.e("CaptureWrapper", "capturedView is null")
             }
         }

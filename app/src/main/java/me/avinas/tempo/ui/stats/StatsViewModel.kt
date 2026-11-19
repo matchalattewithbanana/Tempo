@@ -49,6 +49,7 @@ class StatsViewModel
         // work just as a cancellation is delivered.
         private var resultGeneration = 0L
         private var userSelectedFilters = false
+        private var widgetPeriodApplied = false
 
         private fun invalidateInFlightQueries() {
             resultGeneration++
@@ -70,7 +71,13 @@ class StatsViewModel
                         AppearanceStatsTab.ARTISTS -> StatsTab.TOP_ARTISTS
                         AppearanceStatsTab.ALBUMS -> StatsTab.TOP_ALBUMS
                     },
-                    selectedTimeRange = when (defaults.statsRange) {
+                    selectedSortBy = when (defaults.statsSort) {
+                        AppearanceStatsSort.COMBINED -> SortBy.COMBINED_SCORE
+                        AppearanceStatsSort.PLAYS -> SortBy.PLAY_COUNT
+                        AppearanceStatsSort.TIME -> SortBy.TOTAL_TIME
+                    },
+                    selectedTimeRange = if (widgetPeriodApplied) state.selectedTimeRange else when (defaults.statsRange) {
+                        AppearanceStatsRange.TODAY -> TimeRange.TODAY
                         AppearanceStatsRange.WEEK -> TimeRange.THIS_WEEK
                         AppearanceStatsRange.MONTH -> TimeRange.THIS_MONTH
                         AppearanceStatsRange.YEAR -> TimeRange.THIS_YEAR
@@ -121,7 +128,7 @@ class StatsViewModel
         }
 
         fun openWidgetPeriod(timeRange: TimeRange) {
-            userSelectedFilters = true
+            widgetPeriodApplied = true
             searchJob?.cancel()
             invalidateInFlightQueries()
             _uiState.update { state ->

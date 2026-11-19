@@ -193,7 +193,7 @@ class HistoryViewModel @Inject constructor(
         searchJob?.cancel()
         invalidateHistoryLoads()
         val generation = loadGeneration
-        _uiState.update { it.copy(isRefreshing = true) }
+        _uiState.update { it.copy(isRefreshing = true, searchPending = false) }
         val startTime = System.currentTimeMillis()
         try {
             _uiState.update { it.copy(isLoading = true) }
@@ -322,10 +322,11 @@ class HistoryViewModel @Inject constructor(
         if (_uiState.value.searchQuery == query) return
         searchJob?.cancel()
         invalidateHistoryLoads()
-        _uiState.update { it.copy(searchQuery = query) }
+        _uiState.update { it.copy(searchQuery = query, searchPending = true) }
         searchJob = viewModelScope.launch {
             kotlinx.coroutines.delay(500) // Debounce
             _uiState.update { it.copy(
+                searchPending = false,
                 page = 0,
                 rawItems = emptyList(),
                 groupedItems = emptyMap(),
@@ -351,6 +352,7 @@ class HistoryViewModel @Inject constructor(
         _uiState.update { it.copy(
             startDate = startTime,
             endDate = endTime,
+            searchPending = false,
             showSkips = showSkips,
             page = 0,
             rawItems = emptyList(),
@@ -379,6 +381,7 @@ class HistoryViewModel @Inject constructor(
         
         _uiState.update { it.copy(
             viewMode = mode,
+            searchPending = false,
             page = 0,
             rawItems = emptyList(),
             groupedItems = emptyMap(),
@@ -976,6 +979,7 @@ data class HistoryUiState(
     
     // Filters
     val searchQuery: String = "",
+    val searchPending: Boolean = false,
     val startDate: Long? = null,
     val endDate: Long? = null,
     val showSkips: Boolean = true,

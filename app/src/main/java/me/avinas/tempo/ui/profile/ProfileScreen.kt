@@ -5,6 +5,11 @@ package me.avinas.tempo.ui.profile
  * daily challenges, and earned badges.
  */
 
+import androidx.compose.runtime.saveable.rememberSaveable
+import me.avinas.tempo.ui.appearance.AppearanceProfileTab
+import me.avinas.tempo.ui.theme.LocalTempoAppearance
+import me.avinas.tempo.ui.components.ShareSnapshot
+import me.avinas.tempo.ui.components.SnapshotShareDialog
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.animation.AnimatedVisibility
@@ -637,7 +642,12 @@ fun ProfileScreen(
         }
     }
     val scope = rememberCoroutineScope()
-    var selectedTab by remember { mutableIntStateOf(0) }
+    val appearance = LocalTempoAppearance.current
+    var tabOverride by rememberSaveable { mutableStateOf<Int?>(null) }
+    val selectedTab = tabOverride ?: if (appearance.profileTab == AppearanceProfileTab.BADGES) 1 else 0
+    var showProfileShare by rememberSaveable { mutableStateOf(false) }
+    var includeIdentity by rememberSaveable { mutableStateOf(false) }
+    var shareChallenge by remember { mutableStateOf<DailyChallenge?>(null) }
     var selectedBadge by remember { mutableStateOf<Badge?>(null) }
     var shareBadgeTarget by remember { mutableStateOf<Badge?>(null) }
     var showMilestoneShare by remember { mutableStateOf(false) }
@@ -744,7 +754,7 @@ fun ProfileScreen(
                                 }
                             }
 
-                            item(key = "now_playing") {
+                            if (appearance.showProfileNowPlaying) item(key = "now_playing") {
                                 Box(modifier = contentModifier) {
                                     LiveNowPlayingCard()
                                 }
@@ -763,7 +773,7 @@ fun ProfileScreen(
                                         )
                                     }
 
-                                    if (uiState.levelLoaded && uiState.badgesLoaded) {
+                                    if (appearance.showProfileProgress && uiState.levelLoaded && uiState.badgesLoaded) {
                                         MasterStatMasthead(
                                             userLevel = uiState.userLevel,
                                             earnedCount = uiState.earnedCount,
@@ -781,7 +791,7 @@ fun ProfileScreen(
                                     TabSwitcher(
                                         tabs = tabs,
                                         selectedTab = selectedTab,
-                                        onTabSelected = { selectedTab = it },
+                                        onTabSelected = { tabOverride = it },
                                     )
                                 }
                             }
@@ -791,6 +801,7 @@ fun ProfileScreen(
                                     challengesSection(
                                         challenges = uiState.challenges,
                                         totalXpAvailable = uiState.challengeXpTotal,
+                                        onShareChallenge = { shareChallenge = it },
                                         contentModifier = contentModifier,
                                     )
                                 } else if (uiState.challengesLoaded &&
@@ -845,6 +856,16 @@ fun ProfileScreen(
                             title = uiState.userTitle,
                         )
                     }
+                    if (uiState.levelLoaded) {
+                        FrostedIconButton(
+                            icon = Icons.Default.Share,
+                            contentDescription = stringResource(R.string.share_profile),
+                            onClick = {
+                                includeIdentity = false
+                                showProfileShare = true
+                            },
+                        )
+                    }
                     FrostedIconButton(
                         icon = Icons.Rounded.Settings,
                         contentDescription = stringResource(R.string.settings_title),
@@ -853,7 +874,9 @@ fun ProfileScreen(
                 }
             }
 
-            if (selectedBadge == null && shareBadgeTarget == null && uiState.showLevelUpCelebration) {
+            if (!showProfileShare && shareChallenge == null && selectedBadge == null &&
+                shareBadgeTarget == null && uiState.showLevelUpCelebration
+            ) {
                 LevelUpCelebrationOverlay(
                     level = uiState.userLevel.currentLevel,
                     title = uiState.userTitle,
@@ -866,7 +889,7 @@ fun ProfileScreen(
                 )
             }
 
-            if (selectedBadge == null && uiState.unacknowledgedBadges.isNotEmpty() &&
+            if (!showProfileShare && shareChallenge == null && selectedBadge == null && uiState.unacknowledgedBadges.isNotEmpty() &&
                 (!uiState.showLevelUpCelebration || shareBadgeTarget != null)
             ) {
                 BadgeCelebrationOverlay(
@@ -892,12 +915,50 @@ fun ProfileScreen(
                 )
             }
 
-            if (shareBadgeTarget != null) {
+            if (showProfileShare && uiState.levelLoaded) {
+                val level = stringResource(R.string.stats_period_number, uiState.userLevel.currentLevel)
+                SnapshotShareDialog(
+                    snapshot = ShareSnapshot(
+                        title = if (includeIdentity) uiState.userName
+                            else stringResource(R.string.share_profile_title),
+                        subtitle = uiState.userTitle,
+                        artUrl = uiState.profileImagePath.takeIf { includeIdentity },
+                        metrics = buildList {
+                            add(stringResource(R.string.share_profile_level_label) to level)
+                            if (uiState.badgesLoaded) {
+                                add(stringResource(R.string.profile_badges) to stringResource(R.string.stats_period_number, uiState.earnedCount))
+                            }
+                        },
+                    ),
+                    onDismiss = { showProfileShare = false },
+                    settings = {
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 16.dp)) {
+                            Checkbox(checked = includeIdentity, onCheckedChange = { includeIdentity = it })
+                            Text(stringResource(R.string.share_profile_include_identity))
+                        }
+                    },
+                )
+            }
+
+            shareChallenge?.let { challenge ->
+                SnapshotShareDialog(
+                    snapshot = ShareSnapshot(
+                        title = challenge.title.withoutLeadingEmoji(),
+                        subtitle = stringResource(R.string.share_challenge_completed),
+                        metrics = listOf(stringResource(R.string.share_challenge_reward) to stringResource(R.string.share_challenge_xp, challenge.xpReward)),
+                    ),
+                    onDismiss = { shareChallenge = null },
+                )
+            }
+
+            val badgeToShare = shareBadgeTarget
+            if (badgeToShare != null) {
                 SharePreviewDialog(
                     onDismiss = { shareBadgeTarget = null },
+                    text = listOf(badgeToShare.name, badgeToShare.description, badgeToShare.starLabel).joinToString("\n"),
                 ) { theme ->
                     BadgeShareCard(
-                        badge = shareBadgeTarget!!,
+                        badge = badgeToShare,
                         userName = uiState.userName,
                         profileImagePath = uiState.profileImagePath,
                         theme = theme,
@@ -906,6 +967,8 @@ fun ProfileScreen(
             } else if (showMilestoneShare) {
                 SharePreviewDialog(
                     onDismiss = { showMilestoneShare = false },
+                    text = listOf(uiState.userTitle, stringResource(R.string.share_profile_level, uiState.userLevel.currentLevel))
+                        .joinToString("\n"),
                 ) { theme ->
                     MilestoneShareCard(
                         level = uiState.userLevel.currentLevel,
@@ -913,7 +976,7 @@ fun ProfileScreen(
                         userName = uiState.userName,
                         profileImagePath = uiState.profileImagePath,
                         totalXp = uiState.userLevel.totalXp,
-                        streak = uiState.userLevel.currentStreak,
+                        streak = if (hideStreaks) 0 else uiState.userLevel.currentStreak,
                         theme = theme,
                     )
                 }
@@ -1497,6 +1560,7 @@ private fun LazyListScope.challengesSection(
     challenges: List<DailyChallenge>,
     totalXpAvailable: Int,
     contentModifier: Modifier,
+    onShareChallenge: (DailyChallenge) -> Unit,
 ) {
     val completedCount = challenges.count { it.isCompleted }
     item(key = "challenges_header") {
@@ -1533,9 +1597,12 @@ private fun LazyListScope.challengesSection(
     }
     itemsIndexed(challenges, key = { _, c -> "challenge_${c.id}" }) { _, challenge ->
         Column(modifier = contentModifier) {
-            ChallengeCard(
-                challenge = challenge,
-            )
+            ChallengeCard(challenge = challenge)
+            if (challenge.isCompleted) {
+                TextButton(onClick = { onShareChallenge(challenge) }, modifier = Modifier.align(Alignment.End)) {
+                    Text(stringResource(R.string.share_challenge))
+                }
+            }
             Spacer(modifier = Modifier.height(12.dp))
         }
     }
