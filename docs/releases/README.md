@@ -1,9 +1,10 @@
 # Release catalog
 
-**Reviewed:** 19 November 2026. Version 4.9.0 is the current stable GitHub release.
+**Reviewed:** 19 November 2026. See [Latest stable release](https://github.com/matchalattewithbanana/Tempo/releases/latest) for the current published download.
 
 | Version | Android code | Published | Purpose | Source / notes |
 | --- | --- | --- | --- | --- |
+| 4.9.9 | 4820 | See GitHub | First joint Android and browser bundle | [notes](v4.9.9.md) |
 | [4.9.0](https://github.com/matchalattewithbanana/Tempo/releases/tag/v4.9.0) | 4819 | 19 Nov 2026 IST | First stable GitHub release | `e0887af` · [notes](v4.9.0.md) |
 | [4.9.0-beta.1](https://github.com/matchalattewithbanana/Tempo/releases/tag/v4.9.0-beta.1) | 4818 | 17 Nov 2026 | Historical beta: reliability and import hardening | `289fcd0` · [notes](v4.9.0-beta.1.md) |
 | [4.8.16-fork.2-beta.1](https://github.com/matchalattewithbanana/Tempo/releases/tag/v4.8.16-fork.2-beta.1) | 4817 | 17 Nov 2026 | Historical Appearance Studio beta | `f99c502` · [notes](v4.8.16-fork.2-beta.1.md) |
@@ -11,7 +12,7 @@
 
 ## Install and verify
 
-Download the APK and `SHA256SUMS.txt` from the selected release. Compare the downloaded file's SHA-256 with its checksum. A checksum detects file mismatch; compare the signing certificate separately when assessing an in-place update. Do not assume two debug builds share a signer.
+Download the APK or browser ZIP and `SHA256SUMS.txt` from the selected release. See [browser installation](../../browser-extension/README.md#install-from-github) for the Chromium and Firefox ZIPs. Compare the downloaded file's SHA-256 with its checksum. A checksum detects file mismatch; compare the signing certificate separately when assessing an in-place update. Do not assume two debug builds share a signer.
 
 Export and verify a backup before reinstalling or changing signing identity. The package is `me.avinas.tempo`; minimum Android version is 8.0/API 26. GitHub APKs are separate from upstream Google Play distribution and require their own provider configuration.
 

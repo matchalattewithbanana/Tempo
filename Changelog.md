@@ -4,6 +4,26 @@ Fork-specific changes. Published tags and artifacts are listed in the [release c
 
 ## Unreleased
 
+## [4.9.9]
+
+Nine commits after 4.9.0, counted before release preparation. Android version
+code 4820. Chromium and Firefox companion packages use version 4.9.9.
+
+### Added
+
+- Import Apple Music Play Activity CSVs and Apple privacy-export ZIPs.
+- Create and share a customizable 3×3 album poster from your library, catalog search, or Stats.
+- Save share-card PNGs or share text where available, with new cards for albums, profiles, completed challenges, and recent history.
+- Customize Stats ranking, duration units, and summary counts, plus Profile defaults and the share-card theme.
+
+### Changed
+
+- Improved Light and System appearance, Stats refreshes, and shared artwork loading.
+- Updated Android home-screen widgets with clearer labels, listening totals, and shortcuts to the matching Stats period.
+- Improved import matching by timing and artist credit. YouTube entries without recorded watch time contribute a play with unknown duration.
+
+[Release notes](docs/releases/v4.9.9.md).
+
 ## [4.9.0] — 2026-11-19
 
 First stable GitHub release. Android version code 4819; source commit

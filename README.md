@@ -8,7 +8,9 @@ This repository is a maintained fork of [avinaxhroy/Tempo](https://github.com/av
 
 ## Download
 
-[Tempo 4.9.0](https://github.com/matchalattewithbanana/Tempo/releases/tag/v4.9.0) · Android 8.0+ · signed debug-variant APK
+[Latest stable release](https://github.com/matchalattewithbanana/Tempo/releases/latest) · Android 8.0+ · signed debug-variant APK
+
+Starting with 4.9.9, the same GitHub release includes Chromium and Firefox companion ZIPs. [Companion installation](browser-extension/README.md#install-from-github).
 
 Export a backup before upgrading. An in-place update requires the same signing certificate as the installed app. Light/System appearance, background tracking and device performance still have open device-validation work.
 
@@ -19,8 +21,8 @@ See the [release catalog](docs/releases/README.md) for versions, checksums and u
 - Local notification and MediaSession playback tracking, with optional Spotify device broadcasts.
 - Listening history, charts, artist/album details, challenges and badges.
 - Spotify, Apple Music, Last.fm, YouTube Music, Deezer, Musicolet and browser-history imports.
-- Six appearance presets, saved looks and experimental Light/Follow System support.
-- Spotlight stories and share cards.
+- Appearance presets, saved looks, light and system themes, and customizable Stats and Profile views.
+- Spotlight stories, share cards, and a customizable 3×3 album poster.
 - Local export/restore, optional Google Drive backups and an optional browser companion.
 
 Playback accuracy depends on the player's available signals. Now Playing is provisional; finished listens and imported records can have different timing evidence. Spotify API reconciliation requests a 20-minute background cadence, which Android may defer. Read [tracking accuracy](docs/TRACKING_AND_IMPORT_ACCURACY.md) before interpreting imported durations.

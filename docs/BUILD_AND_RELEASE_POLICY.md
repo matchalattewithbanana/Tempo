@@ -4,7 +4,7 @@
 
 ## Default
 
-Ordinary commits and pull requests do not start CI, lint, emulator tests or APK builds. `ci.yml`, `build-apk.yml` and `beta-release.yml` use `workflow_dispatch` only. The earlier release-only push exception has been removed.
+Ordinary commits and pull requests do not start CI, lint, emulator tests or APK builds. `ci.yml`, `build-apk.yml`, `stable-release.yml` and `beta-release.yml` use `workflow_dispatch` only. The earlier release-only push exception has been removed.
 
 The scheduled Play crash-rate monitor is separate: it may query configured Android vitals and open an issue; it does not compile or publish the app. It is inert without its required credentials.
 

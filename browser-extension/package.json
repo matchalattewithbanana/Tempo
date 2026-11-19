@@ -1,6 +1,6 @@
 {
   "name": "tempo-stats-extension",
-  "version": "1.0.8",
+  "version": "4.9.9",
   "description": "Tempo Stats \u2014 Advanced browser music tracking extension",
   "private": true,
   "scripts": {

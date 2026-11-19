@@ -2,7 +2,22 @@
 
 Records supported web-player observations and syncs queued plays to a paired Tempo Android app. This is the browser companion for [this fork](https://github.com/matchalattewithbanana/Tempo), not a music streaming client.
 
-## Setup
+## Install from GitHub
+
+Beginning with Tempo 4.9.9, each GitHub release supplies both browser ZIPs
+alongside the matching Android APK. Verify the chosen archive against
+`SHA256SUMS.txt`, then extract it so `manifest.json` is at the root of the folder.
+
+- **Chromium** — Enable Developer mode on the browser's Extensions page, choose
+  **Load unpacked**, and select the extracted folder.
+- **Firefox 140+** — Open `about:debugging`, choose **This Firefox → Load Temporary
+  Add-on**, and select the extracted `manifest.json`. The unsigned ZIP loads
+  temporarily and Firefox removes it after a restart.
+
+These are GitHub packages. Marketplace distribution has its own review and signing.
+[Latest stable release](https://github.com/matchalattewithbanana/Tempo/releases/latest).
+
+## Build from source
 
 Use Node.js 20:
 
@@ -10,6 +25,7 @@ Use Node.js 20:
 npm ci
 npm run typecheck
 npm run smoke
+npm run clean
 npm run build:all
 ```
 
