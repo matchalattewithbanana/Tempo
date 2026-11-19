@@ -2,6 +2,7 @@ package me.avinas.tempo.data.repository
 
 import me.avinas.tempo.data.local.dao.TrackAliasDao
 import me.avinas.tempo.data.local.entities.Track
+import me.avinas.tempo.utils.ArtistParser
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -101,9 +102,11 @@ class TrackResolver @Inject constructor(
         }
 
         trackRepository.findByTitleAndArtistFuzzy(query.title, query.artist)?.let {
-            // A fuzzy title hit is never stronger evidence than a conflicting
-            // streaming-service ID: remixes and re-recordings need distinct rows.
-            if (identifiersCompatible(it, query)) return merge(it, query)
+            // SQL's substring search is a candidate lookup. Complete artist credits
+            // must intersect before this candidate can absorb another recording.
+            if (identifiersCompatible(it, query) && sharesCreditedArtist(it.artist, query.artist)) {
+                return merge(it, query)
+            }
         }
 
         val track = Track(
@@ -149,6 +152,15 @@ class TrackResolver @Inject constructor(
                 && existing.musicbrainzId != query.musicbrainzId) ||
           (!existing.youtubeId.isNullOrBlank() && !query.youtubeId.isNullOrBlank()
                 && existing.youtubeId != query.youtubeId))
+
+    private fun sharesCreditedArtist(existing: String, incoming: String): Boolean {
+        val credits = ArtistParser.getAllArtists(existing)
+        return ArtistParser.getAllArtists(incoming).any { artist ->
+            !ArtistParser.isUnknownArtist(artist) && credits.any {
+                !ArtistParser.isUnknownArtist(it) && ArtistParser.isStrictSameArtist(it, artist)
+            }
+        }
+    }
 
     /** Layer 4 for one track: gap-fill only, never overwrite. */
     private suspend fun merge(existing: Track, query: Query): Resolution {

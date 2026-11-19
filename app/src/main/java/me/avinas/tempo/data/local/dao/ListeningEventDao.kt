@@ -3,9 +3,9 @@ package me.avinas.tempo.data.local.dao
 import androidx.room.*
 import kotlinx.coroutines.flow.Flow
 import me.avinas.tempo.data.local.EventFingerprint
-import me.avinas.tempo.data.local.DesktopObservedReplayPolicy
-import me.avinas.tempo.data.local.SourceAuthority
+import me.avinas.tempo.data.local.ListeningImportPolicy
 import me.avinas.tempo.data.local.entities.ListeningEvent
+import java.util.TreeMap
 
 @Dao
 interface ListeningEventDao {
@@ -13,23 +13,8 @@ interface ListeningEventDao {
         // SQLite variable limit is 999, ListeningEvent has ~12 columns
         const val BATCH_SIZE = 80
 
-        // Timestamp tolerance for deduplication (5 seconds)
-        // Two events within 5 seconds for the same track are considered duplicates
-        const val DUPLICATE_TOLERANCE_MS = 5000L
-
-        // Layer 2: minimum window for cross-source temporal reconciliation.
-        // The same physical play recorded by two sources (e.g. Spotify endTime vs
-        // Last.fm scrobble) can have normalized timestamps ~60s apart. Two events
-        // for the same track from DIFFERENT sources within this window are treated
-        // as the same play; the higher-authority one wins. Same-source events keep
-        // using the tight [DUPLICATE_TOLERANCE_MS] so legitimate back-to-back plays
-        // are never merged.
-        const val RECONCILIATION_WINDOW_MS = 60_000L
-        // A local play may start several minutes before Spotify's 'played_at'
-        // (which is the end time). Search a bounded wider range for Spotify
-        // reconciliation, then compare observed END times precisely below.
-        const val SPOTIFY_API_LOOKBACK_MS = 15 * 60_000L
-        const val SPOTIFY_END_TOLERANCE_MS = 15_000L
+        const val DUPLICATE_TOLERANCE_MS = ListeningImportPolicy.SAME_SOURCE_TOLERANCE_MS
+        private const val QUERY_JOIN_GAP_MS = 3_600_000L
     }
 
     @Query("SELECT * FROM listening_events WHERE id = :id")
@@ -43,6 +28,9 @@ interface ListeningEventDao {
 
     @Query("SELECT * FROM listening_events ORDER BY timestamp DESC")
     fun all(): Flow<List<ListeningEvent>>
+
+    @Query("SELECT EXISTS(SELECT 1 FROM listening_events)")
+    fun observeListeningEventWrites(): Flow<Boolean>
 
     @Query("SELECT * FROM listening_events ORDER BY timestamp DESC LIMIT :limit")
     fun recentEvents(limit: Int): Flow<List<ListeningEvent>>
@@ -174,31 +162,22 @@ interface ListeningEventDao {
      *   DB (or earlier in this same batch) is dropped. This makes re-importing
      *   the same file a complete no-op, immune to timestamp drift.
      *
-     * Layer 2 — cross-source temporal reconciliation: the same physical play can
-     *   arrive from two sources whose normalized timestamps drift by ~60s
-     *   (Spotify endTime vs Last.fm scrobble). Survivors of Layer 1 are compared
-     *   against existing events on the same track within a generous window; the
-     *   higher-[SourceAuthority] representation wins. A more authoritative
-     *   incoming event *replaces* a less authoritative existing one (the latter
-     *   is deleted); an equal-or-lower-authority incoming event is skipped, so
-     *   real listening data can never be overwritten by an import.
-     *
-     * Same-source comparisons keep using the tight [DUPLICATE_TOLERANCE_MS] so
-     * legitimate back-to-back plays of a track are never merged.
+     * Layer 2 compares nearby plays on the same track using timing evidence and source
+     * authority. Explicit playback intervals protect adjacent plays. Spotify's
+     * recently-played timestamp is compared against the other recording's end.
+     * Only the closest lower-authority match can be replaced.
      */
     @Transaction
     suspend fun insertAllBatchedWithDedup(events: List<ListeningEvent>): InsertResult {
         if (events.isEmpty()) return InsertResult(0, 0)
 
         // ── Layer 1: fingerprint every incoming event ──────────────────────
-        val withFp =
-            events.map { e ->
-                if (e.contentFingerprint != null) {
-                    e
-                } else {
-                    e.copy(contentFingerprint = EventFingerprint.compute(e))
-                }
-            }
+        val withFp = events.map { event ->
+            val fingerprint = event.contentFingerprint ?: EventFingerprint.compute(event)
+            val normalized = ListeningImportPolicy.normalizeTiming(event)
+            if (normalized.contentFingerprint == fingerprint) normalized
+            else normalized.copy(contentFingerprint = fingerprint)
+        }
 
         val incomingFps = withFp.mapNotNull { it.contentFingerprint }.distinct()
         val existingFps: Set<String> =
@@ -225,74 +204,59 @@ interface ListeningEventDao {
         val toInsert = ArrayList<ListeningEvent>(layer1Survivors.size)
         val toDelete = mutableSetOf<Long>()
 
-        // Group by track for bounded per-track queries (uses the (track_id,
-        // timestamp) index). Process higher-authority events first within each
-        // track so they claim the slot and lower-authority siblings are dropped.
-        val byTrack = layer1Survivors.groupBy { it.track_id }
-        for ((trackId, trackEvents) in byTrack) {
-            val spotifyCrossSource = trackEvents.any { it.source.contains("spotify") }
-            val searchPadding =
-                if (spotifyCrossSource) SPOTIFY_API_LOOKBACK_MS else RECONCILIATION_WINDOW_MS
-            val minTs = trackEvents.minOf { it.timestamp } - searchPadding
-            val maxTs = trackEvents.maxOf { it.timestamp } + searchPadding
-            val existing = getEventsForReconciliation(trackId, minTs, maxTs)
-
-            // Existing refs not yet marked for deletion.
-            val existingAlive = existing.filter { it.id !in toDelete }.toMutableList()
-
-            // Incoming events for this track, most authoritative first (tie → earliest).
-            val sortedIncoming =
-                trackEvents.sortedWith(
-                    compareByDescending<ListeningEvent> { SourceAuthority.rank(it.source) }
-                        .thenBy { it.timestamp },
-                )
-
-            // Timestamps already accepted (existing-kept + incoming-accepted) for
-            // same-play conflict checks on this track.
-            val acceptedSlots = ArrayList<Slot>(existingAlive.size + sortedIncoming.size)
-            for (ex in existingAlive) {
-                acceptedSlots.add(Slot(ex.timestamp, ex.end_timestamp, ex.playDuration, ex.source, true, ex.id, ex.session_id))
+        for ((trackId, trackEvents) in layer1Survivors.groupBy { it.track_id }) {
+            val candidates = TreeMap<Long, MutableList<Slot>>()
+            fun addSlot(slot: Slot) {
+                candidates.getOrPut(slot.play.timestamp) { mutableListOf() }.add(slot)
+            }
+            for (window in reconciliationWindows(trackEvents)) {
+                for (existing in getEventsForReconciliation(trackId, window.first, window.last)) {
+                    addSlot(Slot(
+                        ListeningImportPolicy.Play(
+                            existing.timestamp, existing.end_timestamp, existing.playDuration,
+                            existing.source, existing.session_id,
+                        ),
+                        existing.id,
+                    ))
+                }
             }
 
-            for (incoming in sortedIncoming) {
-                val incomingAuth = SourceAuthority.rank(incoming.source)
-                val conflictIdx = acceptedSlots.indexOfFirst { slot -> isSamePlay(slot, incoming) }
+            val incoming = trackEvents.map { it to ListeningImportPolicy.Play(it) }
+                .sortedWith(compareByDescending<Pair<ListeningEvent, ListeningImportPolicy.Play>> { it.second.authority }
+                    .thenBy { it.second.timestamp })
 
-                if (conflictIdx < 0) {
-                    // No conflict → accept the incoming event.
-                    toInsert.add(incoming)
-                    acceptedSlots.add(
-                        Slot(incoming.timestamp, incoming.endTimestamp, incoming.playDuration, incoming.source, false, sessionId = incoming.sessionId),
-                    )
-                    continue
+            for ((event, play) in incoming) {
+                val range = reconciliationRange(play.timestamp, play.source)
+                val nearby = candidates.subMap(range.first, true, range.last, true)
+                var closest: Slot? = null
+                var shortest = Long.MAX_VALUE
+                for (slots in nearby.values) {
+                    for (slot in slots) {
+                        val distance = ListeningImportPolicy.matchDistance(slot.play, play) ?: continue
+                        val previous = closest
+                        if (previous == null || distance < shortest ||
+                            (distance == shortest && slot.play.authority > previous.play.authority) ||
+                            (distance == shortest && slot.play.authority == previous.play.authority &&
+                                (slot.existingId ?: Long.MAX_VALUE) < (previous.existingId ?: Long.MAX_VALUE))
+                        ) {
+                            closest = slot
+                            shortest = distance
+                        }
+                    }
                 }
 
-                val conflict = acceptedSlots[conflictIdx]
-                if (conflict.isExisting && incomingAuth > SourceAuthority.rank(conflict.source)) {
-                    // Incoming is more authoritative → it replaces the existing event.
-                    // Match by primary key, not by (timestamp, endTimestamp, source): two
-                    // legacy rows can share all three, and `first {}` would then delete the
-                    // wrong one. Every isExisting slot carries the id it came from.
-                    val ref = existingAlive.first { it.id == conflict.existingId }
-                    toDelete.add(ref.id)
-                    existingAlive.remove(ref)
-                    // Replace the slot with the incoming event so later comparisons
-                    // see the new (higher-authority) representation.
-                    acceptedSlots[conflictIdx] =
-                        Slot(
-                            incoming.timestamp,
-                            incoming.endTimestamp,
-                            incoming.playDuration,
-                            incoming.source,
-                            false,
-                            sessionId = incoming.sessionId,
-                        )
-                    toInsert.add(incoming)
-                } else {
-                    // Existing/equal authority wins, or the slot was already taken
-                    // by an equal-higher-authority incoming sibling → drop this one.
-                    skipped++
+                val conflict = closest
+                val existingId = conflict?.existingId
+                if (conflict != null) {
+                    if (existingId == null || play.authority <= conflict.play.authority) {
+                        skipped++
+                        continue
+                    }
+                    toDelete.add(existingId)
+                    candidates[conflict.play.timestamp]?.remove(conflict)
                 }
+                toInsert.add(event)
+                addSlot(Slot(play))
             }
         }
 
@@ -312,74 +276,29 @@ interface ListeningEventDao {
         return InsertResult(inserted = inserted, skipped = skipped, replaced = toDelete.size)
     }
 
-    /** A previously-decided play on a track, used for same-play conflict checks. */
-    private data class Slot(
-        val timestamp: Long,
-        val endTimestamp: Long?,
-        val playDuration: Long,
-        val source: String,
-        val isExisting: Boolean,
-        /** listening_events.id when this slot came from the database; null for incoming events. */
-        val existingId: Long? = null,
-        /** Distinct observed sessions must not be collapsed by a 5s window. */
-        val sessionId: String? = null,
-    )
+    private data class Slot(val play: ListeningImportPolicy.Play, val existingId: Long? = null)
+
+    private fun reconciliationRange(timestamp: Long, source: String): LongRange {
+        val padding = ListeningImportPolicy.searchPadding(source)
+        return (timestamp.coerceAtLeast(Long.MIN_VALUE + padding) - padding)..
+            (timestamp.coerceAtMost(Long.MAX_VALUE - padding) + padding)
+    }
 
     /**
-     * Decide whether an already-decided [slot] and an [incoming] event represent
-     * the same physical play. Same-source uses the tight tolerance (avoids merging
-     * legitimate back-to-back plays); different sources use a generous window that
-     * absorbs cross-source timestamp drift.
+     * Read separate indexed slices for sparse imports instead of fetching all history
+     * between the first and last event when a batch spans months or years.
      */
-    private fun isSamePlay(
-        slot: Slot,
-        incoming: ListeningEvent,
-    ): Boolean {
-        val sameSource = slot.source == incoming.source
-        // Desktop clients do not expose Android session IDs. Different
-        // timestamps outside clock-jitter tolerance represent distinct plays
-        // even when the same three-minute track repeats within five minutes.
-        if (sameSource && slot.source.startsWith("desktop:")) {
-            return DesktopObservedReplayPolicy.isSamePlay(slot.timestamp, incoming.timestamp)
-        }
-        if (sameSource && !slot.sessionId.isNullOrBlank() &&
-            !incoming.sessionId.isNullOrBlank() && slot.sessionId != incoming.sessionId
-        ) return false
-
-        // Android + desktop may play the same recording concurrently. These
-        // are independent observed sessions, not lower-fidelity imported copies.
-        if (!sameSource && SourceAuthority.rank(slot.source) >= 90 &&
-            SourceAuthority.rank(incoming.source) >= 90
-        ) return false
-
-        val apiVsLive =
-            (slot.source == "com.spotify.music.import" && incoming.source == "com.spotify.music") ||
-            (incoming.source == "com.spotify.music.import" && slot.source == "com.spotify.music")
-        if (apiVsLive) {
-            val localEndMs = if (slot.source == "com.spotify.music.import") {
-                incoming.endTimestamp ?: incoming.playDuration
-                    .takeIf { it > 0L }?.let { incoming.timestamp + it }
+    private fun reconciliationWindows(events: List<ListeningEvent>): List<LongRange> {
+        val windows = ArrayList<LongRange>()
+        for (range in events.map { reconciliationRange(it.timestamp, it.source) }.sortedBy { it.first }) {
+            val previous = windows.lastOrNull()
+            if (previous != null && range.first <= previous.last.coerceAtMost(Long.MAX_VALUE - QUERY_JOIN_GAP_MS) + QUERY_JOIN_GAP_MS) {
+                windows[windows.lastIndex] = previous.first..maxOf(previous.last, range.last)
             } else {
-                slot.endTimestamp ?: slot.playDuration
-                    .takeIf { it > 0L }?.let { slot.timestamp + it }
-            }
-            val apiPlayedAt = if (slot.source == "com.spotify.music.import") {
-                slot.timestamp
-            } else {
-                incoming.timestamp
-            }
-            if (localEndMs != null) {
-                return kotlin.math.abs(localEndMs - apiPlayedAt) <= SPOTIFY_END_TOLERANCE_MS
+                windows.add(range)
             }
         }
-        val window: Long =
-            if (sameSource) {
-                DUPLICATE_TOLERANCE_MS
-            } else {
-                val half = maxOf(slot.playDuration, incoming.playDuration) / 2L
-                if (half < RECONCILIATION_WINDOW_MS) RECONCILIATION_WINDOW_MS else half
-            }
-        return kotlin.math.abs(slot.timestamp - incoming.timestamp) <= window
+        return windows
     }
 
     /**

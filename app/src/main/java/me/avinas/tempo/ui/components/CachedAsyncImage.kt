@@ -1,6 +1,5 @@
 package me.avinas.tempo.ui.components
 
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -31,8 +30,6 @@ import coil3.request.allowHardware
 import coil3.request.transformations
 import me.avinas.tempo.data.enrichment.MusicBrainzEnrichmentService
 import me.avinas.tempo.utils.MAX_SAFE_BITMAP_EDGE_PX
-
-private const val TAG = "CachedAsyncImage"
 
 private val ITUNES_SIZE_REGEX = Regex("\\d+x\\d+bb")
 private val URL_PARAM_STRIP_REGEX = Regex("[?&](t|timestamp|v|version|_)=[^&]*")
@@ -84,7 +81,7 @@ fun CachedAsyncImage(
     }
     
     // Fix HTTP to HTTPS for security and caching consistency
-    val fixedUrl = MusicBrainzEnrichmentService.fixHttpUrl(imageUrl)
+    val fixedUrl = remember(imageUrl) { MusicBrainzEnrichmentService.fixHttpUrl(imageUrl) }
     
     // Query params are stripped for more cache hits: they often carry timestamps.
     val cacheKey = remember(fixedUrl) {
@@ -102,11 +99,15 @@ fun CachedAsyncImage(
 
     // Keyed on the effective hardware flag and blur px so the request rebuilds
     // when capture context or blur settings change.
-    val imageRequest = remember(fixedUrl, cacheKey, targetSizePx, effectiveAllowHardware, blurRadiusPx) {
+    val imageRequest = remember(context, fixedUrl, cacheKey, targetSizePx, effectiveAllowHardware, blurRadiusPx) {
         ImageRequest.Builder(context)
             .data(fixedUrl)
-            // Hardware and software bitmaps must not share a memory cache entry.
-            .memoryCacheKey(if (effectiveAllowHardware) cacheKey else "${cacheKey}_sw")
+            // Raw downloads are shared, while decoded variants retain their own memory entries.
+            .memoryCacheKey(buildString {
+                append(cacheKey)
+                if (!effectiveAllowHardware) append("_sw")
+                if (blurRadiusPx != null && blurRadiusPx > 0f) append("_blur_$blurRadiusPx")
+            })
             .diskCacheKey(cacheKey)
             .scale(Scale.FILL)
             .apply {
@@ -139,28 +140,24 @@ fun CachedAsyncImage(
         contentScale = contentScale
     )
     
-    val painterState = painter.state.collectAsState().value
-    
-    LaunchedEffect(painterState) {
-        when (painterState) {
-            is AsyncImagePainter.State.Success -> {
-                Log.d(TAG, "Image loaded successfully: $cacheKey")
-                onSuccess?.invoke(painterState)
-            }
-            is AsyncImagePainter.State.Error -> {
-                // Spotify content:// URIs are transient - only work when Spotify is running
-                // These failures are expected and should not spam warnings
-                val isSpotifyContentUri = fixedUrl?.contains("com.spotify.mobile.android.mediaapi") == true
-                if (isSpotifyContentUri) {
-                } else {
-                    Log.w(TAG, "Image failed to load: $cacheKey - ${painterState.result.throwable.message}")
+    val painterState = if (placeholder != null || error != null || showLoadingIndicator) {
+        painter.state.collectAsState().value
+    } else null
+
+    if (onSuccess != null || onError != null) {
+        val latestSuccess by rememberUpdatedState(onSuccess)
+        val latestError by rememberUpdatedState(onError)
+        LaunchedEffect(painter) {
+            painter.state.collect { state ->
+                when (state) {
+                    is AsyncImagePainter.State.Success -> latestSuccess?.invoke(state)
+                    is AsyncImagePainter.State.Error -> latestError?.invoke(state)
+                    else -> Unit
                 }
-                onError?.invoke(painterState)
             }
-            else -> { /* Loading or Empty */ }
         }
     }
-    
+
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
         when (painterState) {
             is AsyncImagePainter.State.Loading -> {
@@ -181,8 +178,7 @@ fun CachedAsyncImage(
                     placeholder()
                 }
             }
-            is AsyncImagePainter.State.Success, is AsyncImagePainter.State.Empty -> {
-            }
+            is AsyncImagePainter.State.Success, is AsyncImagePainter.State.Empty, null -> Unit
         }
         
         Image(

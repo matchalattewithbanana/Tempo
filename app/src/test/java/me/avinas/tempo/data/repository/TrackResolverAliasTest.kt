@@ -54,12 +54,17 @@ class TrackResolverAliasTest {
      * @param aliasTarget what `findAliasTargetTrack` answers, i.e. the track the user
      *   renamed this name away from.
      */
-    private fun harness(exactTitleMatch: Track? = null, aliasTarget: Track? = null): Harness {
+    private fun harness(
+        exactTitleMatch: Track? = null,
+        aliasTarget: Track? = null,
+        fuzzyCandidate: Track? = null,
+    ): Harness {
         val inserted = mutableListOf<Track>()
 
         val trackRepository = createProxy<TrackRepository> { method, args ->
             when (method) {
                 "findByTitleAndArtist" -> exactTitleMatch
+                "findByTitleAndArtistFuzzy" -> fuzzyCandidate
                 "getById" -> null
                 "insert" -> {
                     inserted.add(args!![0] as Track)
@@ -126,6 +131,22 @@ class TrackResolverAliasTest {
 
         assertEquals(11L, resolution.trackId)
         assertFalse(resolution.isNewTrack)
+        assertTrue(h.inserted().isEmpty())
+    }
+
+    @Test
+    fun `a substring of an unrelated artist credit does not merge tracks`() = runTest {
+        val h = harness(fuzzyCandidate = track(7L, "Night", "ABBA"))
+        val resolution = h.resolver.resolve(query("Night", "BBA"))
+        assertTrue(resolution.isNewTrack)
+        assertEquals("BBA", h.inserted().single().artist)
+    }
+
+    @Test
+    fun `a complete shared artist credit can match collaboration metadata`() = runTest {
+        val h = harness(fuzzyCandidate = track(7L, "Night", "Artist One feat. Artist Two"))
+        val resolution = h.resolver.resolve(query("Night", "Artist One"))
+        assertEquals(7L, resolution.trackId)
         assertTrue(h.inserted().isEmpty())
     }
 

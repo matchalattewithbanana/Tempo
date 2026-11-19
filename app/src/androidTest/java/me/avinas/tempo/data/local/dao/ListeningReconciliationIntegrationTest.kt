@@ -155,4 +155,73 @@ class ListeningReconciliationIntegrationTest {
         assertEquals(2, database.listeningEventDao().getEventsForTrack(id).size)
     }
 
+    @Test fun measuredAdjacentPlaysStaySeparateAcrossProviders() = runBlocking {
+        val id = trackId()
+        val dao = database.listeningEventDao()
+        val first = localPlay(id).copy(
+            source = "com.deezer.music.import.xlsx", playDuration = 20_000L,
+            endTimestamp = localPlay(id).timestamp + 20_000L, sessionId = null,
+        )
+        val second = localPlay(id).copy(
+            source = "com.spotify.music.import.json",
+            timestamp = first.timestamp + 21_000L,
+            endTimestamp = first.timestamp + 81_000L, sessionId = null,
+        )
+        assertEquals(1, dao.insertAllBatchedWithDedup(listOf(first)).inserted)
+        assertEquals(1, dao.insertAllBatchedWithDedup(listOf(second)).inserted)
+        assertEquals(2, dao.getEventsForTrack(id).size)
+    }
+
+    @Test fun closestImportIsReplacedAndEarlierRepeatSurvives() = runBlocking {
+        val id = trackId()
+        val dao = database.listeningEventDao()
+        val live = localPlay(id)
+        val close = live.copy(source = "fm.last.import", timestamp = live.timestamp - 5_000L,
+            playDuration = 0L, endTimestamp = null, sessionId = null)
+        val earlier = close.copy(timestamp = live.timestamp - 45_000L)
+        dao.insertAllBatchedWithDedup(listOf(earlier, close))
+
+        val result = dao.insertAllBatchedWithDedup(listOf(live))
+        assertEquals(1, result.replaced)
+        assertEquals(setOf(earlier.timestamp, live.timestamp), dao.getEventsForTrack(id).map { it.timestamp }.toSet())
+    }
+
+    @Test fun spotifyExportMatchesRecentlyPlayedByEndTime() = runBlocking {
+        val id = trackId()
+        val dao = database.listeningEventDao()
+        val recent = apiPlay(id)
+        val exported = recent.copy(timestamp = recent.timestamp - 180_000L, endTimestamp = recent.timestamp,
+            source = "com.spotify.music.import.json", playDuration = 180_000L)
+        dao.insertAllBatchedWithDedup(listOf(recent))
+        val result = dao.insertAllBatchedWithDedup(listOf(exported))
+        assertEquals(1, result.replaced)
+        assertEquals(exported.source, dao.getEventsForTrack(id).single().source)
+    }
+
+    @Test fun importDurationIsBoundedByElapsedTimeAndRetryIsIdempotent() = runBlocking {
+        val id = trackId()
+        val dao = database.listeningEventDao()
+        val imported = localPlay(id).copy(source = "com.deezer.music.import.xlsx",
+            playDuration = 240_000L, completionPercentage = 100, sessionId = null)
+        assertEquals(1, dao.insertAllBatchedWithDedup(listOf(imported)).inserted)
+        assertEquals(1, dao.insertAllBatchedWithDedup(listOf(imported)).skipped)
+        val row = dao.getEventsForTrack(id).single()
+        assertEquals(60_000L, row.playDuration)
+        assertEquals(25, row.completionPercentage)
+    }
+
+    @Test fun youtubeReimportRecognizesTheOriginalActivityTimestamp() = runBlocking {
+        val id = trackId()
+        val dao = database.listeningEventDao()
+        val end = localPlay(id).endTimestamp!!
+        val unknown = ListeningEvent(track_id = id, timestamp = end, endTimestamp = end,
+            playDuration = 0L, completionPercentage = 0, source = "com.google.android.apps.youtube.music.import.json")
+        val legacy = unknown.copy(timestamp = end - 210_000L, playDuration = 210_000L)
+        dao.insertAllBatchedWithDedup(listOf(legacy))
+        assertEquals(1, dao.insertAllBatchedWithDedup(listOf(unknown)).skipped)
+        val repeat = unknown.copy(timestamp = end + 2_000L, endTimestamp = end + 2_000L)
+        assertEquals(1, dao.insertAllBatchedWithDedup(listOf(repeat)).inserted)
+        assertEquals(2, dao.getEventsForTrack(id).size)
+    }
+
 }

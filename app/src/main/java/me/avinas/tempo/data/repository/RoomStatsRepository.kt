@@ -537,7 +537,7 @@ class RoomStatsRepository @Inject constructor(
 
     @OptIn(FlowPreview::class)
     private val listeningStatsChanges by lazy {
-        val historyChanges = listeningEventDao.recentEvents(1).map { Unit }
+        val historyChanges = listeningEventDao.observeListeningEventWrites().map { Unit }
         val filterChanges = userPreferencesDao.preferences()
             .map { (it?.filterPodcasts ?: true) to (it?.filterAudiobooks ?: true) }
             .distinctUntilChanged()
@@ -609,7 +609,7 @@ class RoomStatsRepository @Inject constructor(
         withLeeway: Boolean
     ): PaginatedResult<TopTrack> {
         // Get user content filtering preferences for cache key
-        val prefs = userPreferencesDao.getSync() ?: me.avinas.tempo.data.local.entities.UserPreferences()
+        val prefs = getCachedUserPrefs()
         val (startTime, endTime) = getTimeRangeBounds(timeRange, withLeeway)
         val key = "top_tracks_${timeRange.name}_${startTime}_${sortBy.name}_${page}_${pageSize}_pod${if (prefs.filterPodcasts) 1 else 0}_audio${if (prefs.filterAudiobooks) 1 else 0}_leeway${if (withLeeway) 1 else 0}"
         return getCached(key) {
@@ -653,7 +653,7 @@ class RoomStatsRepository @Inject constructor(
         withLeeway: Boolean
     ): PaginatedResult<TopArtist> {
         // Get user content filtering preferences for cache key
-        val prefs = userPreferencesDao.getSync() ?: me.avinas.tempo.data.local.entities.UserPreferences()
+        val prefs = getCachedUserPrefs()
         val (startTime, endTime) = getTimeRangeBounds(timeRange, withLeeway)
         val key = "top_artists_${timeRange.name}_${startTime}_${sortBy.name}_${page}_${pageSize}_pod${if (prefs.filterPodcasts) 1 else 0}_audio${if (prefs.filterAudiobooks) 1 else 0}_leeway${if (withLeeway) 1 else 0}"
         return getCached(key) {
@@ -1039,7 +1039,7 @@ class RoomStatsRepository @Inject constructor(
         withLeeway: Boolean
     ): PaginatedResult<TopAlbum> {
         // Get user content filtering preferences
-        val prefs = userPreferencesDao.getSync() ?: me.avinas.tempo.data.local.entities.UserPreferences()
+        val prefs = getCachedUserPrefs()
         val filterPodcasts = prefs.filterPodcasts
         val filterAudiobooks = prefs.filterAudiobooks
         val (startTime, endTime) = getTimeRangeBounds(timeRange, withLeeway)
@@ -1130,7 +1130,7 @@ class RoomStatsRepository @Inject constructor(
         val trimmed = query.trim()
         if (trimmed.isEmpty()) return emptyList()
 
-        val prefs = userPreferencesDao.getSync() ?: me.avinas.tempo.data.local.entities.UserPreferences()
+        val prefs = getCachedUserPrefs()
         val key = "search_tracks_${timeRange.name}_${sortBy.name}_${trimmed.lowercase()}_${limit}_pod${if (prefs.filterPodcasts) 1 else 0}_audio${if (prefs.filterAudiobooks) 1 else 0}_leeway${if (withLeeway) 1 else 0}"
         return getCached(key) {
             val startTime = timeRange.getStartTimestamp(withLeeway = withLeeway)
@@ -1166,7 +1166,7 @@ class RoomStatsRepository @Inject constructor(
         val trimmed = query.trim()
         if (trimmed.isEmpty()) return emptyList()
 
-        val prefs = userPreferencesDao.getSync() ?: me.avinas.tempo.data.local.entities.UserPreferences()
+        val prefs = getCachedUserPrefs()
         val key = "search_artists_${timeRange.name}_${sortBy.name}_${trimmed.lowercase()}_${limit}_pod${if (prefs.filterPodcasts) 1 else 0}_audio${if (prefs.filterAudiobooks) 1 else 0}_leeway${if (withLeeway) 1 else 0}"
         return getCached(key) {
             val startTime = timeRange.getStartTimestamp(withLeeway = withLeeway)
@@ -1207,7 +1207,7 @@ class RoomStatsRepository @Inject constructor(
         val trimmed = query.trim()
         if (trimmed.isEmpty()) return emptyList()
 
-        val prefs = userPreferencesDao.getSync() ?: me.avinas.tempo.data.local.entities.UserPreferences()
+        val prefs = getCachedUserPrefs()
         val key = "search_albums_${timeRange.name}_${sortBy.name}_${trimmed.lowercase()}_${limit}_pod${if (prefs.filterPodcasts) 1 else 0}_audio${if (prefs.filterAudiobooks) 1 else 0}_leeway${if (withLeeway) 1 else 0}"
         return getCached(key) {
             val startTime = timeRange.getStartTimestamp(withLeeway = withLeeway)

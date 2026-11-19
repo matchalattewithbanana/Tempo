@@ -51,6 +51,15 @@ The OAuth redirect URI used by this fork is `tempo://spotify-callback`.
    rather than comparing the API end to a local session start. A higher-fidelity
    locally observed play wins over an API history import, irrespective of insert order.
 
+6. **YouTube Music Takeout** contributes listening time only when the export
+   includes a recorded watch time. Timestamp-only entries count as plays with
+   unknown duration and completion. Reimporting a timestamp-only entry can
+   recognize its earlier copy by the original Takeout timestamp.
+7. **Smart reconciliation** selects the closest compatible event for the same
+   track and applies source authority to that match. Measured plays with
+   disjoint playback intervals remain separate. Imported durations are bounded
+   by their explicit start and end times when those bounds are available.
+
 **Unknown completion must not count as a skip.** New statistics queries exclude
 unknown, non-skipped import rows from completion averages and skip counts. This
 corrects how existing rows are *interpreted* without rewriting them.

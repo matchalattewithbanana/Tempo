@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
+import me.avinas.tempo.data.local.ListeningImportPolicy
 import me.avinas.tempo.data.local.dao.EnrichedMetadataDao
 import me.avinas.tempo.data.local.dao.ListeningEventDao
 import me.avinas.tempo.data.local.dao.TrackDao
@@ -56,10 +57,9 @@ class YouTubeMusicImportService
         companion object {
             private const val TAG = "YouTubeMusicImport"
             private const val BATCH_SIZE = 50
-            private const val DEFAULT_COMPLETION_PERCENTAGE = 80
             private const val MAX_STRING_LENGTH = 500
             private const val CANCELLATION_CHECK_INTERVAL = 100
-            private const val ESTIMATED_DURATION_MS = 210_000L
+            private const val MAX_RECORDED_WATCH_MS = 24 * 60 * 60 * 1_000L
             private const val YOUTUBE_LAUNCH_EPOCH = 1112620800000L
             private const val MAX_FUTURE_MS = 365L * 24 * 60 * 60 * 1000
 
@@ -97,7 +97,7 @@ class YouTubeMusicImportService
              * 64KB each); only samples are retained for the "not found" message. */
             private const val MAX_SAMPLED_ENTRY_NAMES = 50
             private const val MAX_ENTRY_NAME_CHARS = 200
-            const val IMPORT_SOURCE = "com.google.android.apps.youtube.music.import.json"
+            const val IMPORT_SOURCE = ListeningImportPolicy.YOUTUBE_EXPORT
 
             // Google Takeout localizes the watch-history file/folder names to the
             // account's language (e.g. Portuguese "histórico de músicas ouvidas.json",
@@ -1448,24 +1448,22 @@ class YouTubeMusicImportService
             }
         }
 
-        private fun estimateDuration(entry: ParsedEntry): Long = entry.msPlayed?.takeIf { it > 0 } ?: ESTIMATED_DURATION_MS
-
         private fun createListeningEvent(
             trackId: Long,
             entry: ParsedEntry,
         ): ListeningEvent {
-            val estimatedDuration = estimateDuration(entry)
-            val completionPercentage = DEFAULT_COMPLETION_PERCENTAGE
+            // Takeout activity alone gives a play timestamp. Only a recorded watch time
+            // contributes to listening totals, and neither form establishes completion.
+            val duration = entry.msPlayed?.takeIf { it in 1L..MAX_RECORDED_WATCH_MS } ?: 0L
 
             return ListeningEvent(
                 track_id = trackId,
-                timestamp = entry.endTimeMillis - estimatedDuration,
-                playDuration = estimatedDuration,
-                completionPercentage = completionPercentage,
+                timestamp = entry.endTimeMillis - duration,
+                playDuration = duration,
+                completionPercentage = 0,
                 source = IMPORT_SOURCE,
                 wasSkipped = false,
                 isReplay = false,
-                estimatedDurationMs = estimatedDuration,
                 pauseCount = 0,
                 sessionId = null,
                 endTimestamp = entry.endTimeMillis,
