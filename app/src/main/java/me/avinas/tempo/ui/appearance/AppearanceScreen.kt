@@ -40,6 +40,8 @@ import kotlinx.coroutines.withContext
 import me.avinas.tempo.R
 import me.avinas.tempo.ui.components.ShareTheme
 import me.avinas.tempo.ui.components.shareThemeLabel
+import me.avinas.tempo.ui.stats.statsDurationLabel
+import me.avinas.tempo.ui.stats.statsSummaryLabel
 import me.avinas.tempo.ui.components.appearanceBackdropBrush
 import me.avinas.tempo.ui.components.GlassCard
 import me.avinas.tempo.ui.theme.AppFontFamily
@@ -345,6 +347,14 @@ fun AppearanceScreen(onNavigateBack: () -> Unit, viewModel: AppearanceViewModel 
                     AppearanceStatsSort.PLAYS -> R.string.stats_sort_play_count
                     AppearanceStatsSort.TIME -> R.string.stats_sort_total_time
                 } }) { draft = draft.copy(statsSort = it) }
+                ChoiceRow(
+                    R.string.stats_duration_display, AppearanceStatsDuration.entries,
+                    draft.statsDuration, !busy, ::statsDurationLabel,
+                ) { draft = draft.copy(statsDuration = it) }
+                ChoiceRow(
+                    R.string.stats_summary_count, AppearanceStatsSummary.entries,
+                    draft.statsSummary, !busy && draft.showStatsSummary, ::statsSummaryLabel,
+                ) { draft = draft.copy(statsSummary = it) }
                 SettingToggle(R.string.appearance_stats_summary, draft.showStatsSummary, !busy) {
                     draft = draft.copy(showStatsSummary = it)
                 }

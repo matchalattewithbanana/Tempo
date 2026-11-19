@@ -26,6 +26,8 @@ enum class AppearanceHomeSection { SUMMARY, SPOTLIGHT, QUICK_STATS, TODAY, INSIG
 enum class AppearanceStatsTab { SONGS, ARTISTS, ALBUMS }
 enum class AppearanceStatsRange { WEEK, MONTH, YEAR, ALL_TIME, TODAY }
 enum class AppearanceStatsSort { COMBINED, PLAYS, TIME }
+enum class AppearanceStatsDuration { AUTO, MINUTES, HOURS, DAYS }
+enum class AppearanceStatsSummary { TRACKS, ARTISTS, ALBUMS }
 enum class AppearanceProfileTab { CHALLENGES, BADGES }
 
 data class AppearanceSettings(
@@ -53,6 +55,8 @@ data class AppearanceSettings(
     val showProfileNowPlaying: Boolean = true,
     val showProfileProgress: Boolean = true,
     val defaultShareTheme: ShareTheme = ShareTheme.MIDNIGHT,
+    val statsDuration: AppearanceStatsDuration = AppearanceStatsDuration.AUTO,
+    val statsSummary: AppearanceStatsSummary = AppearanceStatsSummary.TRACKS,
 ) {
     /** Retain opt-in beta tones when applying or importing an appearance. */
     fun forLiveApp(): AppearanceSettings = this

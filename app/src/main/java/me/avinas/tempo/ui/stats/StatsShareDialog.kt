@@ -37,7 +37,8 @@ import androidx.datastore.preferences.core.longPreferencesKey
 import me.avinas.tempo.R
 import me.avinas.tempo.ui.components.ShareOutputButtons
 import me.avinas.tempo.ui.components.rememberCardShareActions
-import me.avinas.tempo.ui.details.formatListeningTime
+import me.avinas.tempo.ui.appearance.AppearanceStatsDuration
+import me.avinas.tempo.ui.appearance.AppearanceStatsSummary
 import me.avinas.tempo.ui.theme.LocalTempoAppearance
 import me.avinas.tempo.data.stats.CombinedBasicStats
 import me.avinas.tempo.data.stats.TimeRange
@@ -66,7 +67,8 @@ fun StatsShareDialog(
 ) {
     val context = LocalContext.current
     val captureController = rememberCaptureController()
-    val defaultTheme = LocalTempoAppearance.current.defaultShareTheme
+    val appearance = LocalTempoAppearance.current
+    val defaultTheme = appearance.defaultShareTheme
     var config by remember(defaultTheme) { mutableStateOf(StatsShareConfig(theme = defaultTheme)) }
     val actions = rememberCardShareActions(captureController, fileName = "tempo-stats.png") {
         runCatching {
@@ -76,17 +78,19 @@ fun StatsShareDialog(
         }
         if (onShared != null) onShared() else onDismiss()
     }
-    val text = statsShareText(context, tab, timeRange, items, totals, config)
+    val text = statsShareText(context, tab, timeRange, items, totals, config, appearance.statsDuration, appearance.statsSummary)
 
     val contentToShare: @Composable () -> Unit = {
-        StatsShareCard(
-            tab = tab,
-            timeRange = timeRange,
-            items = items,
-            totals = totals,
-            config = config,
-            modifier = Modifier.fillMaxSize(),
-        )
+        CompositionLocalProvider(LocalTempoAppearance provides appearance) {
+            StatsShareCard(
+                tab = tab,
+                timeRange = timeRange,
+                items = items,
+                totals = totals,
+                config = config,
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
     }
 
     Dialog(
@@ -216,6 +220,8 @@ private fun statsShareText(
     items: List<Any>,
     totals: CombinedBasicStats?,
     config: StatsShareConfig,
+    durationUnit: AppearanceStatsDuration,
+    summaryMetric: AppearanceStatsSummary,
 ): String = buildString {
     val title = when (tab) {
         StatsTab.TOP_SONGS -> R.string.stats_share_top_songs
@@ -232,10 +238,11 @@ private fun statsShareText(
     appendLine(context.getString(title))
     appendLine(context.getString(range))
     if (config.showSummary && totals != null) {
-        val duration = if (totals.totalTimeMs > 0) formatListeningTime(totals.totalTimeMs)
-            else context.getString(R.string.stats_period_zero_time)
+        val duration = formatStatsDuration(context, totals.totalTimeMs, durationUnit)
         appendLine(context.getString(R.string.share_text_metric, context.getString(R.string.stats_period_listening_time), duration))
         appendLine(context.getString(R.string.share_text_metric, context.getString(R.string.stats_period_plays), context.getString(R.string.stats_period_number, totals.playCount)))
+        appendLine(context.getString(R.string.share_text_metric, context.getString(statsSummaryLabel(summaryMetric)),
+            context.getString(R.string.stats_period_number, totals.summaryCount(summaryMetric))))
     }
     items.asSequence().mapNotNull(::statsItemInfo).take(config.count.count).forEachIndexed { index, item ->
         val name = listOf(item.title, item.subtitle).filter(String::isNotBlank).joinToString(" — ")

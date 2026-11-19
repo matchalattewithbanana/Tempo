@@ -28,6 +28,8 @@ object AppearanceCodec {
         put("showProfileNowPlaying", value.showProfileNowPlaying)
         put("showProfileProgress", value.showProfileProgress)
         put("defaultShareTheme", value.defaultShareTheme.name)
+        put("statsDuration", value.statsDuration.name)
+        put("statsSummary", value.statsSummary.name)
     }.toString()
 
     fun decode(raw: String): AppearanceSettings {
@@ -66,6 +68,8 @@ object AppearanceCodec {
             showProfileNowPlaying = json.optBoolean("showProfileNowPlaying", true),
             showProfileProgress = json.optBoolean("showProfileProgress", true),
             defaultShareTheme = enumOrDefault(json.optString("defaultShareTheme"), ShareTheme.MIDNIGHT),
+            statsDuration = enumOrDefault(json.optString("statsDuration"), AppearanceStatsDuration.AUTO),
+            statsSummary = enumOrDefault(json.optString("statsSummary"), AppearanceStatsSummary.TRACKS),
         )
     }
 }

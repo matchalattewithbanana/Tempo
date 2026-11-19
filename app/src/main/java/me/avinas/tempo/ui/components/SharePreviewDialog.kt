@@ -24,6 +24,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -45,15 +46,20 @@ fun SharePreviewDialog(
     text: String? = null,
     links: List<Pair<String, String>> = emptyList(),
     settings: (@Composable () -> Unit)? = null,
+    cardHeight: Dp = CardDesignHeight,
+    fileName: String = "tempo-card.png",
+    exportEnabled: Boolean = true,
+    initialTheme: ShareTheme? = null,
+    onThemeSelected: ((ShareTheme) -> Unit)? = null,
     contentToShare: @Composable (theme: ShareTheme) -> Unit
 ) {
     val palette = LocalTempoPalette.current
     val resources = LocalContext.current.resources
     val themeNames = ShareTheme.entries.associateWith { resources.getString(shareThemeLabel(it)) }
     val captureController = rememberCaptureController()
-    val defaultTheme = me.avinas.tempo.ui.theme.LocalTempoAppearance.current.defaultShareTheme
+    val defaultTheme = initialTheme ?: me.avinas.tempo.ui.theme.LocalTempoAppearance.current.defaultShareTheme
     var theme by remember(defaultTheme) { mutableStateOf(defaultTheme) }
-    val actions = rememberCardShareActions(captureController, onShared = { onDismiss() })
+    val actions = rememberCardShareActions(captureController, fileName = fileName, onShared = { onDismiss() })
 
     Dialog(
         onDismissRequest = { if (!actions.busy) onDismiss() },
@@ -75,7 +81,7 @@ fun SharePreviewDialog(
             // portrait, landscape, and tablet modes.
             Box(
                 modifier = Modifier
-                    .requiredSize(CardDesignWidth, CardDesignHeight)
+                    .requiredSize(CardDesignWidth, cardHeight)
                     .alpha(0f),
                 contentAlignment = Alignment.Center
             ) {
@@ -148,11 +154,11 @@ fun SharePreviewDialog(
                     contentAlignment = Alignment.Center
                 ) {
                     val scaleX = maxWidth / CardDesignWidth
-                    val scaleY = maxHeight / CardDesignHeight
+                    val scaleY = maxHeight / cardHeight
                     val scale = minOf(scaleX, scaleY).coerceAtMost(1f)
                     
                     val scaledWidth = CardDesignWidth * scale
-                    val scaledHeight = CardDesignHeight * scale
+                    val scaledHeight = cardHeight * scale
                     val cardShape = RoundedCornerShape((20 * scale).dp)
                     
                     Box(
@@ -165,7 +171,7 @@ fun SharePreviewDialog(
                     ) {
                         Box(
                             modifier = Modifier
-                                .requiredSize(CardDesignWidth, CardDesignHeight)
+                                .requiredSize(CardDesignWidth, cardHeight)
                                 .graphicsLayer(
                                     scaleX = scale,
                                     scaleY = scale,
@@ -201,7 +207,12 @@ fun SharePreviewDialog(
                             ThemeSwatch(
                                 theme = t,
                                 selected = theme == t,
-                                onClick = { if (!actions.busy) theme = t },
+                                onClick = {
+                                    if (!actions.busy) {
+                                        theme = t
+                                        onThemeSelected?.invoke(t)
+                                    }
+                                },
                                 modifier = Modifier.semantics {
                                     contentDescription = themeNames.getValue(t)
                                 },
@@ -215,6 +226,7 @@ fun SharePreviewDialog(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                     text = text,
                     links = links,
+                    enabled = exportEnabled,
                 )
             }
         }

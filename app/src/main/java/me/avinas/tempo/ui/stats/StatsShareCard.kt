@@ -42,7 +42,7 @@ import me.avinas.tempo.ui.components.ShareTheme
 import me.avinas.tempo.ui.components.ShareThemeDecorations
 import me.avinas.tempo.ui.components.ShareThemePalette
 import me.avinas.tempo.ui.components.contrastingText
-import me.avinas.tempo.ui.details.formatListeningTime
+import me.avinas.tempo.ui.theme.LocalTempoAppearance
 
 enum class StatsShareCount(
     val count: Int,
@@ -287,7 +287,7 @@ private fun SummaryCard(
         ) {
             SummaryStat(
                 label = stringResource(R.string.stats_share_stat_time),
-                value = formatListeningTime(totals.totalTimeMs),
+                value = displayStatsDuration(totals.totalTimeMs),
                 palette = palette,
                 modifier = Modifier.weight(1f),
             )
@@ -300,8 +300,8 @@ private fun SummaryCard(
             )
             SummaryDivider(palette)
             SummaryStat(
-                label = stringResource(R.string.stats_share_stat_unique),
-                value = totals.uniqueTracks.toString(),
+                label = stringResource(statsSummaryLabel(LocalTempoAppearance.current.statsSummary)),
+                value = stringResource(R.string.stats_period_number, totals.summaryCount(LocalTempoAppearance.current.statsSummary)),
                 palette = palette,
                 modifier = Modifier.weight(1f),
             )
@@ -485,7 +485,7 @@ private fun ListLayout(
                     }
                 }
                 Text(
-                    text = formatListeningTime(hero.timeMs),
+                    text = displayStatsDuration(hero.timeMs),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
                     color = palette.accent,
@@ -556,7 +556,7 @@ private fun CompactRow(
             }
         }
         Text(
-            text = formatListeningTime(info.timeMs),
+            text = displayStatsDuration(info.timeMs),
             style = MaterialTheme.typography.bodySmall,
             fontWeight = FontWeight.Bold,
             color = palette.accent,
@@ -685,7 +685,7 @@ private fun PodiumStep(
             textAlign = TextAlign.Center,
         )
         Text(
-            text = formatListeningTime(step.info.timeMs),
+            text = displayStatsDuration(step.info.timeMs),
             style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.Bold,
             // Medal tints (esp. silver) are tuned for dark backdrops; fall back to
@@ -873,7 +873,7 @@ private fun PosterCell(
                     )
                 }
                 Text(
-                    text = formatListeningTime(info.timeMs),
+                    text = displayStatsDuration(info.timeMs),
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
                     color = Color.White,

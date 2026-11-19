@@ -5,7 +5,6 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 
-import me.avinas.tempo.ui.details.formatListeningTime
 import me.avinas.tempo.ui.theme.TempoDarkBackground
 import me.avinas.tempo.ui.theme.TempoDarkSurfaceSunken
 import me.avinas.tempo.ui.theme.TempoAccentBright
@@ -134,6 +133,7 @@ fun StatsScreen(
     val listState = remember(uiState.selectedTab, uiState.selectedTimeRange, uiState.selectedSortBy, uiState.searchQuery) { LazyListState() }
     val scope = rememberCoroutineScope()
     var showShareDialog by remember { mutableStateOf(false) }
+    var showAlbumPoster by rememberSaveable { mutableStateOf(false) }
     var openingAlbum by remember { mutableStateOf(false) }
     val albumSnackbar = remember { SnackbarHostState() }
     val albumNotFound = stringResource(R.string.album_not_found)
@@ -258,6 +258,19 @@ fun StatsScreen(
                         availableRanges = StatsAvailableRanges,
                         modifier = Modifier.padding(horizontal = 16.dp),
                     )
+                }
+
+                if (uiState.selectedTab == StatsTab.TOP_ALBUMS && uiState.searchQuery.isBlank()) {
+                    item(key = "album_poster") {
+                        OutlinedButton(
+                            onClick = { showAlbumPoster = true },
+                            modifier = Modifier.padding(horizontal = 16.dp).fillMaxWidth(),
+                        ) {
+                            Icon(Icons.Rounded.Album, contentDescription = null)
+                            Spacer(Modifier.width(8.dp))
+                            Text(stringResource(R.string.album_poster_title))
+                        }
+                    }
                 }
 
                 if (appearance.showStatsSummary && uiState.searchQuery.isBlank()) {
@@ -461,6 +474,14 @@ fun StatsScreen(
             )
         }
 
+        if (showAlbumPoster) {
+            AlbumPosterEditor(
+                period = uiState.selectedTimeRange,
+                sortBy = uiState.selectedSortBy,
+                onDismiss = { showAlbumPoster = false },
+            )
+        }
+
         if (showShareDialog) {
             StatsShareDialog(
                 tab = uiState.selectedTab,
@@ -566,7 +587,7 @@ fun HeroStatItem(item: StatItem, onNavigate: () -> Unit) {
             }
             Spacer(modifier = Modifier.width(16.dp))
             Text(
-                text = formatListeningTime(timeMs),
+                text = displayStatsDuration(timeMs),
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -676,7 +697,7 @@ fun GlassStatItem(rank: Int, item: StatItem, onClick: (StatItem) -> Unit) {
                 Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
             }
             
-            Text(formatListeningTime(timeMs), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(displayStatsDuration(timeMs), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
@@ -1024,6 +1045,7 @@ private val StatsAvailableRanges = TimeRange.entries.toList()
 
 @Composable
 private fun StatsPeriodSummary(totals: CombinedBasicStats) {
+    val summary = LocalTempoAppearance.current.statsSummary
     Surface(
         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp).fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
@@ -1035,8 +1057,7 @@ private fun StatsPeriodSummary(totals: CombinedBasicStats) {
         ) {
             StatsPeriodMetric(
                 stringResource(R.string.stats_period_listening_time),
-                if (totals.totalTimeMs > 0) formatListeningTime(totals.totalTimeMs)
-                else stringResource(R.string.stats_period_zero_time),
+                displayStatsDuration(totals.totalTimeMs),
                 Modifier.weight(1.25f),
             )
             StatsPeriodMetric(
@@ -1045,8 +1066,8 @@ private fun StatsPeriodSummary(totals: CombinedBasicStats) {
                 Modifier.weight(1f),
             )
             StatsPeriodMetric(
-                stringResource(R.string.stats_period_unique_songs),
-                stringResource(R.string.stats_period_number, totals.uniqueTracks),
+                stringResource(statsSummaryLabel(summary)),
+                stringResource(R.string.stats_period_number, totals.summaryCount(summary)),
                 Modifier.weight(1f),
             )
         }
