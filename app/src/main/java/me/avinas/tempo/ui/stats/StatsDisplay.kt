@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import me.avinas.tempo.R
 import me.avinas.tempo.data.stats.CombinedBasicStats
@@ -38,7 +39,7 @@ internal fun CombinedBasicStats.summaryCount(metric: AppearanceStatsSummary): In
 internal fun displayStatsDuration(millis: Long): String {
     val context = LocalContext.current
     val unit = LocalTempoAppearance.current.statsDuration
-    val locale = context.resources.configuration.locales[0]
+    val locale = LocalConfiguration.current.locales[0]
     return remember(context, locale, unit, millis) { formatStatsDuration(context, millis, unit) }
 }
 

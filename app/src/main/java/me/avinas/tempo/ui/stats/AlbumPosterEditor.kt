@@ -25,6 +25,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
@@ -206,7 +207,7 @@ private fun PosterAlbumPicker(
     var catalogBusy by remember(term) { mutableStateOf(false) }
     var error by remember(term) { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
-    val locale = LocalContext.current.resources.configuration.locales[0]
+    val locale = LocalConfiguration.current.locales[0]
     val country = (locale.country.takeIf { it.length == 2 } ?: "US").lowercase(Locale.ROOT)
 
     LaunchedEffect(term) {

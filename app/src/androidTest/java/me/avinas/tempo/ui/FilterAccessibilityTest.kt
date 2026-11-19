@@ -12,6 +12,8 @@ import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.test.platform.app.InstrumentationRegistry
+import me.avinas.tempo.R
 import me.avinas.tempo.data.stats.TimeRange
 import me.avinas.tempo.ui.components.SettingsSwitch
 import me.avinas.tempo.ui.components.TimePeriodSelector
@@ -23,6 +25,9 @@ class FilterAccessibilityTest {
 
     @Test fun periodChoicesExposeGroupAndUpdateSelection() {
         val range = mutableStateOf(TimeRange.TODAY)
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val todayLabel = context.getString(R.string.stats_share_period_today)
+        val weekLabel = context.getString(R.string.stats_range_week)
         compose.setContent {
             TimePeriodSelector(
                 selectedRange = range.value,
@@ -31,9 +36,9 @@ class FilterAccessibilityTest {
             )
         }
         compose.onAllNodes(SemanticsMatcher.keyIsDefined(SemanticsProperties.SelectableGroup)).assertCountEquals(1)
-        compose.onNodeWithText(TimeRange.TODAY.name).assertIsSelected()
-        compose.onAllNodes(hasClickAction())[1].assertIsNotSelected().performClick().assertIsSelected()
-        compose.onNodeWithText(TimeRange.TODAY.name).assertIsNotSelected()
+        compose.onNodeWithText(todayLabel).assertIsSelected()
+        compose.onNodeWithText(weekLabel).assertIsNotSelected().performClick().assertIsSelected()
+        compose.onNodeWithText(todayLabel).assertIsNotSelected()
     }
 
     @Test fun settingsLabelAndSwitchShareOneToggleAction() {
