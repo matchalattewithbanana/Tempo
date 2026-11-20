@@ -4,7 +4,6 @@ package me.avinas.tempo.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.*
@@ -115,7 +114,7 @@ private fun TempoBentoDestination(
                     modifier = Modifier.size(if (hero) 56.dp else 46.dp),
                     shape = emblemShape,
                     color = if (hero) accentForeground.copy(alpha = 0.12f) else accentContainer,
-                    contentColor = if (hero) accentForeground else accentForeground,
+                    contentColor = accentForeground,
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
