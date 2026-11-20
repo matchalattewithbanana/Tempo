@@ -4,6 +4,8 @@ import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MaterialExpressiveTheme
+import androidx.compose.material3.MotionScheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
@@ -93,6 +95,9 @@ fun TempoTheme(
         AppearancePaletteResolver.withAccent(basePalette, wallpaper.primary)
     } else basePalette
     val policy = rememberAppearanceRuntimePolicy(effective)
+    val motionScheme = androidx.compose.runtime.remember(policy.reduceMotion) {
+        if (policy.reduceMotion) MotionScheme.standard() else MotionScheme.expressive()
+    }
     val colorScheme = if (effective.preset == AppearancePreset.ABYSS && effective.tone == AppearanceTone.DARK &&
         (effective.accentSource == AppearanceAccentSource.PRESET || effective.accentSource == AppearanceAccentSource.ARTWORK)) DarkColorScheme else palette.materialColorScheme()
 
@@ -113,8 +118,9 @@ fun TempoTheme(
         LocalTempoAppearance provides effective,
         LocalAppearanceRuntimePolicy provides policy,
     ) {
-        MaterialTheme(
+        MaterialExpressiveTheme(
             colorScheme = colorScheme,
+            motionScheme = motionScheme,
             typography = androidx.compose.runtime.remember(effective.fontStyle, effective.boldText) {
                 AppearanceTypography.resolve(effective.fontStyle, effective.boldText)
             },

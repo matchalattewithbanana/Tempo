@@ -27,7 +27,12 @@ val appVersionName = "4.9.9"
 
 android {
     namespace = "me.avinas.tempo"
-    compileSdk = 36
+    // Compose 1.13 requires SDK 37.1; targetSdk remains 36 until tested.
+    compileSdk {
+        version = release(37) {
+            minorApiLevel = 1
+        }
+    }
 
     signingConfigs {
         create("release") {
