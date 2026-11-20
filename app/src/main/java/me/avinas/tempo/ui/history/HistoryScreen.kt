@@ -273,67 +273,47 @@ fun HistoryScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-                            // Search Bar with obsidian glass styling
-                            GlassCard(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(48.dp),
-                                shape = RoundedCornerShape(24.dp),
-                                contentPadding = PaddingValues(horizontal = 14.dp),
-                                backgroundColor = MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.85f),
-                                variant = GlassCardVariant.LowProminence,
-                                borderColor = GlassBorderSoft,
-                                borderWidth = 1.dp
-                            ) {
-                                val focusManager = LocalFocusManager.current
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.fillMaxSize()
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Search,
-                                        contentDescription = stringResource(R.string.history_search),
-                                        tint = if (uiState.searchQuery.isNotBlank()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f),
-                                        modifier = Modifier.size(20.dp)
+                            // Expressive native search field: a single tonal
+                            // surface instead of nested glass, shadow and manual text UI.
+                            val focusManager = LocalFocusManager.current
+                            TextField(
+                                value = uiState.searchQuery,
+                                onValueChange = viewModel::onSearchQueryChanged,
+                                modifier = Modifier.weight(1f),
+                                singleLine = true,
+                                shape = MaterialTheme.shapes.extraLarge,
+                                placeholder = {
+                                    Text(
+                                        text = stringResource(R.string.history_search_hint),
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
                                     )
-                                    Spacer(modifier = Modifier.width(10.dp))
-                                    Box(modifier = Modifier.weight(1f)) {
-                                        if (uiState.searchQuery.isEmpty()) {
-                                            Text(
-                                                text = stringResource(R.string.history_search_hint),
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f),
-                                                style = MaterialTheme.typography.bodyMedium
-                                            )
-                                        }
-                                        BasicTextField(
-                                            value = uiState.searchQuery,
-                                            onValueChange = viewModel::onSearchQueryChanged,
-                                            textStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface),
-                                            singleLine = true,
-                                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                                            keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() }),
-                                            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-                                            modifier = Modifier.fillMaxWidth()
-                                        )
-                                    }
+                                },
+                                leadingIcon = {
+                                    Icon(Icons.Default.Search, contentDescription = null)
+                                },
+                                trailingIcon = {
                                     if (uiState.searchQuery.isNotEmpty()) {
-                                        Box(
-                                            modifier = Modifier
-                                                .size(48.dp)
-                                                .clip(CircleShape)
-                                                .premiumClickable(onClick = { viewModel.onSearchQueryChanged("") }),
-                                            contentAlignment = Alignment.Center
+                                        IconButton(
+                                            onClick = { viewModel.onSearchQueryChanged("") }
                                         ) {
                                             Icon(
-                                                imageVector = Icons.Default.Close,
+                                                Icons.Default.Close,
                                                 contentDescription = stringResource(R.string.stats_search_clear),
-                                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                modifier = Modifier.size(18.dp)
                                             )
                                         }
                                     }
-                                }
-                            }
+                                },
+                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                                keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() }),
+                                colors = TextFieldDefaults.colors(
+                                    focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                    focusedIndicatorColor = Color.Transparent,
+                                    unfocusedIndicatorColor = Color.Transparent,
+                                ),
+                            )
 
                             IconButton(
                                 enabled = !uiState.isLoading && !uiState.isRefreshing && !uiState.isMarking &&
