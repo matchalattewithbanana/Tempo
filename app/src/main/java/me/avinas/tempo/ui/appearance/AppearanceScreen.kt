@@ -719,7 +719,11 @@ private fun <T> ChoiceRow(
                         enabled = enabled,
                         onCheckedChange = { if (selected != option) onSelect(option) },
                         shapes = when {
-                            group.size == 1 -> ToggleButtonDefaults.shapes()
+                            group.size == 1 -> ToggleButtonShapes(
+                                shape = ToggleButtonDefaults.shape,
+                                pressedShape = ToggleButtonDefaults.pressedShape,
+                                checkedShape = ToggleButtonDefaults.checkedShape,
+                            )
                             index == 0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
                             index == group.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
                             else -> ButtonGroupDefaults.connectedMiddleButtonShapes()

@@ -11,6 +11,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.ToggleButtonDefaults
+import androidx.compose.material3.ToggleButtonShapes
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -73,7 +74,11 @@ fun TimePeriodSelector(
                             }
                         },
                         shapes = when {
-                            rowRanges.size == 1 -> ToggleButtonDefaults.shapes()
+                            rowRanges.size == 1 -> ToggleButtonShapes(
+                                shape = ToggleButtonDefaults.shape,
+                                pressedShape = ToggleButtonDefaults.pressedShape,
+                                checkedShape = ToggleButtonDefaults.checkedShape,
+                            )
                             index == 0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
                             index == rowRanges.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
                             else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
