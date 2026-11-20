@@ -2,7 +2,7 @@
 
 ## Version and channel
 
-Use `MAJOR.MINOR.PATCH-beta.N` for beta display versions and `vMAJOR.MINOR.PATCH-beta.N` for tags. Stable versions omit the suffix. Titles follow `Tempo X.Y.Z Beta N — Description` or `Tempo X.Y.Z — Description`. Legacy `4.8.16-fork.*` tags retain their original identities.
+Use **`MAJOR.MINOR.PATCH-beta`** for beta display versions and **`vMAJOR.MINOR.PATCH-beta`** for GitHub tags. Beta titles are `Tempo X.Y.Z Beta — Description`. Stable versions omit `-beta` and use `Tempo X.Y.Z — Description`. There is one named beta per base version; if another public beta is necessary, assign a new bounded base version rather than publishing `beta.1` or `beta.2`. Historical numbered beta and `4.8.16-fork.*` tags remain unchanged and readable.
 
 For new releases, use **bounded carry-over versioning**. The patch component
 ranges from **0 through 99**; each full 100 patches increments the minor
@@ -23,7 +23,7 @@ tag, measured before release-preparation commits**. Use
 Before publishing a release candidate, calculate and **normalize** the
 candidate version. For example, `v4.9.9..main` was **116 commits** before
 the 21 November 2026 preparation: `4.9.(9 + 116) = 4.9.125` normalizes
-to `4.10.25-beta.1`. The browser extension uses `4.10.25.1`; Android
+to `4.10.25-beta`. The browser extension uses `4.10.25.0`; Android
 uses monotonically increasing `versionCode=4821` (independent of the
 display version). Once a candidate is prepared, subsequent fixes should
 retain its base version unless an explicit new version is chosen.
@@ -31,9 +31,23 @@ retain its base version unless an explicit new version is chosen.
 These bounds apply to **new releases**, not published historical tags;
 never rename or retag old APKs or silently change signing identity.
 
-The extension uses the same numeric version as Android for stable releases.
-For a beta, use the numeric browser form `X.Y.Z.N` for Android `X.Y.Z-beta.N`.
-Bump the extension manifest, package, and lockfile together.
+Browser extension manifests require a numeric version, even though Android
+and public GitHub tags use the unnumbered `-beta` label. To preserve forward
+update ordering, use **`X.Y.Z.0` internally for beta manifests** and
+**`X.Y.Z.1` for the subsequent stable manifest**. These numeric fourth
+components are **not beta release numbers**. Set the source manifest's
+`version_name` to the corresponding public `X.Y.Z-beta` or `X.Y.Z` label.
+The Chromium bundle retains `version_name`; the Firefox bundle strips the
+unsupported field and Tempo's popup displays the human-readable version.
+The npm `package.json` and root lockfile version use actual SemVer:
+`X.Y.Z-beta` for a beta, `X.Y.Z` for stable. The release validator verifies
+both manifest and package versions. This prevents a stable extension being
+treated as an older version than the beta.
+
+For the current candidate: Android `4.10.25-beta`, versionCode `4821`,
+browser manifest `4.10.25.0`, browser npm package `4.10.25-beta`.
+The future stable manifest would be `4.10.25.1` and stable npm package
+`4.10.25`; the stable APK must use a **newer Android versionCode**.
 
 Android versionCode increases for each new installable build. Do not change package ID, OAuth callbacks, signing identity or stored-data formats as a release-label cleanup.
 

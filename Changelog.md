@@ -4,13 +4,13 @@ Fork-specific changes. Published tags and artifacts are listed in the [release c
 
 ## Unreleased
 
-### Beta release candidate — 4.10.25-beta.1 (2026-11-21)
+### Beta release candidate — 4.10.25-beta (2026-11-21)
 
 - Prepared a coordinated **Android + Chromium + Firefox** prerelease candidate on `main` for the source changes since stable v4.9.9; this is *not* the completion of the future Material 3 Expressive roadmap.
-- Version derived from the bounded rollover rule: **4.9.(9 + 116) = 4.9.125 → 4.10.25-beta.1** (commit count taken before release-preparation commits). Android `versionCode` advanced **4820 → 4821**; browser packages use **4.10.25.1**.
+- Version derived from the bounded rollover rule: **4.9.(9 + 116) = 4.9.125 → 4.10.25-beta** (commit count taken before release-preparation commits). Android `versionCode` advanced **4820 → 4821**; browser manifests use numeric **4.10.25.0** internally, while the package/display version is **4.10.25-beta**.
 - Added [the staged Expressive implementation roadmap](docs/MATERIAL3_EXPRESSIVE_ROADMAP.md), acceptance criteria, performance/accessibility baselines and beta exit gates.
 - Release assets, signing continuity and publication must pass the manual beta workflow; code preparation alone is **not** a published or tested APK.
-- [Beta notes](docs/releases/v4.10.25-beta.1.md).
+- [Beta notes](docs/releases/v4.10.25-beta.md).
 
 
 ### Optional Expressive Effects Studio, floating dock and custom palettes
@@ -188,7 +188,7 @@ First stable GitHub release. Android version code 4819; source commit
 ### Validation
 
 - [Release workflow 44372248786](https://github.com/matchalattewithbanana/Tempo/actions/runs/44372248786) passed Android unit tests, lint, APK assembly, emulator tests and browser companion checks.
-- The published APK checksum and signing certificate were verified. The signer matches 4.9.0 Beta 1.
+- The published APK checksum and signing certificate were verified. The signer matches 4.9.0 Beta.
 - Physical-device visual, accessibility, tracking and battery checks remain to be completed.
 
 ## [4.9.0-beta.1] — 2026-11-17
