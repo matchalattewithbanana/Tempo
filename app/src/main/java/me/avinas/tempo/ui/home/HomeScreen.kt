@@ -170,7 +170,9 @@ fun HomeScreen(
                 LazyColumn(
                     state = lazyListState,
                     contentPadding = PaddingValues(bottom = if (appearance.nowListening == AppearanceNowListening.COMPACT) 176.dp else 116.dp),
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.align(Alignment.TopCenter)
+                        .widthIn(max = 920.dp)
+                        .fillMaxSize(),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     item(key = "header") {

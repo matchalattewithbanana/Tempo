@@ -234,7 +234,9 @@ fun StatsScreen(
             LazyColumn(
                 state = listState,
                 contentPadding = PaddingValues(top = 100.dp, bottom = if (me.avinas.tempo.ui.theme.LocalTempoAppearance.current.nowListening == me.avinas.tempo.ui.appearance.AppearanceNowListening.COMPACT) 176.dp else 116.dp),
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.align(Alignment.TopCenter)
+                    .widthIn(max = 960.dp)
+                    .fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(8.dp) // Increased spacing for vertical rhythm
             ) {
                 // 1. Sticky Tab Selector + Search

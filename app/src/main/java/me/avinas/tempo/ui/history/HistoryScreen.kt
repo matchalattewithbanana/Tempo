@@ -774,9 +774,10 @@ fun HistoryListContent(
     Box(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
             state = listState,
-            // Top padding for persistent search bar (status bar + 48dp bar + paddings), bottom for bottom nav
+            // Top padding for persistent search bar (status bar + 48dp bar + paddings), bottom for bottom nav.
+            // Center the timeline on tablets so individual events stay scannable.
             contentPadding = PaddingValues(top = 96.dp, bottom = if (me.avinas.tempo.ui.theme.LocalTempoAppearance.current.nowListening == me.avinas.tempo.ui.appearance.AppearanceNowListening.COMPACT) 180.dp else 120.dp),
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.align(Alignment.TopCenter).widthIn(max = 960.dp).fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             // View Mode Toggle Banner (only show if user has archive data in SEPARATED mode)
