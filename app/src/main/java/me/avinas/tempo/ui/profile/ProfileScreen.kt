@@ -5,6 +5,9 @@ package me.avinas.tempo.ui.profile
  * daily challenges, and earned badges.
  */
 
+import me.avinas.tempo.ui.effects.tempoAmbientBackdrop
+import me.avinas.tempo.ui.effects.tempoTiltSurface
+import me.avinas.tempo.ui.effects.tempoListMotion
 import androidx.compose.runtime.saveable.rememberSaveable
 import me.avinas.tempo.ui.appearance.AppearanceProfileTab
 import me.avinas.tempo.ui.theme.LocalTempoAppearance
@@ -680,7 +683,7 @@ fun ProfileScreen(
             getLevelTierAccent(uiState.userLevel.currentLevel)
         }
 
-    Box(Modifier.fillMaxSize()) {
+    Box(Modifier.fillMaxSize().tempoAmbientBackdrop()) {
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
             val compact = maxWidth < 380.dp
             val expanded = maxWidth >= 600.dp

@@ -1,5 +1,8 @@
 package me.avinas.tempo.ui.stats
 
+import me.avinas.tempo.ui.effects.tempoAmbientBackdrop
+import me.avinas.tempo.ui.effects.tempoTiltSurface
+import me.avinas.tempo.ui.effects.tempoListMotion
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -220,7 +223,7 @@ fun StatsScreen(
         }
     }
 
-    Box(Modifier.fillMaxSize()) {
+    Box(Modifier.fillMaxSize().tempoAmbientBackdrop()) {
         Box(modifier = Modifier.fillMaxSize()) {
             PullToRefreshBox(
                 isRefreshing = uiState.isRefreshing,
@@ -390,11 +393,13 @@ fun StatsScreen(
                         }
                     ) { index, item ->
                         val rank = if (isSearching) (itemRank(item) ?: (index + 1)) else (index + if (firstItem == null) 1 else 2) // Search shows global rank
-                        GlassStatItem(
-                            rank = rank,
-                            item = item,
-                            onClick = onStatItemClick
-                        )
+                        Box(Modifier.tempoListMotion(index)) {
+                            GlassStatItem(
+                                rank = rank,
+                                item = item,
+                                onClick = onStatItemClick,
+                            )
+                        }
                     }
                 }
 
@@ -552,6 +557,7 @@ fun HeroStatItem(item: StatItem, onNavigate: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
+            .tempoTiltSurface()
             .premiumClickable(onClick = onNavigate),
         backgroundColor = rankColor.copy(alpha = 0.12f), // Reduced from 0.25f for better blend
         contentPadding = PaddingValues(16.dp) // Reduced from 24.dp

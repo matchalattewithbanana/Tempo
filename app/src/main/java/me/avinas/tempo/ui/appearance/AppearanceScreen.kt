@@ -1,5 +1,8 @@
 package me.avinas.tempo.ui.appearance
 
+import me.avinas.tempo.ui.effects.tempoAmbientBackdrop
+import me.avinas.tempo.ui.effects.tempoTiltSurface
+import me.avinas.tempo.ui.effects.tempoListMotion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.contentDescription
 
@@ -230,7 +233,7 @@ fun AppearanceScreen(
         // Compose only the visible studio sections. Previously the entire studio,
         // including presets, fonts and saved looks, was composed on every preference edit.
         LazyColumn(
-            modifier = Modifier.fillMaxSize().padding(padding),
+            modifier = Modifier.fillMaxSize().padding(padding).tempoAmbientBackdrop(),
             contentPadding = PaddingValues(18.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {

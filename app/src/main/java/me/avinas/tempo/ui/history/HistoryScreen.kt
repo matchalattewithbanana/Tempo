@@ -1,5 +1,8 @@
 package me.avinas.tempo.ui.history
 
+import me.avinas.tempo.ui.effects.tempoAmbientBackdrop
+import me.avinas.tempo.ui.effects.tempoTiltSurface
+import me.avinas.tempo.ui.effects.tempoListMotion
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -189,7 +192,7 @@ fun HistoryScreen(
         }
     }
 
-    Box(Modifier.fillMaxSize()) {
+    Box(Modifier.fillMaxSize().tempoAmbientBackdrop()) {
         Box(modifier = Modifier.fillMaxSize()) {
             PullToRefreshBox(
                 isRefreshing = uiState.isRefreshing,
@@ -860,6 +863,7 @@ fun HistoryListContent(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
+                            .tempoListMotion(index)
                             .then(
                                 if (isFirstItem) {
                                     Modifier.onGloballyPositioned { coordinates ->
@@ -933,7 +937,7 @@ fun HistoryListContent(
                         key = { _, item -> "lastfm_${item.id}" },
                         contentType = { _, _ -> "history_item" }
                     ) { index, item ->
-                        Box(modifier = Modifier.fillMaxWidth()) {
+                        Box(modifier = Modifier.fillMaxWidth().tempoListMotion(index)) {
                             SwipeToDeleteHistoryItem(
                                 item = item,
                                 index = index,
@@ -992,8 +996,10 @@ fun HistoryListContent(
                         items = archiveItems,
                         key = { _, item -> "archive_sep_${item.archiveId}" },
                         contentType = { _, _ -> "archive_item" }
-                    ) { _, archiveItem ->
-                        ArchiveHistoryListItem(item = archiveItem)
+                    ) { index, archiveItem ->
+                        Box(Modifier.tempoListMotion(index)) {
+                            ArchiveHistoryListItem(item = archiveItem)
+                        }
                     }
                 }
             }
@@ -1011,8 +1017,10 @@ fun HistoryListContent(
                     items = archiveItems,
                     key = { _, item -> "archive_uni_${item.archiveId}" },
                     contentType = { _, _ -> "archive_item" }
-                ) { _, archiveItem ->
-                    ArchiveHistoryListItem(item = archiveItem)
+                ) { index, archiveItem ->
+                    Box(Modifier.tempoListMotion(index)) {
+                        ArchiveHistoryListItem(item = archiveItem)
+                    }
                 }
             }
         }

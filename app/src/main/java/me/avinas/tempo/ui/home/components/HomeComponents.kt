@@ -1,5 +1,8 @@
 package me.avinas.tempo.ui.home.components
 
+import me.avinas.tempo.ui.effects.tempoAmbientBackdrop
+import me.avinas.tempo.ui.effects.tempoTiltSurface
+import me.avinas.tempo.ui.effects.tempoListMotion
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -590,7 +593,7 @@ fun SpotlightStoryCard(
         )
     }
     Box(
-        modifier = modifier.fillMaxWidth()
+        modifier = modifier.tempoTiltSurface().fillMaxWidth()
             .clip(shape)
             .background(colors.surfaceContainerHigh)
             .background(tint)

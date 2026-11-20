@@ -1,5 +1,8 @@
 package me.avinas.tempo.ui.home
 
+import me.avinas.tempo.ui.effects.tempoAmbientBackdrop
+import me.avinas.tempo.ui.effects.tempoTiltSurface
+import me.avinas.tempo.ui.effects.tempoListMotion
 import me.avinas.tempo.ui.appearance.AppearanceHomeSection
 import me.avinas.tempo.ui.appearance.AppearanceNowListening
 import me.avinas.tempo.ui.appearance.AppearanceStatsRange
@@ -156,7 +159,7 @@ fun HomeScreen(
     val optionalPromptsAllowed = !analyticsDisclosure.shouldShow &&
         !showTodaysOverview && !(uiState.isGamificationEnabled && showLevelUp)
 
-    Box(Modifier.fillMaxSize()) {
+    Box(Modifier.fillMaxSize().tempoAmbientBackdrop()) {
         Box(modifier = Modifier.fillMaxSize()) {
             PullToRefreshBox(
                 isRefreshing = flags.isRefreshing,
@@ -187,7 +190,8 @@ fun HomeScreen(
                             levelTitle = userLevel?.title,
                             isGamificationEnabled = uiState.isGamificationEnabled,
                             onLevelClick = onNavigateToProfile,
-                            onSettingsClick = onNavigateToSettings
+                            onSettingsClick = onNavigateToSettings,
+                            modifier = Modifier.tempoListMotion(0),
                         )
                     }
                     
@@ -278,6 +282,8 @@ fun HomeScreen(
                             Column(
                                 modifier = Modifier
                                     .padding(horizontal = 16.dp)
+                                    .tempoTiltSurface()
+                                    .tempoListMotion(3)
                             ) {
                                 HeroCard(
                                     userName = uiState.userName ?: stringResource(R.string.home_user_default),
@@ -329,7 +335,9 @@ fun HomeScreen(
                                     albumArtUrl = uiState.spotlightTopTrack?.albumArtUrl,
                                     storyAvailable = directStoryTimeRange != null,
                                     storyViewed = flags.spotlightStoryViewed,
-                                    modifier = Modifier.onGloballyPositioned { coordinates ->
+                                    modifier = Modifier.tempoTiltSurface()
+                                        .tempoListMotion(4)
+                                        .onGloballyPositioned { coordinates ->
                                         walkthroughController.registerTarget(
                                             me.avinas.tempo.ui.components.WalkthroughStep.HOME_SPOTLIGHT,
                                             coordinates
