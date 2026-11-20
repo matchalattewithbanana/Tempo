@@ -231,20 +231,7 @@ fun HomeScreen(
                         when (section) {
                             AppearanceHomeSection.SUMMARY -> if (uiState.hasData) { item(key = "hero") {
                             
-                            val timeString = remember(uiState.totalListeningTimeMs) {
-                                val totalMs = uiState.totalListeningTimeMs
-                                val totalMinutes = totalMs / 1000 / 60
-                                val hours = totalMinutes / 60
-                                val minutes = totalMinutes % 60
-                                val decimalTime = String.format(java.util.Locale.US, "%.1f", totalMinutes / 60.0)
-                                if (hours == 0L) {
-                                    if (minutes > 0) "${minutes}m" else "0m"
-                                } else if (hours < 10) {
-                                    "${decimalTime}h"
-                                } else {
-                                    "${hours}h ${minutes}m"
-                                }
-                            }
+                            val timeString = me.avinas.tempo.ui.stats.displayStatsDuration(uiState.totalListeningTimeMs)
 
                             val trendData = remember(uiState.dailyListening) {
                                 uiState.dailyListening.map { it.totalTimeMs.toFloat() / 1000 / 60 }

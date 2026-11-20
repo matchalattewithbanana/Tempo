@@ -1857,4 +1857,11 @@
     <string name="appearance_backdrop_flat">Flat</string>
     <string name="appearance_backdrop_wash">Accent wash</string>
     <string name="appearance_presets">Presets</string>
+    <string name="settings_search_label">Search settings</string>
+    <string name="settings_search_empty">No matching settings found.</string>
+    <string name="settings_search_general_terms">Profile, appearance, theme, colors, listening time, stats, notifications, language</string>
+    <string name="settings_search_tracking_terms">Tracking, permissions, battery, background, apps, scrobbling</string>
+    <string name="settings_search_connections_terms">Spotify, Last.fm, connections, accounts, desktop</string>
+    <string name="settings_search_data_terms">Import, export, backup, restore, Apple Music, YouTube, Deezer, history, privacy</string>
+    <string name="settings_search_about_terms">About, version, help, community, licenses</string>
 </resources>

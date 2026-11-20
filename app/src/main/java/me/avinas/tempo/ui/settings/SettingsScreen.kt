@@ -106,6 +106,7 @@ fun SettingsScreen(
     val lifecycleOwner = LocalLifecycleOwner.current
     // Settings home is intentionally a small category navigator.
     var settingsCategory by rememberSaveable { mutableStateOf("overview") }
+    var settingsSearch by rememberSaveable { mutableStateOf("") }
     val settingsScrollState = key(settingsCategory) { rememberScrollState() }
     BackHandler(enabled = settingsCategory != "overview") {
         settingsCategory = "overview"
@@ -334,6 +335,30 @@ fun SettingsScreen(
                         .padding(16.dp),
             ) {
                 if (settingsCategory == "overview") {
+                    OutlinedTextField(
+                        value = settingsSearch,
+                        onValueChange = { settingsSearch = it },
+                        label = { Text(stringResource(R.string.settings_search_label)) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    Spacer(Modifier.height(16.dp))
+                    if (settingsSearch.isNotBlank()) {
+                        val query = settingsSearch.trim()
+                        val categories = listOf(
+                            Triple("general", stringResource(R.string.settings_category_general), stringResource(R.string.settings_search_general_terms)),
+                            Triple("tracking", stringResource(R.string.settings_category_tracking), stringResource(R.string.settings_search_tracking_terms)),
+                            Triple("connections", stringResource(R.string.settings_category_connections), stringResource(R.string.settings_search_connections_terms)),
+                            Triple("data", stringResource(R.string.settings_category_data), stringResource(R.string.settings_search_data_terms)),
+                            Triple("about", stringResource(R.string.settings_category_about), stringResource(R.string.settings_search_about_terms)),
+                        ).filter { (_, title, terms) ->
+                            query.split(Regex("\\s+")).all { title.contains(it, true) || terms.contains(it, true) }
+                        }
+                        if (categories.isEmpty()) Text(stringResource(R.string.settings_search_empty))
+                        categories.forEach { (category, title, terms) ->
+                            SettingsOption(title = title, subtitle = terms, onClick = { settingsCategory = category })
+                        }
+                    } else {
                     SettingsSectionHeader(stringResource(R.string.settings_tracking_access_status))
                     val trackingHealth = trackingHeartbeat?.let { heartbeat ->
                         evaluateTrackingHealth(
@@ -473,6 +498,7 @@ fun SettingsScreen(
                             )
                         }
                     }
+                    } // Unfiltered settings overview
                 }
 
                 if (settingsCategory == "general") {

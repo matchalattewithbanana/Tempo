@@ -187,6 +187,7 @@ class HomeViewModel @Inject constructor(
     }
 
     fun onTimeRangeSelected(timeRange: TimeRange) {
+        if (_uiState.value.selectedTimeRange == timeRange) return
         _uiState.update { it.copy(selectedTimeRange = timeRange) }
         _flagsState.update { it.copy(isLoading = true) }
         loadData()
@@ -278,6 +279,11 @@ class HomeViewModel @Inject constructor(
                 } else null
                 
                 val totals = totalsDeferred.await()
+                // Publish the primary metric as soon as it is available. Secondary
+                // rankings and insights can take much longer on large libraries.
+                if (totals.playCount > 0) {
+                    _uiState.update { it.copy(totalListeningTimeMs = totals.totalTimeMs, hasData = true, loadFailed = false) }
+                }
                 val periodComparison = periodComparisonDeferred.await()
                 val rawDailyListening = rawDailyListeningDeferred.await()
                 val topTracks = topTracksDeferred?.await()
