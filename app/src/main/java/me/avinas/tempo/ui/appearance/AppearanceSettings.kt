@@ -36,6 +36,8 @@ data class AppearanceSettings(
     val fontStyle: AppearanceFontStyle = AppearanceFontStyle.TEMPO,
     val reduceMotion: Boolean = false,
     val instantNavigation: Boolean = false,
+    val showNavigationLabels: Boolean = true,
+    val showHistoryArtwork: Boolean = true,
     val accentSource: AppearanceAccentSource = AppearanceAccentSource.PRESET,
     val density: AppearanceDensity = AppearanceDensity.COMFORTABLE,
     val shape: AppearanceShape = AppearanceShape.SOFT,

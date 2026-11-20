@@ -1869,4 +1869,8 @@
     <string name="appearance_instant_navigation">Switch screens without a fade</string>
     <string name="appearance_home_start_period">Default Home period</string>
     <string name="appearance_stats_artwork">Show artwork in rankings</string>
+    <string name="appearance_history_artwork">Show album artwork in History</string>
+    <string name="appearance_navigation_labels">Show navigation labels</string>
+    <string name="appearance_move_down">Down</string>
+    <string name="appearance_reset_home_cards">Reset Home card order and visibility</string>
 </resources>

@@ -306,6 +306,9 @@ fun AppearanceScreen(onNavigateBack: () -> Unit, viewModel: AppearanceViewModel 
                 SettingToggle(R.string.appearance_instant_navigation, draft.instantNavigation, !busy) {
                     draft = draft.copy(instantNavigation = it)
                 }
+                SettingToggle(R.string.appearance_navigation_labels, draft.showNavigationLabels, !busy) {
+                    draft = draft.copy(showNavigationLabels = it)
+                }
                 SettingToggle(R.string.appearance_adaptive, draft.adaptiveEffects, !busy) { draft = draft.copy(adaptiveEffects = it) }
                 Text(stringResource(R.string.appearance_effect_policy), style = MaterialTheme.typography.bodySmall)
             }
@@ -326,6 +329,7 @@ fun AppearanceScreen(onNavigateBack: () -> Unit, viewModel: AppearanceViewModel 
                 draft.homeOrder.forEachIndexed { index, section ->
                     val sectionName = stringResource(sectionLabel(section))
                     val moveLabel = stringResource(R.string.appearance_move_up)
+                    val moveDownLabel = stringResource(R.string.appearance_move_down)
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Checkbox(modifier = Modifier.semantics { contentDescription = sectionName }, checked = section !in draft.hiddenHomeSections, enabled = !busy, onCheckedChange = { visible ->
                             draft = draft.copy(hiddenHomeSections = if (visible) draft.hiddenHomeSections - section else draft.hiddenHomeSections + section)
@@ -335,9 +339,26 @@ fun AppearanceScreen(onNavigateBack: () -> Unit, viewModel: AppearanceViewModel 
                             val order = draft.homeOrder.toMutableList()
                             order[index] = order[index - 1]; order[index - 1] = section
                             draft = draft.copy(homeOrder = order)
-                        }) { Text(stringResource(R.string.appearance_move_up)) }
+                        }) { Text(moveLabel) }
+                        TextButton(
+                            modifier = Modifier.semantics { contentDescription = "$moveDownLabel: $sectionName" },
+                            enabled = !busy && index < draft.homeOrder.lastIndex,
+                            onClick = {
+                                val order = draft.homeOrder.toMutableList()
+                                order[index] = order[index + 1]
+                                order[index + 1] = section
+                                draft = draft.copy(homeOrder = order)
+                            },
+                        ) { Text(moveDownLabel) }
                     }
                 }
+                TextButton(
+                    enabled = !busy && (draft.homeOrder != AppearanceHomeSection.entries.toList() ||
+                        draft.hiddenHomeSections.isNotEmpty()),
+                    onClick = {
+                        draft = draft.copy(homeOrder = AppearanceHomeSection.entries.toList(), hiddenHomeSections = emptySet())
+                    },
+                ) { Text(stringResource(R.string.appearance_reset_home_cards)) }
             }
             AppearanceSection(R.string.appearance_stats_settings) {
                 ChoiceRow(R.string.appearance_stats_start, AppearanceStatsTab.entries, draft.statsTab, !busy, { when (it) {
@@ -370,6 +391,11 @@ fun AppearanceScreen(onNavigateBack: () -> Unit, viewModel: AppearanceViewModel 
                 }
                 SettingToggle(R.string.appearance_stats_highlight, draft.highlightTopResult, !busy) {
                     draft = draft.copy(highlightTopResult = it)
+                }
+            }
+            AppearanceSection(R.string.nav_history) {
+                SettingToggle(R.string.appearance_history_artwork, draft.showHistoryArtwork, !busy) {
+                    draft = draft.copy(showHistoryArtwork = it)
                 }
             }
             AppearanceSection(R.string.appearance_profile_settings) {

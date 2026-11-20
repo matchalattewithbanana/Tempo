@@ -1274,7 +1274,7 @@ fun ArchiveHistoryListItem(item: ArchiveHistoryItem) {
         ) {
             Box {
                 CachedAsyncImage(
-                    imageUrl = item.albumArtUrl,
+                    imageUrl = item.albumArtUrl.takeIf { me.avinas.tempo.ui.theme.LocalTempoAppearance.current.showHistoryArtwork },
                     contentDescription = "Album art for ${item.trackTitle}",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
@@ -1474,7 +1474,7 @@ fun HistoryListItem(
                         .border(0.5.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(10.dp)),
                     contentAlignment = Alignment.Center
                 ) {
-                    if (item.album_art_url.isNullOrBlank()) {
+                    if (!me.avinas.tempo.ui.theme.LocalTempoAppearance.current.showHistoryArtwork || item.album_art_url.isNullOrBlank()) {
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()

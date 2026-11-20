@@ -13,6 +13,8 @@ object AppearanceCodec {
         put("preset", value.preset.name); put("tone", value.tone.name)
         put("font", value.fontStyle.name); put("reduceMotion", value.reduceMotion)
         put("instantNavigation", value.instantNavigation)
+        put("showNavigationLabels", value.showNavigationLabels)
+        put("showHistoryArtwork", value.showHistoryArtwork)
         put("accent", value.accentSource.name); put("density", value.density.name)
         put("customAccent", normalizeAccentHex(value.customAccent))
         put("backdrop", value.backdrop.name)
@@ -54,6 +56,8 @@ object AppearanceCodec {
             fontStyle = AppearanceFontStyle.decode(json.optString("font")),
             reduceMotion = json.optBoolean("reduceMotion"),
             instantNavigation = json.optBoolean("instantNavigation"),
+            showNavigationLabels = json.optBoolean("showNavigationLabels", true),
+            showHistoryArtwork = json.optBoolean("showHistoryArtwork", true),
             accentSource = enumOrDefault(json.optString("accent"), AppearanceAccentSource.PRESET),
             density = enumOrDefault(json.optString("density"), AppearanceDensity.COMFORTABLE),
             shape = enumOrDefault(json.optString("shape"), AppearanceShape.SOFT),

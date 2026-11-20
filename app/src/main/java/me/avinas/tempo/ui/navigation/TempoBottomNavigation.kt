@@ -252,6 +252,7 @@ private fun TempoNavItem(
     val interactionSource = remember { MutableInteractionSource() }
     val haptics = LocalHapticFeedback.current
     val isSelected = selected
+    val showLabel = LocalTempoAppearance.current.showNavigationLabels
 
     val palette = LocalTempoPalette.current
     val reducedMotion = rememberReducedMotion()
@@ -295,6 +296,7 @@ private fun TempoNavItem(
                 role = Role.Tab
                 this.selected = isSelected
             }
+            .sizeIn(minWidth = 48.dp, minHeight = 48.dp)
             .padding(horizontal = 10.dp, vertical = 7.dp)
             .scale(selectionScale * pressScale),
         contentAlignment = Alignment.Center
@@ -305,16 +307,18 @@ private fun TempoNavItem(
         ) {
             Icon(
                 imageVector = if (selected) icon else unselectedIcon,
-                contentDescription = null, // Text supplies the accessible label.
+                contentDescription = if (showLabel) null else label,
                 tint = iconColor,
                 modifier = Modifier.size(24.dp)
             )
-            Text(
-                text = label,
-                color = iconColor,
-                style = MaterialTheme.typography.labelSmall,
-                maxLines = 1,
-            )
+            if (showLabel) {
+                Text(
+                    text = label,
+                    color = iconColor,
+                    style = MaterialTheme.typography.labelSmall,
+                    maxLines = 1,
+                )
+            }
         }
     }
 }
