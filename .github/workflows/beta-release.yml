@@ -44,10 +44,12 @@ jobs:
           distribution: temurin
           java-version: '21'
           cache: gradle
+      # The default is the existing published fork signer (also pinned in stable-release.yml).
+      # A repository variable may override it intentionally; verification always remains mandatory.
       - name: Prepare beta signing key
         env:
           TEMPO_DEBUG_KEYSTORE_BASE64: ${{ secrets.TEMPO_DEBUG_KEYSTORE_BASE64 }}
-          TEMPO_BETA_SIGNER_SHA256: ${{ vars.TEMPO_BETA_SIGNER_SHA256 }}
+          TEMPO_BETA_SIGNER_SHA256: ${{ vars.TEMPO_BETA_SIGNER_SHA256 || 'fa14beee34664d2c41bc5db00f630b564992da649fa66cb4e62c523915c95407' }}
           PUBLISH_BETA: ${{ inputs.publish_beta }}
         shell: bash
         run: |
@@ -80,7 +82,7 @@ jobs:
         run: ./gradlew :app:assembleDebug --stacktrace
       - name: Verify APK and expected version
         env:
-          TEMPO_BETA_SIGNER_SHA256: ${{ vars.TEMPO_BETA_SIGNER_SHA256 }}
+          TEMPO_BETA_SIGNER_SHA256: ${{ vars.TEMPO_BETA_SIGNER_SHA256 || 'fa14beee34664d2c41bc5db00f630b564992da649fa66cb4e62c523915c95407' }}
           PUBLISH_BETA: ${{ inputs.publish_beta }}
           VERSION: ${{ steps.release.outputs.version }}
           VERSION_CODE: ${{ steps.release.outputs.version_code }}
@@ -176,7 +178,7 @@ jobs:
           path: release-bundle
       - name: Verify the downloaded release bundle
         env:
-          TEMPO_BETA_SIGNER_SHA256: ${{ vars.TEMPO_BETA_SIGNER_SHA256 }}
+          TEMPO_BETA_SIGNER_SHA256: ${{ vars.TEMPO_BETA_SIGNER_SHA256 || 'fa14beee34664d2c41bc5db00f630b564992da649fa66cb4e62c523915c95407' }}
         shell: bash
         run: |
           set -euo pipefail
