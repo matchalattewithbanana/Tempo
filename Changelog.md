@@ -4,6 +4,14 @@ Fork-specific changes. Published tags and artifacts are listed in the [release c
 
 ## Unreleased
 
+### Launcher artwork: faithful concept assets
+
+- Replaced all four provisional vector launcher illustrations with the **actual approved generated badge artwork**: Pulse Mint, Tempo Clock, Violet Trail, and Vinyl Night.
+- Bundled optimized 432 px WebP adaptive-icon foregrounds with transparent spacing inside Android's safe area, rather than approximate hand-traced icons.
+- Added matching monochrome silhouettes for Android themed icons. Classic remains the original selectable fallback, and the existing Settings icon picker and About page continue working without migration.
+- Icons are entirely bundled and work offline. No listening-data or update-center changes.
+
+
 ### Material launcher icon picker
 
 - Added four new native adaptive launcher designs—Pulse Mint, Tempo Clock, Violet Trail, and Vinyl Night—and kept the original Tempo icon as Tempo Classic.

@@ -41,6 +41,8 @@ Tempo uses its existing Material 3 interface rather than adding a separate style
 
 ## Launcher icon personalization
 
+The four alternate launcher icons use the **same rendered badge artwork displayed in the design concepts**, optimized as transparent WebP assets for Android adaptive launchers; they are not placeholder vector reinterpretations. Their themed monochrome counterparts use the matching symbols.
+
 Select **Settings → General → App icon**, or **Appearance Studio → App icon**, to switch between the original Tempo icon and four Material-inspired designs: **Pulse Mint**, **Tempo Clock**, **Violet Trail**, and **Vinyl Night**. The gallery previews the actual launcher icons. Choices apply immediately and persist through Android's PackageManager, independent of listening records or appearance presets. Android 13+ supports monochrome themed variants. Some launchers take a moment to refresh their cached icon.
 
 The original icon remains available as **Tempo Classic**. This feature does not change the app's package identity, need network access, or restart listening tracking.
