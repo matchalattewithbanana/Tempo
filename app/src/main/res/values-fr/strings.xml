@@ -1122,7 +1122,7 @@
     <string name="settings_health_minutes_ago">Il y a %1$d minutes</string>
     <string name="settings_health_no_signal">Aucun signal du lecteur enregistré</string>
     <string name="settings_backup_overview_header">État des sauvegardes Google Drive</string>
-    <string name="settings_backup_overview_never">Aucune tentative de sauvegarde Drive enregistrée</string>
+    <string name="settings_backup_overview_never">Aucune sauvegarde Drive lancée depuis cet appareil</string>
     <string name="settings_backup_overview_success">Dernière sauvegarde Drive réussie</string>
     <string name="settings_backup_overview_failed">Dernière sauvegarde Drive échouée — vérifier la connexion</string>
     <string name="settings_backup_overview_running">Sauvegarde Drive indiquée comme en cours</string>
