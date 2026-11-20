@@ -1,5 +1,8 @@
 package me.avinas.tempo.ui.details
 
+import me.avinas.tempo.ui.effects.tempoAmbientBackdrop
+import me.avinas.tempo.ui.effects.tempoTiltSurface
+
 /* Tempo · SongDetails · Audio Features & Listening History.
  * Human-centered copy standards (behuman):
  * - Clear, concrete facts over adjectives and puffery
@@ -331,7 +334,7 @@ fun SongDetailsContent(
     }
 
     DeepOceanBackground {
-        Box(modifier = Modifier.fillMaxSize()) {
+        Box(modifier = Modifier.fillMaxSize().tempoAmbientBackdrop()) {
             ArtAtmosphereLayer(
                 artUrl = trackDetails.track.albumArtUrl
                     ?.takeIf { it.isNotBlank() }
@@ -745,7 +748,7 @@ fun SongHeroEditorialStage(
         }
         // Artwork Box
         Box(
-            modifier = Modifier.size(240.dp),
+            modifier = Modifier.size(240.dp).tempoTiltSurface(),
             contentAlignment = Alignment.Center,
         ) {
             Box(

@@ -1,5 +1,8 @@
 package me.avinas.tempo.ui.details
 
+import me.avinas.tempo.ui.effects.tempoAmbientBackdrop
+import me.avinas.tempo.ui.effects.tempoTiltSurface
+
 /* Tempo · ArtistDetails · Listening Profile.
  * Mirrors the SongDetails editorial system:
  * - Frosted header with collapsed title on scroll + gradient scrim
@@ -247,7 +250,7 @@ fun ArtistDetailsContent(
         label = "headerScrim",
     )
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize().tempoAmbientBackdrop()) {
         // The room recolors per artist: blurred image wash behind all content.
         ArtAtmosphereLayer(
             artUrl = artistDetails.artist.imageUrl?.takeIf { it.isNotBlank() },
@@ -590,7 +593,7 @@ fun ArtistHeroSection(
         }
 
         Box(
-            modifier = Modifier.size(248.dp),
+            modifier = Modifier.size(248.dp).tempoTiltSurface(),
             contentAlignment = Alignment.Center,
         ) {
             Box(

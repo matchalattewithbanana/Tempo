@@ -38,6 +38,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import kotlinx.coroutines.launch
+import me.avinas.tempo.ui.components.TempoSettingsCategoryHero
+import me.avinas.tempo.ui.components.TempoEmblemStyle
+import me.avinas.tempo.ui.components.TempoCircularLoadingIndicator
+import me.avinas.tempo.ui.components.TempoLinearLoadingIndicator
 import me.avinas.tempo.ui.components.CachedAsyncImage
 import me.avinas.tempo.data.drive.*
 import me.avinas.tempo.data.importexport.ImportConflictStrategy
@@ -211,8 +215,10 @@ fun BackupRestoreScreen(
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.settings_backup_restore), color = MaterialTheme.colorScheme.onSurface) },
+            MediumFlexibleTopAppBar(
+                title = { Text(stringResource(R.string.settings_backup_restore),
+                    style = MaterialTheme.typography.headlineSmallEmphasized,
+                    color = MaterialTheme.colorScheme.onSurface) },
                 navigationIcon = {
                     IconButton(
                         onClick = onNavigateBack,
@@ -242,6 +248,13 @@ fun BackupRestoreScreen(
                     .verticalScroll(rememberScrollState())
                     .padding(16.dp)
             ) {
+                TempoSettingsCategoryHero(
+                    title = stringResource(R.string.settings_backup_restore),
+                    subtitle = stringResource(R.string.backup_restore_appearance_scope),
+                    icon = Icons.Default.CloudDownload,
+                    style = TempoEmblemStyle.MEMORY,
+                )
+                Spacer(Modifier.height(16.dp))
                 // Data Overview Section
                 DataOverviewSection(uiState)
 
@@ -337,7 +350,7 @@ fun BackupRestoreScreen(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     if (progress.isIndeterminate || progress.total <= 0) {
-                        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary, strokeWidth = 2.dp)
+                        TempoCircularLoadingIndicator(color = MaterialTheme.colorScheme.primary, strokeWidth = 2.dp)
                     } else {
                         LinearProgressIndicator(
                             progress = { (progress.current.toFloat() / progress.total.toFloat()).coerceIn(0f, 1f) },

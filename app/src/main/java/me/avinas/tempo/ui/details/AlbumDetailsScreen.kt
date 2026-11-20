@@ -1,5 +1,8 @@
 package me.avinas.tempo.ui.details
 
+import me.avinas.tempo.ui.effects.tempoAmbientBackdrop
+import me.avinas.tempo.ui.effects.tempoTiltSurface
+
 /* Tempo · AlbumDetails · Editorial album listening profile.
  * Shares the SongDetails design language: art-as-atmosphere background,
  * collapsing header title, frosted top-bar actions, a conditioned
@@ -226,7 +229,7 @@ private fun AlbumDetailsContent(
         ?.let { MusicBrainzEnrichmentService.fixHttpUrl(it) }
 
     DeepOceanBackground {
-        Box(modifier = Modifier.fillMaxSize()) {
+        Box(modifier = Modifier.fillMaxSize().tempoAmbientBackdrop()) {
             ArtAtmosphereLayer(
                 artUrl = atmosphereArtUrl,
                 tint = dominantColor,
@@ -562,7 +565,7 @@ private fun AlbumHeroEditorialStage(
             )
         }
         Box(
-            modifier = Modifier.size(240.dp),
+            modifier = Modifier.size(240.dp).tempoTiltSurface(),
             contentAlignment = Alignment.Center,
         ) {
             Box(
