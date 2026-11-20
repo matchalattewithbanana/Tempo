@@ -4,21 +4,17 @@ import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.OpenInNew
+import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material.icons.outlined.Code
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.HorizontalDivider
@@ -26,12 +22,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.ui.viewinterop.AndroidView
+import android.widget.ImageView
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -73,9 +70,16 @@ fun TempoAboutCredits(modifier: Modifier = Modifier) {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                Image(
-                    painter = painterResource(R.mipmap.ic_launcher),
-                    contentDescription = null,
+                // Launcher assets can be adaptive icons on Android 8+; ImageView
+                // renders both adaptive XML and raster variants correctly.
+                AndroidView(
+                    factory = { androidContext ->
+                        ImageView(androidContext).apply {
+                            setImageResource(R.mipmap.ic_launcher)
+                            scaleType = ImageView.ScaleType.FIT_CENTER
+                            importantForAccessibility = ImageView.IMPORTANT_FOR_ACCESSIBILITY_NO
+                        }
+                    },
                     modifier = Modifier.size(78.dp).clip(RoundedCornerShape(22.dp)),
                 )
                 Text(
@@ -166,7 +170,7 @@ fun TempoAboutCredits(modifier: Modifier = Modifier) {
                             )
                         }
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.OpenInNew,
+                            imageVector = Icons.Filled.OpenInNew,
                             contentDescription = stringResource(R.string.about_view_github_profile),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
