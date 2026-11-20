@@ -13,7 +13,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.FontWeight
-import me.avinas.tempo.ui.theme.KickerSmall
 import me.avinas.tempo.ui.theme.TempoDarkSurfaceElevated
 import me.avinas.tempo.ui.theme.TempoPrimary
 import me.avinas.tempo.ui.theme.TextOnAccent
@@ -21,7 +20,6 @@ import me.avinas.tempo.ui.theme.TextPrimary
 import me.avinas.tempo.ui.theme.TextSecondary
 import me.avinas.tempo.ui.theme.TextTertiary
 import me.avinas.tempo.ui.theme.LocalTempoPalette
-import java.util.Locale
 
 @Composable
 fun SettingsSectionHeader(text: String) {

@@ -4,6 +4,15 @@ Fork-specific changes. Published tags and artifacts are listed in the [release c
 
 ## Unreleased
 
+### Material UI refinement
+
+- Made Tempo's corner preference control standard Material 3 shapes while preserving custom album-art silhouettes.
+- Redesigned Appearance Studio's expandable sections as tonal cards with readable headings and selection chips.
+- Improved Settings section headings, row spacing and touch targets; simplified the listening-period rail to avoid shadow layers.
+- Refined the Home/Stats/History bottom navigation into a compact tonal bar with a clear selected-pill indicator and fewer decorative drawing layers.
+- Added shape-scale regression coverage. Android build and on-device visual validation remain pending.
+
+
 ### Appearance Studio — curated preset collection
 
 - Added **ten complete presets** (Midnight Bloom, Sakura, Matcha, Cobalt, Porcelain, Terracotta, Citrine, Mocha, Lagoon and Lilac), bringing the library to 18.

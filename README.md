@@ -27,6 +27,10 @@ See the [release catalog](docs/releases/README.md) for versions, checksums and u
 
 Playback accuracy depends on the player's available signals. Now Playing is provisional; finished listens and imported records can have different timing evidence. Spotify API reconciliation requests a 20-minute background cadence, which Android may defer. Read [tracking accuracy](docs/TRACKING_AND_IMPORT_ACCURACY.md) before interpreting imported durations.
 
+## Material UI
+
+Tempo uses its existing Material 3 interface rather than adding a separate style system. **Appearance Studio → Layout → Corners** now controls the shape family of standard Material buttons, chips, menus and sheets. Settings and Appearance Studio have cleaner grouped sections, comfortable touch targets and readable color roles. The bottom navigation has a more compact tonal appearance, and listening-period selection is lighter without costly selection shadows.
+
 ## Appearance presets
 
 Go to **Appearance Studio → Presets** for the new curated collection: Midnight Bloom, Sakura, Matcha, Cobalt, Porcelain, Terracotta, Citrine, Mocha, Lagoon and Lilac, alongside Tempo's eight signature looks. Choose Light, Dark, OLED or System tone first to see the corresponding miniature preview. The gallery uses lazy rows to keep scrolling responsive.
