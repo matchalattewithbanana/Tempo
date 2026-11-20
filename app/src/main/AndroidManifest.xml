@@ -73,16 +73,77 @@
                 tools:node="remove" />
         </provider>
 
-        <!-- Main Activity -->
-        <activity 
+        <!-- MainActivity remains enabled for OAuth, notifications and widget intents.
+             Launcher icon variants are aliases so the icon can change without reinstalling. -->
+        <activity
             android:name="me.avinas.tempo.MainActivity"
             android:exported="true"
-            android:theme="@style/Theme.Tempo">
+            android:theme="@style/Theme.Tempo" />
+        <activity-alias
+            android:name="me.avinas.tempo.launcher.ClassicIcon"
+            android:enabled="true"
+            android:exported="true"
+            android:targetActivity="me.avinas.tempo.MainActivity"
+            android:label="@string/app_name"
+            android:icon="@mipmap/ic_launcher"
+            android:roundIcon="@mipmap/ic_launcher">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
+        </activity-alias>
+        <activity-alias
+            android:name="me.avinas.tempo.launcher.PulseIcon"
+            android:enabled="false"
+            android:exported="true"
+            android:targetActivity="me.avinas.tempo.MainActivity"
+            android:label="@string/app_name"
+            android:icon="@mipmap/ic_launcher_pulse"
+            android:roundIcon="@mipmap/ic_launcher_pulse">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name="me.avinas.tempo.launcher.ClockIcon"
+            android:enabled="false"
+            android:exported="true"
+            android:targetActivity="me.avinas.tempo.MainActivity"
+            android:label="@string/app_name"
+            android:icon="@mipmap/ic_launcher_clock"
+            android:roundIcon="@mipmap/ic_launcher_clock">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name="me.avinas.tempo.launcher.TrailIcon"
+            android:enabled="false"
+            android:exported="true"
+            android:targetActivity="me.avinas.tempo.MainActivity"
+            android:label="@string/app_name"
+            android:icon="@mipmap/ic_launcher_trail"
+            android:roundIcon="@mipmap/ic_launcher_trail">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name="me.avinas.tempo.launcher.VinylIcon"
+            android:enabled="false"
+            android:exported="true"
+            android:targetActivity="me.avinas.tempo.MainActivity"
+            android:label="@string/app_name"
+            android:icon="@mipmap/ic_launcher_vinyl"
+            android:roundIcon="@mipmap/ic_launcher_vinyl">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
 
         <!-- Transparent bridge used to choose/persist the automatic local backup folder -->
         <activity
