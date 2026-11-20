@@ -34,6 +34,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import me.avinas.tempo.BuildConfig
+import me.avinas.tempo.ui.branding.LauncherLogoManager
+import androidx.compose.runtime.remember
 import me.avinas.tempo.R
 
 /** The two people requested in the About UI. Upstream attribution remains in NOTICE.md. */
@@ -75,10 +77,12 @@ fun TempoAboutCredits(modifier: Modifier = Modifier) {
                 AndroidView(
                     factory = { androidContext ->
                         ImageView(androidContext).apply {
-                            setImageResource(R.mipmap.ic_launcher)
                             scaleType = ImageView.ScaleType.FIT_CENTER
                             importantForAccessibility = ImageView.IMPORTANT_FOR_ACCESSIBILITY_NO
                         }
+                    },
+                    update = { view ->
+                        view.setImageResource(LauncherLogoManager.selected(context).imageRes)
                     },
                     modifier = Modifier.size(78.dp).clip(RoundedCornerShape(22.dp)),
                 )

@@ -35,6 +35,7 @@ import me.avinas.tempo.ui.settings.EnrichmentReportScreen
 import me.avinas.tempo.ui.settings.ExtensionImportScreen
 import me.avinas.tempo.ui.settings.SettingsScreen
 import me.avinas.tempo.ui.appearance.AppearanceScreen
+import me.avinas.tempo.ui.branding.LauncherLogoPickerScreen
 import me.avinas.tempo.ui.updates.UpdateCenterScreen
 import me.avinas.tempo.ui.settings.SupportedAppsScreen
 import me.avinas.tempo.ui.settings.YourDataScreen
@@ -217,12 +218,20 @@ fun AppNavigation(
                             onNavigateToEnrichmentReport = { navController.navigate(Screen.EnrichmentReport.route) },
                             onNavigateToYourData = { navController.navigate(Screen.YourData.route) },
                             onNavigateToAppearance = { navController.navigate(Screen.Appearance.route) },
+                            onNavigateToLogoPicker = { navController.safeNavigate(Screen.LauncherLogoPicker.route) },
                             onNavigateToUpdates = { navController.safeNavigate(Screen.UpdateCenter.route) },
                         )
                     }
 
                     composable(Screen.Appearance.route) {
-                        AppearanceScreen(onNavigateBack = { navController.popBackStack() })
+                        AppearanceScreen(
+                            onNavigateBack = { navController.popBackStack() },
+                            onNavigateToLogoPicker = { navController.safeNavigate(Screen.LauncherLogoPicker.route) },
+                        )
+                    }
+
+                    composable(Screen.LauncherLogoPicker.route) {
+                        LauncherLogoPickerScreen(onNavigateBack = { navController.popBackStack() })
                     }
 
                     composable(Screen.UpdateCenter.route) {

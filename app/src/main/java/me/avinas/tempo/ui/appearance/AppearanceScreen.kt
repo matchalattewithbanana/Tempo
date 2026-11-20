@@ -77,7 +77,11 @@ private val DraftSaver = Saver<AppearanceSettings, String>(
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-fun AppearanceScreen(onNavigateBack: () -> Unit, viewModel: AppearanceViewModel = hiltViewModel()) {
+fun AppearanceScreen(
+    onNavigateBack: () -> Unit,
+    onNavigateToLogoPicker: () -> Unit = {},
+    viewModel: AppearanceViewModel = hiltViewModel(),
+) {
     val loaded by viewModel.settings.collectAsStateWithLifecycle()
     val saving by viewModel.saving.collectAsStateWithLifecycle()
     val saveFailed by viewModel.saveFailed.collectAsStateWithLifecycle()
@@ -334,6 +338,18 @@ fun AppearanceScreen(onNavigateBack: () -> Unit, viewModel: AppearanceViewModel 
                                 modifier = Modifier.weight(1f), tone = preview.tone, enabled = !busy)
                         }
                     }
+                }
+            }
+            item(key = "launcher_logo") {
+                AppearanceSection(R.string.logo_picker_title) {
+                    Text(stringResource(R.string.logo_picker_settings_description),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    OutlinedButton(
+                        onClick = onNavigateToLogoPicker,
+                        enabled = !busy,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) { Text(stringResource(R.string.logo_picker_choose)) }
                 }
             }
             item(key = "layout") {

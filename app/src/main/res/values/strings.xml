@@ -1952,4 +1952,21 @@
     <string name="about_fork_maintainer">Fork maintainer</string>
     <string name="about_original_creator">Original Tempo creator</string>
     <string name="about_view_github_profile">View GitHub profile</string>
+    <!-- Launcher icon personalization: all designs remain available, including Classic. -->
+    <string name="logo_picker_title">App icon</string>
+    <string name="logo_picker_intro">Choose how Tempo appears on your home screen. Changes apply immediately.</string>
+    <string name="logo_picker_settings_description">Five Material-style launcher icons, including the original design</string>
+    <string name="logo_picker_choose">Choose an app icon</string>
+    <string name="logo_picker_launcher_note">Some launchers take a moment to refresh. Your listening history and theme are unaffected.</string>
+    <string name="logo_picker_apply_failed">Could not change the app icon</string>
+    <string name="logo_original">Tempo Classic</string>
+    <string name="logo_original_description">The original Tempo icon</string>
+    <string name="logo_pulse">Pulse Mint</string>
+    <string name="logo_pulse_description">Music and sound waves</string>
+    <string name="logo_clock">Tempo Clock</string>
+    <string name="logo_clock_description">Music through time</string>
+    <string name="logo_trail">Violet Trail</string>
+    <string name="logo_trail_description">Your listening journey</string>
+    <string name="logo_vinyl">Vinyl Night</string>
+    <string name="logo_vinyl_description">Records and statistics</string>
 </resources>

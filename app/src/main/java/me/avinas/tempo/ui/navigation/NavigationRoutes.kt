@@ -15,6 +15,7 @@ sealed class Screen(
 
     object Settings : Screen("settings")
     object Appearance : Screen("appearance")
+    object LauncherLogoPicker : Screen("launcher_logo_picker")
     object UpdateCenter : Screen("update_center")
 
     object Spotlight : Screen("spotlight?timeRange={timeRange}&directLaunch={directLaunch}") {

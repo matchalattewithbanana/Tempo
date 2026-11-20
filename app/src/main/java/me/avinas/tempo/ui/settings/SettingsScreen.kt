@@ -94,6 +94,7 @@ fun SettingsScreen(
     onNavigateToEnrichmentReport: (() -> Unit)? = null,
     onNavigateToYourData: (() -> Unit)? = null,
     onNavigateToAppearance: (() -> Unit)? = null,
+    onNavigateToLogoPicker: (() -> Unit)? = null,
     onNavigateToUpdates: (() -> Unit)? = null,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
@@ -350,6 +351,7 @@ fun SettingsScreen(
                         val tokens = settingsSearch.trim().split(Regex("\\s+"))
                         val directResults = listOf(
                             Triple(R.string.appearance_title, R.string.settings_search_general_terms, onNavigateToAppearance),
+                            Triple(R.string.logo_picker_title, R.string.logo_picker_intro, onNavigateToLogoPicker),
                             Triple(R.string.update_center_title, R.string.update_center_desc, onNavigateToUpdates),
                             Triple(R.string.settings_manage_apps, R.string.settings_manage_apps_desc, onNavigateToSupportedApps),
                             Triple(R.string.settings_backup_restore, R.string.settings_backup_restore_desc, onNavigateToBackup),
@@ -659,6 +661,15 @@ fun SettingsScreen(
                         subtitle = stringResource(R.string.appearance_settings_summary),
                         onClick = { onNavigateToAppearance?.invoke() },
                     )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    GlassCard(contentPadding = PaddingValues(0.dp),
+                        variant = me.avinas.tempo.ui.components.GlassCardVariant.LowProminence) {
+                        SettingsOption(
+                            title = stringResource(R.string.logo_picker_title),
+                            subtitle = stringResource(R.string.logo_picker_settings_description),
+                            onClick = { onNavigateToLogoPicker?.invoke() },
+                        )
+                    }
                 }
                 Spacer(modifier = Modifier.height(24.dp))
 
