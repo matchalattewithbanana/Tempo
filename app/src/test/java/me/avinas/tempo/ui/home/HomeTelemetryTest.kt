@@ -14,10 +14,10 @@ class HomeTelemetryTest {
     @Test
     fun `test HomeUiState default telemetry values`() {
         val state = HomeUiState()
-        assertEquals(0L, state.dailyAvgMinutes)
+        assertEquals(0L, state.dailyAvgMs)
         assertEquals(0, state.activeDaysCount)
         assertEquals(0, state.totalDaysCount)
-        assertEquals(0L, state.peakDayMinutes)
+        assertEquals(0L, state.peakDayMs)
     }
 
     @Test
