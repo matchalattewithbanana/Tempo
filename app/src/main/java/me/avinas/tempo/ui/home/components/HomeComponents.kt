@@ -97,7 +97,7 @@ fun HeroCard(
     GlassCard(
         modifier = modifier.fillMaxWidth(),
         variant = GlassCardVariant.Obsidian,
-        shape = RoundedCornerShape(24.dp),
+        shape = me.avinas.tempo.ui.components.appearanceCardShape(),
         borderColor = appearancePalette.border.copy(alpha = 0.45f),
         borderWidth = 0.8.dp,
         contentPadding = PaddingValues(18.dp)
@@ -133,11 +133,7 @@ fun HeroCard(
             ) {
                 Text(
                     text = scrubbingTimeMs?.let { me.avinas.tempo.ui.stats.displayStatsDuration(it) } ?: listeningTime,
-                    style = MaterialTheme.typography.displayMedium.copy(
-                        fontFamily = DisplayFontFamily,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = (-1).sp
-                    ),
+                    style = MaterialTheme.typography.displayMediumEmphasized,
                     color = appearancePalette.onSurface
                 )
 
@@ -578,101 +574,74 @@ fun SpotlightStoryCard(
     albumArtUrl: String? = null,
     storyAvailable: Boolean = true,
     storyViewed: Boolean = false,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
-    val appearancePalette = LocalTempoPalette.current
-    val cardShape = RoundedCornerShape(22.dp)
-    val cardBlendBrush = remember {
+    val colors = MaterialTheme.colorScheme
+    val shape = me.avinas.tempo.ui.components.appearanceCardShape()
+    // One tonal overlay follows every palette, including dynamic wallpaper
+    // and Light / OLED modes. Key the brush to colors so live preview works.
+    val tint = remember(colors.primary, colors.secondary, colors.tertiary) {
         Brush.linearGradient(
-            colors = listOf(
-                appearancePalette.accent.copy(alpha = 0.12f),
-                Color(0xFFA855F7).copy(alpha = 0.08f),
-                Color(0xFFEC4899).copy(alpha = 0.06f)
-            )
+            listOf(
+                colors.primary.copy(alpha = 0.15f),
+                colors.secondary.copy(alpha = 0.07f),
+                colors.tertiary.copy(alpha = 0.10f),
+            ),
         )
     }
-    val cardBorderBrush = remember {
-        Brush.linearGradient(
-            colors = listOf(
-                appearancePalette.accent.copy(alpha = 0.35f),
-                Color(0xFFA855F7).copy(alpha = 0.25f),
-                Color(0xFFEC4899).copy(alpha = 0.18f)
-            )
-        )
-    }
-
     Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(cardShape)
-            .background(appearancePalette.elevatedSurface.copy(alpha = 0.94f))
-            .background(cardBlendBrush)
-            .border(0.8.dp, cardBorderBrush, cardShape)
+        modifier = modifier.fillMaxWidth()
+            .clip(shape)
+            .background(colors.surfaceContainerHigh)
+            .background(tint)
+            .border(1.dp, colors.outlineVariant.copy(alpha = 0.6f), shape)
             .premiumClickable(onClick = onClick, pressedScale = 0.98f)
-            .padding(16.dp)
+            .padding(horizontal = 18.dp, vertical = 18.dp),
     ) {
         Row(
-            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier.fillMaxWidth()
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             if (storyAvailable) {
-                SpotlightRing(albumArtUrl = albumArtUrl, viewed = storyViewed, onClick = onRingClick)
+                SpotlightRing(
+                    albumArtUrl = albumArtUrl,
+                    viewed = storyViewed,
+                    onClick = onRingClick,
+                )
             }
-
             Column(
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 Text(
                     text = stringResource(R.string.home_spotlight_title),
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontFamily = DisplayFontFamily,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 17.sp
-                    ),
-                    color = appearancePalette.onSurface
+                    style = MaterialTheme.typography.titleMediumEmphasized,
+                    color = colors.onSurface,
+                    maxLines = 2,
                 )
-                Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = stringResource(R.string.home_spotlight_subtitle),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = appearancePalette.mutedText
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = colors.onSurfaceVariant,
+                    maxLines = 2,
                 )
             }
-
-            val buttonBlendBrush = remember {
-                Brush.linearGradient(
-                    colors = listOf(
-                        appearancePalette.accent.copy(alpha = 0.20f),
-                        Color(0xFFA855F7).copy(alpha = 0.22f),
-                        Color(0xFFEC4899).copy(alpha = 0.18f)
-                    )
-                )
-            }
-            val buttonBorderBrush = remember {
-                Brush.linearGradient(
-                    colors = listOf(
-                        appearancePalette.accent.copy(alpha = 0.48f),
-                        Color(0xFFA855F7).copy(alpha = 0.38f),
-                        Color(0xFFEC4899).copy(alpha = 0.30f)
-                    )
-                )
-            }
-
-            Box(
-                modifier = Modifier
-                    .size(32.dp)
-                    .clip(CircleShape)
-                    .background(buttonBlendBrush)
-                    .border(0.8.dp, buttonBorderBrush, CircleShape),
-                contentAlignment = Alignment.Center
+            // A static Material polygon is distinctive without a looping
+            // animation or GPU blur pass on the Home scroll surface.
+            Surface(
+                modifier = Modifier.size(42.dp),
+                shape = MaterialShapes.Cookie9Sided.toShape(),
+                color = colors.primaryContainer,
+                contentColor = colors.onPrimaryContainer,
             ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Rounded.ArrowForwardIos,
-                    contentDescription = null,
-                    tint = appearancePalette.onSurface,
-                    modifier = Modifier.size(12.dp)
-                )
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Rounded.ArrowForwardIos,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                    )
+                }
             }
         }
     }
@@ -693,7 +662,7 @@ fun WeekInReviewGrid(
             text = stringResource(R.string.home_week_review),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
-            color = Color.White,
+            color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(bottom = 16.dp, start = 4.dp)
         )
         
@@ -874,7 +843,7 @@ fun DiscoverySection(
             text = stringResource(R.string.home_ready_discover),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
-            color = Color.White,
+            color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 16.dp)
         )
         
@@ -977,7 +946,7 @@ fun HabitInsights(
             text = stringResource(R.string.home_habits_title),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
-            color = Color.White,
+            color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(bottom = 16.dp, start = 4.dp)
         )
         

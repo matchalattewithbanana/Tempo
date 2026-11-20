@@ -580,7 +580,7 @@ fun HeroStatItem(item: StatItem, onNavigate: () -> Unit) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(label, style = MaterialTheme.typography.labelMedium, color = rankColor, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.height(4.dp))
-                Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface, maxLines = 1)
+                Text(title, style = MaterialTheme.typography.titleLargeEmphasized, color = MaterialTheme.colorScheme.onSurface, maxLines = 2)
                 Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
             }
 
@@ -589,13 +589,19 @@ fun HeroStatItem(item: StatItem, onNavigate: () -> Unit) {
                 is TopArtist -> item.totalTimeMs
                 is TopAlbum -> item.totalTimeMs
             }
-            Spacer(modifier = Modifier.width(16.dp))
-            Text(
-                text = displayStatsDuration(timeMs),
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Surface(
+                color = scheme.secondaryContainer,
+                contentColor = scheme.onSecondaryContainer,
+                shape = MaterialTheme.shapes.extraLarge,
+            ) {
+                Text(
+                    text = displayStatsDuration(timeMs),
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                    style = MaterialTheme.typography.labelLarge,
+                    maxLines = 1,
+                )
+            }
         }
     }
 }
