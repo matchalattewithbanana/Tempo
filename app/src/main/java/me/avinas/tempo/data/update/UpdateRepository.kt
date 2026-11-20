@@ -247,8 +247,10 @@ class UpdateRepository @Inject constructor(@ApplicationContext private val conte
 
     suspend fun verifyInstalledPackageCandidate(release: TempoRelease): File = withContext(Dispatchers.IO) {
         val file = downloadedFile(release.tag) ?: throw IOException("Invalid release name")
-        if (!file.isFile || file.length() != release.apkBytes || sha256(file) != release.sha256)
-            throw IOException("Downloaded update failed verification. Download it again.")
+        if (!file.isFile || file.length() != release.apkBytes || sha256(file) != release.sha256) {
+            file.delete()
+            throw IOException("Downloaded update failed verification. Please download it again.")
+        }
         val pm = context.packageManager
         @Suppress("DEPRECATION")
         val flag = if (Build.VERSION.SDK_INT >= 28) PackageManager.GET_SIGNING_CERTIFICATES else PackageManager.GET_SIGNATURES

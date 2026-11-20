@@ -168,7 +168,14 @@ class UpdateCenterViewModel @Inject constructor(
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (failure: Exception) {
-                _state.update { it.copy(error = failure.localizedMessage ?: "Could not open Android installer") }
+                _state.update {
+                    it.copy(
+                        error = failure.localizedMessage ?: "Could not open Android installer",
+                        // A failed checksum deletes the bad APK. Restore the
+                        // Download action instead of trapping users on Install.
+                        downloaded = repository.downloadedFile(release.tag)?.exists() == true,
+                    )
+                }
             } finally {
                 _state.update { it.copy(installing = false) }
             }
