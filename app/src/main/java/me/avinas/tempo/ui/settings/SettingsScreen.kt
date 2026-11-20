@@ -308,10 +308,10 @@ fun SettingsScreen(
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
-            MediumFlexibleTopAppBar(
+            TopAppBar(
                 title = {
                     Text(
-                        style = MaterialTheme.typography.headlineSmallEmphasized,
+                        style = MaterialTheme.typography.titleLargeEmphasized,
                         text = when (settingsCategory) {
                             "general" -> stringResource(R.string.settings_category_general)
                             "tracking" -> stringResource(R.string.settings_category_tracking)
@@ -334,7 +334,7 @@ fun SettingsScreen(
                 },
                 colors =
                     TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.Transparent,
+                        containerColor = MaterialTheme.colorScheme.surface,
                         titleContentColor = MaterialTheme.colorScheme.onSurface,
                         navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
                     ),
@@ -444,6 +444,57 @@ fun SettingsScreen(
                             SettingsOption(title = title, subtitle = terms, onClick = { settingsCategory = category })
                         }
                     } else {
+                    SettingsSectionHeader(stringResource(R.string.settings_category_browse))
+                    me.avinas.tempo.ui.components.TempoSettingsBento(
+                        destinations = listOfNotNull(
+                            onNavigateToAppearance?.let { open ->
+                                me.avinas.tempo.ui.components.TempoSettingsDestination(
+                                    title = stringResource(R.string.appearance_title),
+                                    subtitle = stringResource(R.string.appearance_settings_summary),
+                                    icon = Icons.Rounded.Palette,
+                                    style = TempoEmblemStyle.DISCOVERY,
+                                    onClick = open,
+                                    featured = true,
+                                )
+                            },
+                            me.avinas.tempo.ui.components.TempoSettingsDestination(
+                                title = stringResource(R.string.settings_category_general),
+                                subtitle = stringResource(R.string.settings_category_general_desc),
+                                icon = Icons.Rounded.Settings,
+                                style = TempoEmblemStyle.DISCOVERY,
+                                onClick = { settingsCategory = "general" },
+                            ),
+                            me.avinas.tempo.ui.components.TempoSettingsDestination(
+                                title = stringResource(R.string.settings_category_tracking),
+                                subtitle = stringResource(R.string.settings_category_tracking_desc),
+                                icon = Icons.Rounded.GraphicEq,
+                                style = TempoEmblemStyle.PULSE,
+                                onClick = { settingsCategory = "tracking" },
+                            ),
+                            me.avinas.tempo.ui.components.TempoSettingsDestination(
+                                title = stringResource(R.string.settings_category_connections),
+                                subtitle = stringResource(R.string.settings_category_connections_desc),
+                                icon = Icons.Rounded.Link,
+                                style = TempoEmblemStyle.MEMORY,
+                                onClick = { settingsCategory = "connections" },
+                            ),
+                            me.avinas.tempo.ui.components.TempoSettingsDestination(
+                                title = stringResource(R.string.settings_category_data),
+                                subtitle = stringResource(R.string.settings_category_data_desc),
+                                icon = Icons.Rounded.Storage,
+                                style = TempoEmblemStyle.MEMORY,
+                                onClick = { settingsCategory = "data" },
+                            ),
+                            me.avinas.tempo.ui.components.TempoSettingsDestination(
+                                title = stringResource(R.string.settings_category_about),
+                                subtitle = stringResource(R.string.settings_category_about_desc),
+                                icon = Icons.Rounded.Info,
+                                style = TempoEmblemStyle.DISCOVERY,
+                                onClick = { settingsCategory = "about" },
+                            ),
+                        ),
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
                     SettingsSectionHeader(stringResource(R.string.settings_tracking_access_status))
                     val trackingHealth = trackingHeartbeat?.let { heartbeat ->
                         evaluateTrackingHealth(
@@ -455,9 +506,10 @@ fun SettingsScreen(
                             nowMs = trackingStatusCheckedAt,
                         )
                     }
-                    GlassCard(
-                        contentPadding = PaddingValues(0.dp),
-                        variant = me.avinas.tempo.ui.components.GlassCardVariant.LowProminence,
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.extraLarge,
+                        color = MaterialTheme.colorScheme.surfaceContainerLow,
                     ) {
                         Column {
                             SettingsOption(
@@ -516,9 +568,10 @@ fun SettingsScreen(
                     }
                     Spacer(modifier = Modifier.height(20.dp))
                     SettingsSectionHeader(stringResource(R.string.settings_backup_overview_header))
-                    GlassCard(
-                        contentPadding = PaddingValues(0.dp),
-                        variant = me.avinas.tempo.ui.components.GlassCardVariant.LowProminence,
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.extraLarge,
+                        color = MaterialTheme.colorScheme.surfaceContainerLow,
                     ) {
                         // BackupSettingsManager is updated by the Drive worker.
                         // Local folder backups have an independent WorkManager job.
@@ -547,8 +600,11 @@ fun SettingsScreen(
                     }
                     Spacer(modifier = Modifier.height(20.dp))
                     SettingsSectionHeader(stringResource(R.string.update_center_title))
-                    GlassCard(contentPadding = PaddingValues(0.dp),
-                        variant = me.avinas.tempo.ui.components.GlassCardVariant.LowProminence) {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.extraLarge,
+                        color = MaterialTheme.colorScheme.surfaceContainerLow,
+                    ) {
                         SettingsOption(
                             title = stringResource(R.string.update_check_now),
                             subtitle = stringResource(R.string.update_center_desc),
@@ -556,55 +612,6 @@ fun SettingsScreen(
                         )
                     }
                     Spacer(modifier = Modifier.height(16.dp))
-                    SettingsSectionHeader(stringResource(R.string.settings_category_browse))
-                    me.avinas.tempo.ui.components.TempoSettingsBento(
-                        destinations = listOfNotNull(
-                            onNavigateToAppearance?.let { open ->
-                                me.avinas.tempo.ui.components.TempoSettingsDestination(
-                                    title = stringResource(R.string.appearance_title),
-                                    subtitle = stringResource(R.string.appearance_settings_summary),
-                                    icon = Icons.Rounded.Palette,
-                                    style = TempoEmblemStyle.DISCOVERY,
-                                    onClick = open,
-                                )
-                            },
-                            me.avinas.tempo.ui.components.TempoSettingsDestination(
-                                title = stringResource(R.string.settings_category_general),
-                                subtitle = stringResource(R.string.settings_category_general_desc),
-                                icon = Icons.Rounded.Settings,
-                                style = TempoEmblemStyle.DISCOVERY,
-                                onClick = { settingsCategory = "general" },
-                            ),
-                            me.avinas.tempo.ui.components.TempoSettingsDestination(
-                                title = stringResource(R.string.settings_category_tracking),
-                                subtitle = stringResource(R.string.settings_category_tracking_desc),
-                                icon = Icons.Rounded.GraphicEq,
-                                style = TempoEmblemStyle.PULSE,
-                                onClick = { settingsCategory = "tracking" },
-                            ),
-                            me.avinas.tempo.ui.components.TempoSettingsDestination(
-                                title = stringResource(R.string.settings_category_connections),
-                                subtitle = stringResource(R.string.settings_category_connections_desc),
-                                icon = Icons.Rounded.Link,
-                                style = TempoEmblemStyle.MEMORY,
-                                onClick = { settingsCategory = "connections" },
-                            ),
-                            me.avinas.tempo.ui.components.TempoSettingsDestination(
-                                title = stringResource(R.string.settings_category_data),
-                                subtitle = stringResource(R.string.settings_category_data_desc),
-                                icon = Icons.Rounded.Storage,
-                                style = TempoEmblemStyle.MEMORY,
-                                onClick = { settingsCategory = "data" },
-                            ),
-                            me.avinas.tempo.ui.components.TempoSettingsDestination(
-                                title = stringResource(R.string.settings_category_about),
-                                subtitle = stringResource(R.string.settings_category_about_desc),
-                                icon = Icons.Rounded.Info,
-                                style = TempoEmblemStyle.DISCOVERY,
-                                onClick = { settingsCategory = "about" },
-                            ),
-                        ),
-                    )
                     } // Unfiltered settings overview
                 }
 
