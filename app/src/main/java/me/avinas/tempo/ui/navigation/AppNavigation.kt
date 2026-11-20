@@ -35,6 +35,7 @@ import me.avinas.tempo.ui.settings.EnrichmentReportScreen
 import me.avinas.tempo.ui.settings.ExtensionImportScreen
 import me.avinas.tempo.ui.settings.SettingsScreen
 import me.avinas.tempo.ui.appearance.AppearanceScreen
+import me.avinas.tempo.ui.updates.UpdateCenterScreen
 import me.avinas.tempo.ui.settings.SupportedAppsScreen
 import me.avinas.tempo.ui.settings.YourDataScreen
 import me.avinas.tempo.ui.spotlight.SpotlightScreen
@@ -84,6 +85,9 @@ fun AppNavigation(
             }
         } else if (navigationTrigger == "background_protection") {
             navController.navigate(Screen.BackgroundProtection.route)
+        } else if (navigationTrigger == "update_center") {
+            navController.navigate(Screen.UpdateCenter.route) { launchSingleTop = true }
+            onWidgetNavigationHandled()
         }
     }
 
@@ -213,11 +217,16 @@ fun AppNavigation(
                             onNavigateToEnrichmentReport = { navController.navigate(Screen.EnrichmentReport.route) },
                             onNavigateToYourData = { navController.navigate(Screen.YourData.route) },
                             onNavigateToAppearance = { navController.navigate(Screen.Appearance.route) },
+                            onNavigateToUpdates = { navController.safeNavigate(Screen.UpdateCenter.route) },
                         )
                     }
 
                     composable(Screen.Appearance.route) {
                         AppearanceScreen(onNavigateBack = { navController.popBackStack() })
+                    }
+
+                    composable(Screen.UpdateCenter.route) {
+                        UpdateCenterScreen(onNavigateBack = { navController.popBackStack() })
                     }
 
                     composable(Screen.BackupRestore.route) {

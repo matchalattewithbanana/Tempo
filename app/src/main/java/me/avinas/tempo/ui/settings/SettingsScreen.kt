@@ -94,6 +94,7 @@ fun SettingsScreen(
     onNavigateToEnrichmentReport: (() -> Unit)? = null,
     onNavigateToYourData: (() -> Unit)? = null,
     onNavigateToAppearance: (() -> Unit)? = null,
+    onNavigateToUpdates: (() -> Unit)? = null,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -349,6 +350,7 @@ fun SettingsScreen(
                         val tokens = settingsSearch.trim().split(Regex("\\s+"))
                         val directResults = listOf(
                             Triple(R.string.appearance_title, R.string.settings_search_general_terms, onNavigateToAppearance),
+                            Triple(R.string.update_center_title, R.string.update_center_desc, onNavigateToUpdates),
                             Triple(R.string.settings_manage_apps, R.string.settings_manage_apps_desc, onNavigateToSupportedApps),
                             Triple(R.string.settings_backup_restore, R.string.settings_backup_restore_desc, onNavigateToBackup),
                             Triple(R.string.settings_import_apple_music, R.string.settings_import_apple_music_desc, onNavigateToAppleMusicImport),
@@ -480,6 +482,16 @@ fun SettingsScreen(
                         )
                     }
                     Spacer(modifier = Modifier.height(20.dp))
+                    SettingsSectionHeader(stringResource(R.string.update_center_title))
+                    GlassCard(contentPadding = PaddingValues(0.dp),
+                        variant = me.avinas.tempo.ui.components.GlassCardVariant.LowProminence) {
+                        SettingsOption(
+                            title = stringResource(R.string.update_check_now),
+                            subtitle = stringResource(R.string.update_center_desc),
+                            onClick = { onNavigateToUpdates?.invoke() },
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
                     SettingsSectionHeader(stringResource(R.string.settings_category_browse))
                     GlassCard(
                         contentPadding = PaddingValues(0.dp),
@@ -1340,7 +1352,7 @@ fun SettingsScreen(
                         SettingsOption(
                             title = stringResource(R.string.settings_version),
                             subtitle = versionName,
-                            showArrow = false,
+                            onClick = { onNavigateToUpdates?.invoke() },
                         )
                     }
                 }

@@ -15,6 +15,7 @@ sealed class Screen(
 
     object Settings : Screen("settings")
     object Appearance : Screen("appearance")
+    object UpdateCenter : Screen("update_center")
 
     object Spotlight : Screen("spotlight?timeRange={timeRange}&directLaunch={directLaunch}") {
         fun createRoute(

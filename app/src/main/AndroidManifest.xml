@@ -22,6 +22,8 @@
     
     <!-- Internet for Spotify and MusicBrainz APIs -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Only user-approved, GitHub-distributed APK updates. Android still owns installation. -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <!-- Desktop Satellite: read WiFi IP to display pairing address -->
