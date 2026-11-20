@@ -707,7 +707,14 @@ private fun AppearancePresetCard(
     val palette = remember(preset, tone, systemDark) {
         AppearancePaletteResolver.resolve(AppearanceSettings(preset = preset, tone = tone), systemDark)
     }
-    val shape = RoundedCornerShape(22.dp)
+    // Fast spatial morph when the draft chooses a palette; the theme's
+    // instant motion scheme makes this snap for reduced-motion settings.
+    val corner by androidx.compose.animation.core.animateDpAsState(
+        targetValue = if (selected) 30.dp else 20.dp,
+        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+        label = "preset_selected_corner",
+    )
+    val shape = RoundedCornerShape(corner)
     val label = when (preset) {
         AppearancePreset.ABYSS -> stringResource(R.string.appearance_abyss)
         AppearancePreset.OBSIDIAN_GOLD -> stringResource(R.string.appearance_gold)
@@ -751,6 +758,10 @@ private fun AppearancePresetCard(
     Column(
         modifier = modifier
             .clip(shape)
+            .background(
+                if (selected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.26f)
+                else MaterialTheme.colorScheme.surfaceContainerLow
+            )
             .border(
                 BorderStroke(if (selected) 2.dp else 1.dp,
                     if (selected) palette.accent else MaterialTheme.colorScheme.outlineVariant),
@@ -777,7 +788,10 @@ private fun AppearancePresetCard(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-                    Box(Modifier.size(33.dp).clip(RoundedCornerShape(9.dp))
+                    // A tiny Material-shaped album tile makes the saved
+                    // palette preview feel like a real music screen.
+                    Box(Modifier.size(33.dp)
+                        .clip(MaterialShapes.Cookie9Sided.toShape())
                         .background(palette.accent), contentAlignment = Alignment.Center) {
                         Text("♫", color = palette.onAccent, style = MaterialTheme.typography.titleLarge)
                     }

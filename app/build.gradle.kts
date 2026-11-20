@@ -154,6 +154,12 @@ android {
         compilerOptions {
             jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
             freeCompilerArgs.add("-Xannotation-default-target=param-property")
+            // M3 Expressive is used throughout Compose screens (shapes, motion,
+            // connected buttons, app bars); keep the opt-in in one place.
+            optIn.addAll(
+                "androidx.compose.material3.ExperimentalMaterial3Api",
+                "androidx.compose.material3.ExperimentalMaterial3ExpressiveApi",
+            )
         }
     }
 
