@@ -4,6 +4,17 @@ Fork-specific changes. Published tags and artifacts are listed in the [release c
 
 ## Unreleased
 
+### Orion-inspired Material 3 Expressive visual refinement
+
+- Audited Orion Store's native Compose components and screenshot gallery as design references, creating original Tempo-owned primitives rather than copying GPL source.
+- Added reusable static Material-shape identity emblems and editorial insight headings; refreshed setup, errors, empty Stats, quests and badges with coherent shapes and typography.
+- Rebuilt Home Spotlight's artwork frame with correctly keyed, theme-derived tonal overlay and expressive icon indicator instead of fixed pink/purple gradients that failed to update when switching palettes.
+- Re-themed Home's identity pill and level ring in Light/Dark/OLED, removing a costly 10dp shadow and fixed pale/pink colors.
+- Reorganized Settings overview into five tactile category tiles; polished top-ranked Stats cards, time badges, summary corners and native centered header.
+- Limited the Home, Stats and History content width on larger screens without changing navigation, data loading or listening tracking. Added source review and device validation notes in `docs/EXPRESSIVE_DESIGN_REFERENCE.md`.
+- Committed with `[skip ci]`. Android compilation, device visuals and performance benchmarking remain pending; no build or release was initiated.
+
+
 ### Material 3 Expressive — adaptive navigation and shared components
 
 - Added an M3 Expressive collapsed **WideNavigationRail** for primary destinations on windows at least 840dp wide. The phone short navigation bar remains for smaller windows; both retain Home/Stats/History back-stack state, and Compact Now Playing appears in either layout.

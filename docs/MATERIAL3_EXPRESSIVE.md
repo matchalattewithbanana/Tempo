@@ -32,6 +32,10 @@
 
 The existing `GlassCard` and music-specific surfaces are retained where they represent song art, statistics and listening history better than generic cards. They already use theme palette, corner and solid-surface policies. Material3 components are used in shared controls, not as a reason to add unrelated UI.
 
+## Visual implementation references
+
+For the independent design review of Orion Store, the specific Tempo surfaces updated, and the remaining device-level visual checks, see [Expressive visual design reference](EXPRESSIVE_DESIGN_REFERENCE.md).
+
 ## Compatibility and performance guardrails
 
 1. No direct datastore or database reads in the composables added by this migration.
