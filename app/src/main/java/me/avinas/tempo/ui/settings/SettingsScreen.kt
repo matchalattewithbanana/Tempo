@@ -348,6 +348,46 @@ fun SettingsScreen(
                         .verticalScroll(settingsScrollState)
                         .padding(16.dp),
             ) {
+                if (settingsCategory != "overview") {
+                    val hero = when (settingsCategory) {
+                        "general" -> Triple(
+                            R.string.settings_category_general,
+                            R.string.settings_category_general_desc,
+                            Icons.Rounded.Palette,
+                        )
+                        "tracking" -> Triple(
+                            R.string.settings_category_tracking,
+                            R.string.settings_category_tracking_desc,
+                            Icons.Rounded.GraphicEq,
+                        )
+                        "connections" -> Triple(
+                            R.string.settings_category_connections,
+                            R.string.settings_category_connections_desc,
+                            Icons.Rounded.Link,
+                        )
+                        "data" -> Triple(
+                            R.string.settings_category_data,
+                            R.string.settings_category_data_desc,
+                            Icons.Rounded.Storage,
+                        )
+                        else -> Triple(
+                            R.string.settings_category_about,
+                            R.string.settings_category_about_desc,
+                            Icons.Rounded.Info,
+                        )
+                    }
+                    me.avinas.tempo.ui.components.TempoSettingsCategoryHero(
+                        title = stringResource(hero.first),
+                        subtitle = stringResource(hero.second),
+                        icon = hero.third,
+                        style = when (settingsCategory) {
+                            "general", "about" -> TempoEmblemStyle.DISCOVERY
+                            "tracking" -> TempoEmblemStyle.PULSE
+                            else -> TempoEmblemStyle.MEMORY
+                        },
+                    )
+                    Spacer(Modifier.height(12.dp))
+                }
                 if (settingsCategory == "overview") {
                     OutlinedTextField(
                         value = settingsSearch,
