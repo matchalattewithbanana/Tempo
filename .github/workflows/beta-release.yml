@@ -29,7 +29,7 @@ jobs:
     if: >-
       github.ref == 'refs/heads/main' &&
       (github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'push' && github.event.head_commit.message == 'release(beta): one-shot launch 4.10.25-beta'))
+      (github.event_name == 'push' && github.event.head_commit.message == 'release-beta-one-shot-4.10.25'))
     runs-on: ubuntu-latest
     timeout-minutes: 45
     outputs:
@@ -59,7 +59,7 @@ jobs:
         env:
           TEMPO_DEBUG_KEYSTORE_BASE64: ${{ secrets.TEMPO_DEBUG_KEYSTORE_BASE64 }}
           TEMPO_BETA_SIGNER_SHA256: ${{ vars.TEMPO_BETA_SIGNER_SHA256 || 'fa14beee34664d2c41bc5db00f630b564992da649fa66cb4e62c523915c95407' }}
-          PUBLISH_BETA: ${{ inputs.publish_beta || (github.event_name == 'push' && github.event.head_commit.message == 'release(beta): one-shot launch 4.10.25-beta') }}
+          PUBLISH_BETA: ${{ inputs.publish_beta || (github.event_name == 'push' && github.event.head_commit.message == 'release-beta-one-shot-4.10.25') }}
         shell: bash
         run: |
           set -euo pipefail
@@ -92,7 +92,7 @@ jobs:
       - name: Verify APK and expected version
         env:
           TEMPO_BETA_SIGNER_SHA256: ${{ vars.TEMPO_BETA_SIGNER_SHA256 || 'fa14beee34664d2c41bc5db00f630b564992da649fa66cb4e62c523915c95407' }}
-          PUBLISH_BETA: ${{ inputs.publish_beta || (github.event_name == 'push' && github.event.head_commit.message == 'release(beta): one-shot launch 4.10.25-beta') }}
+          PUBLISH_BETA: ${{ inputs.publish_beta || (github.event_name == 'push' && github.event.head_commit.message == 'release-beta-one-shot-4.10.25') }}
           VERSION: ${{ steps.release.outputs.version }}
           VERSION_CODE: ${{ steps.release.outputs.version_code }}
         shell: bash
@@ -145,7 +145,7 @@ jobs:
     if: >-
       github.ref == 'refs/heads/main' &&
       (github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'push' && github.event.head_commit.message == 'release(beta): one-shot launch 4.10.25-beta'))
+      (github.event_name == 'push' && github.event.head_commit.message == 'release-beta-one-shot-4.10.25'))
     runs-on: ubuntu-latest
     timeout-minutes: 45
     env:
@@ -175,7 +175,7 @@ jobs:
   publish:
     name: Publish immutable GitHub prerelease
     needs: [validate, platform]
-    if: ${{ github.ref == 'refs/heads/main' && (inputs.publish_beta || (github.event_name == 'push' && github.event.head_commit.message == 'release(beta): one-shot launch 4.10.25-beta')) }}
+    if: ${{ github.ref == 'refs/heads/main' && (inputs.publish_beta || (github.event_name == 'push' && github.event.head_commit.message == 'release-beta-one-shot-4.10.25')) }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
