@@ -8,6 +8,10 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.*
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.foundation.layout.*
@@ -577,10 +581,15 @@ private fun AppearanceSection(
 ) {
     var expanded by rememberSaveable(title) { mutableStateOf(initiallyExpanded) }
     val colors = MaterialTheme.colorScheme
+    val container by animateColorAsState(
+        targetValue = if (expanded) colors.surfaceContainerHigh else colors.surfaceContainerLow,
+        animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
+        label = "appearance_section_tonal",
+    )
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.large,
-        color = colors.surfaceContainerLow,
+        color = container,
         border = BorderStroke(1.dp, colors.outlineVariant.copy(alpha = 0.65f)),
     ) {
         Column {
@@ -594,20 +603,26 @@ private fun AppearanceSection(
             ) {
                 Text(
                     stringResource(title), modifier = Modifier.weight(1f),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold, color = colors.onSurface,
+                    style = MaterialTheme.typography.titleMediumEmphasized,
+                    color = colors.onSurface,
                 )
                 Icon(
                     if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                     contentDescription = null, tint = colors.onSurfaceVariant,
                 )
             }
-            if (expanded) {
-                HorizontalDivider(color = colors.outlineVariant.copy(alpha = 0.6f))
-                Column(
-                    modifier = Modifier.fillMaxWidth().padding(18.dp),
-                    verticalArrangement = Arrangement.spacedBy(14.dp),
-                ) { content() }
+            AnimatedVisibility(
+                visible = expanded,
+                enter = fadeIn(MaterialTheme.motionScheme.fastEffectsSpec()),
+                exit = fadeOut(MaterialTheme.motionScheme.fastEffectsSpec()),
+            ) {
+                Column {
+                    HorizontalDivider(color = colors.outlineVariant.copy(alpha = 0.6f))
+                    Column(
+                        modifier = Modifier.fillMaxWidth().padding(18.dp),
+                        verticalArrangement = Arrangement.spacedBy(14.dp),
+                    ) { content() }
+                }
             }
         }
     }
