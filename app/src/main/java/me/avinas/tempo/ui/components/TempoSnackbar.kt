@@ -1,20 +1,18 @@
 package me.avinas.tempo.ui.components
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarData
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.IconButton
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -45,121 +43,71 @@ enum class TempoSnackbarVariant(
     }
 }
 
-private val TempoSnackbarShape = RoundedCornerShape(16.dp)
-
 /**
- * Unified in-app notification for Tempo. Same token family as
- * [TempoDialogSurface]: solid TempoSurfaceDialog, hairline border, soft
- * shadow. Severity-tinted icon badge, TextPrimary message, accent action.
- * Floats with 16dp side / 12dp bottom margins.
+ * Native M3 snackbar host presentation. Severity remains visible in the icon,
+ * while standard Material actions provide ripple, keyboard and TalkBack support.
+ * No layered gradient or shadow passes are needed.
  */
 @Composable
 fun TempoSnackbar(
     data: SnackbarData,
     modifier: Modifier = Modifier,
-    variant: TempoSnackbarVariant = TempoSnackbarVariant.fromMessage(data.visuals.message)
+    variant: TempoSnackbarVariant = TempoSnackbarVariant.fromMessage(data.visuals.message),
 ) {
-    val palette = LocalTempoPalette.current
-    val notificationTint = if (variant == TempoSnackbarVariant.Neutral) palette.accent else variant.tint
-    Box(
+    val scheme = MaterialTheme.colorScheme
+    val notificationTint = when (variant) {
+        TempoSnackbarVariant.Success -> LocalTempoPalette.current.accent
+        TempoSnackbarVariant.Error -> scheme.error
+        TempoSnackbarVariant.Warning -> scheme.tertiary
+        TempoSnackbarVariant.Neutral -> scheme.primary
+    }
+    val actionLabel = data.visuals.actionLabel
+    Snackbar(
         modifier = modifier
             .fillMaxWidth()
-            .padding(start = 16.dp, end = 16.dp, bottom = 12.dp)
-            .shadow(
-                elevation = 16.dp,
-                shape = TempoSnackbarShape,
-                ambientColor = Color.Black.copy(alpha = 0.5f),
-                spotColor = Color.Black.copy(alpha = 0.6f)
-            )
-            .clip(TempoSnackbarShape)
-            .background(
-                Brush.verticalGradient(
-                    listOf(palette.elevatedSurface, palette.surface)
-                )
-            )
-            .border(
-                width = 1.dp,
-                color = palette.border.copy(alpha = 0.65f),
-                shape = TempoSnackbarShape
-            )
-    ) {
-        // Specular top hairline edge
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(1.dp)
-                .background(
-                    Brush.horizontalGradient(
-                        listOf(
-                            Color.Transparent,
-                            palette.onSurface.copy(alpha = 0.15f),
-                            Color.Transparent
-                        )
-                    )
-                )
-        )
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 13.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Clean single-tile icon badge
-            Box(
-                modifier = Modifier
-                    .size(28.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(notificationTint.copy(alpha = 0.10f))
-                    .border(0.5.dp, notificationTint.copy(alpha = 0.20f), RoundedCornerShape(8.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = when (variant) {
-                        TempoSnackbarVariant.Success -> TempoIcons.CheckCircle
-                        TempoSnackbarVariant.Error -> TempoIcons.ErrorCircle
-                        TempoSnackbarVariant.Warning -> TempoIcons.AlertCircle
-                        TempoSnackbarVariant.Neutral -> TempoIcons.InfoCircle
-                    },
-                    contentDescription = null,
-                    tint = notificationTint,
-                    modifier = Modifier.size(16.dp)
-                )
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+        shape = MaterialTheme.shapes.large,
+        containerColor = scheme.surfaceContainerHigh,
+        contentColor = scheme.onSurface,
+        action = if (actionLabel == null) null else {
+            {
+                TextButton(onClick = { data.performAction() }) {
+                    Text(actionLabel, color = scheme.primary,
+                        style = MaterialTheme.typography.labelLarge)
+                }
             }
-
-            Spacer(Modifier.width(12.dp))
-
+        },
+        dismissAction = if (data.visuals.withDismissAction) {
+            {
+                IconButton(onClick = { data.dismiss() }) {
+                    Icon(Icons.Default.Close, contentDescription = "Dismiss message",
+                        tint = scheme.onSurfaceVariant)
+                }
+            }
+        } else null,
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Icon(
+                imageVector = when (variant) {
+                    TempoSnackbarVariant.Success -> TempoIcons.CheckCircle
+                    TempoSnackbarVariant.Error -> TempoIcons.ErrorCircle
+                    TempoSnackbarVariant.Warning -> TempoIcons.AlertCircle
+                    TempoSnackbarVariant.Neutral -> TempoIcons.InfoCircle
+                },
+                contentDescription = null,
+                tint = notificationTint,
+                modifier = Modifier.size(22.dp),
+            )
             Text(
                 text = data.visuals.message,
                 style = MaterialTheme.typography.bodyMedium,
-                color = palette.onSurface,
-                modifier = Modifier.weight(1f, fill = false)
+                color = scheme.onSurface,
+                modifier = Modifier.weight(1f, fill = false),
             )
-
-            data.visuals.actionLabel?.let { actionLabel ->
-                Spacer(Modifier.width(10.dp))
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(notificationTint.copy(alpha = 0.08f))
-                        .border(0.5.dp, notificationTint.copy(alpha = 0.22f), RoundedCornerShape(8.dp))
-                        .clickable(
-                            interactionSource = null,
-                            indication = null
-                        ) {
-                            data.performAction()
-                            data.dismiss()
-                        }
-                        .padding(horizontal = 10.dp, vertical = 6.dp)
-                ) {
-                    Text(
-                        text = actionLabel,
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.SemiBold,
-                        color = notificationTint
-                    )
-                }
-            }
         }
     }
 }
