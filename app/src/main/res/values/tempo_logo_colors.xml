@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="tempo_logo_pulse_background">#E6FFF4</color>
+    <color name="tempo_logo_clock_background">#F6F1FF</color>
+    <color name="tempo_logo_trail_background">#FCF8FF</color>
+    <color name="tempo_logo_vinyl_background">#E9F7EE</color>
+</resources>
