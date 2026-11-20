@@ -1,100 +1,299 @@
-# Tempo
+<!-- Tempo • community-maintained Android listening journal -->
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/readme/tempo-hero-dark.svg">
+    <img src="assets/readme/tempo-hero-light.svg" alt="Tempo — Every listen leaves a story" width="100%">
+  </picture>
+</p>
 
-<p align="center"><img src="TempoICON.png" width="96" alt="Tempo icon" /></p>
+<p align="center">
+  <a href="https://github.com/matchalattewithbanana/Tempo/releases/latest"><img src="https://img.shields.io/github/v/release/matchalattewithbanana/Tempo?style=for-the-badge&label=LATEST%20RELEASE&color=239981" alt="Latest GitHub release"></a>
+  <a href="https://github.com/matchalattewithbanana/Tempo/releases"><img src="https://img.shields.io/github/downloads/matchalattewithbanana/Tempo/total?style=for-the-badge&label=DOWNLOADS&color=7763BE" alt="Total GitHub release downloads"></a>
+  <a href="https://github.com/matchalattewithbanana/Tempo/stargazers"><img src="https://img.shields.io/github/stars/matchalattewithbanana/Tempo?style=for-the-badge&label=STARS&color=E9AC72" alt="GitHub stars"></a>
+</p>
 
-**A local-first listening journal for Android.** Track supported players, explore your history, import older records, and create listening summaries.
+<p align="center">
+  <strong>A local-first listening journal for Android.</strong><br>
+  Keep track of the music you play, understand your habits, bring past listens together, and make the experience unmistakably yours.
+</p>
 
-This repository is a maintained fork of [avinaxhroy/Tempo](https://github.com/avinaxhroy/Tempo). Its APKs are distributed through this repository, separately from the upstream Google Play app.
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/readme/chips-dark.svg">
+    <img src="assets/readme/chips-light.svg" height="42" alt="Android 8+, Kotlin and Jetpack Compose, Material 3 Expressive, local-first">
+  </picture>
+</p>
 
-## Download
+<p align="center">
+  <a href="https://github.com/matchalattewithbanana/Tempo/releases/latest"><strong>Get the Android APK</strong></a>
+  &nbsp;·&nbsp;
+  <a href="browser-extension/README.md#install-from-github">Browser companion</a>
+  &nbsp;·&nbsp;
+  <a href="docs/README.md">Documentation</a>
+  &nbsp;·&nbsp;
+  <a href="https://github.com/matchalattewithbanana/Tempo/issues">Report an issue</a>
+</p>
 
-[Latest stable release](https://github.com/matchalattewithbanana/Tempo/releases/latest) · Android 8.0+ · signed debug-variant APK
+<p align="center"><sub>Community-maintained fork of <a href="https://github.com/avinaxhroy/Tempo">the original Tempo</a>. Published downloads are independent of the upstream Google Play app.</sub></p>
 
-Starting with 4.9.9, the same GitHub release includes Chromium and Firefox companion ZIPs. [Companion installation](browser-extension/README.md#install-from-github).
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/readme/divider-dark.svg">
+    <img src="assets/readme/divider-light.svg" width="100%" alt="">
+  </picture>
+</p>
 
-Export a backup before upgrading. An in-place update requires the same signing certificate as the installed app. Light/System appearance, background tracking and device performance still have open device-validation work.
+## Overview
 
-See the [release catalog](docs/releases/README.md) for versions, checksums and upgrade guidance. Historical tags and APKs are retained.
+Tempo is a music-listening tracker, not a streaming player. It builds a personal history from supported playback information, brings in compatible exports, and turns those records into meaningful listening stats, artwork-led summaries and milestones.
 
-## Features
+The idea is simple: **your listening history should be useful, personal, and enjoyable to explore.**
 
-- Local notification and MediaSession playback tracking, with optional Spotify device broadcasts.
-- Listening history, charts, artist/album details, challenges and badges.
-- Spotify, Apple Music, Last.fm, YouTube Music, Deezer, Musicolet and browser-history imports.
-- Eighteen appearance presets, including ten curated light/dark editions, saved looks, configurable typography and layout, customizable Stats/Profile views, and precise listening-time display.
-- Spotlight stories, share cards, and a customizable 3×3 album poster.
-- Local export/restore, optional Google Drive backups and an optional browser companion.
+- **Track:** supported Android player activity, with optional Spotify signals.
+- **Understand:** songs, albums, artists, listening durations, trends, challenges and badges.
+- **Bring it together:** supported music-history imports and optional browser sync.
+- **Make it yours:** curated appearance presets, layouts, share cards, widgets and launcher icon options.
 
-Playback accuracy depends on the player's available signals. Now Playing is provisional; finished listens and imported records can have different timing evidence. Spotify API reconciliation requests a 20-minute background cadence, which Android may defer. Read [tracking accuracy](docs/TRACKING_AND_IMPORT_ACCURACY.md) before interpreting imported durations.
+> **Release vs. source:** The latest published release is **[v4.9.9](https://github.com/matchalattewithbanana/Tempo/releases/tag/v4.9.9)**. The Material 3 Expressive redesign, latest icon options and other commits on `main` are **unreleased until a newer APK is built and published**. Do not assume the current download already contains them.
 
-## Update Center
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/readme/divider-dark.svg">
+    <img src="assets/readme/divider-light.svg" width="100%" alt="">
+  </picture>
+</p>
 
-**Settings → Update Center** checks the maintained fork's published GitHub releases, compares the installed version with the **Stable** or opt-in **Preview** channel, shows release notes and starts an APK download only when you ask. **Automatic checks are off by default.** Enabling them schedules a network-aware daily WorkManager check; it may show an update notification, but it will never download or install in the background without your request. You can mute a particular release.
+## What makes Tempo different?
 
-APK downloads run through WorkManager and show progress. Tempo accepts only its exact GitHub Release APK name and URL, a valid published asset digest, and an expected bounded APK size. Downloads are stored privately, SHA-256 verified, checked for correct package identity, a newer Android version code and the same signing certificate as the installed app, and then handed to Android's installer with user confirmation. If Android requires permission to install from Tempo, the Update Center opens the corresponding system settings. **No silent installs, forced updates or bypasses of Android safety controls.** If your installed APK uses an incompatible signing key, export a backup before considering a reinstall; the updater will refuse an in-place install.
+**Listening is more than a play count.** Tempo brings listening records, music artwork, trends and a personalized visual experience into one Android app. Its local-first library helps keep that experience usable without requiring you to publish your music history to a social service.
 
-The Update Center checks Android APK releases only. The Chromium/Firefox companion packages remain linked on each GitHub release page. An app version that has unreleased commits is not an available update until a new version is explicitly built and published.
+It also treats playback evidence carefully. **Now Playing is provisional**, different apps expose different timing signals, and imports can have incomplete timestamps or durations. Tempo does not claim that all sources report the same level of accuracy; the [tracking and import accuracy guide](docs/TRACKING_AND_IMPORT_ACCURACY.md) explains the differences.
 
-## Material 3 Expressive — adaptive layout
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/readme/divider-dark.svg">
+    <img src="assets/readme/divider-light.svg" width="100%" alt="">
+  </picture>
+</p>
 
-On phones, Tempo uses the expressive short navigation bar; on expanded windows (≥840dp), it switches to a native wide navigation rail while preserving Compact Now Playing. Home and Stats periods, History filters, Appearance Studio options, and Update Center channels use responsive connected Material 3 buttons. Shared dialogs and snackbars use lighter Material surfaces and accessible actions; Supported Apps search keeps results visible while filtering, and Stats/History search now uses native Material fields. Error and empty states use themed Material colors. These changes alter UI presentation only, not tracking, import, or backup logic.
+## Feature atlas
 
-**Status:** source implementation on `main`; Android compilation and device/tablet visual testing are still pending.
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <img src="assets/readme/feature-signal.svg" width="66" height="66" alt=""><br>
+      <strong>Live listening</strong><br>
+      Tempo listens to supported Android playback signals, with optional Spotify device broadcasts and reconciliation. Now Playing is immediate feedback; completed listening records depend on the available timing evidence.<br><br>
+      <code>MediaSession</code> <code>Device broadcasts</code> <code>Playback signals</code>
+    </td>
+    <td width="50%" valign="top">
+      <img src="assets/readme/feature-history.svg" width="66" height="66" alt=""><br>
+      <strong>Your listening, in context</strong><br>
+      Explore recent plays, top tracks, artists and albums, listening trends, rankings, challenges and badges. Turn listening history into a journal worth revisiting.<br><br>
+      <code>History</code> <code>Statistics</code> <code>Milestones</code>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <img src="assets/readme/feature-imports.svg" width="66" height="66" alt=""><br>
+      <strong>Bring your history with you</strong><br>
+      Import supported history from Spotify, Apple Music, Last.fm, YouTube Music, Deezer and Musicolet. Matching and deduplication aim to reduce overlapping records.<br><br>
+      <code>Spotify + Apple</code> <code>Last.fm</code> <code>Import matching</code>
+    </td>
+    <td width="50%" valign="top">
+      <img src="assets/readme/feature-palette.svg" width="66" height="66" alt=""><br>
+      <strong>Appearance Studio</strong><br>
+      Explore 18 curated looks, Light/Dark/OLED tones, font and shape options, reusable saved looks, configurable layouts, and rich Material 3 Expressive styling on the development branch.<br><br>
+      <code>18 palettes</code> <code>Material You</code> <code>Custom layouts</code>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <img src="assets/readme/feature-share.svg" width="66" height="66" alt=""><br>
+      <strong>Make it shareable</strong><br>
+      Create Spotlight stories, listening-summary cards and a customizable 3×3 album poster. Share music memories without needing to publish your entire library.<br><br>
+      <code>Spotlight</code> <code>Share cards</code> <code>Album poster</code>
+    </td>
+    <td width="50%" valign="top">
+      <img src="assets/readme/feature-backup.svg" width="66" height="66" alt=""><br>
+      <strong>Keep your records yours</strong><br>
+      Export and restore your library locally, or configure optional Google Drive backup. Review the privacy and backup limitations before moving between installations.<br><br>
+      <code>Local export</code> <code>Restore</code> <code>Optional Drive</code>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <img src="assets/readme/feature-browser.svg" width="66" height="66" alt=""><br>
+      <strong>Listening beyond Android</strong><br>
+      The Chromium/Firefox companion records supported browser-player activity and pairs with the Android app. Both companion packages ship alongside the published Android APK.<br><br>
+      <code>Chromium</code> <code>Firefox</code> <code>Paired sync</code>
+    </td>
+    <td width="50%" valign="top">
+      <img src="assets/readme/feature-updates.svg" width="66" height="66" alt=""><br>
+      <strong>A deliberate Update Center</strong><br>
+      The in-app Update Center supports Stable and opt-in Preview channels, release notes, verified APK downloads, and Android's normal install confirmation. Automatic checks are optional; installs are not silent.<br><br>
+      <code>Release notes</code> <code>APK verification</code> <code>User approval</code>
+    </td>
+  </tr>
+</table>
 
-## Material 3 Expressive (2026)
+<details>
+<summary><strong>More details about playback accuracy, cloud sync and release safety</strong></summary>
 
-Tempo uses Google's stable Compose Material 3 Expressive 1.5.0 from BOM **2026.11.01**, while preserving the eighteen curated palettes and configurable corners/typography. Our app-level theme uses `MaterialExpressiveTheme`, the official motion scheme, and the corresponding increased shape and emphasized typography tokens. Core navigation now uses the official `ShortNavigationBar` and Material-selected destinations; History and Home use Material expressive toggle buttons for time ranges, and Profile/Stats have native tab rows. Settings uses `ListItem` and improved search, Appearance Studio uses expressive choices, and the Update Center has a flexible app bar and matching controls. Loading indicators are wavy only when motion is permitted by system accessibility and Tempo's low-resource policy.
+**Playback tracking:** notification/MediaSession signals and compatible device broadcasts may report different information. Spotify API reconciliation uses a requested background cadence of about 20 minutes, which Android may defer. See [tracking and import accuracy](docs/TRACKING_AND_IMPORT_ACCURACY.md).
 
-These controls are selectively chosen for music tracking; not every Material 3 Expressive component is appropriate (for example, FAB menus and carousels should not be added where no corresponding workflow exists). Existing artwork-driven stats, share cards and player surfaces remain purpose-designed.
+**Backups:** local records use app-private Room/SQLite. Backup archives are not independently password-encrypted. Optional cloud features and third-party metadata services have their own network and data flows. Read [privacy](PRIVACY.md) and [Drive configuration](docs/GOOGLE_DRIVE_SETUP.md).
 
-**Toolchain:** Compile SDK 37.1 / Android Gradle Plugin 9.5.1 / Gradle 9.8.2 / Compose BOM 2026.11.01 / Lifecycle 2.11.0. Target SDK remains 36. **Build, instrumented checks and physical-device validation are pending authorization.** See [Material 3 Expressive migration notes](docs/MATERIAL3_EXPRESSIVE.md).
+**Updates:** automatic checks are off by default. The Update Center only downloads an APK after a user request, verifies the asset and package/signing information, and defers installation to Android. Signing-key changes can prevent in-place upgrades; export a backup first. See [releases](docs/releases/README.md).
 
-## Material UI
+</details>
 
-Tempo uses its existing Material 3 interface rather than adding a separate style system. **Appearance Studio → Layout → Corners** now controls the shape family of standard Material buttons, chips, menus and sheets. Settings and Appearance Studio have cleaner grouped sections, comfortable touch targets and readable color roles. The bottom navigation has a more compact tonal appearance, and listening-period selection is lighter without costly selection shadows.
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/readme/divider-dark.svg">
+    <img src="assets/readme/divider-light.svg" width="100%" alt="">
+  </picture>
+</p>
 
-## Launcher icon personalization
+## Screenshots
 
-The four alternate launcher icons use the **same rendered badge artwork displayed in the design concepts**, optimized as transparent WebP assets for Android adaptive launchers; they are not placeholder vector reinterpretations. Their themed monochrome counterparts use the matching symbols.
+<table>
+  <tr>
+    <td width="25%" align="center" valign="top"><img src="Screenshots/S1.png" alt="Tempo historical interface screenshot 1" width="100%"></td>
+    <td width="25%" align="center" valign="top"><img src="Screenshots/S2.png" alt="Tempo historical interface screenshot 2" width="100%"></td>
+    <td width="25%" align="center" valign="top"><img src="Screenshots/S3.png" alt="Tempo historical interface screenshot 3" width="100%"></td>
+    <td width="25%" align="center" valign="top"><img src="Screenshots/S4.png" alt="Tempo historical interface screenshot 4" width="100%"></td>
+  </tr>
+  <tr>
+    <td width="25%" align="center" valign="top"><img src="Screenshots/S5.png" alt="Tempo historical interface screenshot 5" width="100%"></td>
+    <td width="25%" align="center" valign="top"><img src="Screenshots/S6.png" alt="Tempo historical interface screenshot 6" width="100%"></td>
+    <td width="25%" align="center" valign="top"><img src="Screenshots/S7.png" alt="Tempo historical interface screenshot 7" width="100%"></td>
+    <td width="25%" align="center" valign="top"><img src="Screenshots/S8.png" alt="Tempo historical interface screenshot 8" width="100%"></td>
+  </tr>
+</table>
 
-Select **Settings → General → App icon**, or **Appearance Studio → App icon**, to switch between the original Tempo icon and four Material-inspired designs: **Pulse Mint**, **Tempo Clock**, **Violet Trail**, and **Vinyl Night**. The gallery previews the actual launcher icons. Choices apply immediately and persist through Android's PackageManager, independent of listening records or appearance presets. Android 13+ supports monochrome themed variants. Some launchers take a moment to refresh their cached icon.
+<sub>These are historical repository screenshots, **not screenshots of the unreleased Material 3 Expressive redesign**. Updated device captures will be needed when that version has been compiled and tested.</sub>
 
-The original icon remains available as **Tempo Classic**. This feature does not change the app's package identity, need network access, or restart listening tracking.
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/readme/divider-dark.svg">
+    <img src="assets/readme/divider-light.svg" width="100%" alt="">
+  </picture>
+</p>
 
-## Appearance presets
+## Download & installation
 
-Go to **Appearance Studio → Presets** for the new curated collection: Midnight Bloom, Sakura, Matcha, Cobalt, Porcelain, Terracotta, Citrine, Mocha, Lagoon and Lilac, alongside Tempo's eight signature looks. Choose Light, Dark, OLED or System tone first to see the corresponding miniature preview. The gallery uses lazy rows to keep scrolling responsive.
+<p align="center">
+  <a href="https://github.com/matchalattewithbanana/Tempo/releases/latest"><img src="https://img.shields.io/badge/Android-Download%20APK-167D67?style=for-the-badge&logo=android&logoColor=white" alt="Download Android APK"></a>
+  <a href="browser-extension/README.md#install-from-github"><img src="https://img.shields.io/badge/Browser-Companion-7564BD?style=for-the-badge&logo=firefoxbrowser&logoColor=white" alt="Browser companion installation"></a>
+</p>
 
-When enabled, **Match typography, corners and background to the preset** applies a coordinated heading font, shape, surface finish and backdrop. Disable it to preserve those personal settings when changing colors. Selecting a preset activates its intended accent; any custom accent value remains saved and can be reactivated from Accent Source. Previews are not applied to the app until you tap **Apply**.
+Tempo supports **Android 8.0 (API 26) and newer**. For the latest published binaries, use the [GitHub releases page](https://github.com/matchalattewithbanana/Tempo/releases/latest). Release **v4.9.9** includes the Android APK, Chromium and Firefox companion archives, and `SHA256SUMS.txt`.
 
-## Listening-time display
+1. Download the APK and its release checksum file.
+2. Verify the download against `SHA256SUMS.txt` and install it using Android's installer.
+3. Grant only the permissions needed for your chosen tracking sources and finish setup in the app.
 
-In **Appearance Studio → Stats → Listening time units**, choose automatic, decimal minutes/hours/days, or clock-style hours/minutes (optionally including seconds). Decimal units represent fractions of a unit: **589.95 min = 9h 49m 57s**; `.95 min` means 57 seconds, not 95 seconds. Decimal precision is adjustable from 0 to 3 places. Formatting does not modify the stored millisecond totals.
+**Upgrading?** Back up your data first. An Android update can be installed over an existing copy only when package identity and signing certificate are compatible. GitHub APKs are separate from upstream Play Store distribution. Consult the [release catalog](docs/releases/README.md) for version history, checksums and known limitations.
 
-## Privacy
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/readme/divider-dark.svg">
+    <img src="assets/readme/divider-light.svg" width="100%" alt="">
+  </picture>
+</p>
 
-The primary library is stored in app-private Room/SQLite storage. The app does not add database encryption or password encryption to backup archives. Metadata services receive search terms or music identifiers; account integrations, paired-device sync, backups and sharing have their own data flows. Health reporting is build-configurable and uses a random installation identifier when active.
+## The expressive side of Tempo
 
-Read the [Android privacy policy](PRIVACY.md), [browser policy](browser-extension/PRIVACY.md) and [analytics reference](docs/ANALYTICS.md) for controls and limitations.
+Tempo's ongoing Material 3 Expressive work extends the visual system through native Compose motion, responsive navigation, tonal bento layouts, expressive buttons and shape families, and accessible loading states. **Appearance Studio** offers 18 curated color presets with Light, Dark, OLED and System-tone previews, alongside typography, density, corner and motion preferences.
 
-## Build and contribute
+On the source branch, selectable launcher artwork includes **Tempo Classic**, **Pulse Mint**, **Tempo Clock**, **Violet Trail** and **Vinyl Night**. The browser companion, Android widgets, stats and sharing have their own documentation and release notes.
 
-Development uses JDK 21, Android SDK 36 and the checked-in Gradle wrapper. Browser development uses Node.js 20 and the npm lockfile. See [development setup](docs/DEVELOPMENT.md), [architecture](docs/ARCHITECTURE.md) and [contributing](CONTRIBUTING.md).
+Explore the [Material 3 Expressive migration](docs/MATERIAL3_EXPRESSIVE.md), [visual design reference](docs/EXPRESSIVE_DESIGN_REFERENCE.md) and [changelog](Changelog.md). These describe source changes; compilation, visual accessibility checks and physical-device performance verification are still pending for the latest unreleased work.
 
-Build and validation workflows are manual. Ordinary commits do not build or publish APKs. See [release policy](docs/BUILD_AND_RELEASE_POLICY.md).
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/readme/divider-dark.svg">
+    <img src="assets/readme/divider-light.svg" width="100%" alt="">
+  </picture>
+</p>
 
-## Documentation and support
+## How the project is structured
 
-| Resource | Purpose |
+This is the Android client and its optional browser companion. Playback tracking, local storage, importers and UI are kept in the same repository; documentation explains their boundaries.
+
+| Area | Purpose |
 | --- | --- |
-| [Documentation index](docs/README.md) | User guides, development references and historical reports |
-| [Support](SUPPORT.md) | Troubleshooting and useful bug reports |
-| [Security](SECURITY.md) | Responsible vulnerability reporting |
-| [Changelog](Changelog.md) | Fork releases and unreleased changes |
-| [Current audit backlog](https://github.com/matchalattewithbanana/Tempo/issues) | Confirmed findings and proposed work |
+| [`app/src/main/java/me/avinas/tempo/`](app/src/main/java/me/avinas/tempo) | Android app: playback/tracking, data, services, Compose screens and settings |
+| [`app/src/main/res/`](app/src/main/res) | Android resources, including Material artwork and launcher icons |
+| [`browser-extension/`](browser-extension) | Chromium and Firefox listening companion |
+| [`docs/`](docs/README.md) | Architecture, accuracy, reliability, privacy, releases and engineering notes |
+| [`Screenshots/`](Screenshots) | Historical UI captures for reference |
 
-Repository screenshots are illustrative historical assets. See the release notes for current validation.
+For a deeper tour, see [architecture](docs/ARCHITECTURE.md) and [development setup](docs/DEVELOPMENT.md).
 
-## Attribution and license
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/readme/divider-dark.svg">
+    <img src="assets/readme/divider-light.svg" width="100%" alt="">
+  </picture>
+</p>
 
-Original project: [avinaxhroy/Tempo](https://github.com/avinaxhroy/Tempo). See [NOTICE.md](NOTICE.md) and the complete [LICENSE](LICENSE). The license contains additional restrictions beyond standard AGPL-3.0, including commercial-use and rebranding restrictions. The license text is retained unchanged. Third-party services and marks belong to their respective owners; this fork is not endorsed by those services.
+## Build from source
+
+You will need **JDK 21**, **Android SDK 37.1** for the current `main` branch, and the checked-in Gradle wrapper. The application targets Android SDK 36 and supports API 26+. Optional service integrations require their own setup.
+
+```bash
+git clone https://github.com/matchalattewithbanana/Tempo.git
+cd Tempo
+./gradlew :app:testDebugUnitTest
+./gradlew :app:assembleDebug
+```
+
+For the optional browser companion, use **Node.js 20** and its checked-in lockfile:
+
+```bash
+cd browser-extension
+npm ci
+npm run typecheck
+npm run build:all
+```
+
+Builds and release workflows are **manual**, not triggered by normal commits. Local builds and GitHub releases may use different signing certificates. Read [development](docs/DEVELOPMENT.md), [release policy](docs/BUILD_AND_RELEASE_POLICY.md) and [contribution guidelines](CONTRIBUTING.md) before changing packaging or release workflows.
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/readme/divider-dark.svg">
+    <img src="assets/readme/divider-light.svg" width="100%" alt="">
+  </picture>
+</p>
+
+## Privacy, support & documentation
+
+Tempo keeps its primary listening library in app-private local storage. Optional integrations, metadata lookup, sharing, health reporting and backups have their own privacy considerations; **local-first does not mean that every optional feature is offline**.
+
+| Resource | Read this for |
+| --- | --- |
+| [Privacy policy](PRIVACY.md) · [Browser privacy](browser-extension/PRIVACY.md) | Stored data, optional network flows, retention and user controls |
+| [Tracking accuracy](docs/TRACKING_AND_IMPORT_ACCURACY.md) | Timing evidence, import matching and reconciliation |
+| [Docs index](docs/README.md) | Feature guides, audits and development reference |
+| [Support](SUPPORT.md) · [Issues](https://github.com/matchalattewithbanana/Tempo/issues) | Troubleshooting, reproducible bug reports and feature suggestions |
+| [Security](SECURITY.md) | Responsible vulnerability disclosure |
+| [Changelog](Changelog.md) · [Release catalog](docs/releases/README.md) | Published releases versus unreleased work |
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/readme/divider-dark.svg">
+    <img src="assets/readme/divider-light.svg" width="100%" alt="">
+  </picture>
+</p>
+
+## Credits & license
+
+Tempo was originally created by **[Avinash (avinaxhroy)](https://github.com/avinaxhroy/Tempo)**. This maintained fork is developed by **[matchalattewithbanana](https://github.com/matchalattewithbanana)**, with original project attribution and notices preserved.
+
+**License:** The repository retains the original [Tempo Custom License](LICENSE), based on AGPLv3 **with additional restrictions**, including non-commercial use and no rebranding/white-label distribution. It is **not** an unrestricted standard AGPL license. See [NOTICE.md](NOTICE.md) for full attribution and service trademark information.
+
+<p align="center">
+  <sub>Made for people who care about the music between the moments.</sub>
+</p>
