@@ -23,8 +23,8 @@ import me.avinas.tempo.data.repository.ArtistLinkingService
 import me.avinas.tempo.data.repository.TrackResolver
 import okio.buffer
 import okio.Buffer
-import okio.HashingSinkedSink
-import okio.Buffer
+import okio.BufferedSink
+import okio.HashingSink
 import okio.sink
 import okio.source
 import java.io.File

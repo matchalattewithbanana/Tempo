@@ -257,7 +257,7 @@ class AppPreferenceViewModel @Inject constructor(
     }
 
     private fun resolveDisplayName(packageName: String): String =
-        installedApps.value.firstOrNull { it.packageName == packageName }?.displayName
+        installedApps.value?.firstOrNull { it.packageName == packageName }?.displayName
             ?: DefaultMusicApps.getDisplayName(packageName)
 
     fun toggleAppEnabled(packageName: String, enabled: Boolean) {
