@@ -2,21 +2,20 @@
 
 package me.avinas.tempo.ui.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
-/** Section identity for Settings pages, matching the bento entry tiles.
- * The large polygon remains static: opening a subpage should feel immediate,
- * not spend frames on another ambient spinner or alpha-heavy background.
+/**
+ * Compact context strip for Settings subpages.
+ *
+ * Their TopAppBar already states the destination title. Repeating it as a
+ * second enormous heading in a decorative hero wastes most of the first screen.
+ * Keep the category identity through its Material shape and a short description.
  */
 @Composable
 fun TempoSettingsCategoryHero(
@@ -27,7 +26,7 @@ fun TempoSettingsCategoryHero(
     modifier: Modifier = Modifier,
 ) {
     val scheme = MaterialTheme.colorScheme
-    val (container, foreground, shape) = when (style) {
+    val (container, foreground, emblemShape) = when (style) {
         TempoEmblemStyle.PULSE -> Triple(
             scheme.primaryContainer, scheme.onPrimaryContainer, MaterialShapes.Cookie9Sided.toShape(),
         )
@@ -44,52 +43,34 @@ fun TempoSettingsCategoryHero(
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.extraLarge,
-        color = container,
-        contentColor = foreground,
+        color = scheme.surfaceContainerLow,
+        contentColor = scheme.onSurface,
     ) {
-        Box(Modifier.fillMaxWidth().heightIn(min = 126.dp)) {
-            Box(
-                Modifier.align(Alignment.CenterEnd)
-                    .offset(x = 30.dp)
-                    .size(164.dp)
-                    .background(foreground.copy(alpha = 0.075f), shape),
-            )
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(20.dp),
-                horizontalArrangement = Arrangement.spacedBy(18.dp),
-                verticalAlignment = Alignment.CenterVertically,
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            Surface(
+                modifier = Modifier.size(44.dp),
+                color = container,
+                contentColor = foreground,
+                shape = emblemShape,
             ) {
-                Surface(
-                    modifier = Modifier.size(66.dp),
-                    shape = shape,
-                    color = foreground.copy(alpha = 0.12f),
-                    contentColor = foreground,
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(icon, contentDescription = null, modifier = Modifier.size(32.dp))
-                    }
-                }
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(5.dp),
-                ) {
-                    Text(
-                        title,
-                        style = MaterialTheme.typography.headlineSmallEmphasized,
-                        color = foreground,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.semantics { heading() },
-                    )
-                    Text(
-                        subtitle,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = foreground.copy(alpha = 0.84f),
-                        maxLines = 3,
-                        overflow = TextOverflow.Ellipsis,
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        modifier = Modifier.size(23.dp),
                     )
                 }
             }
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodyMedium,
+                color = scheme.onSurfaceVariant,
+                modifier = Modifier.weight(1f),
+            )
         }
     }
 }
