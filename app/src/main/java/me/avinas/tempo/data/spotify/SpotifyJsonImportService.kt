@@ -6,6 +6,7 @@ import android.util.Log
 import com.squareup.moshi.JsonReader
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.ensureActive
@@ -21,7 +22,8 @@ import me.avinas.tempo.data.local.entities.ListeningEvent
 import me.avinas.tempo.data.repository.ArtistLinkingService
 import me.avinas.tempo.data.repository.TrackResolver
 import okio.buffer
-import okio.BufferedSink
+import okio.Buffer
+import okio.HashingSinkedSink
 import okio.Buffer
 import okio.sink
 import okio.source
@@ -111,10 +113,11 @@ class SpotifyJsonImportService @Inject constructor(
         _importState.value = ImportState.Parsing("", 0, uris.size)
 
         val errors = mutableListOf<String>()
-        if (uris.size > MAX_FILES_PER_IMPORT) {
-            errors.add("Too many files selected (${uris.size}), importing first $MAX_FILES_PER_IMPORT")
+        val uniqueUris = uris.distinct()
+        if (uniqueUris.size > MAX_FILES_PER_IMPORT) {
+            errors.add("Too many files selected (${uniqueUris.size}), importing first $MAX_FILES_PER_IMPORT")
         }
-        val boundedUris = uris.take(MAX_FILES_PER_IMPORT)
+        val boundedUris = uniqueUris.take(MAX_FILES_PER_IMPORT)
         var filesProcessed = 0
         var totalEntries = 0
         var tracksImported = 0
@@ -127,6 +130,7 @@ class SpotifyJsonImportService @Inject constructor(
         // Track cache persists across files so a track resolved in an earlier file
         // is reused in later files without re-querying the database.
         val trackCache = mutableMapOf<String, Long>()
+        val processedFiles = mutableMapOf<okio.ByteString, Int>()
 
         for ((index, uri) in boundedUris.withIndex()) {
             coroutineContext.ensureActive()
@@ -145,9 +149,12 @@ class SpotifyJsonImportService @Inject constructor(
                 // null/spoofable on some providers, so the pre-check above is advisory only.
                 val stagedFile = File.createTempFile("tempo-spotify-", ".jsonl", context.cacheDir)
                 try {
+                    var stagedHash: okio.ByteString? = null
                     val parseResult = context.contentResolver.openInputStream(uri)?.use { raw ->
                         CappedInputStream(raw, MAX_FILE_SIZE_BYTES).use { capped ->
-                            stagedFile.sink().buffer().use { sink -> parseJsonStream(capped, fileName, sink) }
+                            val hashingSink = HashingSink.sha256(stagedFile.sink())
+                            hashingSink.buffer().use { sink -> parseJsonStream(capped, fileName, sink) }
+                                .also { stagedHash = hashingSink.hash }
                         }
                     } ?: ParseResult(0, 0, 0).also {
                         addCappedError(errors, "Could not open: $fileName")
@@ -169,6 +176,16 @@ class SpotifyJsonImportService @Inject constructor(
 
                     totalEntries += parseResult.entryCount
                     podcastsSkipped += filePodcasts
+
+                    val musicEntries = parseResult.entryCount - filePodcasts
+                    val repeatedLowQuality = stagedHash?.let(processedFiles::get)
+                    if (repeatedLowQuality != null) {
+                        lowQualitySkipped += repeatedLowQuality
+                        duplicatesSkipped += musicEntries - repeatedLowQuality
+                        musicProcessedSoFar += musicEntries
+                        filesProcessed++
+                        continue
+                    }
 
                     var fileMusicProcessed = 0
                     var tracksInFile = 0
@@ -214,11 +231,18 @@ class SpotifyJsonImportService @Inject constructor(
                     duplicatesSkipped += duplicatesInFile
                     lowQualitySkipped += lowQualityInFile
 
+                    if (fileMusicProcessed == musicEntries &&
+                        eventsInFile + duplicatesInFile + lowQualityInFile == fileMusicProcessed
+                    ) {
+                        stagedHash?.let { processedFiles[it] = lowQualityInFile }
+                    }
                     filesProcessed++
                     Log.i(TAG, "Processed ${parseResult.entryCount} entries from $fileName")
                 } finally {
                     stagedFile.delete()
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to parse $fileName", e)
                 // ponytail: no e.message — exception text can carry paths/SQL internals.
@@ -269,7 +293,7 @@ class SpotifyJsonImportService @Inject constructor(
 
         suspend fun flush() {
             if (pendingEvents.isNotEmpty()) {
-                val r = insertPendingBatch(pendingEvents)
+                val r = insertPendingBatch(pendingEvents, errors)
                 eventsCreated += r.inserted
                 duplicatesSkipped += r.skipped
                 pendingEvents.clear()
@@ -285,6 +309,8 @@ class SpotifyJsonImportService @Inject constructor(
                 pendingEnrichedMetadata.clear()
                 try {
                     enrichedMetadataDao.upsertAllFromAutomaticEnrichment(rows)
+                } catch (e: CancellationException) {
+                    throw e
                 } catch (e: Exception) {
                     Log.w(TAG, "Failed to batch-upsert enriched metadata for ${rows.size} tracks", e)
                 }
@@ -307,6 +333,8 @@ class SpotifyJsonImportService @Inject constructor(
                     ProcessResult.Duplicate -> duplicatesSkipped++
                     ProcessResult.LowQuality -> lowQualitySkipped++
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 // ponytail: track titles are PII — never into logcat or the errors list.
                 Log.e(TAG, "Failed to import entry", e)
@@ -325,33 +353,33 @@ class SpotifyJsonImportService @Inject constructor(
 
     private data class FlushResult(val inserted: Int, val skipped: Int)
 
-    private suspend fun insertPendingBatch(pendingEvents: List<ListeningEvent>): FlushResult {
-        try {
-            val insertResult = listeningEventDao.insertAllBatchedWithDedup(pendingEvents)
-            Log.i(TAG, "Batch inserted ${insertResult.inserted} events, skipped ${insertResult.skipped} duplicates, replaced ${insertResult.replaced} lower-authority")
-            return FlushResult(insertResult.inserted, insertResult.skipped)
+    private suspend fun insertPendingBatch(
+        pendingEvents: List<ListeningEvent>,
+        errors: MutableList<String>,
+    ): FlushResult {
+        return try {
+            val result = listeningEventDao.insertAllBatchedWithDedup(pendingEvents)
+            FlushResult(result.inserted, result.skipped)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
-            Log.e(TAG, "Batch insert failed, falling back to individual inserts", e)
+            Log.e(TAG, "Batch insert failed, retrying Spotify plays individually", e)
             var inserted = 0
             var skipped = 0
             for (event in pendingEvents) {
+                coroutineContext.ensureActive()
                 try {
-                    val count = listeningEventDao.countEventsNearTimestamp(
-                        event.track_id,
-                        event.timestamp - ListeningEventDao.DUPLICATE_TOLERANCE_MS,
-                        event.timestamp + ListeningEventDao.DUPLICATE_TOLERANCE_MS
-                    )
-                    if (count == 0) {
-                        listeningEventDao.insert(event)
-                        inserted++
-                    } else {
-                        skipped++
-                    }
-                } catch (e2: Exception) {
-                    Log.e(TAG, "Failed to insert event for track ${event.track_id}", e2)
+                    val result = listeningEventDao.insertAllBatchedWithDedup(listOf(event))
+                    inserted += result.inserted
+                    skipped += result.skipped
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
+                } catch (failure: Exception) {
+                    Log.e(TAG, "Failed to save a Spotify play", failure)
+                    addCappedError(errors, "Failed to save a Spotify play")
                 }
             }
-            return FlushResult(inserted, skipped)
+            FlushResult(inserted, skipped)
         }
     }
 
@@ -736,6 +764,8 @@ class SpotifyJsonImportService @Inject constructor(
             if (isNewTrack) {
                 try {
                     artistLinkingService.linkArtistsForTrack(resolution.track)
+                } catch (e: CancellationException) {
+                    throw e
                 } catch (e: Exception) {
                     Log.w(TAG, "Failed to link artists for track $trackId", e)
                 }

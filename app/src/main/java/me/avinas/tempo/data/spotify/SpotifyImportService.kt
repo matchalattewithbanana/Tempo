@@ -56,6 +56,7 @@ class SpotifyImportService @Inject constructor(
         private const val CURSOR_OVERLAP_MS = 30 * 60 * 1000L
         private const val MAX_PAGES_PER_SYNC = SpotifyRecentHistoryPagingPolicy.MAX_PAGES
         private const val PAGE_SIZE = SpotifyRecentHistoryPagingPolicy.PAGE_LIMIT
+        private const val WRITE_BATCH_SIZE = 100
         
         // Source identifier for imported events
         const val IMPORT_SOURCE = "com.spotify.music.import"
@@ -75,7 +76,7 @@ class SpotifyImportService @Inject constructor(
         val newCursor: String? = null // For incremental polling
     ) {
         val isSuccess: Boolean get() = errors.isEmpty()
-        val totalProcessed: Int get() = tracksImported + duplicatesSkipped
+        val totalProcessed: Int get() = eventsCreated + duplicatesSkipped
         
         companion object {
             fun notConnected() = ImportResult(
@@ -228,31 +229,49 @@ class SpotifyImportService @Inject constructor(
                 )
             }
 
+            val resolvedTracks = mutableMapOf<String, Long>()
+            val pending = ArrayList<ListeningEvent>(WRITE_BATCH_SIZE)
+            suspend fun flush() {
+                if (pending.isEmpty()) return
+                try {
+                    val result = listeningEventDao.insertAllBatchedWithDedup(pending)
+                    eventsCreated += result.inserted
+                    duplicatesSkipped += result.skipped
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Log.e(TAG, "Could not save a batch of Spotify plays", e)
+                    errors.add("Failed to save a batch of Spotify plays. Retry to recover it.")
+                } finally {
+                    pending.clear()
+                }
+            }
             items.forEachIndexed { index, playHistory ->
                 try {
-                    val result = processPlayHistoryItem(playHistory)
-                    when (result) {
-                        is ProcessResult.NewTrack -> {
-                            tracksImported++
-                            eventsCreated++
+                    if (playHistory.playedAtMillis <= 0L) {
+                        duplicatesSkipped++
+                    } else {
+                        val track = playHistory.track
+                        val spotifyId = track.id.takeIf { it.isNotBlank() }
+                        val cachedId = spotifyId?.let(resolvedTracks::get)
+                        val trackId = cachedId ?: resolveTrack(track).let { resolution ->
+                            if (resolution.isNewTrack) tracksImported++
+                            if (spotifyId != null) resolvedTracks[spotifyId] = resolution.trackId
+                            resolution.trackId
                         }
-                        is ProcessResult.ExistingTrack -> {
-                            eventsCreated++
-                        }
-                        is ProcessResult.Duplicate -> {
-                            duplicatesSkipped++
-                        }
+                        pending.add(createListeningEvent(playHistory, trackId))
+                        if (pending.size == WRITE_BATCH_SIZE) flush()
                     }
-                    onProgress?.invoke(index + 1, items.size)
-                    
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
                     Log.e(TAG, "Error processing Spotify play", e)
                     errors.add("Failed to import a Spotify play")
                 }
+                onProgress?.invoke(index + 1, items.size)
             }
-            
+            flush()
+
             // Save cursor for future polling
             val newCursor = latestSeen?.let { latest ->
                 maxOf(latest, afterCursor ?: 0L).toString()
@@ -290,20 +309,7 @@ class SpotifyImportService @Inject constructor(
     /**
      * Result of processing a single play history item.
      */
-    private sealed class ProcessResult {
-        object NewTrack : ProcessResult()
-        object ExistingTrack : ProcessResult()
-        object Duplicate : ProcessResult()
-    }
-    
-    private suspend fun processPlayHistoryItem(playHistory: PlayHistoryObject): ProcessResult {
-        val spotifyTrack = playHistory.track
-        val playedAtMillis = playHistory.playedAtMillis
-        if (playedAtMillis <= 0L) {
-            Log.w(TAG, "Skipping a Spotify play with an invalid timestamp")
-            return ProcessResult.Duplicate
-        }
-
+    private suspend fun resolveTrack(spotifyTrack: SpotifyTrack): TrackResolver.Resolution {
         // Resolve against local MediaSession/Last.fm/Spotify tracks as well as API
         // tracks. A Spotify ID is stronger identity than a fuzzy title match.
         val resolution = trackResolver.resolve(
@@ -327,27 +333,26 @@ class SpotifyImportService @Inject constructor(
         }
         if (resolution.isNewTrack) createEnrichedMetadata(resolution.trackId, spotifyTrack)
 
+        return resolution
+    }
+
+    private fun createListeningEvent(playHistory: PlayHistoryObject, trackId: Long): ListeningEvent {
         // /recently-played supplies an exact played_at timestamp and catalog duration
         // but NO observed listening duration or completion percentage. Do not
         // invent an 80% play or add fictional listening minutes.
-        val event = ListeningEvent(
-            track_id = resolution.trackId,
-            timestamp = playedAtMillis,
+        return ListeningEvent(
+            track_id = trackId,
+            timestamp = playHistory.playedAtMillis,
             playDuration = 0L,
             completionPercentage = 0,
             source = IMPORT_SOURCE,
             wasSkipped = false,
             isReplay = false,
-            estimatedDurationMs = spotifyTrack.durationMs.takeIf { it > 0L },
+            estimatedDurationMs = playHistory.track.durationMs.takeIf { it > 0L },
             pauseCount = 0,
             sessionId = null,
             endTimestamp = null
         )
-        // Authority-ranked dedup avoids the old full-history scan and prevents
-        // API sync from double-counting a play recorded live.
-        val insertResult = listeningEventDao.insertAllBatchedWithDedup(listOf(event))
-        if (insertResult.inserted == 0) return ProcessResult.Duplicate
-        return if (resolution.isNewTrack) ProcessResult.NewTrack else ProcessResult.ExistingTrack
     }
 
     /**

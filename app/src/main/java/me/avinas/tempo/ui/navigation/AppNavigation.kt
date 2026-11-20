@@ -61,6 +61,7 @@ fun AppNavigation(
 ) {
     val navController = rememberNavController()
     val reducedMotion = rememberReducedMotion()
+    val animateNavigation = !reducedMotion && !me.avinas.tempo.ui.theme.LocalTempoAppearance.current.instantNavigation
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     val currentDestination = navBackStackEntry?.destination
@@ -111,8 +112,8 @@ fun AppNavigation(
                     navController = navController,
                     startDestination = Screen.Home.route,
                     modifier = Modifier.fillMaxSize(),
-                    enterTransition = { if (reducedMotion) EnterTransition.None else fadeIn(tween(120)) },
-                    exitTransition = { if (reducedMotion) ExitTransition.None else fadeOut(tween(120)) },
+                    enterTransition = { if (animateNavigation) fadeIn(tween(120)) else EnterTransition.None },
+                    exitTransition = { if (animateNavigation) fadeOut(tween(120)) else ExitTransition.None },
                 ) {
                     composable(Screen.Home.route) {
                         me.avinas.tempo.ui.home.HomeScreen(

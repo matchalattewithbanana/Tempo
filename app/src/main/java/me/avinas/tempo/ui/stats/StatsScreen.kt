@@ -550,29 +550,31 @@ fun HeroStatItem(item: StatItem, onNavigate: () -> Unit) {
         Row(
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Big Image
-            Box(contentAlignment = Alignment.Center) {
-                // Glow Layer
-                Box(modifier = Modifier.size(90.dp).clip(CircleShape).background(rankColor.copy(alpha = 0.22f))) // Reduced glow size
-                
-                // Image Layer
-                if (imageUrl != null) {
-                    CachedAsyncImage(
-                        imageUrl = imageUrl,
-                        contentDescription = null,
-                        modifier = Modifier.size(80.dp).clip(CircleShape),
-                        contentScale = ContentScale.Crop,
-                        targetSizeDp = 80 // Downsample for faster decode & less memory
-                    )
-                } else {
-                     Box(modifier = Modifier.size(80.dp).clip(CircleShape).background(scheme.surfaceContainerHigh), contentAlignment = Alignment.Center) {
-                         Text(title.firstOrNull()?.toString() ?: "?", style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.onSurface)
-                     }
+            if (LocalTempoAppearance.current.showStatsArtwork) {
+                // Big Image
+                Box(contentAlignment = Alignment.Center) {
+                    // Glow Layer
+                    Box(modifier = Modifier.size(90.dp).clip(CircleShape).background(rankColor.copy(alpha = 0.22f))) // Reduced glow size
+
+                    // Image Layer
+                    if (imageUrl != null) {
+                        CachedAsyncImage(
+                            imageUrl = imageUrl,
+                            contentDescription = null,
+                            modifier = Modifier.size(80.dp).clip(CircleShape),
+                            contentScale = ContentScale.Crop,
+                            targetSizeDp = 80 // Downsample for faster decode & less memory
+                        )
+                    } else {
+                         Box(modifier = Modifier.size(80.dp).clip(CircleShape).background(scheme.surfaceContainerHigh), contentAlignment = Alignment.Center) {
+                             Text(title.firstOrNull()?.toString() ?: "?", style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.onSurface)
+                         }
+                    }
                 }
+
+                Spacer(modifier = Modifier.width(20.dp))
+
             }
-            
-            Spacer(modifier = Modifier.width(20.dp))
-            
             Column(modifier = Modifier.weight(1f)) {
                 Text(label, style = MaterialTheme.typography.labelMedium, color = rankColor, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.height(4.dp))
@@ -674,24 +676,26 @@ fun GlassStatItem(rank: Int, item: StatItem, onClick: (StatItem) -> Unit) {
                 modifier = Modifier.width(36.dp)
             )
             
-            Box(
-                modifier = Modifier.size(48.dp).clip(RoundedCornerShape(8.dp)).background(scheme.surfaceContainerHigh),
-                contentAlignment = Alignment.Center
-            ) {
-                if (imageUrl != null) {
-                    CachedAsyncImage(
-                        imageUrl = imageUrl,
-                        contentDescription = null,
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop,
-                        targetSizeDp = 48 // Downsample for faster decode & less memory
-                    )
-                } else {
-                    Icon(Icons.Rounded.MusicNote, contentDescription = null, tint = scheme.onSurfaceVariant)
+            if (LocalTempoAppearance.current.showStatsArtwork) {
+                Box(
+                    modifier = Modifier.size(48.dp).clip(RoundedCornerShape(8.dp)).background(scheme.surfaceContainerHigh),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (imageUrl != null) {
+                        CachedAsyncImage(
+                            imageUrl = imageUrl,
+                            contentDescription = null,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop,
+                            targetSizeDp = 48 // Downsample for faster decode & less memory
+                        )
+                    } else {
+                        Icon(Icons.Rounded.MusicNote, contentDescription = null, tint = scheme.onSurfaceVariant)
+                    }
                 }
+
+                Spacer(modifier = Modifier.width(16.dp))
             }
-            
-            Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface, maxLines = 1)
                 Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)

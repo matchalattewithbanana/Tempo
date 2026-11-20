@@ -303,6 +303,9 @@ fun AppearanceScreen(onNavigateBack: () -> Unit, viewModel: AppearanceViewModel 
                 ChoiceRow(R.string.appearance_finish, AppearanceSurface.entries, draft.surface, !busy,
                     { if (it == AppearanceSurface.SOLID) R.string.appearance_solid else R.string.appearance_satin }) { draft = draft.copy(surface = it) }
                 SettingToggle(R.string.appearance_reduce_motion, draft.reduceMotion, !busy) { draft = draft.copy(reduceMotion = it) }
+                SettingToggle(R.string.appearance_instant_navigation, draft.instantNavigation, !busy) {
+                    draft = draft.copy(instantNavigation = it)
+                }
                 SettingToggle(R.string.appearance_adaptive, draft.adaptiveEffects, !busy) { draft = draft.copy(adaptiveEffects = it) }
                 Text(stringResource(R.string.appearance_effect_policy), style = MaterialTheme.typography.bodySmall)
             }
@@ -312,6 +315,10 @@ fun AppearanceScreen(onNavigateBack: () -> Unit, viewModel: AppearanceViewModel 
                     AppearanceNowListening.COMPACT -> R.string.appearance_compact
                     AppearanceNowListening.HIDDEN -> R.string.appearance_hidden
                 } }) { draft = draft.copy(nowListening = it) }
+                ChoiceRow(
+                    R.string.appearance_home_start_period, AppearanceStatsRange.entries, draft.homeStartPeriod, !busy,
+                    ::appearancePeriodLabel,
+                ) { draft = draft.copy(homeStartPeriod = it) }
                 SettingToggle(R.string.appearance_home_summary_chart, draft.showHomeSummaryChart, !busy) {
                     draft = draft.copy(showHomeSummaryChart = it)
                 }
@@ -338,13 +345,10 @@ fun AppearanceScreen(onNavigateBack: () -> Unit, viewModel: AppearanceViewModel 
                     AppearanceStatsTab.ARTISTS -> R.string.appearance_artists
                     AppearanceStatsTab.ALBUMS -> R.string.appearance_albums
                 } }) { draft = draft.copy(statsTab = it) }
-                ChoiceRow(R.string.appearance_stats_period, AppearanceStatsRange.entries, draft.statsRange, !busy, { when (it) {
-                    AppearanceStatsRange.TODAY -> R.string.stats_share_period_today
-                    AppearanceStatsRange.WEEK -> R.string.period_this_week
-                    AppearanceStatsRange.MONTH -> R.string.period_this_month
-                    AppearanceStatsRange.YEAR -> R.string.period_this_year
-                    AppearanceStatsRange.ALL_TIME -> R.string.period_all_time
-                } }) { draft = draft.copy(statsRange = it) }
+                ChoiceRow(
+                    R.string.appearance_stats_period, AppearanceStatsRange.entries, draft.statsRange, !busy,
+                    ::appearancePeriodLabel,
+                ) { draft = draft.copy(statsRange = it) }
                 ChoiceRow(R.string.appearance_stats_sort, AppearanceStatsSort.entries, draft.statsSort, !busy, { when (it) {
                     AppearanceStatsSort.COMBINED -> R.string.stats_sort_combined
                     AppearanceStatsSort.PLAYS -> R.string.stats_sort_play_count
@@ -360,6 +364,9 @@ fun AppearanceScreen(onNavigateBack: () -> Unit, viewModel: AppearanceViewModel 
                 ) { draft = draft.copy(statsSummary = it) }
                 SettingToggle(R.string.appearance_stats_summary, draft.showStatsSummary, !busy) {
                     draft = draft.copy(showStatsSummary = it)
+                }
+                SettingToggle(R.string.appearance_stats_artwork, draft.showStatsArtwork, !busy) {
+                    draft = draft.copy(showStatsArtwork = it)
                 }
                 SettingToggle(R.string.appearance_stats_highlight, draft.highlightTopResult, !busy) {
                     draft = draft.copy(highlightTopResult = it)
@@ -700,4 +707,13 @@ private fun CustomAccentPicker(selected: String?, enabled: Boolean, onSelect: (S
             },
         )
     }
+}
+
+
+private fun appearancePeriodLabel(period: AppearanceStatsRange): Int = when (period) {
+    AppearanceStatsRange.TODAY -> R.string.stats_share_period_today
+    AppearanceStatsRange.WEEK -> R.string.period_this_week
+    AppearanceStatsRange.MONTH -> R.string.period_this_month
+    AppearanceStatsRange.YEAR -> R.string.period_this_year
+    AppearanceStatsRange.ALL_TIME -> R.string.period_all_time
 }

@@ -1866,4 +1866,7 @@
     <string name="settings_search_about_terms">About, version, help, community, licenses</string>
     <string name="appearance_profile_streak_warning">Show streak warning banner</string>
     <string name="appearance_home_summary_chart">Show the Home summary chart and daily breakdown</string>
+    <string name="appearance_instant_navigation">Switch screens without a fade</string>
+    <string name="appearance_home_start_period">Default Home period</string>
+    <string name="appearance_stats_artwork">Show artwork in rankings</string>
 </resources>

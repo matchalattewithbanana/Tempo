@@ -12,6 +12,7 @@ object AppearanceCodec {
         put("version", VERSION)
         put("preset", value.preset.name); put("tone", value.tone.name)
         put("font", value.fontStyle.name); put("reduceMotion", value.reduceMotion)
+        put("instantNavigation", value.instantNavigation)
         put("accent", value.accentSource.name); put("density", value.density.name)
         put("customAccent", normalizeAccentHex(value.customAccent))
         put("backdrop", value.backdrop.name)
@@ -21,9 +22,11 @@ object AppearanceCodec {
         put("hiddenHome", JSONArray(value.hiddenHomeSections.map { it.name }))
         put("homeOrder", JSONArray(value.homeOrder.map { it.name }))
         put("showHomeSummaryChart", value.showHomeSummaryChart)
+        put("homeStartPeriod", value.homeStartPeriod.name)
         put("statsTab", value.statsTab.name); put("statsRange", value.statsRange.name)
         put("statsSort", value.statsSort.name)
         put("showStatsSummary", value.showStatsSummary)
+        put("showStatsArtwork", value.showStatsArtwork)
         put("highlightTopResult", value.highlightTopResult)
         put("profileTab", value.profileTab.name)
         put("showProfileNowPlaying", value.showProfileNowPlaying)
@@ -50,6 +53,7 @@ object AppearanceCodec {
             tone = decodeAppearanceTone(json.optString("tone")),
             fontStyle = AppearanceFontStyle.decode(json.optString("font")),
             reduceMotion = json.optBoolean("reduceMotion"),
+            instantNavigation = json.optBoolean("instantNavigation"),
             accentSource = enumOrDefault(json.optString("accent"), AppearanceAccentSource.PRESET),
             density = enumOrDefault(json.optString("density"), AppearanceDensity.COMFORTABLE),
             shape = enumOrDefault(json.optString("shape"), AppearanceShape.SOFT),
@@ -60,12 +64,14 @@ object AppearanceCodec {
             hiddenHomeSections = sections("hiddenHome").toSet(),
             homeOrder = order + AppearanceHomeSection.entries.filter { it !in order },
             showHomeSummaryChart = json.optBoolean("showHomeSummaryChart", true),
+            homeStartPeriod = enumOrDefault(json.optString("homeStartPeriod"), AppearanceStatsRange.WEEK),
             statsTab = enumOrDefault(json.optString("statsTab"), AppearanceStatsTab.SONGS),
             statsRange = enumOrDefault(json.optString("statsRange"), AppearanceStatsRange.WEEK),
             customAccent = normalizeAccentHex(json.optString("customAccent")),
             backdrop = enumOrDefault(json.optString("backdrop"), AppearanceBackdrop.GRADIENT),
             statsSort = enumOrDefault(json.optString("statsSort"), AppearanceStatsSort.COMBINED),
             showStatsSummary = json.optBoolean("showStatsSummary", true),
+            showStatsArtwork = json.optBoolean("showStatsArtwork", true),
             highlightTopResult = json.optBoolean("highlightTopResult", true),
             profileTab = enumOrDefault(json.optString("profileTab"), AppearanceProfileTab.CHALLENGES),
             showProfileNowPlaying = json.optBoolean("showProfileNowPlaying", true),

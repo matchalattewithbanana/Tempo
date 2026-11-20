@@ -2,6 +2,7 @@ package me.avinas.tempo.ui.home
 
 import me.avinas.tempo.ui.appearance.AppearanceHomeSection
 import me.avinas.tempo.ui.appearance.AppearanceNowListening
+import me.avinas.tempo.ui.appearance.AppearanceStatsRange
 import me.avinas.tempo.ui.theme.LocalTempoAppearance
 import me.avinas.tempo.ui.theme.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -86,11 +87,24 @@ fun HomeScreen(
     val scope = rememberCoroutineScope()
     val lazyListState = rememberLazyListState()
 
-    LaunchedEffect(lifecycleOwner, viewModel, context) {
+    val appearance = LocalTempoAppearance.current
+    val startPeriod = when (appearance.homeStartPeriod) {
+        AppearanceStatsRange.TODAY -> TimeRange.TODAY
+        AppearanceStatsRange.WEEK -> TimeRange.THIS_WEEK
+        AppearanceStatsRange.MONTH -> TimeRange.THIS_MONTH
+        AppearanceStatsRange.YEAR -> TimeRange.THIS_YEAR
+        AppearanceStatsRange.ALL_TIME -> TimeRange.ALL_TIME
+    }
+    val hiddenSections = appearance.hiddenHomeSections
+    val showSummaryChart = appearance.showHomeSummaryChart
+    val hasOptionalSections = AppearanceHomeSection.SPOTLIGHT !in hiddenSections ||
+        AppearanceHomeSection.QUICK_STATS !in hiddenSections ||
+        AppearanceHomeSection.INSIGHTS !in hiddenSections
+    LaunchedEffect(lifecycleOwner, viewModel, context, startPeriod, hiddenSections, showSummaryChart) {
         var observedZone = ZoneId.systemDefault()
         var observedDate = LocalDate.now(observedZone)
         lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-            launch { viewModel.observeWhileVisible() }
+            launch { viewModel.observeWhileVisible(startPeriod, hiddenSections, showSummaryChart) }
             // A calendar rollover can change charts even when no listening rows change.
             observeClockChanges(context.applicationContext).collect {
                 val zone = ZoneId.systemDefault()
@@ -136,7 +150,6 @@ fun HomeScreen(
     val optionalPromptsAllowed = !analyticsDisclosure.shouldShow &&
         !showTodaysOverview && !(uiState.isGamificationEnabled && showLevelUp)
 
-    val appearance = LocalTempoAppearance.current
     Box(Modifier.fillMaxSize()) {
         Box(modifier = Modifier.fillMaxSize()) {
             PullToRefreshBox(
@@ -179,7 +192,7 @@ fun HomeScreen(
                             selectedRange = uiState.selectedTimeRange,
                             onRangeSelected = viewModel::onTimeRangeSelected,
                             availableRanges = listOf(
-                                TimeRange.THIS_WEEK, TimeRange.THIS_MONTH,
+                                TimeRange.TODAY, TimeRange.THIS_WEEK, TimeRange.THIS_MONTH,
                                 TimeRange.THIS_YEAR, TimeRange.ALL_TIME,
                             ),
                             modifier = Modifier.padding(horizontal = 16.dp),
@@ -197,7 +210,7 @@ fun HomeScreen(
                         }
                     }
 
-                    if (uiState.hasData) {
+                    if (uiState.hasData && hasOptionalSections) {
                         item(key = "insights_toggle") {
                             Row(
                                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
@@ -216,13 +229,14 @@ fun HomeScreen(
                                 }
                             }
                         }
-                    } else if (flags.isLoading) {
+                    }
+                    if (!uiState.hasData && flags.isLoading) {
                         item(key = "loading") {
                             Box(Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
                                 CircularProgressIndicator()
                             }
                         }
-                    } else if (!uiState.loadFailed) {
+                    } else if (!uiState.hasData && !uiState.loadFailed) {
                         item(key = "empty") {
                             me.avinas.tempo.ui.components.EmptyState(
                                 modifier = Modifier
