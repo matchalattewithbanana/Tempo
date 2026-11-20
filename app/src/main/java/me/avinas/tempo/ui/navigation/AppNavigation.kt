@@ -17,8 +17,13 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
@@ -76,6 +81,8 @@ fun AppNavigation(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     val currentDestination = navBackStackEntry?.destination
+    var bottomBarHeightPx by remember { mutableIntStateOf(0) }
+    val bottomBarHeightDp = with(LocalDensity.current) { bottomBarHeightPx.toDp() }
 
     androidx.compose.runtime.LaunchedEffect(navigationTrigger) {
         val widgetPeriod = me.avinas.tempo.widget.utils.WidgetNavigation.periodFor(navigationTrigger)
@@ -128,9 +135,14 @@ fun AppNavigation(
                 NavHost(
                     navController = navController,
                     startDestination = Screen.Home.route,
-                    modifier = Modifier.fillMaxSize().then(
-                        if (useWideRail) Modifier.padding(start = 96.dp) else Modifier
-                    ),
+                    modifier = Modifier.fillMaxSize()
+                        .then(if (useWideRail) Modifier.padding(start = 96.dp) else Modifier)
+                        // Reserve the measured bar (including gesture insets
+                        // and optional now-playing strip) instead of allowing
+                        // it to cover the last rows in Home/Stats/History.
+                        .then(if (showBottomBar && !useWideRail) {
+                            Modifier.padding(bottom = bottomBarHeightDp)
+                        } else Modifier),
                     enterTransition = { if (animateNavigation) fadeIn(tween(120)) else EnterTransition.None },
                     exitTransition = { if (animateNavigation) fadeOut(tween(120)) else ExitTransition.None },
                 ) {
@@ -525,7 +537,8 @@ fun AppNavigation(
                             onNavigateToHome = goHome,
                             onNavigateToStats = goStats,
                             onNavigateToHistory = goHistory,
-                            modifier = Modifier.align(Alignment.BottomCenter),
+                            modifier = Modifier.align(Alignment.BottomCenter)
+                                .onSizeChanged { bottomBarHeightPx = it.height },
                         )
                     }
                 }
