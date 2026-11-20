@@ -13,7 +13,9 @@ import com.google.api.services.drive.model.File as DriveFile
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -534,22 +536,29 @@ class GoogleDriveService @Inject constructor(
             val folderId = getOrCreateBackupFolder()
             
             val backups = executeWithRetry { service ->
-                val result = service.files().list()
-                    .setQ("'$folderId' in parents and name contains '$BACKUP_FILE_PREFIX' and trashed = false")
-                    .setFields("files(id, name, size, createdTime, appProperties)")
-                    .setOrderBy("createdTime desc")
-                    .execute()
-                
-                result.files?.map { file ->
-                    DriveBackupInfo(
-                        fileId = file.id,
-                        fileName = file.name,
-                        createdAt = file.createdTime?.value ?: 0L,
-                        sizeBytes = file.getSize()?.toLong() ?: 0L,
-                        appVersion = file.appProperties?.get("app_version"),
-                        deviceName = file.appProperties?.get("device_name")
-                    )
-                } ?: emptyList()
+                buildList {
+                    var pageToken: String? = null
+                    do {
+                        currentCoroutineContext().ensureActive()
+                        val result = service.files().list()
+                            .setQ("'$folderId' in parents and name contains '$BACKUP_FILE_PREFIX' and trashed = false")
+                            .setFields("nextPageToken, files(id, name, size, createdTime, appProperties)")
+                            .setOrderBy("createdTime desc")
+                            .setPageToken(pageToken)
+                            .execute()
+                        result.files.orEmpty().mapTo(this) { file ->
+                            DriveBackupInfo(
+                                fileId = file.id,
+                                fileName = file.name,
+                                createdAt = file.createdTime?.value ?: 0L,
+                                sizeBytes = file.getSize()?.toLong() ?: 0L,
+                                appVersion = file.appProperties?.get("app_version"),
+                                deviceName = file.appProperties?.get("device_name")
+                            )
+                        }
+                        pageToken = result.nextPageToken
+                    } while (!pageToken.isNullOrEmpty())
+                }
             }
             Result.success(backups)
         } catch (e: DriveException) {
@@ -602,14 +611,32 @@ class GoogleDriveService @Inject constructor(
                 val file = File.createTempFile("tempo_drive_", ".tempo", cacheDir)
 
                 try {
-                    FileOutputStream(file).use { outputStream ->
-                        service.files().get(fileId)
-                            .executeMediaAndDownloadTo(outputStream)
+                    val digest = MessageDigest.getInstance("MD5")
+                    var downloaded = 0L
+                    var reportedPercent = 20
+                    service.files().get(fileId).executeMediaAsInputStream().use { input ->
+                        FileOutputStream(file).buffered().use { output ->
+                            val buffer = ByteArray(64 * 1024)
+                            while (true) {
+                                currentCoroutineContext().ensureActive()
+                                val read = input.read(buffer)
+                                if (read < 0) break
+                                downloaded += read
+                                if (downloaded > expectedSize) {
+                                    throw IOException("Downloaded backup is larger than expected")
+                                }
+                                output.write(buffer, 0, read)
+                                digest.update(buffer, 0, read)
+                                val percent = 20 + (79 * downloaded.toDouble() / expectedSize).toInt()
+                                if (percent > reportedPercent) {
+                                    reportedPercent = percent
+                                    progressCallback?.invoke(percent / 100f)
+                                }
+                            }
+                        }
                     }
-
-                    if (file.length() != expectedSize ||
-                        !md5Hex(file).equals(expectedMd5, ignoreCase = true)
-                    ) {
+                    val downloadedMd5 = digest.digest().joinToString("") { byte -> "%02x".format(byte) }
+                    if (downloaded != expectedSize || !downloadedMd5.equals(expectedMd5, ignoreCase = true)) {
                         throw IOException("Downloaded backup failed its integrity check")
                     }
 

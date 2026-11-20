@@ -249,12 +249,12 @@ fun RestoreScreen(
     LaunchedEffect(driveOperation) {
         when (val op = driveOperation) {
             is DriveOperationState.Success -> {
-                viewModel.clearDriveOperation()
+                viewModel.clearDriveOperation(op)
             }
 
             is DriveOperationState.Error -> {
                 snackbarHostState.showSnackbar("Drive error: ${op.message}")
-                viewModel.clearDriveOperation()
+                viewModel.clearDriveOperation(op)
             }
 
             else -> {}
@@ -603,7 +603,9 @@ fun RestoreScreen(
     }
 
     // Drive Downloading Dialog
-    if (driveOperation is DriveOperationState.Downloading || driveOperation is DriveOperationState.Restoring) {
+    if (driveOperation is DriveOperationState.Downloading ||
+        (driveOperation is DriveOperationState.Restoring && importExportProgress == null)
+    ) {
         AlertDialog(
             onDismissRequest = { },
             containerColor = TempoSurfaceDialog,

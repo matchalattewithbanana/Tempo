@@ -129,7 +129,7 @@ class HomeViewModel @Inject constructor(
                 .debounce { if (initialLoad) 0L else 350L }
                 .collect {
                     initialLoad = false
-                    loadData()
+                    loadData()?.join()
                 }
         }
 
@@ -188,20 +188,31 @@ class HomeViewModel @Inject constructor(
 
     fun onTimeRangeSelected(timeRange: TimeRange) {
         if (_uiState.value.selectedTimeRange == timeRange) return
-        _uiState.update { it.copy(selectedTimeRange = timeRange) }
+        _uiState.update {
+            it.copy(
+                selectedTimeRange = timeRange,
+                hasData = false,
+                loadFailed = false,
+                totalListeningTimeMs = 0L,
+                periodComparison = null,
+                dailyListening = emptyList(),
+                chartLabels = emptyList(),
+                dailyAvgMinutes = 0L,
+                activeDaysCount = 0,
+                totalDaysCount = 0,
+                peakDayMinutes = 0L,
+                insights = emptyList(),
+            )
+        }
         _flagsState.update { it.copy(isLoading = true) }
         loadData()
     }
 
     suspend fun refresh() {
-        val startTime = System.currentTimeMillis()
         _flagsState.update { it.copy(isRefreshing = true, isLoading = true) }
         try {
             loadData()?.join()
         } finally {
-            // Keep spinner visible for at least 600ms to prevent flicker
-            val elapsed = System.currentTimeMillis() - startTime
-            if (elapsed < 600) delay(600 - elapsed)
             _flagsState.update { it.copy(isRefreshing = false) }
         }
     }
@@ -357,11 +368,6 @@ class HomeViewModel @Inject constructor(
                 val hasData = totals.playCount > 0
                 val isNewUser = earliestTimestamp == null
                 
-                // Hoist the suspend rate-app check out of the state-update lambda, and
-                // preserve an already-visible popup across reloads (shouldShowRateApp()
-                // writes a 3-day cooldown on success and would otherwise dismiss it).
-                val showRateApp = _flagsState.value.showRateAppPopup || shouldShowRateApp()
-
                 _uiState.update {
                     it.copy(
                         totalListeningTimeMs = totals.totalTimeMs,
@@ -394,11 +400,11 @@ class HomeViewModel @Inject constructor(
                         todayPeriodComparison = todayPeriodComparison
                     )
                 }
-                _flagsState.update {
-                    it.copy(
-                        isLoading = false,
-                        showRateAppPopup = showRateApp
-                    )
+                _flagsState.update { it.copy(isLoading = false) }
+
+                // Prompt eligibility can scan history. It should never gate the dashboard.
+                if (!_flagsState.value.showRateAppPopup && shouldShowRateApp()) {
+                    _flagsState.update { it.copy(showRateAppPopup = true) }
                 }
 
                 // Share nudge — evaluate once per session, once home data is ready.

@@ -133,6 +133,9 @@ fun SupportedAppsScreen(
     val minimumPlayDurationMs = remember(rulesRevision) { trackingRules.minimumPlayDurationMs }
     val defaultMaxMusicDurationMs = remember(rulesRevision) { trackingRules.defaultMaxMusicDurationMs }
     val trackUnrecognizedApps = remember(rulesRevision) { trackingRules.trackUnrecognizedApps }
+    val searchQuery by viewModel.searchQuery.collectAsState()
+    val listState = androidx.compose.foundation.lazy.rememberLazyListState()
+    LaunchedEffect(uiState.searchQuery) { listState.scrollToItem(0) }
     val overrideCount = uiState.contentOverrides.size
 
     Scaffold(
@@ -171,7 +174,7 @@ fun SupportedAppsScreen(
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     TextField(
-                        value = uiState.searchQuery,
+                        value = searchQuery,
                         onValueChange = { viewModel.setSearchQuery(it) },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -187,7 +190,7 @@ fun SupportedAppsScreen(
                             Icon(Icons.Default.Search, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
                         },
                         trailingIcon = {
-                            if (uiState.searchQuery.isNotEmpty()) {
+                            if (searchQuery.isNotEmpty()) {
                                 IconButton(onClick = { viewModel.setSearchQuery("") }) {
                                     Icon(Icons.Default.Close, contentDescription = "Clear", tint = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
@@ -208,7 +211,7 @@ fun SupportedAppsScreen(
                     )
                 }
 
-                if (uiState.isLoading) {
+                if (uiState.isLoading || uiState.searchQuery != searchQuery.trim()) {
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
@@ -217,27 +220,31 @@ fun SupportedAppsScreen(
                     }
                 } else {
                     LazyColumn(
+                        state = listState,
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(16.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        item(key = "header_tracking_rules") {
-                            SettingsSectionHeader(stringResource(R.string.tracking_rules_section))
-                        }
-                        item(key = "tracking_rules") {
-                            TrackingRulesCard(
-                                minimumPlayDurationMs = minimumPlayDurationMs,
-                                defaultMaxMusicDurationMs = defaultMaxMusicDurationMs,
-                                overrideCount = overrideCount,
-                                trackUnrecognizedApps = trackUnrecognizedApps,
-                                onMinimumPlayClick = { showMinPlayDialog = true },
-                                onDefaultMaxClick = { showDefaultMaxDialog = true },
-                                onOverridesClick = { showContentOverridesDialog = true },
-                                onTrackUnrecognizedChange = { enabled ->
-                                    trackingRules.trackUnrecognizedApps = enabled
-                                    rulesRevision++
-                                }
-                            )
+                        if (uiState.searchQuery.isBlank()) {
+                            item(key = "header_tracking_rules") {
+                                SettingsSectionHeader(stringResource(R.string.tracking_rules_section))
+                            }
+                            item(key = "tracking_rules") {
+                                TrackingRulesCard(
+                                    minimumPlayDurationMs = minimumPlayDurationMs,
+                                    defaultMaxMusicDurationMs = defaultMaxMusicDurationMs,
+                                    overrideCount = overrideCount,
+                                    trackUnrecognizedApps = trackUnrecognizedApps,
+                                    onMinimumPlayClick = { showMinPlayDialog = true },
+                                    onDefaultMaxClick = { showDefaultMaxDialog = true },
+                                    onOverridesClick = { showContentOverridesDialog = true },
+                                    onTrackUnrecognizedChange = { enabled ->
+                                        trackingRules.trackUnrecognizedApps = enabled
+                                        rulesRevision++
+                                    }
+                                )
+                            }
+
                         }
 
                         // Apps Tempo heard but refused to track. This is what makes the
@@ -350,21 +357,14 @@ fun SupportedAppsScreen(
                                     modifier = Modifier.padding(horizontal = 8.dp)
                                 )
                             }
-                            item(key = "list_search_results") {
-                                GlassCard(
-                                    contentPadding = PaddingValues(0.dp),
-                                    variant = GlassCardVariant.LowProminence
-                                ) {
-                                    Column(modifier = Modifier.animateContentSize()) {
-                                        uiState.searchResults.forEachIndexed { index, app ->
-                                            AllowableAppItem(
-                                                app = app,
-                                                onAllow = { viewModel.allowApp(app.packageName) },
-                                                onBlock = { viewModel.blockApp(app.packageName) },
-                                                showDivider = index < uiState.searchResults.size - 1
-                                            )
-                                        }
-                                    }
+                            items(uiState.searchResults, key = { "search_" + it.packageName }) { app ->
+                                GlassCard(contentPadding = PaddingValues(0.dp), variant = GlassCardVariant.LowProminence) {
+                                    AllowableAppItem(
+                                        app = app,
+                                        onAllow = { viewModel.allowApp(app.packageName) },
+                                        onBlock = { viewModel.blockApp(app.packageName) },
+                                        showDivider = false,
+                                    )
                                 }
                             }
                         }
@@ -442,7 +442,7 @@ fun SupportedAppsScreen(
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(
-                                        text = "No apps found",
+                                        text = if (uiState.isScanningInstalledApps) stringResource(R.string.ui_loading) else "No apps found",
                                         style = MaterialTheme.typography.bodyLarge,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f)
                                     )
@@ -467,7 +467,9 @@ fun SupportedAppsScreen(
     }
 
     if (showAddAppDialog) {
+        val installedApps by viewModel.installedApps.collectAsState()
         AddAppDialog(
+            installedApps = installedApps,
             onDismiss = { showAddAppDialog = false },
             onAddApp = { packageName, displayName ->
                 viewModel.addCustomApp(packageName, displayName)
@@ -1467,52 +1469,20 @@ private fun ContentOverrideItem(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AddAppDialog(
+    installedApps: List<me.avinas.tempo.data.InstalledApp>?,
     onDismiss: () -> Unit,
     onAddApp: (packageName: String, displayName: String) -> Unit
 ) {
-    val context = LocalContext.current
     var searchQuery by remember { mutableStateOf("") }
-
-    // PackageManager queries + loadLabel() do binder calls and APK asset loads
-    // per app; running them in remember{} on the main thread during composition
-    // blocks input for seconds on app-heavy devices (ANR "Input dispatching
-    // timed out" at ResolveInfo.loadLabel). Load once on IO, show a spinner.
-    var installedApps by remember { mutableStateOf<List<Pair<String, String>>?>(null) }
-    LaunchedEffect(Unit) {
-        val apps = withContext(Dispatchers.IO) {
-            try {
-                val pm = context.packageManager
-                val mainIntent = android.content.Intent(
-                    android.content.Intent.ACTION_MAIN, null
-                ).apply {
-                    addCategory(android.content.Intent.CATEGORY_LAUNCHER)
-                }
-                pm.queryIntentActivities(mainIntent, 0)
-                    .mapNotNull { resolveInfo ->
-                        try {
-                            Pair(
-                                resolveInfo.activityInfo.packageName,
-                                resolveInfo.loadLabel(pm).toString()
-                            )
-                        } catch (_: Exception) {
-                            null // one bad app must not kill the whole list
-                        }
-                    }
-                    .distinctBy { it.first } // Remove duplicates if any
-                    .sortedBy { it.second }
-            } catch (_: Exception) {
-                emptyList()
-            }
-        }
-        installedApps = apps
-    }
-
     val filteredApps = remember(searchQuery, installedApps) {
         val apps = installedApps.orEmpty()
-        if (searchQuery.isBlank()) apps.take(30)
-        else apps.filter {
-            it.first.contains(searchQuery, ignoreCase = true) ||
-                it.second.contains(searchQuery, ignoreCase = true)
+        val tokens = searchQuery.trim().split(Regex("\\s+")).filter { it.isNotEmpty() }
+        if (tokens.isEmpty()) apps.take(30)
+        else apps.filter { app ->
+            tokens.all { token ->
+                app.packageName.contains(token, ignoreCase = true) ||
+                    app.displayName.contains(token, ignoreCase = true)
+            }
         }
     }
 

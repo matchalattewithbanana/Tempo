@@ -20,6 +20,7 @@ object AppearanceCodec {
         put("nowListening", value.nowListening.name)
         put("hiddenHome", JSONArray(value.hiddenHomeSections.map { it.name }))
         put("homeOrder", JSONArray(value.homeOrder.map { it.name }))
+        put("showHomeSummaryChart", value.showHomeSummaryChart)
         put("statsTab", value.statsTab.name); put("statsRange", value.statsRange.name)
         put("statsSort", value.statsSort.name)
         put("showStatsSummary", value.showStatsSummary)
@@ -27,6 +28,7 @@ object AppearanceCodec {
         put("profileTab", value.profileTab.name)
         put("showProfileNowPlaying", value.showProfileNowPlaying)
         put("showProfileProgress", value.showProfileProgress)
+        put("showProfileStreakWarning", value.showProfileStreakWarning)
         put("defaultShareTheme", value.defaultShareTheme.name)
         put("statsDuration", value.statsDuration.name)
         put("statsSummary", value.statsSummary.name)
@@ -57,6 +59,7 @@ object AppearanceCodec {
             nowListening = enumOrDefault(json.optString("nowListening"), AppearanceNowListening.INLINE),
             hiddenHomeSections = sections("hiddenHome").toSet(),
             homeOrder = order + AppearanceHomeSection.entries.filter { it !in order },
+            showHomeSummaryChart = json.optBoolean("showHomeSummaryChart", true),
             statsTab = enumOrDefault(json.optString("statsTab"), AppearanceStatsTab.SONGS),
             statsRange = enumOrDefault(json.optString("statsRange"), AppearanceStatsRange.WEEK),
             customAccent = normalizeAccentHex(json.optString("customAccent")),
@@ -67,6 +70,7 @@ object AppearanceCodec {
             profileTab = enumOrDefault(json.optString("profileTab"), AppearanceProfileTab.CHALLENGES),
             showProfileNowPlaying = json.optBoolean("showProfileNowPlaying", true),
             showProfileProgress = json.optBoolean("showProfileProgress", true),
+            showProfileStreakWarning = json.optBoolean("showProfileStreakWarning", true),
             defaultShareTheme = enumOrDefault(json.optString("defaultShareTheme"), ShareTheme.MIDNIGHT),
             statsDuration = enumOrDefault(json.optString("statsDuration"), AppearanceStatsDuration.AUTO),
             statsSummary = enumOrDefault(json.optString("statsSummary"), AppearanceStatsSummary.TRACKS),

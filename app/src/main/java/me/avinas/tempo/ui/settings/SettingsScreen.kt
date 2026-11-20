@@ -108,9 +108,14 @@ fun SettingsScreen(
     var settingsCategory by rememberSaveable { mutableStateOf("overview") }
     var settingsSearch by rememberSaveable { mutableStateOf("") }
     val settingsScrollState = key(settingsCategory) { rememberScrollState() }
-    BackHandler(enabled = settingsCategory != "overview") {
-        settingsCategory = "overview"
+    val clearOrClose = {
+        when {
+            settingsCategory != "overview" -> settingsCategory = "overview"
+            settingsSearch.isNotEmpty() -> settingsSearch = ""
+            else -> onNavigateBack()
+        }
     }
+    BackHandler(enabled = settingsCategory != "overview" || settingsSearch.isNotEmpty(), onBack = clearOrClose)
     val scope = rememberCoroutineScope()
     var notificationListenerGranted by remember { mutableStateOf(false) }
     var trackingHeartbeat by remember { mutableStateOf<TrackingServiceHeartbeat.Snapshot?>(null) }
@@ -304,10 +309,7 @@ fun SettingsScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = {
-                        if (settingsCategory == "overview") onNavigateBack()
-                        else settingsCategory = "overview"
-                    }) {
+                    IconButton(onClick = clearOrClose) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.settings_back),
@@ -344,7 +346,24 @@ fun SettingsScreen(
                     )
                     Spacer(Modifier.height(16.dp))
                     if (settingsSearch.isNotBlank()) {
-                        val query = settingsSearch.trim()
+                        val tokens = settingsSearch.trim().split(Regex("\\s+"))
+                        val directResults = listOf(
+                            Triple(R.string.appearance_title, R.string.settings_search_general_terms, onNavigateToAppearance),
+                            Triple(R.string.settings_manage_apps, R.string.settings_manage_apps_desc, onNavigateToSupportedApps),
+                            Triple(R.string.settings_backup_restore, R.string.settings_backup_restore_desc, onNavigateToBackup),
+                            Triple(R.string.settings_import_apple_music, R.string.settings_import_apple_music_desc, onNavigateToAppleMusicImport),
+                            Triple(R.string.settings_import_spotify_json, R.string.settings_import_spotify_json_desc, onNavigateToSpotifyJsonImport),
+                            Triple(R.string.settings_import_youtube_music, R.string.settings_import_youtube_music_desc, onNavigateToYouTubeMusicImport),
+                            Triple(R.string.settings_import_deezer, R.string.settings_import_deezer_desc, onNavigateToDeezerImport),
+                            Triple(R.string.settings_import_lastfm, R.string.settings_import_lastfm_desc, onNavigateToLastFmImport),
+                        ).mapNotNull { (titleId, subtitleId, open) ->
+                            if (open == null) null else Triple(stringResource(titleId), stringResource(subtitleId), open)
+                        }.filter { (title, subtitle, _) ->
+                            tokens.all { title.contains(it, true) || subtitle.contains(it, true) }
+                        }
+                        directResults.forEach { (title, subtitle, open) ->
+                            SettingsOption(title = title, subtitle = subtitle, onClick = open)
+                        }
                         val categories = listOf(
                             Triple("general", stringResource(R.string.settings_category_general), stringResource(R.string.settings_search_general_terms)),
                             Triple("tracking", stringResource(R.string.settings_category_tracking), stringResource(R.string.settings_search_tracking_terms)),
@@ -352,9 +371,9 @@ fun SettingsScreen(
                             Triple("data", stringResource(R.string.settings_category_data), stringResource(R.string.settings_search_data_terms)),
                             Triple("about", stringResource(R.string.settings_category_about), stringResource(R.string.settings_search_about_terms)),
                         ).filter { (_, title, terms) ->
-                            query.split(Regex("\\s+")).all { title.contains(it, true) || terms.contains(it, true) }
+                            tokens.all { title.contains(it, true) || terms.contains(it, true) }
                         }
-                        if (categories.isEmpty()) Text(stringResource(R.string.settings_search_empty))
+                        if (categories.isEmpty() && directResults.isEmpty()) Text(stringResource(R.string.settings_search_empty))
                         categories.forEach { (category, title, terms) ->
                             SettingsOption(title = title, subtitle = terms, onClick = { settingsCategory = category })
                         }

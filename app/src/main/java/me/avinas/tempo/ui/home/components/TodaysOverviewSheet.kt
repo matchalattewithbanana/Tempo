@@ -731,7 +731,7 @@ private fun HeroListeningCard(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = formatHeroTime(overview.totalListeningTimeMs),
+                    text = me.avinas.tempo.ui.stats.displayStatsDuration(overview.totalListeningTimeMs),
                     fontFamily = DisplayFontFamily,
                     fontWeight = FontWeight.Bold,
                     fontSize = 44.sp,
@@ -1700,20 +1700,6 @@ private fun rememberTodayAccentColor(imageUrl: String?): Color {
 // ──────────────────────────────────────────────────────────────
 // Formatters
 // ──────────────────────────────────────────────────────────────
-
-/** Hero numeral form: "2h 41m", "41m", "38s". */
-private fun formatHeroTime(ms: Long): String {
-    val totalMinutes = ms / 60_000
-    val hours = totalMinutes / 60
-    val mins = totalMinutes % 60
-    return when {
-        ms <= 0L -> "0m"
-        hours == 0L && mins == 0L -> "${ms / 1000}s"
-        hours == 0L -> "${mins}m"
-        mins == 0L -> "${hours}h"
-        else -> "${hours}h ${mins}m"
-    }
-}
 
 /** Compact form for tiles and per-artist totals ("38m", "2.4h"). */
 private fun formatShortDuration(ms: Long): String {

@@ -216,7 +216,13 @@ fun HomeScreen(
                                 }
                             }
                         }
-                    } else if (!flags.isLoading && !uiState.loadFailed) {
+                    } else if (flags.isLoading) {
+                        item(key = "loading") {
+                            Box(Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
+                                CircularProgressIndicator()
+                            }
+                        }
+                    } else if (!uiState.loadFailed) {
                         item(key = "empty") {
                             me.avinas.tempo.ui.components.EmptyState(
                                 modifier = Modifier
@@ -233,11 +239,13 @@ fun HomeScreen(
                             
                             val timeString = me.avinas.tempo.ui.stats.displayStatsDuration(uiState.totalListeningTimeMs)
 
-                            val trendData = remember(uiState.dailyListening) {
-                                uiState.dailyListening.map { it.totalTimeMs.toFloat() / 1000 / 60 }
+                            val trendData = remember(uiState.dailyListening, appearance.showHomeSummaryChart) {
+                                if (appearance.showHomeSummaryChart) {
+                                    uiState.dailyListening.map { it.totalTimeMs.toFloat() / 60_000 }
+                                } else emptyList()
                             }
                             
-                            val dailyLabels = uiState.chartLabels
+                            val dailyLabels = if (appearance.showHomeSummaryChart) uiState.chartLabels else emptyList()
 
                             val periodLabel = when(uiState.selectedTimeRange) {
                                 TimeRange.TODAY -> stringResource(R.string.period_today)

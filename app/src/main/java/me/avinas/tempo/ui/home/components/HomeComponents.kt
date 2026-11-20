@@ -78,12 +78,12 @@ fun HeroCard(
     modifier: Modifier = Modifier
 ) {
     val appearancePalette = LocalTempoPalette.current
-    var scrubbingTime by remember { mutableStateOf<String?>(null) }
+    var scrubbingTimeMs by remember { mutableStateOf<Long?>(null) }
     var scrubbingLabel by remember { mutableStateOf<String?>(null) }
 
     // Reset scrubbing state when time range changes
     LaunchedEffect(selectedRange, dailyLabels) {
-        scrubbingTime = null
+        scrubbingTimeMs = null
         scrubbingLabel = null
     }
 
@@ -91,16 +91,8 @@ fun HeroCard(
         me.avinas.tempo.utils.TempoCopyEngine.getHeroGreeting(userName)
     }
 
-    val dailyAvgFormatted = remember(dailyAvgMinutes) {
-        val h = dailyAvgMinutes / 60
-        val m = dailyAvgMinutes % 60
-        if (h > 0) "${h}h ${m}m" else "${m}m"
-    }
-    val peakFormatted = remember(peakDayMinutes) {
-        val h = peakDayMinutes / 60
-        val m = peakDayMinutes % 60
-        if (h > 0) "${h}h ${m}m" else "${m}m"
-    }
+    val dailyAvgFormatted = me.avinas.tempo.ui.stats.displayStatsDuration(dailyAvgMinutes * 60_000)
+    val peakFormatted = me.avinas.tempo.ui.stats.displayStatsDuration(peakDayMinutes * 60_000)
 
     GlassCard(
         modifier = modifier.fillMaxWidth(),
@@ -140,7 +132,7 @@ fun HeroCard(
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Text(
-                    text = scrubbingTime ?: listeningTime,
+                    text = scrubbingTimeMs?.let { me.avinas.tempo.ui.stats.displayStatsDuration(it) } ?: listeningTime,
                     style = MaterialTheme.typography.displayMedium.copy(
                         fontFamily = DisplayFontFamily,
                         fontWeight = FontWeight.Bold,
@@ -220,18 +212,18 @@ fun HeroCard(
                 }
             }
 
-            // Hairline separator
-            Spacer(modifier = Modifier.height(16.dp))
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(0.8.dp)
-                    .background(appearancePalette.border.copy(alpha = 0.45f))
-            )
-            Spacer(modifier = Modifier.height(14.dp))
-
             // Secondary Telemetry Metrics Row
             if (trendData.isNotEmpty()) {
+                // Hairline separator
+                Spacer(modifier = Modifier.height(16.dp))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(0.8.dp)
+                        .background(appearancePalette.border.copy(alpha = 0.45f))
+                )
+                Spacer(modifier = Modifier.height(14.dp))
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -272,46 +264,43 @@ fun HeroCard(
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-            }
 
-            // Chart Box
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(96.dp)
-            ) {
-                if (dailyLabels.isNotEmpty() && trendData.size == dailyLabels.size) {
-                    InteractiveTrendLine(
-                        dataPoints = trendData,
-                        labels = dailyLabels,
-                        modifier = Modifier.fillMaxSize(),
-                        lineColor = me.avinas.tempo.ui.theme.TempoSecondary,
-                        fillColor = me.avinas.tempo.ui.theme.TempoSecondary.copy(alpha = 0.2f),
-                        strokeWidth = 3.dp,
-                        onValueSelected = { value, label ->
-                            val minutes = value.toLong()
-                            val hours = minutes / 60
-                            val mins = minutes % 60
-                            scrubbingTime = if (hours > 0) "${hours}h ${mins}m" else "${mins}m"
-                            scrubbingLabel = label
-                        },
-                        onSelectionCleared = {
-                            scrubbingTime = null
-                            scrubbingLabel = null
-                        }
-                    )
-                } else {
-                    TrendLine(
-                        dataPoints = trendData,
-                        modifier = Modifier.fillMaxSize(),
-                        lineColor = me.avinas.tempo.ui.theme.TempoSecondary,
-                        fillColor = me.avinas.tempo.ui.theme.TempoSecondary.copy(alpha = 0.2f),
-                        strokeWidth = 3.dp
-                    )
+                // Chart Box
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(96.dp)
+                ) {
+                    if (dailyLabels.isNotEmpty() && trendData.size == dailyLabels.size) {
+                        InteractiveTrendLine(
+                            dataPoints = trendData,
+                            labels = dailyLabels,
+                            modifier = Modifier.fillMaxSize(),
+                            lineColor = me.avinas.tempo.ui.theme.TempoSecondary,
+                            fillColor = me.avinas.tempo.ui.theme.TempoSecondary.copy(alpha = 0.2f),
+                            strokeWidth = 3.dp,
+                            onValueSelected = { value, label ->
+                                scrubbingTimeMs = (value * 60_000).toLong()
+                                scrubbingLabel = label
+                            },
+                            onSelectionCleared = {
+                                scrubbingTimeMs = null
+                                scrubbingLabel = null
+                            }
+                        )
+                    } else {
+                        TrendLine(
+                            dataPoints = trendData,
+                            modifier = Modifier.fillMaxSize(),
+                            lineColor = me.avinas.tempo.ui.theme.TempoSecondary,
+                            fillColor = me.avinas.tempo.ui.theme.TempoSecondary.copy(alpha = 0.2f),
+                            strokeWidth = 3.dp
+                        )
+                    }
                 }
-            }
-            if (dailyLabels.isNotEmpty() && trendData.size == dailyLabels.size) {
-                TrendValues(dailyLabels, trendData, selectedRange)
+                if (dailyLabels.isNotEmpty() && trendData.size == dailyLabels.size) {
+                    TrendValues(dailyLabels, trendData, selectedRange)
+                }
             }
             if (selectedRange == TimeRange.TODAY || selectedRange == TimeRange.THIS_WEEK) {
                 Text(

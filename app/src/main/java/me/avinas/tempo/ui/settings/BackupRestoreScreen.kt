@@ -198,11 +198,11 @@ fun BackupRestoreScreen(
         when (val op = driveOperation) {
             is DriveOperationState.Success -> {
                 snackbarHostState.showSnackbar(op.message)
-                viewModel.clearDriveOperation()
+                viewModel.clearDriveOperation(op)
             }
             is DriveOperationState.Error -> {
                 snackbarHostState.showSnackbar(op.message)
-                viewModel.clearDriveOperation()
+                viewModel.clearDriveOperation(op)
             }
             else -> {}
         }
@@ -317,7 +317,8 @@ fun BackupRestoreScreen(
             shape = RoundedCornerShape(24.dp),
             title = {
                 Text(
-                    if (progress.phase.contains("Import", ignoreCase = true)) "Importing..."
+                    if (driveOperation == DriveOperationState.Restoring) "Restoring..."
+                    else if (progress.phase.contains("Import", ignoreCase = true)) "Importing..."
                     else "Exporting...",
                     color = MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.SemiBold
@@ -447,7 +448,7 @@ fun BackupRestoreScreen(
     when (val op = driveOperation) {
         is DriveOperationState.SigningIn,
         is DriveOperationState.Loading,
-        is DriveOperationState.Restoring -> {
+        is DriveOperationState.Restoring -> if (importExportProgress == null) {
             AlertDialog(
                 onDismissRequest = { },
                 containerColor = TempoSurfaceDialog,

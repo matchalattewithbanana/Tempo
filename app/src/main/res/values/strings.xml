@@ -1864,4 +1864,6 @@
     <string name="settings_search_connections_terms">Spotify, Last.fm, connections, accounts, desktop</string>
     <string name="settings_search_data_terms">Import, export, backup, restore, Apple Music, YouTube, Deezer, history, privacy</string>
     <string name="settings_search_about_terms">About, version, help, community, licenses</string>
+    <string name="appearance_profile_streak_warning">Show streak warning banner</string>
+    <string name="appearance_home_summary_chart">Show the Home summary chart and daily breakdown</string>
 </resources>

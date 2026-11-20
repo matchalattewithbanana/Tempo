@@ -39,6 +39,7 @@ data class AppPreferenceUiState(
     val installedPackageNames: Set<String> = emptySet(),
     val contentOverrides: List<ManualContentMark> = emptyList(),
     val searchQuery: String = "",
+    val isScanningInstalledApps: Boolean = true,
     val isLoading: Boolean = true
 )
 
@@ -72,6 +73,7 @@ class AppPreferenceViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
 
     private val _uiState = MutableStateFlow(AppPreferenceUiState())
     val uiState: StateFlow<AppPreferenceUiState> = _uiState.asStateFlow()
@@ -83,13 +85,16 @@ class AppPreferenceViewModel @Inject constructor(
      * every screen open — as an earlier version did — meant one resource load per installed app
      * per visit, because resolving a label opens the target app's resources.
      */
-    private val installedApps = MutableStateFlow<List<InstalledApp>>(emptyList())
+    private val _installedApps = MutableStateFlow<List<InstalledApp>?>(null)
+    val installedApps = _installedApps.asStateFlow()
 
     init {
         // Seed default apps for fresh installs (no-op if already seeded)
         viewModelScope.launch(Dispatchers.IO) {
             repository.seedDefaultAppsIfNeeded()
-            installedApps.value = installedAppsProvider.get()
+        }
+        viewModelScope.launch(Dispatchers.IO) {
+            _installedApps.value = installedAppsProvider.get()
         }
 
         // App state and manual content overrides both come from Room so the settings
@@ -111,7 +116,7 @@ class AppPreferenceViewModel @Inject constructor(
                 _searchQuery,
                 installedApps
             ) { lists, manualMarks, query, installed ->
-                buildUiState(lists, manualMarks, query, installed)
+                buildUiState(lists, manualMarks, query.trim(), installed.orEmpty(), installed == null)
             }
                 .flowOn(Dispatchers.Default)
                 .collect { state ->
@@ -124,13 +129,19 @@ class AppPreferenceViewModel @Inject constructor(
         lists: AppLists,
         manualMarks: List<ManualContentMark>,
         query: String,
-        installed: List<InstalledApp>
+        installed: List<InstalledApp>,
+        isScanning: Boolean,
     ): AppPreferenceUiState {
-        val installedPackages = installed.mapTo(mutableSetOf()) { it.packageName }
+        val installedByPackage = installed.associateBy { it.packageName }
+        val installedPackages = installedByPackage.keys
+        val tokens = query.split(Regex("\\s+")).filter { it.isNotEmpty() }
         val matches: (String, String) -> Boolean = { displayName, packageName ->
-            query.isBlank() ||
-                displayName.contains(query, ignoreCase = true) ||
-                packageName.contains(query, ignoreCase = true)
+            val installedLabel = installedByPackage[packageName]?.displayName
+            tokens.all { token ->
+                displayName.contains(token, ignoreCase = true) ||
+                    packageName.contains(token, ignoreCase = true) ||
+                    installedLabel?.contains(token, ignoreCase = true) == true
+            }
         }
 
         val preinstalled = lists.preinstalled
@@ -177,7 +188,7 @@ class AppPreferenceViewModel @Inject constructor(
 
         val detectedApps = lists.detected
             .map { detected ->
-                val installedApp = installed.firstOrNull { it.packageName == detected.packageName }
+                val installedApp = installedByPackage[detected.packageName]
                 DetectedAppUi(
                     packageName = detected.packageName,
                     displayName = installedApp?.displayName
@@ -205,6 +216,7 @@ class AppPreferenceViewModel @Inject constructor(
             installedPackageNames = installedPackages,
             contentOverrides = contentOverrides,
             searchQuery = query,
+            isScanningInstalledApps = isScanning,
             isLoading = false
         )
     }

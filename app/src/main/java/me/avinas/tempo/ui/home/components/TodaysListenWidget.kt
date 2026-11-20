@@ -132,7 +132,7 @@ fun TodaysListenWidget(
 
                     // Headline listening time
                     Text(
-                        text = formatListeningTime(todayOverview?.totalListeningTimeMs ?: 0),
+                        text = me.avinas.tempo.ui.stats.displayStatsDuration(todayOverview?.totalListeningTimeMs ?: 0),
                         fontFamily = DisplayFontFamily,
                         fontWeight = FontWeight.Bold,
                         fontSize = 26.sp,
@@ -687,19 +687,6 @@ private fun CompactRecapFooter(
                 modifier = Modifier.size(9.dp)
             )
         }
-    }
-}
-
-private fun formatListeningTime(ms: Long): String {
-    val totalSeconds = ms / 1000
-    val totalMinutes = totalSeconds / 60
-    val hours = totalMinutes / 60
-    val mins = totalMinutes % 60
-    return when {
-        hours == 0L && mins == 0L && totalSeconds > 0 -> "${totalSeconds}s"
-        hours == 0L -> "${mins}m"
-        mins == 0L -> "${hours}h"
-        else -> "${hours}h ${mins}m"
     }
 }
 

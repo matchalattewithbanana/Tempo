@@ -121,19 +121,17 @@ class BackupRestoreViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val settings = backupSettingsManager.settings.first()
-                ensureAutomaticBackupScheduled(settings)
-
-                if (!settings.isGoogleDriveEnabled) return@launch
-
-                val restored = googleAuthManager.restoreSessionSilently()
-                if (restored) {
+                // Restore access even when scheduled uploads are disabled.
+                if (googleAuthManager.restoreSessionSilently()) {
                     loadDriveBackups()
                 }
+                ensureAutomaticBackupScheduled(settings)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                _driveOperation.value = DriveOperationState.Error(
-                    e.message ?: "Could not initialize automatic backup state"
+                _driveOperation.compareAndSet(
+                    DriveOperationState.Idle,
+                    DriveOperationState.Error(e.message ?: "Could not initialize automatic backup state")
                 )
             }
         }
@@ -799,6 +797,7 @@ class BackupRestoreViewModel @Inject constructor(
      * existing data could conflict. On a fresh install, restores directly.
      */
     fun startDriveRestore(backup: DriveBackupInfo) {
+        if (_driveOperation.value != DriveOperationState.Idle) return
         viewModelScope.launch {
             if (hasExistingData()) {
                 _showDriveRestoreDialog.value = backup
@@ -847,21 +846,10 @@ class BackupRestoreViewModel @Inject constructor(
                             downloadResult.localFile.delete()
                         }
                         
-                        when (importResult) {
-                            is ImportExportResult.Success -> {
-                                calculateStats()
-                                refreshDriveBackups()
-                                _driveOperation.value = DriveOperationState.Success(
-                                    "Restored ${importResult.totalRecords} records"
-                                )
-                                // Also set import result for RestoreScreen's auto-finish logic
-                                _importExportResult.value = importResult
-                            }
-                            is ImportExportResult.Error -> {
-                                _driveOperation.value = DriveOperationState.Error(importResult.message)
-                                _importExportResult.value = importResult
-                            }
-                        }
+                        // Import results already drive the Settings message and onboarding completion.
+                        _importExportResult.value = importResult
+                        _driveOperation.value = DriveOperationState.Idle
+                        if (importResult is ImportExportResult.Success) calculateStats()
                     }
                     is DriveRestoreResult.Error -> {
                         driveService.cleanupDownloadCache()
@@ -937,8 +925,8 @@ class BackupRestoreViewModel @Inject constructor(
     /**
      * Clear drive operation state.
      */
-    fun clearDriveOperation() {
-        _driveOperation.value = DriveOperationState.Idle
+    fun clearDriveOperation(completed: DriveOperationState) {
+        _driveOperation.compareAndSet(completed, DriveOperationState.Idle)
     }
 
     private suspend fun updateLastBackupSafely(status: BackupStatus) {

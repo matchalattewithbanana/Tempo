@@ -766,7 +766,7 @@ fun ProfileScreen(
                                     modifier = contentModifier,
                                     verticalArrangement = Arrangement.spacedBy(22.dp),
                                 ) {
-                                    if (streakMinutes != null) {
+                                    if (appearance.showProfileStreakWarning && streakMinutes != null) {
                                         StreakRiskBanner(
                                             streakDurationMinutes = streakMinutes,
                                             timeRemaining = streakTimeRemaining,
@@ -1310,21 +1310,6 @@ private fun MasterStatMasthead(
     hideStreaks: Boolean = false,
 ) {
     val appearancePalette = LocalTempoPalette.current
-    val animatedStreak by animateIntAsState(
-        targetValue = currentStreak,
-        animationSpec = tween(durationMillis = 900, easing = FastOutSlowInEasing),
-        label = "streakCounter",
-    )
-    val animatedXp by animateIntAsState(
-        targetValue = userLevel.totalXp.coerceAtMost(Int.MAX_VALUE.toLong()).toInt(),
-        animationSpec = tween(durationMillis = 1100, easing = FastOutSlowInEasing),
-        label = "xpCounter",
-    )
-    val animatedEarnedBadges by animateIntAsState(
-        targetValue = earnedCount,
-        animationSpec = tween(durationMillis = 900, easing = FastOutSlowInEasing),
-        label = "badgeCounter",
-    )
 
     val suffix =
         when {
@@ -1353,7 +1338,7 @@ private fun MasterStatMasthead(
             if (!hideStreaks) {
                 MastheadHeroMetric(
                     label = "Listening rhythm",
-                    value = "$animatedStreak",
+                    value = "$currentStreak",
                     suffix = suffix,
                     accentTint = accentTint,
                 )
@@ -1396,7 +1381,7 @@ private fun MasterStatMasthead(
 
                 MastheadSecondaryStat(
                     label = "Total XP",
-                    value = String.format(Locale.getDefault(), "%,d", animatedXp),
+                    value = String.format(Locale.getDefault(), "%,d", userLevel.totalXp),
                     subtext = "Rank: Level ${userLevel.currentLevel}",
                     modifier =
                         Modifier
@@ -1416,7 +1401,7 @@ private fun MasterStatMasthead(
 
                 MastheadSecondaryStat(
                     label = "Badges",
-                    value = "$animatedEarnedBadges / $totalCount",
+                    value = "$earnedCount / $totalCount",
                     subtext = if (totalStars > 0) "$totalStars stars" else "Unlocked",
                     modifier =
                         Modifier

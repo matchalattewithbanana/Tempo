@@ -312,6 +312,9 @@ fun AppearanceScreen(onNavigateBack: () -> Unit, viewModel: AppearanceViewModel 
                     AppearanceNowListening.COMPACT -> R.string.appearance_compact
                     AppearanceNowListening.HIDDEN -> R.string.appearance_hidden
                 } }) { draft = draft.copy(nowListening = it) }
+                SettingToggle(R.string.appearance_home_summary_chart, draft.showHomeSummaryChart, !busy) {
+                    draft = draft.copy(showHomeSummaryChart = it)
+                }
                 Text(stringResource(R.string.appearance_home_order), style = MaterialTheme.typography.titleSmall)
                 draft.homeOrder.forEachIndexed { index, section ->
                     val sectionName = stringResource(sectionLabel(section))
@@ -372,6 +375,9 @@ fun AppearanceScreen(onNavigateBack: () -> Unit, viewModel: AppearanceViewModel 
                 }
                 SettingToggle(R.string.appearance_profile_progress, draft.showProfileProgress, !busy) {
                     draft = draft.copy(showProfileProgress = it)
+                }
+                SettingToggle(R.string.appearance_profile_streak_warning, draft.showProfileStreakWarning, !busy) {
+                    draft = draft.copy(showProfileStreakWarning = it)
                 }
             }
             AppearanceSection(R.string.appearance_sharing_settings) {

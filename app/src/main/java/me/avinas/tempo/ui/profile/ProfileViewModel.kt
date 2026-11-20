@@ -54,7 +54,7 @@ class ProfileViewModel @Inject constructor(
 
     suspend fun observeWhileVisible(): Unit = coroutineScope {
         observeData()
-        launch { refreshProfileData() }
+        launch { refreshProfileData(refreshChallenges = false) }
         observeRefreshEvents()
     }
 
@@ -66,22 +66,29 @@ class ProfileViewModel @Inject constructor(
                     state.copy(challenges = emptyList(), challengeXpTotal = 0, challengesLoaded = false, challengeDate = date)
                 } else state
             }
-            try {
-                challengeRepository.generateDailyChallengesIfNeeded(day.date)
-                challengeRepository.refreshChallengeProgress(day)
-                setProblem(ProfileProblem.CHALLENGE_REFRESH, false)
-            } catch (cancelled: CancellationException) {
-                throw cancelled
-            } catch (failure: Exception) {
-                reportProblem(ProfileProblem.CHALLENGE_REFRESH, failure)
-            }
-            challengeRepository.observeChallenges(day.date).collectProfile(ProfileProblem.CHALLENGES) { challenges ->
-                _uiState.update { state ->
-                    state.copy(
-                        challenges = challenges,
-                        challengeXpTotal = challenges.sumOf { it.xpReward },
-                        challengesLoaded = true,
-                    )
+            coroutineScope {
+                var refreshCompleted = false
+                launch {
+                    challengeRepository.observeChallenges(day.date).collectProfile(ProfileProblem.CHALLENGES) { challenges ->
+                        _uiState.update { state ->
+                            state.copy(
+                                challenges = challenges,
+                                challengeXpTotal = challenges.sumOf { it.xpReward },
+                                challengesLoaded = refreshCompleted || challenges.isNotEmpty(),
+                            )
+                        }
+                    }
+                }
+                try {
+                    challengeRepository.generateDailyChallengesIfNeeded(day.date)
+                    challengeRepository.refreshChallengeProgress(day)
+                    refreshCompleted = true
+                    setProblem(ProfileProblem.CHALLENGE_REFRESH, false)
+                    _uiState.update { it.copy(challengesLoaded = true) }
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
+                } catch (failure: Exception) {
+                    reportProblem(ProfileProblem.CHALLENGE_REFRESH, failure)
                 }
             }
         }
@@ -214,9 +221,9 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
-    private suspend fun refreshProfileData() {
+    private suspend fun refreshProfileData(refreshChallenges: Boolean = true) {
         try {
-            challengeRepository.refreshChallengeProgress()
+            if (refreshChallenges) challengeRepository.refreshChallengeProgress()
             gamificationRepository.fullRefresh()
             setProblem(ProfileProblem.REFRESH, false)
         } catch (cancelled: CancellationException) {
