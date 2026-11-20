@@ -1711,7 +1711,7 @@
     <string name="settings_health_minutes_ago">%1$d minutes ago</string>
     <string name="settings_health_no_signal">No player callback recorded yet</string>
     <string name="settings_backup_overview_header">Google Drive backup status</string>
-    <string name="settings_backup_overview_never">No Drive backup attempt recorded</string>
+    <string name="settings_backup_overview_never">No Drive backup started on this device yet</string>
     <string name="settings_backup_overview_success">Last Drive backup succeeded</string>
     <string name="settings_backup_overview_failed">Last Drive backup failed — review connection</string>
     <string name="settings_backup_overview_running">Drive backup marked in progress</string>
