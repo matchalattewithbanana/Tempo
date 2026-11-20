@@ -661,15 +661,12 @@ fun SettingsScreen(
                         subtitle = stringResource(R.string.appearance_settings_summary),
                         onClick = { onNavigateToAppearance?.invoke() },
                     )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    GlassCard(contentPadding = PaddingValues(0.dp),
-                        variant = me.avinas.tempo.ui.components.GlassCardVariant.LowProminence) {
-                        SettingsOption(
-                            title = stringResource(R.string.logo_picker_title),
-                            subtitle = stringResource(R.string.logo_picker_settings_description),
-                            onClick = { onNavigateToLogoPicker?.invoke() },
-                        )
-                    }
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    SettingsOption(
+                        title = stringResource(R.string.logo_picker_title),
+                        subtitle = stringResource(R.string.logo_picker_settings_description),
+                        onClick = { onNavigateToLogoPicker?.invoke() },
+                    )
                 }
                 Spacer(modifier = Modifier.height(24.dp))
 
