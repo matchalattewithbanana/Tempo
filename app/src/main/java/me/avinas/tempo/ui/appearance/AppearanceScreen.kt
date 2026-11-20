@@ -651,75 +651,72 @@ private fun AppearancePresetCard(
                 shape,
             )
             .clickable(enabled = enabled, onClick = onClick)
-            .semantics {
+            .semantics(mergeDescendants = true) {
                 role = Role.RadioButton
                 this.selected = selected
             }
             .padding(7.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
+        // A real miniature of the theme: canvas, raised card, typography,
+        // progress accent and surface swatches, including the selected light tone.
         Box(
-            modifier = Modifier.fillMaxWidth().heightIn(min = 148.dp)
+            modifier = Modifier.fillMaxWidth().height(170.dp)
                 .clip(RoundedCornerShape(16.dp))
-                .background(
-                    Brush.verticalGradient(listOf(palette.topBackground, palette.background))
-                ),
+                .background(Brush.verticalGradient(listOf(palette.topBackground, palette.background))),
         ) {
             Column(
-                modifier = Modifier.fillMaxSize().padding(11.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
+                modifier = Modifier.fillMaxSize().padding(10.dp),
+                verticalArrangement = Arrangement.spacedBy(9.dp),
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(Modifier.size(43.dp).clip(RoundedCornerShape(8.dp))
-                        .background(palette.accent),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text("♫", color = palette.onAccent,
-                            style = MaterialTheme.typography.headlineSmall)
+                Row(verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                    Box(Modifier.size(33.dp).clip(RoundedCornerShape(9.dp))
+                        .background(palette.accent), contentAlignment = Alignment.Center) {
+                        Text("♫", color = palette.onAccent, style = MaterialTheme.typography.titleLarge)
                     }
-                    Spacer(Modifier.width(8.dp))
-                    Column {
-                        Text(stringResource(R.string.appearance_preview_song),
-                            color = palette.onSurface, maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            style = MaterialTheme.typography.labelMedium)
-                        Text(stringResource(R.string.appearance_preview_artist),
-                            color = palette.mutedText,
-                            style = MaterialTheme.typography.labelSmall)
+                    Text(stringResource(R.string.appearance_preview_song),
+                        color = palette.onSurface, style = MaterialTheme.typography.labelSmall,
+                        maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+                Column(
+                    modifier = Modifier.fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(palette.surface).padding(9.dp),
+                    verticalArrangement = Arrangement.spacedBy(5.dp),
+                ) {
+                    Text(stringResource(R.string.stats_period_listening_time),
+                        color = palette.mutedText, style = MaterialTheme.typography.labelSmall,
+                        maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text("9h 49m", color = palette.onSurface,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold)
+                    Box(Modifier.fillMaxWidth().height(4.dp)
+                        .clip(RoundedCornerShape(4.dp)).background(palette.elevatedSurface)) {
+                        Box(Modifier.fillMaxWidth(0.68f).height(4.dp)
+                            .background(palette.accent))
                     }
                 }
-                Box(
-                    Modifier.fillMaxWidth().height(4.dp).clip(RoundedCornerShape(4.dp))
-                        .background(palette.elevatedSurface),
-                ) {
-                    Box(Modifier.fillMaxWidth(0.64f).height(4.dp)
-                        .background(palette.accent))
-                }
-                Row(
-                    modifier = Modifier.fillMaxWidth().height(39.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(palette.surface),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalAlignment = Alignment.Bottom,
-                ) {
-                    listOf(0.36f, 0.70f, 0.48f, 0.9f, 0.60f, 0.80f).forEach { proportion ->
-                        Box(
-                            Modifier.weight(1f)
-                                .fillMaxHeight(proportion)
-                                .background(palette.accent.copy(alpha = 0.60f)),
-                        )
+                Row(horizontalArrangement = Arrangement.spacedBy(5.dp),
+                    verticalAlignment = Alignment.CenterVertically) {
+                    listOf(palette.accent, palette.elevatedSurface,
+                        palette.surfaceSunken, palette.onSurface).forEach { swatch ->
+                        Box(Modifier.size(13.dp).clip(RoundedCornerShape(5.dp))
+                            .background(swatch)
+                            .border(0.5.dp, palette.border.copy(alpha = 0.7f),
+                                RoundedCornerShape(5.dp)))
                     }
                 }
             }
             if (active) {
                 Box(
-                    modifier = Modifier.align(Alignment.TopEnd).padding(9.dp)
-                        .size(23.dp).clip(RoundedCornerShape(30.dp))
+                    modifier = Modifier.align(Alignment.TopEnd).padding(8.dp)
+                        .size(22.dp).clip(RoundedCornerShape(30.dp))
                         .background(palette.accent),
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(Icons.Default.Check, contentDescription = null,
-                        modifier = Modifier.size(16.dp), tint = palette.onAccent)
+                        modifier = Modifier.size(15.dp), tint = palette.onAccent)
                 }
             }
         }

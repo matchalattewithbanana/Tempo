@@ -266,12 +266,19 @@ fun FrostedIconButton(
     containerColor: Color = GlassFrostMedium,
     borderColor: Color = GlassBorderSoft,
 ) {
+    val palette = LocalTempoPalette.current
+    // Theme-aware defaults keep icon controls readable over pale glass.
+    // Explicit caller colors are preserved for artwork overlays.
+    val effectiveContainer = if (!palette.isDark && containerColor == GlassFrostMedium)
+        palette.elevatedSurface else containerColor
+    val effectiveBorder = if (!palette.isDark && borderColor == GlassBorderSoft)
+        palette.border.copy(alpha = 0.75f) else borderColor
     Box(
         modifier = modifier
             .size(40.dp)
             .clip(CircleShape)
-            .background(containerColor)
-            .border(0.8.dp, borderColor, CircleShape)
+            .background(effectiveContainer)
+            .border(0.8.dp, effectiveBorder, CircleShape)
             .premiumClickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
