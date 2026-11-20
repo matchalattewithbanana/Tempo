@@ -16,7 +16,7 @@ class TempoVersioningTest(unittest.TestCase):
         self.assertEqual((5, 0, 0), normalize_version(4, 10, 100))
         self.assertEqual((5, 0, 25), normalize_version(4, 11, 25))
         self.assertEqual((5, 0, 0), normalize_version(4, 10, 99 + 1))
-        self.assertEqual((7, 4, 3), normalize_version(5, 15, 2_003))
+        self.assertEqual((8, 2, 3), normalize_version(5, 15, 2_003))
 
     def test_reject_invalid_components(self):
         for value in [(-1, 0, 0), (4, -1, 0), (4, 1, -1)]:
