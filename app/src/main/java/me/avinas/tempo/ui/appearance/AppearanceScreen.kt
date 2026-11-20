@@ -732,7 +732,7 @@ private fun <T> ChoiceRow(
                         modifier = Modifier.weight(1f).heightIn(min = 52.dp)
                             .semantics {
                                 role = Role.RadioButton
-                                selected = isChosen
+                                this.selected = isChosen
                             },
                     ) {
                         Text(
