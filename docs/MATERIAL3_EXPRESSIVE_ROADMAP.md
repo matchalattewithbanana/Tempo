@@ -27,6 +27,47 @@ Build a distinctive, quick, delightful music journal with consistent Material 3 
 
 Phases are **sequential by dependency, not calendar commitments**. Work within a phase may be delivered in smaller reviewable commits. Future preview releases should be scoped to verified changes rather than assuming the entire roadmap is complete.
 
+## Screenshot-driven corrective pass — started 21 November 2026
+
+User feedback from the Settings and Daily Listening screenshots exposed a design-system split: large custom GlassCard diagnostics and oversized category tiles competed with Material 3 Expressive controls, Settings search disappeared on scroll, and a three-column daily metric rendered an ellipsized duration with its caption.
+
+**Source updates committed to `main` (not built or visually verified yet):**
+
+- [x] Settings: compact native tonal category destinations, a featured Appearance entry, readable single-column phone layout, and responsive two-column expanded layout. The categories now appear before diagnostics, backups and update shortcuts.
+- [x] Settings: native surface containers for tracking health, backup and Update Center; a smaller fixed Material top bar; a search field that stays visible during scrolling; scroll reset when searching.
+- [x] Daily Listening: theme-tonal summary/rhythm surfaces; duration value and caption are separate, multi-line text rather than a single forced ellipsis; label corrected to "per session."
+- [x] Daily Listening: optional, policy-gated entrance motion instead of mandatory 50–320ms stagger plus 380ms reveal; skip sheet reveal motion when reduced motion is active.
+- [x] Update pure Settings layout policy tests for 320/393/600/680/920dp and large font scales.
+- [ ] **Required to claim fixed:** Android compilation, screenshot comparison against reported devices, semantics/tap targets and run-time navigation.
+- [ ] Reproduce or rule out the screenshot's unusual 48 tracks / 1 album count via distinct album-key and missing-metadata checks. Don't change recorded listening data to make a card look right.
+- [ ] Check whether one average session equaling the daily total is mathematically correct for the underlying session count; surface session count or an explanatory metric where useful.
+- [ ] Confirm duration units in Settings immediately update every summary surface without waiting for a reload.
+
+### App-wide expressive design contract
+
+**Every Tempo screen** must share the same theme roles, typography hierarchy, shape families, native interaction semantics, adaptive window rules and motion policy. "Expressive" does **not** mean decorating every row or replacing useful data visualizations with generic Material cards.
+
+| Surface | Material 3 Expressive target | Functional gate |
+| --- | --- | --- |
+| Home, Now Playing and Spotlight | Artwork-led hero, strong information hierarchy, cohesive native shortcuts and compact playback affordances | No blocked first content or extra artwork requests |
+| Stats, rankings, trends and Daily Listening | Themed charts, consistent compact/expanded metric layouts, connected periods and native search | No truncated durations or stale filtered results |
+| History, collections and library | Grouped native rows, coherent selection and undo, predictable sheets | Stable identity, correct pagination and no delete/data-loss regressions |
+| Profile, badges and personalization | Themed editorial sections and adjustable density/layouts, not hardcoded gradients | Large-font and Light/OLED contrast screenshots |
+| Settings, Appearance Studio and search | Fixed search, concise categories, native switches, previewable options, surfaced diagnostics | All settings discoverable, updates immediate |
+| Import, restore, account links and Update Center | Shared native forms, progress, recovery, dialogs and error feedback | Long operations resumable and errors actionable |
+| Song, Artist, Album and share/export | Native expressive detail scaffolds with original media treatments, real actions and flexible layouts | Artwork identity, back-stack, image export accuracy |
+| Widgets, tablet, foldable and accessibility | Same semantics/colors adapted to each host surface | No fixed phone-width assumptions, 48dp targets, TalkBack |
+
+**Design system rules:**
+
+1. No new hardcoded per-screen gradients or `Color.White` labels where theme roles are available. Keep music/artwork exceptions deliberate, documented and tested.
+2. Single source for 1.0×/1.3×/1.5× type, spacing, rounded shape, component surface elevation and pressed/selected states; support 320/360/393/412dp phones and wider windows.
+3. Performance and motion are acceptance requirements: no forced reveal delay, looping motion or sensor work in ordinary scroll paths. Respect system reduced animation, app Reduce Motion, battery/thermal gating, and existing effects opt-ins.
+4. Back/IME/search behavior and empty/loading/error content must match across Settings, Stats, History, imports and supported apps.
+5. Before closing a screen's migration, compare before/after **actual screenshots** in Light/Dark/OLED, with 1.5× type and active playback; run compilation/unit tests and retain an explicit issue for any missing device check.
+
+The screenshot-driven work above is deliberately *not* a claim that phases 0–5 are complete. Phase 0's build/test gate remains blocking; no APK or release has been authorized by this pass.
+
 ## Phase 0 — Critical: make the current beta testable
 
 **Status:** release metadata prepared; compile/test/publish validation pending.
