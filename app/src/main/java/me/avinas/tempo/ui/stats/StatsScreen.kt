@@ -932,28 +932,17 @@ private fun StatsTopBar(
     val headerAlpha by animateFloatAsState(targetValue = if (isScrolled) 1f else 0f, label = "headerAlpha")
 
     Surface(
-        color = me.avinas.tempo.ui.theme.LocalTempoPalette.current.background.copy(alpha = headerAlpha),
-        shadowElevation = if (isScrolled) 4.dp else 0.dp,
+        color = MaterialTheme.colorScheme.surface.copy(alpha = headerAlpha),
+        shadowElevation = 0.dp,
         modifier = modifier
     ) {
-        TopAppBar(
-            navigationIcon = {
-                // Balances the action row (Search + Share) so the centered title is optically centered.
-                Spacer(
-                    modifier = Modifier.width(
-                        if (hasItems) 96.dp else 48.dp
-                    )
-                )
-            },
+        CenterAlignedTopAppBar(
             title = {
-                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    Text(
-                        stringResource(R.string.stats_screen_title),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
+                Text(
+                    stringResource(R.string.stats_screen_title),
+                    style = MaterialTheme.typography.titleLargeEmphasized,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
             },
             actions = {
                 IconButton(onClick = onOpenSearch) {
