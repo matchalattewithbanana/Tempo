@@ -4,6 +4,15 @@ Fork-specific changes. Published tags and artifacts are listed in the [release c
 
 ## Unreleased
 
+### Material launcher icon picker
+
+- Added four new native adaptive launcher designs—Pulse Mint, Tempo Clock, Violet Trail, and Vinyl Night—and kept the original Tempo icon as Tempo Classic.
+- Added a dedicated picker with real launcher-resource previews, accessibility labels, selected-state indicators and Settings search integration. It is reachable from General Settings and Appearance Studio.
+- Android PackageManager controls enabled launcher aliases without resetting listening history or restarting the tracking service. Android 13+ changes aliases atomically; older supported versions use a safe sequential switch.
+- Includes monochrome themed icon variants and a synchronized About-page icon. No network calls or extra permissions.
+- This code requires an Android build and launcher/device testing before release.
+
+
 ### About screen
 - Added a Material 3 About header with Tempo identity, installed version and a concise project description.
 - Added exactly two linked credit entries: matchalattewithbanana (fork maintainer) and avinaxhroy (original creator). Existing upstream license and attribution notices remain unchanged.
