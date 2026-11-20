@@ -74,6 +74,14 @@ The review covered `Root.kt`, `Theme.kt`, `Common.kt`, `Settings.kt`, `PaletteMa
 
 Changes are committed to `main` **without compiling, running instrumentation, or checking pixel output on an Android device**. Material API opt-ins make source intent explicit; they do not certify the dependency/toolchain combination. Device QA should inspect the bento at 320dp/370dp, 1.3× fonts and OLED; check theme previews, active-player scrolling, skeleton state transitions, and whether TalkBack correctly describes icon-only elements.
 
+## Opt-in expressive extras implemented
+
+Following the deeper Orion source audit, Tempo now offers **Effects Studio** in Appearance Studio. Ambient animation, gravity-based card tilt and item entrances are separately opt-in and always subject to the Android accessibility/power/thermal/low-RAM/foreground policy. The default presentation remains deliberately static. The floating navigation toolbar is also optional; normal short navigation remains the default, and wide rail navigation retains priority on large layouts.
+
+Artwork-led Song/Artist/Album headers can respond to optional tilt and ambient accents; the Album, Artist and Profile collections use the same opt-in short item entrance pattern as History and Stats. Backup/restore gained a native expressive header and unified loading indicators. The custom palette maker supports three seeds with accessible contrast adjustment and previews for each display tone.
+
+These are original Tempo implementations using Android/Compose APIs, not a source transfer from Orion Store. No device captures or benchmarking results are available yet.
+
 ## Next visual milestones
 
 Retune the remaining visual duplicates on track/artist/album details, import/restore flows and Spotlight story editor. Choose deliberately where a shape or action morph helps recognition; do not add permanent shimmer, blur or animated gradients merely to look expressive.

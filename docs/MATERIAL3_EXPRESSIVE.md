@@ -41,6 +41,22 @@ The existing `GlassCard` and music-specific surfaces are retained where they rep
 
 For the independent design review of Orion Store, the specific Tempo surfaces updated, and the remaining device-level visual checks, see [Expressive visual design reference](EXPRESSIVE_DESIGN_REFERENCE.md).
 
+## Opt-in Effects Studio (unreleased)
+
+Under **Appearance Studio → Effects**, three independent options are **off by default**:
+
+- **Ambient animated accents** — two subtle, slowly moving tonal radial fields on main app screens. Animation state is read inside drawing, without per-frame recomposition of lazy music rows.
+- **Move featured cards with device tilt** — one lifecycle-bound gravity-sensor listener per visible app theme, never a sensor per list row. `SensorManager.SENSOR_DELAY_UI`, a 50 ms event throttle and low-pass filtering drive only small `graphicsLayer` transforms. It is optional hardware; unsupported devices remain static.
+- **Animate list items as they appear** — short, bounded staggered enter transitions for Home highlights, Stats, History, Profile collections and Album/Artist lists. Not a continuous animation per row.
+
+**Gentle / Expressive** intensity and the optional **Short bar / Floating dock** navigation selection are saved in the same versioned appearance settings, backup and saved looks. Existing settings decode with every new effect off; the source-level version is now `AppearanceCodec.VERSION = 5`. The floating dock uses a native `HorizontalFloatingToolbar` on phones; expanded 840dp+ layouts retain their rail.
+
+**Hard safety gates:** Optional ambient/list/tilt effects are denied when animations are system-disabled, Tempo's Reduce Motion is enabled, battery saver is on, the device is low-RAM or thermally limited, or the UI is not foreground. This remains true even if the older `adaptiveEffects` preference is disabled. The sensor is registered only while a supported, enabled app window is RESUMED and is unregistered on backgrounding, disposal, or disabling the option.
+
+The **Custom palette maker** extends the existing primary custom accent with optional secondary and tertiary RGB seeds and Light/Dark/OLED preview cards. Optional roles use surface-aware contrast adjustment. Invalid hex input is not applied, and the full draft only persists on **Apply**. Preset surfaces and listening data remain unchanged.
+
+No new Android permissions, background workers, networking, analytics, or album-art refreshes are added by the effect engine. It has not been compiled or benchmarked on a device.
+
 ## Compatibility and performance guardrails
 
 1. No direct datastore or database reads in the composables added by this migration.

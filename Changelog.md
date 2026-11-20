@@ -4,6 +4,17 @@ Fork-specific changes. Published tags and artifacts are listed in the [release c
 
 ## Unreleased
 
+### Optional Expressive Effects Studio, floating dock and custom palettes
+
+- Added three **independent opt-in** effects, all off by default: continuous low-alpha ambient tonal animation, foreground-only sensor-driven featured-card tilt, and bounded entrance motion for lazy music items.
+- Added Gentle / Expressive intensity choices and a native floating Material navigation toolbar as an alternative to the short bar. Expanded screens continue using their navigation rail.
+- Hard-gated all expensive effects against Android animation settings, reduced motion, battery saver, low RAM, thermal limits and app backgrounding. A single lifecycle-managed, throttled gravity sensor listener is shared; no permissions, workers or background polling were added.
+- Applied optional effects to Home, Stats, History, Profile and Song/Artist/Album detail screens, with no effects for existing users unless explicitly enabled.
+- Built a three-seed custom palette maker (primary, secondary, tertiary), automatic contrast adjustments, and live previews across Light, Dark and OLED tones. Existing saved looks and imports retain backward-compatible defaults; appearance schema version increased to 5.
+- Improved backup/restore headers and loading states, and added tests covering default-off behavior, hard safety gates, color contrast, and serialization.
+- Source committed to `main` using `[skip ci]`. Compilation, accessibility/device visuals, battery impact, and frame-time benchmarking still pending.
+
+
 ### Material 3 Expressive — deeper Orion design review
 
 - Audited Orion's native Settings hub, palette editor, navigation docks, motion code, content skeletons, segmented sheets, details, and onboarding in addition to screenshots.

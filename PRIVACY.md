@@ -1,6 +1,6 @@
 # Tempo privacy policy
 
-**Updated:** 20 November 2026
+**Updated:** 21 November 2026
 **Scope:** the Android app built from this fork. Build configuration and enabled integrations affect which data flows are active. The browser companion has a [separate policy](browser-extension/PRIVACY.md).
 
 ## Overview
@@ -67,6 +67,12 @@ Signing out or deleting local app data does not delete files already exported, s
 | Selected document/folder/photo access | Read chosen imports/images and write chosen exports or automatic backup folders. |
 
 The [Android manifest](app/src/main/AndroidManifest.xml) is the authoritative permission inventory for a particular source revision. Revoking relevant permissions can stop associated features.
+
+## Optional visual effects and motion sensors
+
+**Appearance Studio → Effects** offers ambient animation, featured-card sensor tilt and list entrance animations as separate **off-by-default** choices. When tilt is explicitly enabled, Tempo reads the device **gravity sensor** while the app window is resumed to adjust a small visual transform. The values are filtered in memory only: the effect does **not** add sensor data to listening records, save orientation history, transmit readings, or run a background sensor service. It registers one listener for the visible app and unregisters it on backgrounding or when the option is disabled. Devices without the gravity sensor simply do not tilt.
+
+These optional effects are suppressed when system animations are disabled, Reduce Motion is on, battery saver is active, the device is thermally constrained or low-RAM, or the UI is in the background. The floating navigation dock and the optional multi-seed palette editor are UI preferences stored with other appearance settings. They do not change audio tracking or backup encryption.
 
 ## App-health reporting
 

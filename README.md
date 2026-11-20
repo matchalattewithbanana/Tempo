@@ -209,6 +209,8 @@ Tempo's ongoing Material 3 Expressive work extends the visual system through nat
 
 On the source branch, selectable launcher artwork includes **Tempo Classic**, **Pulse Mint**, **Tempo Clock**, **Violet Trail** and **Vinyl Night**. The browser companion, Android widgets, stats and sharing have their own documentation and release notes.
 
+The unreleased **Effects Studio** adds independently opt-in ambient animation, gravity-based tilt and per-item entrances, with automatic accessibility, power, thermal and low-memory fallbacks. A native floating navigation dock is also optional. The custom palette maker supports three color seeds and previews in Light, Dark and OLED.
+
 Explore the [Material 3 Expressive migration](docs/MATERIAL3_EXPRESSIVE.md), [visual design reference](docs/EXPRESSIVE_DESIGN_REFERENCE.md) and [changelog](Changelog.md). These describe source changes; compilation, visual accessibility checks and physical-device performance verification are still pending for the latest unreleased work.
 
 <p align="center">
