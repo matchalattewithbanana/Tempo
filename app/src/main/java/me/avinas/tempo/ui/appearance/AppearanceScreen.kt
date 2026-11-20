@@ -714,10 +714,11 @@ private fun <T> ChoiceRow(
                 horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
             ) {
                 group.forEachIndexed { index, option ->
+                    val isChosen = selected == option
                     ToggleButton(
-                        checked = selected == option,
+                        checked = isChosen,
                         enabled = enabled,
-                        onCheckedChange = { if (selected != option) onSelect(option) },
+                        onCheckedChange = { if (!isChosen) onSelect(option) },
                         shapes = when {
                             group.size == 1 -> ToggleButtonShapes(
                                 shape = ToggleButtonDefaults.shape,
@@ -731,7 +732,7 @@ private fun <T> ChoiceRow(
                         modifier = Modifier.weight(1f).heightIn(min = 52.dp)
                             .semantics {
                                 role = Role.RadioButton
-                                selected = selected == option
+                                selected = isChosen
                             },
                     ) {
                         Text(
