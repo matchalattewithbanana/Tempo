@@ -1101,13 +1101,7 @@ fun MasterStatMasthead(
     dominantColor: Color,
 ) {
     val appearancePalette = LocalTempoPalette.current
-    val formattedTime = if (trackDetails.totalTimeMinutes >= 60) {
-        val hrs = trackDetails.totalTimeMinutes / 60
-        val mins = trackDetails.totalTimeMinutes % 60
-        "${hrs}h ${mins}m"
-    } else {
-        "${trackDetails.totalTimeMinutes}m"
-    }
+    val formattedTime = me.avinas.tempo.ui.stats.displayStatsDuration(trackDetails.totalTimeMs)
 
     val rankText = trackDetails.peakRank?.let { "#$it" } ?: "—"
     val rankSubtext = when (trackDetails.peakRank) {
@@ -1432,8 +1426,7 @@ private fun ScrubbableRhythmChart(
     // Screen-reader summary of the currently inspected day
     val inspectedItem = selectedIndex?.takeIf { it in history.indices }?.let { history[it] }
     val chartStateDescription = if (inspectedItem != null) {
-        val mins = (inspectedItem.totalTimeMs / 60000L).toInt()
-        val timeStr = if (mins >= 60) "${mins / 60}h ${mins % 60}m" else "${mins}m"
+        val timeStr = me.avinas.tempo.ui.stats.displayStatsDuration(inspectedItem.totalTimeMs)
         stringResource(
             R.string.details_trends_day_summary,
             formatSongDate(parseIsoToTimestamp(inspectedItem.date)),
@@ -1614,8 +1607,7 @@ private fun ScrubbableRhythmChart(
 
             // Scrubbing inspection HUD overlay
             inspectedItem?.let { item ->
-                val mins = (item.totalTimeMs / 60000L).toInt()
-                val timeStr = if (mins >= 60) "${mins / 60}h ${mins % 60}m" else "${mins}m"
+                val timeStr = me.avinas.tempo.ui.stats.displayStatsDuration(item.totalTimeMs)
                 val playsLabel = stringResource(
                     if (item.playCount == 1) R.string.details_trends_hud_one else R.string.details_trends_hud_many,
                     item.playCount,

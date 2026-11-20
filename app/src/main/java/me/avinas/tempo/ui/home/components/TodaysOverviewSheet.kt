@@ -1515,7 +1515,7 @@ private fun ArtistRankRow(
             verticalArrangement = Arrangement.spacedBy(1.dp)
         ) {
             Text(
-                text = formatLongListeningTime(artist.totalTimeMs),
+                text = me.avinas.tempo.ui.stats.displayStatsDuration(artist.totalTimeMs),
                 style = MaterialTheme.typography.titleSmall.copy(fontFamily = DisplayFontFamily),
                 fontWeight = FontWeight.Bold,
                 fontSize = 14.sp,

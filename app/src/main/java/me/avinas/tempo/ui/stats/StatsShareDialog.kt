@@ -78,7 +78,7 @@ fun StatsShareDialog(
         }
         if (onShared != null) onShared() else onDismiss()
     }
-    val text = statsShareText(context, tab, timeRange, items, totals, config, appearance.statsDuration, appearance.statsSummary)
+    val text = statsShareText(context, tab, timeRange, items, totals, config, appearance.statsDuration, appearance.statsDurationPrecision, appearance.statsSummary)
 
     val contentToShare: @Composable () -> Unit = {
         CompositionLocalProvider(LocalTempoAppearance provides appearance) {
@@ -221,6 +221,7 @@ private fun statsShareText(
     totals: CombinedBasicStats?,
     config: StatsShareConfig,
     durationUnit: AppearanceStatsDuration,
+    durationPrecision: me.avinas.tempo.ui.appearance.AppearanceDurationPrecision,
     summaryMetric: AppearanceStatsSummary,
 ): String = buildString {
     val title = when (tab) {
@@ -238,7 +239,7 @@ private fun statsShareText(
     appendLine(context.getString(title))
     appendLine(context.getString(range))
     if (config.showSummary && totals != null) {
-        val duration = formatStatsDuration(context, totals.totalTimeMs, durationUnit)
+        val duration = formatStatsDuration(context, totals.totalTimeMs, durationUnit, durationPrecision)
         appendLine(context.getString(R.string.share_text_metric, context.getString(R.string.stats_period_listening_time), duration))
         appendLine(context.getString(R.string.share_text_metric, context.getString(R.string.stats_period_plays), context.getString(R.string.stats_period_number, totals.playCount)))
         appendLine(context.getString(R.string.share_text_metric, context.getString(statsSummaryLabel(summaryMetric)),

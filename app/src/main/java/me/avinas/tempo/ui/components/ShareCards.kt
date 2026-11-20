@@ -453,12 +453,7 @@ fun ArtistShareCard(
                                 )
                             }
                             Spacer(modifier = Modifier.height(2.dp))
-                            val formattedTime =
-                                if (artistDetails.personalTotalTimeMinutes >= 60) {
-                                    String.format(Locale.US, "%.1fh", artistDetails.personalTotalTimeMinutes / 60.0)
-                                } else {
-                                    "${artistDetails.personalTotalTimeMinutes}m"
-                                }
+                            val formattedTime = me.avinas.tempo.ui.stats.displayStatsDuration(artistDetails.personalTotalTimeMs)
                             Text(
                                 text = formattedTime,
                                 style = MaterialTheme.typography.titleLarge,
@@ -906,12 +901,7 @@ fun SongShareCard(
                                 )
                             }
                             Spacer(modifier = Modifier.height(2.dp))
-                            val formattedTime =
-                                if (trackDetails.totalTimeMinutes >= 60) {
-                                    String.format(Locale.US, "%.1fh", trackDetails.totalTimeMinutes / 60.0)
-                                } else {
-                                    "${trackDetails.totalTimeMinutes}m"
-                                }
+                            val formattedTime = me.avinas.tempo.ui.stats.displayStatsDuration(trackDetails.totalTimeMs)
                             Text(
                                 text = formattedTime,
                                 style = MaterialTheme.typography.titleLarge,

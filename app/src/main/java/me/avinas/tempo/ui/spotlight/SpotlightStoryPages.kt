@@ -793,11 +793,7 @@ fun TopSongsPage(page: SpotlightStoryPage.TopSongs) {
                             )
                             // Total playtime chip for #1 song
                             if (page.totalTimeMs > 0L) {
-                                val totalMinutes = (page.totalTimeMs / 60_000).toInt()
-                                val hours = totalMinutes / 60
-                                val minutes = totalMinutes % 60
-                                val playtimeText = if (hours > 0) stringResource(R.string.spotlight_playtime_hours, hours, minutes)
-                                                   else stringResource(R.string.spotlight_playtime_minutes, minutes)
+                                val playtimeText = me.avinas.tempo.ui.stats.displayStatsDuration(page.totalTimeMs)
                                 Spacer(modifier = Modifier.height(dimens.spacerSmall))
                                 // Playtime highlight chip for #1 song
                                 SolidCard(
@@ -1791,10 +1787,7 @@ fun TopAlbumPage(page: SpotlightStoryPage.TopAlbum) {
 
             // Stats row
             EnterAnimation(delay = 700) {
-                val totalMinutes = (page.totalTimeMs / 60_000).toInt()
-                val hours = totalMinutes / 60
-                val mins = totalMinutes % 60
-                val timeText = if (hours > 0) stringResource(R.string.spotlight_time_hours, hours, mins) else stringResource(R.string.spotlight_time_minutes, mins)
+                val timeText = me.avinas.tempo.ui.stats.displayStatsDuration(page.totalTimeMs)
                 val values = listOf(page.playCount.toString(), timeText, page.uniqueTracksPlayed.toString())
                 val maxLen = values.maxOf { it.length }
                 val statFontSize = when {

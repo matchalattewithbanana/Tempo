@@ -379,7 +379,7 @@ private fun AlbumDetailsContent(
             }
 
             if (showShareDialog) {
-                val duration = if (albumDetails.totalTimeMs > 0) formatListeningTime(albumDetails.totalTimeMs)
+                val duration = if (albumDetails.totalTimeMs > 0) me.avinas.tempo.ui.stats.displayStatsDuration(albumDetails.totalTimeMs)
                     else stringResource(R.string.stats_period_zero_time)
                 SnapshotShareDialog(
                     snapshot = ShareSnapshot(
@@ -708,7 +708,7 @@ private fun AlbumStatMasthead(
                 value = String.format(Locale.getDefault(), "%,d", albumDetails.totalPlayCount),
                 suffix = stringResource(
                     R.string.details_together_suffix,
-                    formatListeningTime(albumDetails.totalTimeMs),
+                    me.avinas.tempo.ui.stats.displayStatsDuration(albumDetails.totalTimeMs),
                 ),
                 accentTint = dominantColor,
             )
@@ -734,7 +734,7 @@ private fun AlbumStatMasthead(
                     label = stringResource(R.string.details_tracks),
                     value = "${albumDetails.tracks.size}",
                     subtext = if (runtimeMs > 0) {
-                        formatListeningTime(runtimeMs)
+                        me.avinas.tempo.ui.stats.displayStatsDuration(runtimeMs)
                     } else {
                         stringResource(R.string.details_stat_recorded_library)
                     },

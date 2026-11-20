@@ -799,7 +799,7 @@ fun ArtistStatMasthead(artistDetails: ArtistDetails, accent: Color = LocalTempoP
                 value = String.format(Locale.getDefault(), "%,d", artistDetails.personalPlayCount),
                 suffix = stringResource(
                     R.string.details_together_suffix,
-                    formatListeningTime(artistDetails.personalTotalTimeMs.toLong()),
+                    me.avinas.tempo.ui.stats.displayStatsDuration(artistDetails.personalTotalTimeMs),
                 ),
                 accentTint = accent,
             )

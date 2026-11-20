@@ -992,18 +992,8 @@ private fun BingeVisualizer(
     val appearancePalette = LocalTempoPalette.current
     val safeArtist = artist.ifBlank { "Top Artist" }
     val safeCount = playCount.coerceAtLeast(1)
-    val minutes = (durationMs / 1000 / 60).coerceAtLeast(0)
-    val hours = minutes / 60
-    val remainingMin = minutes % 60
-    val timeFormatted = remember(durationMs) {
-        if (durationMs <= 0L) {
-            "Active Session"
-        } else if (hours > 0) {
-            "${hours}h ${remainingMin}m"
-        } else {
-            "${minutes}m"
-        }
-    }
+    val timeFormatted = if (durationMs <= 0L) "Active Session"
+        else me.avinas.tempo.ui.stats.displayStatsDuration(durationMs)
 
     Column(
         modifier = Modifier
