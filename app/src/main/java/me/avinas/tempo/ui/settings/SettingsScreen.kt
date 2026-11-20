@@ -703,16 +703,18 @@ fun SettingsScreen(
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface,
+                                maxLines = 2,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                             )
                             Text(
                                 text = stringResource(R.string.settings_tap_to_edit),
                                 style = MaterialTheme.typography.bodySmall,
-                                color = TextTertiary,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                             Text(
                                 text = stringResource(R.string.settings_tap_photo_to_change),
                                 style = MaterialTheme.typography.bodySmall,
-                                color = TextQuaternary,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
 
@@ -737,21 +739,26 @@ fun SettingsScreen(
 
                 // Appearance is a focused gallery instead of another long list of toggles.
                 SettingsSectionHeader(stringResource(R.string.appearance_title))
-                GlassCard(
-                    contentPadding = PaddingValues(0.dp),
-                    variant = me.avinas.tempo.ui.components.GlassCardVariant.LowProminence,
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.extraLarge,
+                    color = MaterialTheme.colorScheme.surfaceContainerLow,
                 ) {
-                    SettingsOption(
-                        title = stringResource(R.string.appearance_title),
-                        subtitle = stringResource(R.string.appearance_settings_summary),
-                        onClick = { onNavigateToAppearance?.invoke() },
-                    )
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                    SettingsOption(
-                        title = stringResource(R.string.logo_picker_title),
-                        subtitle = stringResource(R.string.logo_picker_settings_description),
-                        onClick = { onNavigateToLogoPicker?.invoke() },
-                    )
+                    // A Surface/GlassCard is a Box: rows must be stacked
+                    // explicitly or they paint at exactly the same position.
+                    Column {
+                        SettingsOption(
+                            title = stringResource(R.string.appearance_title),
+                            subtitle = stringResource(R.string.appearance_settings_summary),
+                            onClick = onNavigateToAppearance,
+                        )
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                        SettingsOption(
+                            title = stringResource(R.string.logo_picker_title),
+                            subtitle = stringResource(R.string.logo_picker_settings_description),
+                            onClick = onNavigateToLogoPicker,
+                        )
+                    }
                 }
                 Spacer(modifier = Modifier.height(24.dp))
 
