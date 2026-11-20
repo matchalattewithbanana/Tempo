@@ -199,6 +199,10 @@ class StatsViewModel
                     val sortBy = current.selectedSortBy
                     val query = current.searchQuery
 
+                    // The summary is independent of ranking/search pagination. Start its
+                    // query immediately so a slow rankings page cannot delay the period total.
+                    if (page == 0) launch { updatePeriodTotals(timeRange, generation) }
+
                     val items: List<StatItem>
                     val hasMore: Boolean
                     if (query.isNotBlank()) {
@@ -240,7 +244,6 @@ class StatsViewModel
                         )
                     }
 
-                    if (page == 0) updatePeriodTotals(timeRange, generation)
                 } catch (cancelled: CancellationException) {
                     throw cancelled
                 } catch (failure: Exception) {
