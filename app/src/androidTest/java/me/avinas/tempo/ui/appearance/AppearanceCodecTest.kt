@@ -25,6 +25,7 @@ class AppearanceCodecTest {
             navigationStyle = AppearanceNavigationStyle.FLOATING,
             ambientAnimation = true, sensorTilt = true, listEntranceMotion = true,
             effectIntensity = AppearanceEffectIntensity.EXPRESSIVE,
+            customSecondary = "D770C0", customTertiary = "80C0AA",
         )
         assertEquals(settings, AppearanceCodec.decode(AppearanceCodec.encode(settings)))
     }

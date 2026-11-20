@@ -6,7 +6,7 @@ import org.json.JSONObject
 
 /** Portable, size-bounded appearance-only format. No paths, account data or history. */
 object AppearanceCodec {
-    const val VERSION = 4
+    const val VERSION = 5
     const val MAX_BYTES = 32 * 1024
     fun encode(value: AppearanceSettings): String = JSONObject().apply {
         put("version", VERSION)
@@ -43,6 +43,8 @@ object AppearanceCodec {
         put("sensorTilt", value.sensorTilt)
         put("listEntranceMotion", value.listEntranceMotion)
         put("effectIntensity", value.effectIntensity.name)
+        put("customSecondary", normalizeAccentHex(value.customSecondary))
+        put("customTertiary", normalizeAccentHex(value.customTertiary))
     }.toString()
 
     fun decode(raw: String): AppearanceSettings {
@@ -96,6 +98,8 @@ object AppearanceCodec {
             sensorTilt = json.optBoolean("sensorTilt", false),
             listEntranceMotion = json.optBoolean("listEntranceMotion", false),
             effectIntensity = enumOrDefault(json.optString("effectIntensity"), AppearanceEffectIntensity.GENTLE),
+            customSecondary = normalizeAccentHex(json.optString("customSecondary")),
+            customTertiary = normalizeAccentHex(json.optString("customTertiary")),
         )
     }
 }

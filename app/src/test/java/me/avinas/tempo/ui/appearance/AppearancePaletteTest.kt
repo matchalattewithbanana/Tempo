@@ -112,6 +112,38 @@ class AppearancePaletteTest {
         assertEquals(null, normalizeAccentHex("#FFFFFF7F"))
     }
 
+    @Test fun `optional palette seeds do not alter listening surfaces and maintain contrast`() {
+        for (tone in listOf(AppearanceTone.DARK, AppearanceTone.LIGHT, AppearanceTone.OLED)) {
+            val baseSettings = AppearanceSettings(
+                preset = AppearancePreset.LAGOON, tone = tone,
+                accentSource = AppearanceAccentSource.CUSTOM,
+                customAccent = "537CF2",
+            )
+            val base = AppearancePaletteResolver.resolve(baseSettings)
+            val custom = AppearancePaletteResolver.resolve(
+                baseSettings.copy(customSecondary = "FF0000", customTertiary = "003900"),
+            )
+            assertEquals(base.background, custom.background)
+            assertEquals(base.surface, custom.surface)
+            assertTrue(custom.secondaryAccent != null && custom.tertiaryAccent != null)
+            val scheme = custom.materialColorScheme()
+            assertTrue(contrast(scheme.onSecondary, scheme.secondary) >= 4.5)
+            assertTrue(contrast(scheme.onTertiary, scheme.tertiary) >= 4.5)
+            listOf(base.surface, base.elevatedSurface, base.surfaceSunken).forEach { surface ->
+                assertTrue(contrast(custom.secondaryAccent!!, surface) >= 4.5)
+                assertTrue(contrast(custom.tertiaryAccent!!, surface) >= 4.5)
+            }
+        }
+        val invalid = AppearancePaletteResolver.resolve(
+            AppearanceSettings(
+                accentSource = AppearanceAccentSource.CUSTOM,
+                customSecondary = "not-hex", customTertiary = "#FFFFAAAA",
+            ),
+        )
+        assertEquals(null, invalid.secondaryAccent)
+        assertEquals(null, invalid.tertiaryAccent)
+    }
+
     private fun contrast(first: Color, second: Color): Double {
         fun luma(color: Color): Double {
             fun channel(value: Float): Double {

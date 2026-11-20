@@ -25,18 +25,20 @@ data class AppearancePalette(
     val mutedText: Color,
     val border: Color,
     val isDark: Boolean = true,
+    val secondaryAccent: Color? = null,
+    val tertiaryAccent: Color? = null,
 ) {
     fun materialColorScheme(): ColorScheme = (if (isDark) darkColorScheme() else lightColorScheme()).copy(
         primary = accent,
         onPrimary = onAccent,
         primaryContainer = elevatedSurface,
         onPrimaryContainer = onSurface,
-        secondary = accent,
-        onSecondary = onAccent,
-        secondaryContainer = elevatedSurface,
+        secondary = secondaryAccent ?: accent,
+        onSecondary = secondaryAccent?.let { if (it.luminance() >= 0.179f) Color.Black else Color.White } ?: onAccent,
+        secondaryContainer = secondaryAccent?.let { lerp(elevatedSurface, it, 0.10f) } ?: elevatedSurface,
         onSecondaryContainer = onSurface,
-        tertiary = accent,
-        onTertiary = onAccent,
+        tertiary = tertiaryAccent ?: accent,
+        onTertiary = tertiaryAccent?.let { if (it.luminance() >= 0.179f) Color.Black else Color.White } ?: onAccent,
         background = background,
         onBackground = onSurface,
         surface = surface,
@@ -226,7 +228,15 @@ object AppearancePaletteResolver {
         val custom = if (settings.accentSource == AppearanceAccentSource.CUSTOM) {
             normalizeAccentHex(settings.customAccent)?.toLong(16)
         } else null
-        return if (custom != null) withAccent(palette, Color(0xFF000000L or custom)) else palette
+        val accented = if (custom != null) withAccent(palette, Color(0xFF000000L or custom)) else palette
+        if (settings.accentSource != AppearanceAccentSource.CUSTOM) return accented
+        fun seed(raw: String?): Color? = normalizeAccentHex(raw)
+            ?.toLong(16)?.let { Color(0xFF000000L or it) }
+            ?.let { readableAccent(accented, it) }
+        return accented.copy(
+            secondaryAccent = seed(settings.customSecondary),
+            tertiaryAccent = seed(settings.customTertiary),
+        )
     }
 
     private fun lightPalette(base: AppearancePalette): AppearancePalette {

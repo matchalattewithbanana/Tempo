@@ -79,6 +79,9 @@ data class AppearanceSettings(
     val sensorTilt: Boolean = false,
     val listEntranceMotion: Boolean = false,
     val effectIntensity: AppearanceEffectIntensity = AppearanceEffectIntensity.GENTLE,
+    // Distinct optional color seeds; blank means use the base palette role.
+    val customSecondary: String? = null,
+    val customTertiary: String? = null,
 ) {
     /** Retain opt-in beta tones when applying or importing an appearance. */
     fun forLiveApp(): AppearanceSettings = this
