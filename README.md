@@ -35,6 +35,12 @@ APK downloads run through WorkManager and show progress. Tempo accepts only its 
 
 The Update Center checks Android APK releases only. The Chromium/Firefox companion packages remain linked on each GitHub release page. An app version that has unreleased commits is not an available update until a new version is explicitly built and published.
 
+## Material 3 Expressive — adaptive layout
+
+On phones, Tempo uses the expressive short navigation bar; on expanded windows (≥840dp), it switches to a native wide navigation rail while preserving Compact Now Playing. Home and Stats periods, History filters, Appearance Studio options, and Update Center channels use responsive connected Material 3 buttons. Shared dialogs and snackbars use lighter Material surfaces and accessible actions; Supported Apps search keeps results visible while filtering. Error and empty states use themed Material colors. These changes alter UI presentation only, not tracking, import, or backup logic.
+
+**Status:** source implementation on `main`; Android compilation and device/tablet visual testing are still pending.
+
 ## Material 3 Expressive (2026)
 
 Tempo uses Google's stable Compose Material 3 Expressive 1.5.0 from BOM **2026.11.01**, while preserving the eighteen curated palettes and configurable corners/typography. Our app-level theme uses `MaterialExpressiveTheme`, the official motion scheme, and the corresponding increased shape and emphasized typography tokens. Core navigation now uses the official `ShortNavigationBar` and Material-selected destinations; History and Home use Material expressive toggle buttons for time ranges, and Profile/Stats have native tab rows. Settings uses `ListItem` and improved search, Appearance Studio uses expressive choices, and the Update Center has a flexible app bar and matching controls. Loading indicators are wavy only when motion is permitted by system accessibility and Tempo's low-resource policy.

@@ -4,6 +4,18 @@ Fork-specific changes. Published tags and artifacts are listed in the [release c
 
 ## Unreleased
 
+### Material 3 Expressive — adaptive navigation and shared components
+
+- Added an M3 Expressive collapsed **WideNavigationRail** for primary destinations on windows at least 840dp wide. The phone short navigation bar remains for smaller windows; both retain Home/Stats/History back-stack state, and Compact Now Playing appears in either layout.
+- Converted legacy dialogs from multi-layer gradient surfaces and 28dp shadows to native tonal Material `Surface` and expressive primary/tonal buttons.
+- Rebuilt shared snackbars with Material-provided action and dismiss buttons, keyboard/TalkBack semantics and tonal surfaces while retaining severity icons.
+- Improved **Manage Supported Apps** search: native expressive search field and a narrow loading indicator replace the full-screen loading flash while filtering. Initial device scanning still indicates loading explicitly.
+- Implemented native connected button-group shapes for time periods, History date filters, Update Center channels and Appearance Studio choices; rows reflow on narrow phones and larger font scales without squeezing five options into tiny targets.
+- Improved Home/Stats/History load errors with a readable Material error container and native Retry button. Fixed the year displayed in empty-state guidance and replaced a hardcoded success green with theme roles.
+- Added pure layout policies and unit tests for responsive connected-button columns and 840dp navigation-rail cutoff.
+- Source changes only: no Android build, instrumented tests or release was triggered.
+
+
 ### Material 3 Expressive foundation and whole-app controls
 
 - Upgraded to stable **Compose BOM 2026.11.01 / Material3 1.5.0** with compile SDK 37.1, AGP 9.5.1, Gradle 9.8.2 and Lifecycle 2.11.0. Kept target SDK 36.
