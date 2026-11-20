@@ -68,6 +68,26 @@ User feedback from the Settings and Daily Listening screenshots exposed a design
 
 The screenshot-driven work above is deliberately *not* a claim that phases 0–5 are complete. Phase 0's build/test gate remains blocking; no APK or release has been authorized by this pass.
 
+## Additional screenshot regressions — Settings subpages and bottom navigation (21 November 2026)
+
+Five further user screenshots identify overlapping Appearance/App Icon options in General, duplicated giant title banners in General/Music Tracking/Backup, backup explanatory text repeated below Data Overview, very narrow Google Drive status next to an oversized Backup Now action, unusually large diagnostic disclosure cards, and a bottom navigation surface obscuring content.
+
+**Source corrections now on main (review, not device validation):**
+
+- [x] General Appearance rows explicitly wrapped in a Column. `GlassCard` is Box-based, so direct sibling `SettingsOption` calls overlapped in the screenshot.
+- [x] `TempoSettingsCategoryHero` is a compact, native Material context strip; the top app bar remains the single page title. Backup's header likewise uses a compact `TopAppBar`.
+- [x] Backups no longer repeat the appearance-scope description below the library-count summary. Drive backup action gets an independent full-width button row instead of crushing the status copy.
+- [x] The "never backed up" status now explicitly describes **this device's** locally recorded Drive attempts, because remote Drive backup history can still contain earlier backups. English and the five existing locales updated.
+- [x] Diagnostics disclosure panels use Material surface container roles, two-line collapsed descriptions and a policy-aware expand transition. Crucially, refresh is triggered in a `LaunchedEffect(expanded)`, not during composition.
+- [x] Standard Material `NavigationBar` / `NavigationBarItem` temporarily replace the reported inflated `ShortNavigationBar` layout while keeping the app's theme colors and label preference. The root host reserves the bar's **measured** height, including the optional now-playing strip and gesture insets.
+- [x] Settings shared rows use native Material switch colors, compact header spacing and readable supporting typography. Profile removal no longer crowds the name.
+- [x] Backup and diagnostic pages inherit the existing root Appearance background instead of drawing a second full-screen gradient.
+- [ ] **Validation required:** compile all affected screens, test real navigation height with/without compact Now Playing and both appearance navigation styles, review dark/light/OLED screenshots on 320/360/393/412dp, large fonts, keyboard and TalkBack, confirm restore/backup and diagnostics semantics.
+- [ ] Revisit the native expressive short navigation only if library/API and real-device geometry can be confirmed. A stable compact Material control is preferable to an unverified expressive one that obscures music content.
+- [ ] Establish screenshot/golden baseline to prevent future stacking regressions.
+
+Do not claim the reported screenshot problems fully closed until a tested APK reproduces the corrected layouts. Existing source-only validation is not a substitute.
+
 ## Phase 0 — Critical: make the current beta testable
 
 **Status:** release metadata prepared; compile/test/publish validation pending.
