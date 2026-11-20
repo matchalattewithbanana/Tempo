@@ -41,7 +41,7 @@ Tempo uses Google's stable Compose Material 3 Expressive 1.5.0 from BOM **2026.1
 
 These controls are selectively chosen for music tracking; not every Material 3 Expressive component is appropriate (for example, FAB menus and carousels should not be added where no corresponding workflow exists). Existing artwork-driven stats, share cards and player surfaces remain purpose-designed.
 
-**Toolchain:** Compile SDK 37.1 / Android Gradle Plugin 9.5.1 / Gradle 9.8.2 / Compose BOM 2026.11.01. Target SDK remains 36. **Build, instrumented checks and physical-device validation are pending authorization.** See [Material 3 Expressive migration notes](docs/MATERIAL3_EXPRESSIVE.md).
+**Toolchain:** Compile SDK 37.1 / Android Gradle Plugin 9.5.1 / Gradle 9.8.2 / Compose BOM 2026.11.01 / Lifecycle 2.11.0. Target SDK remains 36. **Build, instrumented checks and physical-device validation are pending authorization.** See [Material 3 Expressive migration notes](docs/MATERIAL3_EXPRESSIVE.md).
 
 ## Material UI
 

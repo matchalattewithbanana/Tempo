@@ -5,7 +5,7 @@
 ## Baseline
 
 - Compose BOM `2026.11.01` — Compose 1.13 and stable Material3 1.5.0.
-- Android Gradle Plugin `9.5.1`, Gradle `9.8.2`, compile SDK `37.1`.
+- Android Gradle Plugin `9.5.1`, Gradle `9.8.2`, compile SDK `37.1`, Lifecycle `2.11.0` (required by Compose's current lifecycle/lint integration).
 - Android target SDK remains `36`; any change to this is a separate compatibility task.
 - `MaterialExpressiveTheme` wraps every Compose screen. This is not a second theme engine.
 - Material motion is expressive by default, but `AppearanceRuntimePolicy.reduceMotion` activates the standard motion scheme for system-disabled animations, reduced-motion preferences, power-save, thermal limits or background/low-resource constraints.
@@ -23,6 +23,7 @@
 | Appearance Studio | `ToggleButton`, expanded shape scale | easy previewable selections |
 | Update Center | `MediumFlexibleTopAppBar`, `ToggleButton` | coherent header/channel selection |
 | Loading | `CircularWavyProgressIndicator`, `LinearWavyProgressIndicator` | expressive but reduced-motion-safe loading states |
+| Stat cards | `MaterialTheme.motionScheme.fastSpatialSpec/fastEffectsSpec` | consistent short entrance effects without bouncy slow springs |
 
 The existing `GlassCard` and music-specific surfaces are retained where they represent song art, statistics and listening history better than generic cards. They already use theme palette, corner and solid-surface policies. Material3 components are used in shared controls, not as a reason to add unrelated UI.
 
