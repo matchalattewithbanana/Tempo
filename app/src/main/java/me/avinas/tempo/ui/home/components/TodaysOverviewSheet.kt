@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -73,6 +74,7 @@ import me.avinas.tempo.data.stats.PeriodComparison
 import me.avinas.tempo.data.stats.TimeRange
 import me.avinas.tempo.data.stats.TopArtist
 import me.avinas.tempo.data.stats.TopTrack
+import me.avinas.tempo.ui.appearance.LocalAppearanceRuntimePolicy
 import me.avinas.tempo.ui.components.ArtAtmosphereLayer
 import me.avinas.tempo.ui.components.CachedAsyncImage
 import me.avinas.tempo.ui.components.FrostedIconButton
@@ -109,6 +111,12 @@ private val RankBronze = Color(0xFFCD8B5A)
  */
 @Composable
 private fun EntranceReveal(index: Int, content: @Composable () -> Unit) {
+    // Avoid holding back real content for hundreds of milliseconds by default.
+    // Optional list entrances are already gated for motion, battery and thermal state.
+    if (!LocalAppearanceRuntimePolicy.current.allowListEntranceMotion) {
+        content()
+        return
+    }
     val appear = remember { Animatable(0f) }
 
     LaunchedEffect(Unit) {
@@ -150,6 +158,7 @@ fun TodaysOverviewOverlay(
     modifier: Modifier = Modifier
 ) {
     val progress = remember { Animatable(0f) }
+    val reduceMotion = LocalAppearanceRuntimePolicy.current.reduceMotion
     var isClosing by remember { mutableStateOf(false) }
     var showShareDialog by remember { mutableStateOf(false) }
 
@@ -179,22 +188,22 @@ fun TodaysOverviewOverlay(
     }
     val headerScrimAlpha by animateFloatAsState(
         targetValue = if (showCollapsedTitle) 1f else 0f,
-        animationSpec = tween(200),
+        animationSpec = if (reduceMotion) snap() else tween(200),
         label = "overviewHeaderScrim"
     )
 
-    LaunchedEffect(Unit) {
-        progress.animateTo(
+    LaunchedEffect(reduceMotion) {
+        if (reduceMotion) progress.snapTo(1f) else progress.animateTo(
             targetValue = 1f,
-            animationSpec = tween(durationMillis = 360, easing = FastOutSlowInEasing)
+            animationSpec = tween(durationMillis = 360, easing = FastOutSlowInEasing),
         )
     }
 
-    LaunchedEffect(isClosing) {
+    LaunchedEffect(isClosing, reduceMotion) {
         if (isClosing) {
-            progress.animateTo(
+            if (reduceMotion) progress.snapTo(0f) else progress.animateTo(
                 targetValue = 0f,
-                animationSpec = tween(durationMillis = 240, easing = FastOutSlowInEasing)
+                animationSpec = tween(durationMillis = 240, easing = FastOutSlowInEasing),
             )
             onDismiss()
         }
@@ -888,7 +897,7 @@ private fun TodayVsYesterdayBar(
                 .fillMaxWidth()
                 .height(6.dp)
                 .clip(RoundedCornerShape(3.dp))
-                .background(Color.White.copy(alpha = 0.12f))
+                .background(MaterialTheme.colorScheme.surfaceContainerHighest)
         ) {
             Box(
                 modifier = Modifier
