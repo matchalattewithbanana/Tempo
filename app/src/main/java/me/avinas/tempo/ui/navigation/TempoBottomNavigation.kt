@@ -140,7 +140,7 @@ fun TempoBottomNavigation(
 }
 
 @Composable
-private fun CompactNowPlayingStrip() {
+internal fun CompactNowPlayingStrip() {
     if (LocalTempoAppearance.current.nowListening != AppearanceNowListening.COMPACT) return
     val presence by SpotifyBroadcastPresence.presence.collectAsStateWithLifecycle()
     val current = presence ?: return

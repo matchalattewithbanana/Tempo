@@ -7,6 +7,11 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.then
+import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -112,11 +117,16 @@ fun AppNavigation(
         me.avinas.tempo.ui.components.WalkthroughOverlay(
             controller = walkthroughController,
         ) {
-            Box(modifier = Modifier.fillMaxSize()) {
+            BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+                // On tablet/expanded widths, the rail frees vertical space
+                // and keeps Home, Stats, and History reachable at all times.
+                val useWideRail = showBottomBar && maxWidth >= 840.dp
                 NavHost(
                     navController = navController,
                     startDestination = Screen.Home.route,
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.fillMaxSize().then(
+                        if (useWideRail) Modifier.padding(start = 96.dp) else Modifier
+                    ),
                     enterTransition = { if (animateNavigation) fadeIn(tween(120)) else EnterTransition.None },
                     exitTransition = { if (animateNavigation) fadeOut(tween(120)) else ExitTransition.None },
                 ) {
@@ -466,37 +476,54 @@ fun AppNavigation(
                 }
 
                 if (showBottomBar) {
-                    me.avinas.tempo.ui.navigation.TempoBottomNavigation(
-                        currentDestination = currentDestination,
-                        onNavigateToHome = {
-                            navController.navigate(Screen.Home.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
-                                }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        },
-                        onNavigateToStats = {
-                            navController.navigate(Screen.Stats.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
-                                }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        },
-                        onNavigateToHistory = {
-                            navController.navigate(Screen.History.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
-                                }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        },
-                        modifier = Modifier.align(Alignment.BottomCenter),
-                    )
+                    // Keep the same navigation back-stack semantics on all sizes.
+                    val goHome = {
+                        navController.navigate(Screen.Home.route) {
+                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
+                    val goStats = {
+                        navController.navigate(Screen.Stats.route) {
+                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
+                    val goHistory = {
+                        navController.navigate(Screen.History.route) {
+                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
+                    if (useWideRail) {
+                        TempoMainNavigationRail(
+                            currentDestination = currentDestination,
+                            onNavigateToHome = goHome,
+                            onNavigateToStats = goStats,
+                            onNavigateToHistory = goHistory,
+                            modifier = Modifier.align(Alignment.CenterStart).fillMaxHeight(),
+                        )
+                        // Bottom-bar mode previously owned this strip. Preserve it
+                        // on wide screens without placing it underneath the rail.
+                        Box(
+                            modifier = Modifier.align(Alignment.BottomCenter)
+                                .fillMaxWidth()
+                                .padding(start = 96.dp),
+                        ) {
+                            CompactNowPlayingStrip()
+                        }
+                    } else {
+                        TempoBottomNavigation(
+                            currentDestination = currentDestination,
+                            onNavigateToHome = goHome,
+                            onNavigateToStats = goStats,
+                            onNavigateToHistory = goHistory,
+                            modifier = Modifier.align(Alignment.BottomCenter),
+                        )
+                    }
                 }
             }
         }
