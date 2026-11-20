@@ -1,6 +1,6 @@
 # Tempo privacy policy
 
-**Updated:** 18 November 2026
+**Updated:** 20 November 2026
 **Scope:** the Android app built from this fork. Build configuration and enabled integrations affect which data flows are active. The browser companion has a [separate policy](browser-extension/PRIVACY.md).
 
 ## Overview
@@ -35,10 +35,15 @@ Apple Music privacy exports are processed locally. Tempo saves playback and trac
 | Browser/desktop pairing | A configured companion and phone exchange playback records and pairing/control data. Use a trusted network. |
 | Export, diagnostics and sharing | Files leave the app when you select an external destination or share target. That recipient controls its copy. |
 | Configured health reporting | The configured analytics endpoint receives limited app-health events and a random installation identifier, as described below. |
+| Optional software update checks | Opening **Settings → Update Center** requests public release metadata from GitHub. If you enable automatic checks, a daily background job makes the same request. GitHub can see normal network information such as your IP address and the app version in the request User-Agent, but Tempo does not send your listening library to the update API. |
 
 Network recipients necessarily receive connection information, including the public IP used for internet requests. Provider processing and retention are controlled by those providers and the operator of a configured analytics deployment. This repository cannot guarantee their infrastructure location, logging or retention configuration.
 
 Tempo's enrichment path does not upload local music/audio files. A public preview URL may be submitted for analysis. Search terms can disclose which music is being matched, so metadata requests are not described as containing no listening information.
+
+## Software updates and downloaded installers
+
+The Update Center is manual by default; its daily background release check is **opt-in and can be turned off**. It stores the selected update channel, check preference, skipped and previously notified release tags, and last successful check time in app-private preferences. A user-started download stores its APK in Tempo's app-private files folder, verifies its GitHub-published checksum and Android signing identity, and grants Android's system installer access to the specific APK using FileProvider. Installation still requires your approval in Android. Tempo does not send local listening records or account credentials as part of these requests. The app declares Android's **Install packages** permission solely for the user-initiated update flow; it does not silently install other apps.
 
 ## Backups and exports
 

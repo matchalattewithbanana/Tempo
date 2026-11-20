@@ -2,7 +2,6 @@ package me.avinas.tempo.worker
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.app.Service
 import android.content.Context
 import android.content.pm.ServiceInfo
 import android.os.Build

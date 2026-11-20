@@ -27,6 +27,14 @@ See the [release catalog](docs/releases/README.md) for versions, checksums and u
 
 Playback accuracy depends on the player's available signals. Now Playing is provisional; finished listens and imported records can have different timing evidence. Spotify API reconciliation requests a 20-minute background cadence, which Android may defer. Read [tracking accuracy](docs/TRACKING_AND_IMPORT_ACCURACY.md) before interpreting imported durations.
 
+## Update Center
+
+**Settings → Update Center** checks the maintained fork's published GitHub releases, compares the installed version with the **Stable** or opt-in **Preview** channel, shows release notes and starts an APK download only when you ask. **Automatic checks are off by default.** Enabling them schedules a network-aware daily WorkManager check; it may show an update notification, but it will never download or install in the background without your request. You can mute a particular release.
+
+APK downloads run through WorkManager and show progress. Tempo accepts only its exact GitHub Release APK name and URL, a valid published asset digest, and an expected bounded APK size. Downloads are stored privately, SHA-256 verified, checked for correct package identity, a newer Android version code and the same signing certificate as the installed app, and then handed to Android's installer with user confirmation. If Android requires permission to install from Tempo, the Update Center opens the corresponding system settings. **No silent installs, forced updates or bypasses of Android safety controls.** If your installed APK uses an incompatible signing key, export a backup before considering a reinstall; the updater will refuse an in-place install.
+
+The Update Center checks Android APK releases only. The Chromium/Firefox companion packages remain linked on each GitHub release page. An app version that has unreleased commits is not an available update until a new version is explicitly built and published.
+
 ## Material UI
 
 Tempo uses its existing Material 3 interface rather than adding a separate style system. **Appearance Studio → Layout → Corners** now controls the shape family of standard Material buttons, chips, menus and sheets. Settings and Appearance Studio have cleaner grouped sections, comfortable touch targets and readable color roles. The bottom navigation has a more compact tonal appearance, and listening-period selection is lighter without costly selection shadows.

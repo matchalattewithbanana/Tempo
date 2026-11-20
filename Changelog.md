@@ -4,6 +4,15 @@ Fork-specific changes. Published tags and artifacts are listed in the [release c
 
 ## Unreleased
 
+### Update Center
+
+- Added an in-app Material 3 Update Center with installed/latest versions, Stable and Preview channels, release notes, manual checks, downloadable APKs and explicit installation confirmation.
+- Added opt-in daily WorkManager release checks with deduplicated notifications and a per-release mute option. No automatic download or installation.
+- Verify exact official GitHub APK asset URLs, size and release SHA-256 digest. Check the downloaded APK's package name, Android version code and signing certificate before launching Android's system installer.
+- Persistent WorkManager downloads display progress and survive leaving the screen; cancelled and incomplete transfers are kept separate.
+- Added Settings entry/search, update notification deep linking, private FileProvider paths, version/release parsing tests and documentation. **Android build and device installation tests remain pending.**
+
+
 ### Material UI refinement
 
 - Made Tempo's corner preference control standard Material 3 shapes while preserving custom album-art silhouettes.
