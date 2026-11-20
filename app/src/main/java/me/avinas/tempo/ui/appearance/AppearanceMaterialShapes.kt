@@ -13,6 +13,9 @@ object AppearanceMaterialShapes {
             medium = RoundedCornerShape(18.dp),
             large = RoundedCornerShape(24.dp),
             extraLarge = RoundedCornerShape(30.dp),
+            largeIncreased = RoundedCornerShape(30.dp),
+            extraLargeIncreased = RoundedCornerShape(34.dp),
+            extraExtraLarge = RoundedCornerShape(40.dp),
         )
         AppearanceShape.MODERATE -> Shapes(
             extraSmall = RoundedCornerShape(4.dp),
@@ -20,6 +23,9 @@ object AppearanceMaterialShapes {
             medium = RoundedCornerShape(12.dp),
             large = RoundedCornerShape(18.dp),
             extraLarge = RoundedCornerShape(24.dp),
+            largeIncreased = RoundedCornerShape(24.dp),
+            extraLargeIncreased = RoundedCornerShape(28.dp),
+            extraExtraLarge = RoundedCornerShape(34.dp),
         )
         AppearanceShape.SHARP -> Shapes(
             extraSmall = RoundedCornerShape(2.dp),
@@ -27,6 +33,9 @@ object AppearanceMaterialShapes {
             medium = RoundedCornerShape(8.dp),
             large = RoundedCornerShape(12.dp),
             extraLarge = RoundedCornerShape(16.dp),
+            largeIncreased = RoundedCornerShape(16.dp),
+            extraLargeIncreased = RoundedCornerShape(20.dp),
+            extraExtraLarge = RoundedCornerShape(26.dp),
         )
     }
 }

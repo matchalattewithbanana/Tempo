@@ -123,7 +123,33 @@ val Typography = Typography(
         fontSize = 11.sp,
         lineHeight = 16.sp,
         letterSpacing = 0.5.sp
-    )
+    ),
+    // M3 Expressive emphasis tokens explicitly use Tempo's fonts, never the
+    // platform default font when the user selects a custom appearance style.
+    displayLargeEmphasized = TextStyle(
+        fontFamily = DisplayFontFamily, fontWeight = FontWeight.Bold,
+        fontSize = 57.sp, lineHeight = 64.sp, letterSpacing = (-1.5).sp
+    ),
+    displayMediumEmphasized = TextStyle(
+        fontFamily = DisplayFontFamily, fontWeight = FontWeight.Bold,
+        fontSize = 45.sp, lineHeight = 52.sp, letterSpacing = (-1).sp
+    ),
+    headlineLargeEmphasized = TextStyle(
+        fontFamily = DisplayFontFamily, fontWeight = FontWeight.Bold,
+        fontSize = 32.sp, lineHeight = 40.sp, letterSpacing = (-0.5).sp
+    ),
+    headlineMediumEmphasized = TextStyle(
+        fontFamily = DisplayFontFamily, fontWeight = FontWeight.Bold,
+        fontSize = 28.sp, lineHeight = 36.sp, letterSpacing = 0.sp
+    ),
+    titleLargeEmphasized = TextStyle(
+        fontFamily = AppFontFamily, fontWeight = FontWeight.Bold,
+        fontSize = 22.sp, lineHeight = 28.sp, letterSpacing = (-0.15).sp
+    ),
+    titleMediumEmphasized = TextStyle(
+        fontFamily = AppFontFamily, fontWeight = FontWeight.Bold,
+        fontSize = 16.sp, lineHeight = 24.sp, letterSpacing = 0.sp
+    ),
 )
 
 // Micro-type tokens — the only sanctioned styles for kicker labels and

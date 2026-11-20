@@ -34,6 +34,11 @@ object AppearanceTypography {
             headlineMedium = base.headlineMedium.copy(fontFamily = headingFont),
             headlineSmall = base.headlineSmall.copy(fontFamily = headingFont),
             titleLarge = base.titleLarge.copy(fontFamily = headingFont),
+            displayLargeEmphasized = base.displayLargeEmphasized.copy(fontFamily = headingFont),
+            displayMediumEmphasized = base.displayMediumEmphasized.copy(fontFamily = headingFont),
+            headlineLargeEmphasized = base.headlineLargeEmphasized.copy(fontFamily = headingFont),
+            headlineMediumEmphasized = base.headlineMediumEmphasized.copy(fontFamily = headingFont),
+            titleLargeEmphasized = base.titleLargeEmphasized.copy(fontFamily = headingFont),
         )
     }
 }
