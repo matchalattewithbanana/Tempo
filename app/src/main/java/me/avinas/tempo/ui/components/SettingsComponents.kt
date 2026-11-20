@@ -12,7 +12,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.graphics.vector.ImageVector
 import me.avinas.tempo.ui.theme.LocalTempoPalette
 
 /** Expressive section typography, shared by all Settings categories. */
@@ -95,55 +94,4 @@ fun SettingsSwitch(
         modifier = Modifier.fillMaxWidth().heightIn(min = 64.dp)
             .toggleable(value = checked, role = Role.Switch, onValueChange = onCheckedChange),
     )
-}
-
-
-/** Expressive destination tile for the settings overview. Unlike a dense
- * settings row, this is an actual navigational destination with a bold
- * Material-shape icon and an independent focus/ripple target.
- */
-@Composable
-fun SettingsCategoryTile(
-    title: String,
-    subtitle: String,
-    icon: ImageVector,
-    style: TempoEmblemStyle,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Surface(
-        onClick = onClick,
-        modifier = modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-        contentColor = MaterialTheme.colorScheme.onSurface,
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
-            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
-        ) {
-            TempoEmblem(icon = icon, size = 52.dp, style = style)
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                Text(
-                    title,
-                    style = MaterialTheme.typography.titleMediumEmphasized,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-                Text(
-                    subtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    }
 }
