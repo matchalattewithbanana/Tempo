@@ -1,6 +1,6 @@
 # Release catalog
 
-**Reviewed:** 19 November 2026. See [Latest stable release](https://github.com/matchalattewithbanana/Tempo/releases/latest) for the current published download.
+**Reviewed:** 21 November 2026. See [Latest stable release](https://github.com/matchalattewithbanana/Tempo/releases/latest) for the current published download.
 
 | Version | Android code | Published | Purpose | Source / notes |
 | --- | --- | --- | --- | --- |
