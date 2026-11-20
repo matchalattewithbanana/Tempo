@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import me.avinas.tempo.data.update.TempoRelease
 import me.avinas.tempo.data.update.UpdateChannel
@@ -57,7 +58,11 @@ class UpdateCenterViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             manager.getWorkInfosForUniqueWorkFlow(UpdateDownloadWorker.WORK_NAME).collect { jobs ->
-                val job = jobs.firstOrNull()
+                // Unique work chains can contain an older cancelled run. Prefer
+                // the current active request so progress never jumps backwards.
+                val job = jobs.firstOrNull { it.state == WorkInfo.State.RUNNING }
+                    ?: jobs.firstOrNull { it.state == WorkInfo.State.ENQUEUED }
+                    ?: jobs.lastOrNull()
                 _state.update { previous ->
                     val release = previous.release
                     val matches = release != null && (
