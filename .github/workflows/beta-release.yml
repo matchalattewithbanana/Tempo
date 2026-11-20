@@ -68,6 +68,15 @@ jobs:
       - run: chmod +x gradlew
       - name: Unit tests
         run: ./gradlew :app:testDebugUnitTest --stacktrace
+      - name: Retain unit test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-unit-test-reports
+          path: |
+            app/build/reports/tests/testDebugUnitTest/
+            app/build/test-results/testDebugUnitTest/
+          if-no-files-found: warn
       - name: Android lint
         run: |
           ./gradlew :app:lintDebug --stacktrace || { cat app/build/reports/lint-results-debug.txt; exit 1; }
