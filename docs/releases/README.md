@@ -12,7 +12,7 @@
 
 ## Prepared beta (not yet published)
 
-- **Tempo 4.9.125 Beta 1** is staged on `main` with Android versionCode **4821**, browser version **4.9.125.1**, and [release notes](v4.9.125-beta.1.md). The version was calculated from **116 commits after v4.9.9**, counted before release preparation, following the 4.9-series policy.
+- **Tempo 4.10.25 Beta 1** is staged on `main` with Android versionCode **4821**, browser version **4.10.25.1**, and [release notes](v4.10.25-beta.1.md). The version was calculated from **116 commits after v4.9.9**, counted before release preparation, and normalized by the new patch-100 / minor-10 rollover rule.
 - **Status:** awaiting the manually dispatched, gated [Beta release workflow](https://github.com/matchalattewithbanana/Tempo/actions/workflows/beta-release.yml). A source commit and release note are not a published APK; add the release to the published table only after GitHub confirms a prerelease tag and all four assets.
 
 ## Install and verify

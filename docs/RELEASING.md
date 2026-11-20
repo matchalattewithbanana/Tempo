@@ -4,15 +4,32 @@
 
 Use `MAJOR.MINOR.PATCH-beta.N` for beta display versions and `vMAJOR.MINOR.PATCH-beta.N` for tags. Stable versions omit the suffix. Titles follow `Tempo X.Y.Z Beta N — Description` or `Tempo X.Y.Z — Description`. Legacy `4.8.16-fork.*` tags retain their original identities.
 
-In the 4.9 series, advance the previous patch by the number of commits after the
-last stable tag, counted before release preparation. Use `git rev-list --count LAST_TAG..main`
-and include merged commits. For 4.9.9, the count after `v4.9.0` was nine. For the next beta,
-`v4.9.9..main` was **116** commits before release-preparation changes on
-21 November 2026; `9 + 116 = 125` gives **`4.9.125-beta.1`**.
-The extension version is `4.9.125.1`, and Android versionCode is `4821`.
-Any further fixes before publication should stay under this explicit release
-candidate, rather than silently recalculating the already-prepared version. Keeping the
-previous patch as the starting point ensures subsequent versions keep increasing.
+For new releases, use **bounded carry-over versioning**. The patch component
+ranges from **0 through 99**; each full 100 patches increments the minor
+component by one and keeps the remainder. The minor component ranges from
+**0 through 10 inclusive**; when it would become 11, increment the major and
+reset the minor to zero. Preserve any patch remainder. The rule is enforced
+by `.github/scripts/tempo_versioning.py` and checked during release validation.
+
+Examples:
+- `4.9.125` normalizes to `4.10.25`.
+- `4.10.125` normalizes to `5.0.25`.
+- `5.0.205` normalizes to `5.2.5`.
+- `4.10.99 + 1 patch` becomes `5.0.0`.
+
+Continue to determine the patch increment from **commits since the last stable
+tag, measured before release-preparation commits**. Use
+`git rev-list --count LAST_STABLE_TAG..main` and include merged commits.
+Before publishing a release candidate, calculate and **normalize** the
+candidate version. For example, `v4.9.9..main` was **116 commits** before
+the 21 November 2026 preparation: `4.9.(9 + 116) = 4.9.125` normalizes
+to `4.10.25-beta.1`. The browser extension uses `4.10.25.1`; Android
+uses monotonically increasing `versionCode=4821` (independent of the
+display version). Once a candidate is prepared, subsequent fixes should
+retain its base version unless an explicit new version is chosen.
+
+These bounds apply to **new releases**, not published historical tags;
+never rename or retag old APKs or silently change signing identity.
 
 The extension uses the same numeric version as Android for stable releases.
 For a beta, use the numeric browser form `X.Y.Z.N` for Android `X.Y.Z-beta.N`.

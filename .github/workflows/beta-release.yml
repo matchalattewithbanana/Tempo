@@ -32,6 +32,8 @@ jobs:
       TEMPO_DEBUG_KEY_PASSWORD: ${{ secrets.TEMPO_DEBUG_KEY_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
+      - name: Test version rollover boundaries
+        run: python3 .github/scripts/test_tempo_versioning.py
       - name: Validate release version and package metadata
         id: release
         run: python3 .github/scripts/release-bundle.py beta >> "$GITHUB_OUTPUT"

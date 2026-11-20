@@ -7,6 +7,7 @@ from pathlib import Path
 import re
 import shutil
 import zipfile
+from tempo_versioning import normalize_version
 
 EXTENSION = Path("browser-extension")
 BUNDLE = Path("release-bundle")
@@ -26,6 +27,13 @@ def get_metadata(channel):
     matched = re.fullmatch(pattern, version)
     if not matched or any(int(part) > 65535 for part in matched.groups()):
         raise ValueError(f"Invalid {channel} release version: {version}")
+    major, minor, patch = (int(x) for x in matched.groups()[:3])
+    if normalize_version(major, minor, patch) != (major, minor, patch):
+        correct = ".".join(map(str, normalize_version(major, minor, patch)))
+        raise ValueError(
+            f"Unnormalized {channel} release version {version}: use {correct} "
+            "(patch 0..99, minor 0..10)"
+        )
 
     browser_version = ".".join(matched.groups())
     manifest = json.loads((EXTENSION / "manifest.json").read_text())

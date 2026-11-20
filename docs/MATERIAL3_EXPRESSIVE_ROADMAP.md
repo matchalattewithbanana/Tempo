@@ -1,7 +1,7 @@
 # Material 3 Expressive — Implementation roadmap
 
 **Branch:** `main` · **Created:** 21 November 2026 · **Owner:** Tempo contributors
-**Starting point:** Tempo **4.9.125-beta.1** *release candidate*, a snapshot of source already on `main`. This beta is for feedback; the projects below are future work, not features promised in that APK.
+**Starting point:** Tempo **4.10.25-beta.1** *release candidate*, a snapshot of source already on `main`. This beta is for feedback; the projects below are future work, not features promised in that APK.
 
 ## Goals and non-goals
 
@@ -31,9 +31,9 @@ Phases are **sequential by dependency, not calendar commitments**. Work within a
 
 **Status:** release metadata prepared; compile/test/publish validation pending.
 
-- [ ] Verify the `4.9.125-beta.1` candidate through the existing manual `beta-release.yml`: Android unit tests, Android lint, debug APK assembly, APK version/package/signature, emulator tests, Chromium/Firefox typecheck/build/smoke.
+- [ ] Verify the `4.10.25-beta.1` candidate through the existing manual `beta-release.yml`: Android unit tests, Android lint, debug APK assembly, APK version/package/signature, emulator tests, Chromium/Firefox typecheck/build/smoke.
 - [ ] Fix any compile issues from the large Compose 1.13 / Material 3 1.5 migration, SDK 37.1, AGP/Gradle upgrades, and newer `MotionScheme`/floating-toolbar APIs.
-- [ ] Verify `versionName=4.9.125-beta.1`, `versionCode=4821`, browser `4.9.125.1`, and stable tag `v4.9.9` remains untouched.
+- [ ] Verify `versionName=4.10.25-beta.1`, `versionCode=4821`, browser `4.10.25.1`, and stable tag `v4.9.9` remains untouched.
 - [ ] Confirm one signer fingerprint compatible with the previous GitHub APK before publishing; never rotate silently.
 - [ ] Capture initial screenshots for Home, Stats, Profile, History, Settings, Appearance Studio, and Details in Light, Dark, OLED, and System tones.
 - [ ] Validate initial loading, empty states, permission-denied routes, launcher icon picker, restored settings, overlays, widgets and browser pairing.
@@ -99,10 +99,10 @@ Phases are **sequential by dependency, not calendar commitments**. Work within a
 ## Beta cadence and versioning
 
 - Latest **published stable** before this candidate: `v4.9.9` (Android `versionCode=4820`).
-- Commit count before release preparation: `v4.9.9..main = 116` (21 Nov 2026). Repository 4.9 policy: `9 + 116 = 125`.
-- **Current candidate:** Android `4.9.125-beta.1`, versionCode `4821`; browser manifests/package/lock use `4.9.125.1`.
-- Subsequent betas of the **same release candidate** use `4.9.125-beta.2`, `beta.3`, etc. and increment Android versionCode for *every* installable APK; browser fourth component matches beta number.
-- After successful beta and quality gates, a stable promotion would be `4.9.125` (with another versionCode increment) if no separate version-policy decision supersedes it.
+- Commit count before release preparation: `v4.9.9..main = 116` (21 Nov 2026). New bounded carry rule: `4.9.(9 + 116) = 4.9.125 → 4.10.25`.
+- **Current candidate:** Android `4.10.25-beta.1`, versionCode `4821`; browser manifests/package/lock use `4.10.25.1`.
+- Subsequent betas of the **same release candidate** use `4.10.25-beta.2`, `beta.3`, etc. and increment Android versionCode for *every* installable APK; browser fourth component matches beta number.
+- After successful beta and quality gates, stable promotion would be `4.10.25` (with another versionCode increment). Future releases use patch 0–99 and minor 0–10 inclusive; `4.10.125 → 5.0.25` and `5.0.205 → 5.2.5`.
 - The beta is explicitly **not a stable release**. Keep older tags/assets immutable; publish only through the existing gated manual release workflow, including Android/browser packages and SHA256 checksums.
 
 ## References
