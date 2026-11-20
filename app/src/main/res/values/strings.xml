@@ -1733,6 +1733,7 @@
     <string name="appearance_restore">Restore Tempo default</string>
     <string name="appearance_abyss">Abyss</string>
     <string name="appearance_new_editions">New editions</string>
+    <string name="appearance_apply_curated_style">Match typography, corners and background to the preset</string>
     <string name="appearance_signature_editions">Signature collection</string>
     <string name="appearance_gallery_hint">See the actual text, card and accent colors for the selected light or dark tone. Tap to preview, then Apply.</string>
     <string name="appearance_midnight_bloom">Midnight Bloom</string>

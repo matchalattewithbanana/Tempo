@@ -84,3 +84,53 @@ internal fun normalizeAccentHex(raw: String?): String? {
     return rgb.takeIf { it.length == 6 && it.all { char -> char in '0'..'9' || char in 'a'..'f' || char in 'A'..'F' } }
         ?.uppercase()
 }
+
+// Applying a new edition selects the palette's intended accent and, optionally,
+// its coordinated typography and surface treatment. Personal custom accent value
+// remains saved and can be re-selected from the Accent Source control.
+fun AppearanceSettings.withCuratedPreset(
+    selectedPreset: AppearancePreset,
+    applySuggestedDetails: Boolean,
+): AppearanceSettings {
+    val selected = copy(preset = selectedPreset, accentSource = AppearanceAccentSource.PRESET)
+    if (!applySuggestedDetails) return selected
+    return when (selectedPreset) {
+        AppearancePreset.MIDNIGHT_BLOOM -> selected.copy(
+            fontStyle = AppearanceFontStyle.ARCHIVE_SERIF,
+            shape = AppearanceShape.SOFT, surface = AppearanceSurface.SATIN,
+            backdrop = AppearanceBackdrop.GRADIENT,
+        )
+        AppearancePreset.SAKURA, AppearancePreset.TERRACOTTA,
+        AppearancePreset.MOCHA, AppearancePreset.LILAC -> selected.copy(
+            fontStyle = AppearanceFontStyle.ARCHIVE_SERIF,
+            shape = AppearanceShape.SOFT, surface = AppearanceSurface.SATIN,
+            backdrop = AppearanceBackdrop.WASH,
+        )
+        AppearancePreset.MATCHA -> selected.copy(
+            fontStyle = AppearanceFontStyle.NEO_SANS,
+            shape = AppearanceShape.SOFT, surface = AppearanceSurface.SOLID,
+            backdrop = AppearanceBackdrop.WASH,
+        )
+        AppearancePreset.COBALT -> selected.copy(
+            fontStyle = AppearanceFontStyle.NEO_SANS,
+            shape = AppearanceShape.SHARP, surface = AppearanceSurface.SATIN,
+            backdrop = AppearanceBackdrop.GRADIENT,
+        )
+        AppearancePreset.PORCELAIN -> selected.copy(
+            fontStyle = AppearanceFontStyle.NEO_SANS,
+            shape = AppearanceShape.MODERATE, surface = AppearanceSurface.SOLID,
+            backdrop = AppearanceBackdrop.FLAT,
+        )
+        AppearancePreset.CITRINE -> selected.copy(
+            fontStyle = AppearanceFontStyle.STUDIO_MONO,
+            shape = AppearanceShape.SHARP, surface = AppearanceSurface.SOLID,
+            backdrop = AppearanceBackdrop.FLAT,
+        )
+        AppearancePreset.LAGOON -> selected.copy(
+            fontStyle = AppearanceFontStyle.NEO_SANS,
+            shape = AppearanceShape.SOFT, surface = AppearanceSurface.SATIN,
+            backdrop = AppearanceBackdrop.GRADIENT,
+        )
+        else -> selected // Keep existing presets' layout behavior unchanged.
+    }
+}

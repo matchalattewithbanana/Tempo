@@ -92,6 +92,7 @@ fun AppearanceScreen(onNavigateBack: () -> Unit, viewModel: AppearanceViewModel 
     }
     var draft by rememberSaveable(saved, stateSaver = DraftSaver) { mutableStateOf(saved) }
     var presetsExpanded by rememberSaveable { mutableStateOf(true) }
+    var applySuggestedDetails by rememberSaveable { mutableStateOf(true) }
     val columns = if (LocalConfiguration.current.screenWidthDp < 350 ||
         LocalDensity.current.fontScale >= 1.35f) 1 else 2
     val newRows = remember(columns) { NewAppearanceEditions.chunked(columns) }
@@ -303,6 +304,8 @@ fun AppearanceScreen(onNavigateBack: () -> Unit, viewModel: AppearanceViewModel 
                         Text(stringResource(R.string.appearance_gallery_hint),
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             style = MaterialTheme.typography.bodySmall)
+                        SettingToggle(R.string.appearance_apply_curated_style,
+                            applySuggestedDetails, !busy) { applySuggestedDetails = it }
                     }
                 }
                 items(count = newRows.size, key = { "new_preset_$it" }) { index ->
@@ -310,7 +313,7 @@ fun AppearanceScreen(onNavigateBack: () -> Unit, viewModel: AppearanceViewModel 
                         horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         newRows[index].forEach { preset ->
                             AppearancePresetCard(preset, saved.preset == preset, draft.preset == preset,
-                                onClick = { draft = draft.copy(preset = preset) },
+                                onClick = { draft = draft.withCuratedPreset(preset, applySuggestedDetails) },
                                 modifier = Modifier.weight(1f), tone = preview.tone, enabled = !busy)
                         }
                     }
@@ -325,7 +328,7 @@ fun AppearanceScreen(onNavigateBack: () -> Unit, viewModel: AppearanceViewModel 
                         horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         signatureRows[index].forEach { preset ->
                             AppearancePresetCard(preset, saved.preset == preset, draft.preset == preset,
-                                onClick = { draft = draft.copy(preset = preset) },
+                                onClick = { draft = draft.withCuratedPreset(preset, applySuggestedDetails) },
                                 modifier = Modifier.weight(1f), tone = preview.tone, enabled = !busy)
                         }
                     }
