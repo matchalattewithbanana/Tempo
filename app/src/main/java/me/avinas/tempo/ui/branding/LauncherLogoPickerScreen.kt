@@ -55,6 +55,7 @@ fun LauncherLogoPickerScreen(onNavigateBack: () -> Unit) {
     val context = LocalContext.current
     var selected by remember { mutableStateOf(LauncherLogoManager.selected(context)) }
     var error by remember { mutableStateOf<String?>(null) }
+    val logoApplyFailedLabel = stringResource(R.string.logo_picker_apply_failed)
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
@@ -104,7 +105,7 @@ fun LauncherLogoPickerScreen(onNavigateBack: () -> Unit) {
                                 selected = LauncherLogoManager.selected(context)
                             } catch (failure: Exception) {
                                 error = failure.localizedMessage ?:
-                                    context.getString(R.string.logo_picker_apply_failed)
+                                    logoApplyFailedLabel
                             }
                         },
                     colors = CardDefaults.cardColors(
