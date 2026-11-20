@@ -61,6 +61,7 @@ internal val TEMPO_ABOUT_CREDITS = listOf(
 @Composable
 fun TempoAboutCredits(modifier: Modifier = Modifier) {
     val context = LocalContext.current
+    val noBrowserLabel = stringResource(R.string.settings_no_browser)
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Surface(
             shape = MaterialTheme.shapes.extraLarge,
@@ -135,7 +136,7 @@ fun TempoAboutCredits(modifier: Modifier = Modifier) {
                                     )
                                 } catch (_: ActivityNotFoundException) {
                                     Toast.makeText(
-                                        context, context.getString(R.string.settings_no_browser),
+                                        context, noBrowserLabel,
                                         Toast.LENGTH_SHORT,
                                     ).show()
                                 }
