@@ -4,6 +4,11 @@ Fork-specific changes. Published tags and artifacts are listed in the [release c
 
 ## Unreleased
 
+### About screen
+- Added a Material 3 About header with Tempo identity, installed version and a concise project description.
+- Added exactly two linked credit entries: matchalattewithbanana (fork maintainer) and avinaxhroy (original creator). Existing upstream license and attribution notices remain unchanged.
+
+
 ### Update Center
 
 - Added an in-app Material 3 Update Center with installed/latest versions, Stable and Preview channels, release notes, manual checks, downloadable APKs and explicit installation confirmation.

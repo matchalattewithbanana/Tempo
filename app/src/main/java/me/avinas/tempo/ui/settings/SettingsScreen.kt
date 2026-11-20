@@ -1250,6 +1250,8 @@ fun SettingsScreen(
 
                 } // Library and data
                 if (settingsCategory == "about") {
+                TempoAboutCredits(modifier = Modifier.fillMaxWidth())
+                Spacer(modifier = Modifier.height(24.dp))
                 // Community
                 SettingsSectionHeader(stringResource(R.string.settings_community))
                 GlassCard(

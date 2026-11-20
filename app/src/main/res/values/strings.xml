@@ -1945,4 +1945,11 @@
     <string name="update_notifications_desc">Optional Tempo release announcements</string>
     <string name="update_notification_title">Tempo %1$s is available</string>
     <string name="update_notification_body">See what is new and choose whether to install</string>
+    <!-- About: curated maintainer and original creator attribution -->
+    <string name="about_version_label">Version %1$s</string>
+    <string name="about_tempo_description">Your local-first music listening journal. Track what you love, revisit your history, and discover your listening story.</string>
+    <string name="about_people_title">People behind Tempo</string>
+    <string name="about_fork_maintainer">Fork maintainer</string>
+    <string name="about_original_creator">Original Tempo creator</string>
+    <string name="about_view_github_profile">View GitHub profile</string>
 </resources>
