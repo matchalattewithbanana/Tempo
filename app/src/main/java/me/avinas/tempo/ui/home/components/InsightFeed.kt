@@ -465,6 +465,7 @@ fun VibeHeader(
     modifier: Modifier = Modifier
 ) {
     val appearancePalette = LocalTempoPalette.current
+    val colors = MaterialTheme.colorScheme
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -495,15 +496,15 @@ fun VibeHeader(
                         onClick = onLevelClick
                     )
                     .defaultMinSize(minHeight = if (!levelTitle.isNullOrBlank()) 72.dp else 64.dp)
-                    .shadow(
-                        elevation = 10.dp,
-                        shape = RoundedCornerShape(100.dp),
-                        spotColor = appearancePalette.surfaceSunken,
-                        ambientColor = appearancePalette.surfaceSunken.copy(alpha = 0.8f)
-                    )
-                    .border(width = 1.dp, color = me.avinas.tempo.ui.theme.PillBorder, shape = RoundedCornerShape(100.dp)),
-                color = me.avinas.tempo.ui.theme.PillSurface,
-                shape = RoundedCornerShape(100.dp)
+                    .border(
+                        width = 1.dp,
+                        color = colors.outlineVariant.copy(alpha = 0.65f),
+                        shape = MaterialTheme.shapes.extraLarge,
+                    ),
+                color = colors.surfaceContainerHigh,
+                contentColor = colors.onSurface,
+                tonalElevation = 1.dp,
+                shape = MaterialTheme.shapes.extraLarge
             ) {
                 Row(
                     modifier = Modifier.padding(horizontal = rowPaddingH, vertical = rowPaddingV),
@@ -526,7 +527,7 @@ fun VibeHeader(
                                 val arcSize = Size(radius * 2, radius * 2)
                                 
                                 drawArc(
-                                    color = me.avinas.tempo.ui.theme.PillInnerSurface,
+                                    color = colors.surfaceContainerLowest,
                                     startAngle = -90f,
                                     sweepAngle = 360f,
                                     useCenter = false,
@@ -537,10 +538,10 @@ fun VibeHeader(
                                 drawArc(
                                     brush = Brush.sweepGradient(
                                         listOf(
-                                            me.avinas.tempo.ui.theme.LevelRingSweepStart,
-                                            me.avinas.tempo.ui.theme.LevelRingSweepMid,
-                                            me.avinas.tempo.ui.theme.LevelRingSweepEnd,
-                                            me.avinas.tempo.ui.theme.LevelRingSweepStart
+                                            colors.primary,
+                                            colors.tertiary,
+                                            colors.secondary,
+                                            colors.primary,
                                         )
                                     ),
                                     startAngle = -90f,
@@ -559,8 +560,8 @@ fun VibeHeader(
                             modifier = Modifier
                                 .size(innerAvatarSize)
                                 .clip(CircleShape)
-                                .background(me.avinas.tempo.ui.theme.PillInnerSurface)
-                                .border(1.dp, me.avinas.tempo.ui.theme.PillBorder, CircleShape),
+                                .background(colors.surfaceContainerLow)
+                                .border(1.dp, colors.outlineVariant, CircleShape),
                             contentAlignment = Alignment.Center
                         ) {
                             if (profileImagePath.isNullOrBlank()) {
@@ -568,7 +569,7 @@ fun VibeHeader(
                                     text = userName.firstOrNull()?.toString()?.uppercase() ?: "U",
                                     style = levelNumStyle.copy(lineHeight = levelNumStyle.fontSize * 1.1),
                                     fontWeight = FontWeight.Black,
-                                    color = me.avinas.tempo.ui.theme.PillTextPrimary,
+                                    color = colors.onSurface,
                                     maxLines = 1
                                 )
                             } else {
@@ -596,7 +597,7 @@ fun VibeHeader(
                                 style = nameTextStyle.copy(lineHeight = nameTextStyle.fontSize * 1.1f),
                                 modifier = Modifier,
                                 fontWeight = FontWeight.Bold,
-                                color = me.avinas.tempo.ui.theme.PillTextPrimary,
+                                color = colors.onSurface,
                                 maxLines = 1,
                                 softWrap = false,
                                 overflow = TextOverflow.Ellipsis
@@ -604,7 +605,7 @@ fun VibeHeader(
                             if (isGamificationEnabled) {
                                 Surface(
                                     shape = RoundedCornerShape(999.dp),
-                                    color = TempoPop.copy(alpha = 0.08f),
+                                    color = colors.tertiaryContainer,
                                     tonalElevation = 0.dp,
                                     shadowElevation = 0.dp
                                 ) {
@@ -613,7 +614,7 @@ fun VibeHeader(
                                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
                                         style = MaterialTheme.typography.labelMedium,
                                         fontWeight = FontWeight.Black,
-                                        color = TempoPop,
+                                        color = colors.onTertiaryContainer,
                                         maxLines = 1
                                     )
                                 }
@@ -623,7 +624,7 @@ fun VibeHeader(
                             ResponsiveText(
                                 text = levelTitle.uppercase(),
                                 style = titleStyle.copy(letterSpacing = 0.9.sp, lineHeight = titleStyle.fontSize * 1.15f),
-                                color = InsightBinge,
+                                color = colors.tertiary,
                                 fontWeight = FontWeight.Bold,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
