@@ -335,8 +335,7 @@ fun HomeScreen(
                                     albumArtUrl = uiState.spotlightTopTrack?.albumArtUrl,
                                     storyAvailable = directStoryTimeRange != null,
                                     storyViewed = flags.spotlightStoryViewed,
-                                    modifier = Modifier.tempoTiltSurface()
-                                        .tempoListMotion(4)
+                                    modifier = Modifier.tempoListMotion(4)
                                         .onGloballyPositioned { coordinates ->
                                         walkthroughController.registerTarget(
                                             me.avinas.tempo.ui.components.WalkthroughStep.HOME_SPOTLIGHT,
