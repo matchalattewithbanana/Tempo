@@ -398,14 +398,10 @@ fun HomeScreen(
                             AppearanceHomeSection.INSIGHTS -> if (showExtendedInsights && insights.isNotEmpty()) {
                                 item(key = "insights_header") {
                             Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-                                Text(
-                                    text = stringResource(R.string.home_your_signal),
-                                    style = MaterialTheme.typography.titleMedium.copy(
-                                        fontFamily = DisplayFontFamily,
-                                        fontWeight = FontWeight.Bold,
-                                        letterSpacing = (-0.2).sp
-                                    ),
-                                    color = TextPrimary
+                                me.avinas.tempo.ui.components.TempoSectionHeading(
+                                    title = stringResource(R.string.home_your_signal),
+                                    icon = Icons.Rounded.AutoAwesome,
+                                    style = me.avinas.tempo.ui.components.TempoEmblemStyle.DISCOVERY,
                                 )
                             }
                         }

@@ -143,11 +143,10 @@ private fun TimeRangeEmptyState(
             }
             
             // Icon
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
-                modifier = Modifier.size(48.dp)
+            TempoEmblem(
+                icon = icon,
+                size = 88.dp,
+                style = TempoEmblemStyle.MEMORY,
             )
             
             Spacer(modifier = Modifier.height(24.dp))
@@ -155,7 +154,7 @@ private fun TimeRangeEmptyState(
             // Title & Context
             Text(
                 text = title,
-                style = MaterialTheme.typography.titleLarge,
+                style = MaterialTheme.typography.titleLargeEmphasized,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center,
@@ -225,10 +224,16 @@ private fun SetupGuideEmptyState(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
+            TempoEmblem(
+                icon = Icons.Rounded.GraphicEq,
+                size = 96.dp,
+                style = TempoEmblemStyle.PULSE,
+            )
+            Spacer(modifier = Modifier.height(20.dp))
             // Header
             Text(
                 text = stringResource(R.string.empty_getting_started),
-                style = MaterialTheme.typography.headlineSmall, // Bigger than titleLarge
+                style = MaterialTheme.typography.headlineSmallEmphasized,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center
@@ -247,14 +252,14 @@ private fun SetupGuideEmptyState(
 
             // Trust Signal
             Surface(
-                color = Color(0xFF22C55E).copy(alpha = 0.1f), 
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF22C55E).copy(alpha = 0.2f))
+                color = MaterialTheme.colorScheme.tertiaryContainer,
+                contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                shape = MaterialTheme.shapes.extraLarge
             ) {
                  Text(
                     text = stringResource(R.string.empty_no_account),
                     style = MaterialTheme.typography.labelMedium,
-                    color = Color(0xFF22C55E),
+                    color = MaterialTheme.colorScheme.onTertiaryContainer,
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                 )
             }

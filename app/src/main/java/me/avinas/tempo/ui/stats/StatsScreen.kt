@@ -722,9 +722,13 @@ private val GlassStatItemPalette = listOf(
 fun EmptyStatsState() {
      Box(modifier = Modifier.fillMaxWidth().height(300.dp), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(Icons.AutoMirrored.Filled.TrendingDown, contentDescription = null, modifier = Modifier.size(48.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            me.avinas.tempo.ui.components.TempoEmblem(
+                icon = Icons.AutoMirrored.Filled.TrendingDown,
+                size = 92.dp,
+                style = me.avinas.tempo.ui.components.TempoEmblemStyle.MEMORY,
+            )
             Spacer(modifier = Modifier.height(16.dp))
-            Text(stringResource(R.string.stats_no_stats_yet), style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onBackground)
+            Text(stringResource(R.string.stats_no_stats_yet), style = MaterialTheme.typography.titleLargeEmphasized, color = MaterialTheme.colorScheme.onBackground)
             Spacer(modifier = Modifier.height(8.dp))
             Text(stringResource(R.string.stats_start_listening), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }

@@ -41,8 +41,11 @@ internal fun LoadErrorNotice(message: String, onRetry: () -> Unit) {
             verticalAlignment = Alignment.Top,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Icon(Icons.Outlined.ErrorOutline, contentDescription = null,
-                tint = colors.onErrorContainer)
+            TempoEmblem(
+                icon = Icons.Outlined.ErrorOutline,
+                size = 44.dp,
+                style = TempoEmblemStyle.WARNING,
+            )
             Column(verticalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.weight(1f)) {
                 Text(message, style = MaterialTheme.typography.bodyMedium)
