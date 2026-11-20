@@ -34,6 +34,7 @@ import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.WbSunny
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -688,13 +689,10 @@ private fun HeroListeningCard(
     periodComparison: PeriodComparison?,
     accent: Color
 ) {
-    GlassCard(
+    Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(22.dp),
-        variant = GlassCardVariant.Obsidian,
-        borderColor = GlassBorderSoft,
-        borderWidth = 0.8.dp,
-        contentPadding = PaddingValues(0.dp)
+        shape = MaterialTheme.shapes.extraLarge,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
             // Hero block: accent dot kicker over display-size numeral
@@ -758,7 +756,7 @@ private fun HeroListeningCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(0.8.dp)
-                    .background(GlassBorderSoft)
+                    .background(MaterialTheme.colorScheme.outlineVariant)
             )
 
             // Secondary metrics — stat columns split by vertical hairlines
@@ -780,7 +778,7 @@ private fun HeroListeningCard(
                     modifier = Modifier
                         .fillMaxHeight()
                         .width(0.8.dp)
-                        .background(GlassBorderSoft)
+                        .background(MaterialTheme.colorScheme.outlineVariant)
                 )
 
                 MastheadSecondaryStat(
@@ -794,14 +792,14 @@ private fun HeroListeningCard(
                     modifier = Modifier
                         .fillMaxHeight()
                         .width(0.8.dp)
-                        .background(GlassBorderSoft)
+                        .background(MaterialTheme.colorScheme.outlineVariant)
                 )
 
                 MastheadSecondaryStat(
                     label = "AVG SESSION",
                     value = me.avinas.tempo.ui.stats.displayStatsDuration(overview.averageSessionDurationMs),
-                    subtext = "per listen",
-                    modifier = Modifier.weight(1f),
+                    subtext = "per session",
+                    modifier = Modifier.weight(1.35f),
                     valueColor = accent
                 )
             }
@@ -812,7 +810,7 @@ private fun HeroListeningCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(0.8.dp)
-                        .background(GlassBorderSoft)
+                        .background(MaterialTheme.colorScheme.outlineVariant)
                 )
 
                 Box(
@@ -838,33 +836,34 @@ private fun MastheadSecondaryStat(
     modifier: Modifier = Modifier,
     valueColor: Color = LocalTempoPalette.current.onSurface
 ) {
-    val mutedText = todayMutedText()
-    Column(modifier = modifier.padding(horizontal = 10.dp)) {
+    Column(
+        modifier = modifier.padding(horizontal = 6.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
         Text(
             text = label,
             style = KickerSmall,
-            color = todayMutedText()
+            color = todayMutedText(),
+            maxLines = 2,
         )
-        Spacer(modifier = Modifier.height(3.dp))
+        // The setting-controlled duration can be longer than a count. Keep the
+        // full value readable instead of concatenating it with its caption
+        // and ellipsizing the whole line on compact devices.
         Text(
-            text = buildAnnotatedString {
-                append(value)
-                append("  ")
-                withStyle(
-                    SpanStyle(
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = mutedText
-                    )
-                ) {
-                    append(subtext)
-                }
-            },
+            text = value,
             style = MaterialTheme.typography.titleMedium.copy(fontFamily = DisplayFontFamily),
             fontWeight = FontWeight.Bold,
             color = valueColor,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
+            maxLines = 3,
+            softWrap = true,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Text(
+            text = subtext,
+            style = MaterialTheme.typography.labelSmall,
+            color = todayMutedText(),
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }
@@ -1009,15 +1008,15 @@ private fun PeakHoursCard(
     }
     val isDay = peak?.let { it.hour in 6..17 } ?: true
 
-    GlassCard(
+    Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(22.dp),
-        variant = GlassCardVariant.Obsidian,
-        borderColor = GlassBorderSoft,
-        borderWidth = 0.8.dp,
-        contentPadding = PaddingValues(16.dp)
+        shape = MaterialTheme.shapes.extraLarge,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
