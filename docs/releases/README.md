@@ -10,6 +10,11 @@
 | [4.8.16-fork.2-beta.1](https://github.com/matchalattewithbanana/Tempo/releases/tag/v4.8.16-fork.2-beta.1) | 4817 | 17 Nov 2026 | Historical Appearance Studio beta | `f99c502` · [notes](v4.8.16-fork.2-beta.1.md) |
 | [4.8.16-fork.1](https://github.com/matchalattewithbanana/Tempo/releases/tag/v4.8.16-fork.1) | 4816 | 16 Nov 2026 | Historical first fork preview | `11000a1` · [notes](v4.8.16-fork.1.md) |
 
+## Prepared beta (not yet published)
+
+- **Tempo 4.9.125 Beta 1** is staged on `main` with Android versionCode **4821**, browser version **4.9.125.1**, and [release notes](v4.9.125-beta.1.md). The version was calculated from **116 commits after v4.9.9**, counted before release preparation, following the 4.9-series policy.
+- **Status:** awaiting the manually dispatched, gated [Beta release workflow](https://github.com/matchalattewithbanana/Tempo/actions/workflows/beta-release.yml). A source commit and release note are not a published APK; add the release to the published table only after GitHub confirms a prerelease tag and all four assets.
+
 ## Install and verify
 
 Download the APK or browser ZIP and `SHA256SUMS.txt` from the selected release. See [browser installation](../../browser-extension/README.md#install-from-github) for the Chromium and Firefox ZIPs. Compare the downloaded file's SHA-256 with its checksum. A checksum detects file mismatch; compare the signing certificate separately when assessing an in-place update. Do not assume two debug builds share a signer.
