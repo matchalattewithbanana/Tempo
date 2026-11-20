@@ -514,46 +514,45 @@ fun SettingsScreen(
                     }
                     Spacer(modifier = Modifier.height(16.dp))
                     SettingsSectionHeader(stringResource(R.string.settings_category_browse))
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        SettingsCategoryTile(
-                            title = stringResource(R.string.settings_category_general),
-                            subtitle = stringResource(R.string.settings_category_general_desc),
-                            icon = Icons.Rounded.Palette,
-                            style = TempoEmblemStyle.DISCOVERY,
-                            onClick = { settingsCategory = "general" },
-                        )
-                        SettingsCategoryTile(
-                            title = stringResource(R.string.settings_category_tracking),
-                            subtitle = stringResource(R.string.settings_category_tracking_desc),
-                            icon = Icons.Rounded.GraphicEq,
-                            style = TempoEmblemStyle.PULSE,
-                            onClick = { settingsCategory = "tracking" },
-                        )
-                        SettingsCategoryTile(
-                            title = stringResource(R.string.settings_category_connections),
-                            subtitle = stringResource(R.string.settings_category_connections_desc),
-                            icon = Icons.Rounded.Link,
-                            style = TempoEmblemStyle.MEMORY,
-                            onClick = { settingsCategory = "connections" },
-                        )
-                        SettingsCategoryTile(
-                            title = stringResource(R.string.settings_category_data),
-                            subtitle = stringResource(R.string.settings_category_data_desc),
-                            icon = Icons.Rounded.Storage,
-                            style = TempoEmblemStyle.MEMORY,
-                            onClick = { settingsCategory = "data" },
-                        )
-                        SettingsCategoryTile(
-                            title = stringResource(R.string.settings_category_about),
-                            subtitle = stringResource(R.string.settings_category_about_desc),
-                            icon = Icons.Rounded.Info,
-                            style = TempoEmblemStyle.DISCOVERY,
-                            onClick = { settingsCategory = "about" },
-                        )
-                    }
+                    me.avinas.tempo.ui.components.TempoSettingsBento(
+                        destinations = listOf(
+                            me.avinas.tempo.ui.components.TempoSettingsDestination(
+                                title = stringResource(R.string.settings_category_general),
+                                subtitle = stringResource(R.string.settings_category_general_desc),
+                                icon = Icons.Rounded.Palette,
+                                style = TempoEmblemStyle.DISCOVERY,
+                                onClick = { settingsCategory = "general" },
+                            ),
+                            me.avinas.tempo.ui.components.TempoSettingsDestination(
+                                title = stringResource(R.string.settings_category_tracking),
+                                subtitle = stringResource(R.string.settings_category_tracking_desc),
+                                icon = Icons.Rounded.GraphicEq,
+                                style = TempoEmblemStyle.PULSE,
+                                onClick = { settingsCategory = "tracking" },
+                            ),
+                            me.avinas.tempo.ui.components.TempoSettingsDestination(
+                                title = stringResource(R.string.settings_category_connections),
+                                subtitle = stringResource(R.string.settings_category_connections_desc),
+                                icon = Icons.Rounded.Link,
+                                style = TempoEmblemStyle.MEMORY,
+                                onClick = { settingsCategory = "connections" },
+                            ),
+                            me.avinas.tempo.ui.components.TempoSettingsDestination(
+                                title = stringResource(R.string.settings_category_data),
+                                subtitle = stringResource(R.string.settings_category_data_desc),
+                                icon = Icons.Rounded.Storage,
+                                style = TempoEmblemStyle.MEMORY,
+                                onClick = { settingsCategory = "data" },
+                            ),
+                            me.avinas.tempo.ui.components.TempoSettingsDestination(
+                                title = stringResource(R.string.settings_category_about),
+                                subtitle = stringResource(R.string.settings_category_about_desc),
+                                icon = Icons.Rounded.Info,
+                                style = TempoEmblemStyle.DISCOVERY,
+                                onClick = { settingsCategory = "about" },
+                            ),
+                        ),
+                    )
                     } // Unfiltered settings overview
                 }
 
