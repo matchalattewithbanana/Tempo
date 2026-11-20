@@ -631,9 +631,11 @@ fun SettingsScreen(
                     contentPadding = PaddingValues(16.dp),
                     variant = me.avinas.tempo.ui.components.GlassCardVariant.LowProminence,
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
+                    Column {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
                         Box(
                             modifier =
                                 Modifier
@@ -724,8 +726,13 @@ fun SettingsScreen(
                                 contentDescription = stringResource(R.string.settings_update_name),
                                 tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                             )
-                        } else {
-                            TextButton(onClick = viewModel::removeProfileImage) {
+                        }
+                        }
+                        if (!uiState.profileImagePath.isNullOrBlank()) {
+                            TextButton(
+                                onClick = viewModel::removeProfileImage,
+                                modifier = Modifier.align(Alignment.End),
+                            ) {
                                 Text(
                                     text = stringResource(R.string.settings_remove_photo),
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -735,7 +742,7 @@ fun SettingsScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
                 // Appearance is a focused gallery instead of another long list of toggles.
                 SettingsSectionHeader(stringResource(R.string.appearance_title))
