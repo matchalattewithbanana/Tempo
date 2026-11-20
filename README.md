@@ -39,6 +39,12 @@ The Update Center checks Android APK releases only. The Chromium/Firefox compani
 
 Tempo uses its existing Material 3 interface rather than adding a separate style system. **Appearance Studio → Layout → Corners** now controls the shape family of standard Material buttons, chips, menus and sheets. Settings and Appearance Studio have cleaner grouped sections, comfortable touch targets and readable color roles. The bottom navigation has a more compact tonal appearance, and listening-period selection is lighter without costly selection shadows.
 
+## Launcher icon personalization
+
+Select **Settings → General → App icon**, or **Appearance Studio → App icon**, to switch between the original Tempo icon and four Material-inspired designs: **Pulse Mint**, **Tempo Clock**, **Violet Trail**, and **Vinyl Night**. The gallery previews the actual launcher icons. Choices apply immediately and persist through Android's PackageManager, independent of listening records or appearance presets. Android 13+ supports monochrome themed variants. Some launchers take a moment to refresh their cached icon.
+
+The original icon remains available as **Tempo Classic**. This feature does not change the app's package identity, need network access, or restart listening tracking.
+
 ## Appearance presets
 
 Go to **Appearance Studio → Presets** for the new curated collection: Midnight Bloom, Sakura, Matcha, Cobalt, Porcelain, Terracotta, Citrine, Mocha, Lagoon and Lilac, alongside Tempo's eight signature looks. Choose Light, Dark, OLED or System tone first to see the corresponding miniature preview. The gallery uses lazy rows to keep scrolling responsive.
