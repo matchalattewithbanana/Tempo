@@ -8,6 +8,7 @@ import me.avinas.tempo.ui.theme.TextSecondary
 import me.avinas.tempo.ui.theme.LocalTempoPalette
 import me.avinas.tempo.ui.theme.LocalTempoAppearance
 import me.avinas.tempo.ui.appearance.AppearanceNowListening
+import me.avinas.tempo.ui.appearance.AppearanceNavigationStyle
 import me.avinas.tempo.ui.appearance.shouldShowCompactStrip
 import me.avinas.tempo.service.SpotifyBroadcastPresence
 import me.avinas.tempo.ui.components.AlbumArtImage
@@ -73,6 +74,11 @@ import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 
 import androidx.compose.material3.ShortNavigationBar
+import androidx.compose.material3.HorizontalFloatingToolbar
+import androidx.compose.material3.FloatingToolbarDefaults
+import androidx.compose.material3.FilledIconToggleButton
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.ShortNavigationBarItem
 import androidx.compose.material3.ShortNavigationBarArrangement
 import androidx.compose.material3.NavigationItemIconPosition
@@ -101,6 +107,63 @@ fun TempoBottomNavigation(
     val actions = listOf(onNavigateToHome, onNavigateToStats, onNavigateToHistory)
     Column(modifier = modifier.fillMaxWidth()) {
         CompactNowPlayingStrip()
+        if (LocalTempoAppearance.current.navigationStyle == AppearanceNavigationStyle.FLOATING) {
+            Box(
+                modifier = Modifier.fillMaxWidth().navigationBarsPadding()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                HorizontalFloatingToolbar(
+                    expanded = true,
+                    colors = FloatingToolbarDefaults.standardFloatingToolbarColors(
+                        toolbarContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    ),
+                ) {
+                    destinations.forEachIndexed { index, destination ->
+                        val selected = currentDestination?.hierarchy?.any {
+                            it.route == destination.first
+                        } == true
+                        FilledIconToggleButton(
+                            checked = selected,
+                            onCheckedChange = {
+                                if (!selected) {
+                                    haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    actions[index]()
+                                }
+                            },
+                            modifier = Modifier.size(
+                                width = if (showLabels) 92.dp else 60.dp,
+                                height = 62.dp,
+                            ),
+                            shapes = IconButtonDefaults.toggleableShapes(),
+                            colors = IconButtonDefaults.filledIconToggleButtonColors(
+                                containerColor = androidx.compose.ui.graphics.Color.Transparent,
+                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                checkedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                checkedContentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                            ),
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(2.dp),
+                            ) {
+                                Icon(
+                                    imageVector = if (selected) destination.second.first
+                                        else destination.second.second,
+                                    contentDescription = if (showLabels) null else destination.third,
+                                    modifier = Modifier.size(23.dp),
+                                )
+                                if (showLabels) Text(
+                                    destination.third,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    maxLines = 1,
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        } else {
         BoxWithConstraints(Modifier.fillMaxWidth()) {
             val wide = maxWidth >= 600.dp
             ShortNavigationBar(
@@ -135,6 +198,7 @@ fun TempoBottomNavigation(
                     )
                 }
             }
+        }
         }
     }
 }
