@@ -73,14 +73,13 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 
-import androidx.compose.material3.ShortNavigationBar
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.FloatingToolbarDefaults
 import androidx.compose.material3.FilledIconToggleButton
 import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.ShortNavigationBarItem
-import androidx.compose.material3.ShortNavigationBarArrangement
-import androidx.compose.material3.NavigationItemIconPosition
 
 /**
  * M3 Expressive short navigation: one accessible destination component handles
@@ -164,39 +163,45 @@ fun TempoBottomNavigation(
                 }
             }
         } else {
-        BoxWithConstraints(Modifier.fillMaxWidth()) {
-            val wide = maxWidth >= 600.dp
-            ShortNavigationBar(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = if (wide) 28.dp else 14.dp, vertical = 8.dp)
-                    .clip(MaterialTheme.shapes.extraLarge),
-                containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                contentColor = MaterialTheme.colorScheme.onSurface,
-                arrangement = if (wide) ShortNavigationBarArrangement.Centered
-                    else ShortNavigationBarArrangement.EqualWeight,
-            ) {
-                destinations.forEachIndexed { index, destination ->
-                    val selected = currentDestination?.hierarchy?.any { it.route == destination.first } == true
-                    ShortNavigationBarItem(
-                        selected = selected,
-                        onClick = {
-                            if (!selected) {
-                                haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                actions[index]()
-                            }
-                        },
-                        icon = {
-                            Icon(
-                                imageVector = if (selected) destination.second.first else destination.second.second,
-                                contentDescription = if (showLabels) null else destination.third,
-                            )
-                        },
-                        label = { if (showLabels) Text(destination.third, maxLines = 1) },
-                        iconPosition = if (wide) NavigationItemIconPosition.Start
-                            else NavigationItemIconPosition.Top,
-                    )
-                }
+        // Native Material navigation stays compact and horizontally weighted.
+        // The ShortNavigationBar layout in the reported screenshot inflated
+        // the selected Home destination and obscured page content.
+        NavigationBar(
+            modifier = Modifier.fillMaxWidth(),
+            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+            contentColor = MaterialTheme.colorScheme.onSurface,
+        ) {
+            destinations.forEachIndexed { index, destination ->
+                val selected = currentDestination?.hierarchy?.any {
+                    it.route == destination.first
+                } == true
+                NavigationBarItem(
+                    selected = selected,
+                    onClick = {
+                        if (!selected) {
+                            haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            actions[index]()
+                        }
+                    },
+                    icon = {
+                        Icon(
+                            imageVector = if (selected) destination.second.first
+                                else destination.second.second,
+                            contentDescription = if (showLabels) null else destination.third,
+                        )
+                    },
+                    label = if (showLabels) {
+                        { Text(destination.third, maxLines = 1) }
+                    } else null,
+                    alwaysShowLabel = showLabels,
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                        selectedTextColor = MaterialTheme.colorScheme.onSurface,
+                        indicatorColor = MaterialTheme.colorScheme.secondaryContainer,
+                        unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    ),
+                )
             }
         }
         }
