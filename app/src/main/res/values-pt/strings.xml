@@ -1233,7 +1233,7 @@
     <string name="settings_health_minutes_ago">Há %1$d minutos</string>
     <string name="settings_health_no_signal">Ainda não foi registado um sinal do leitor</string>
     <string name="settings_backup_overview_header">Estado da cópia do Google Drive</string>
-    <string name="settings_backup_overview_never">Ainda não houve tentativas de cópia no Drive</string>
+    <string name="settings_backup_overview_never">Ainda não foi iniciado um backup do Drive neste dispositivo</string>
     <string name="settings_backup_overview_success">Última cópia do Drive concluída</string>
     <string name="settings_backup_overview_failed">Última cópia do Drive falhou — verificar ligação</string>
     <string name="settings_backup_overview_running">Cópia do Drive marcada como em curso</string>
