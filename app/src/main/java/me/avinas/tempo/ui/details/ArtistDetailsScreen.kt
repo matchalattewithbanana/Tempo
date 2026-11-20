@@ -2,6 +2,7 @@ package me.avinas.tempo.ui.details
 
 import me.avinas.tempo.ui.effects.tempoAmbientBackdrop
 import me.avinas.tempo.ui.effects.tempoTiltSurface
+import me.avinas.tempo.ui.effects.tempoListMotion
 
 /* Tempo · ArtistDetails · Listening Profile.
  * Mirrors the SongDetails editorial system:
@@ -349,8 +350,10 @@ fun ArtistDetailsContent(
                             items = artistDetails.topAlbums,
                             key = { _, album -> "album_${album.album}_${album.artist}" },
                             contentType = { _, _ -> "album" }
-                        ) { _, album ->
-                            TopAlbumCard(album = album, accent = accent)
+                        ) { index, album ->
+                            Box(Modifier.tempoListMotion(index)) {
+                                TopAlbumCard(album = album, accent = accent)
+                            }
                         }
                     }
                 }

@@ -1559,8 +1559,8 @@ private fun LazyListScope.challengesSection(
             Spacer(modifier = Modifier.height(16.dp))
         }
     }
-    itemsIndexed(challenges, key = { _, c -> "challenge_${c.id}" }) { _, challenge ->
-        Column(modifier = contentModifier) {
+    itemsIndexed(challenges, key = { _, c -> "challenge_${c.id}" }) { index, challenge ->
+        Column(modifier = contentModifier.tempoListMotion(index)) {
             ChallengeCard(challenge = challenge)
             if (challenge.isCompleted) {
                 TextButton(onClick = { onShareChallenge(challenge) }, modifier = Modifier.align(Alignment.End)) {
@@ -1935,8 +1935,8 @@ private fun LazyListScope.badgeSection(
     itemsIndexed(
         filteredBadges.chunked(badgeColumns),
         key = { _, rowBadges -> rowBadges.joinToString("-") { it.badgeId } },
-    ) { _, rowBadges ->
-        Column(modifier = contentModifier) {
+    ) { index, rowBadges ->
+        Column(modifier = contentModifier.tempoListMotion(index)) {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 rowBadges.forEach { badge ->
                     BadgeCard(badge = badge, onClick = { onBadgeClick(badge) }, modifier = Modifier.weight(1f))

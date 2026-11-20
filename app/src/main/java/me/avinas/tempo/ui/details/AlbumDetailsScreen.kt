@@ -2,6 +2,7 @@ package me.avinas.tempo.ui.details
 
 import me.avinas.tempo.ui.effects.tempoAmbientBackdrop
 import me.avinas.tempo.ui.effects.tempoTiltSurface
+import me.avinas.tempo.ui.effects.tempoListMotion
 
 /* Tempo · AlbumDetails · Editorial album listening profile.
  * Shares the SongDetails design language: art-as-atmosphere background,
@@ -302,15 +303,17 @@ private fun AlbumDetailsContent(
                         key = { _, item -> "track_${item.track.id}" },
                         contentType = { _, _ -> "album_track_row" },
                     ) { index, track ->
-                        AlbumTrackRow(
-                            index = index,
-                            track = track,
-                            tint = dominantColor,
-                            isEditMode = isEditMode,
-                            isFirst = index == 0,
-                            isLast = index == albumDetails.tracks.lastIndex,
-                            onNavigateToSong = onNavigateToSong,
-                        )
+                        Box(Modifier.tempoListMotion(index)) {
+                            AlbumTrackRow(
+                                index = index,
+                                track = track,
+                                tint = dominantColor,
+                                isEditMode = isEditMode,
+                                isFirst = index == 0,
+                                isLast = index == albumDetails.tracks.lastIndex,
+                                onNavigateToSong = onNavigateToSong,
+                            )
+                        }
                     }
                 }
 
