@@ -230,9 +230,17 @@ object AppearancePaletteResolver {
         } else null
         val accented = if (custom != null) withAccent(palette, Color(0xFF000000L or custom)) else palette
         if (settings.accentSource != AppearanceAccentSource.CUSTOM) return accented
+        // Optional seed colors can appear on cards, raised surfaces and inset surfaces.
+        // Adjust against every listening surface rather than the base surface alone.
         fun seed(raw: String?): Color? = normalizeAccentHex(raw)
             ?.toLong(16)?.let { Color(0xFF000000L or it) }
-            ?.let { readableAccent(accented, it) }
+            ?.let { candidate ->
+                contrastAdjusted(
+                    candidate,
+                    if (accented.isDark) Color.White else Color.Black,
+                    listOf(accented.surface, accented.elevatedSurface, accented.surfaceSunken),
+                )
+            }
         return accented.copy(
             secondaryAccent = seed(settings.customSecondary),
             tertiaryAccent = seed(settings.customTertiary),
