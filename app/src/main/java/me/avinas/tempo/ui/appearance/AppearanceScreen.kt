@@ -16,6 +16,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.Saver
@@ -553,22 +555,57 @@ private fun AppearanceSection(
     initiallyExpanded: Boolean = false,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    var expanded by rememberSaveable { mutableStateOf(initiallyExpanded) }
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        TextButton(onClick = { expanded = !expanded }, modifier = Modifier.fillMaxWidth()) {
-            Text(stringResource(title), modifier = Modifier.weight(1f), style = MaterialTheme.typography.titleMedium)
-            Text(if (expanded) "−" else "+")
+    var expanded by rememberSaveable(title) { mutableStateOf(initiallyExpanded) }
+    val colors = MaterialTheme.colorScheme
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        color = colors.surfaceContainerLow,
+        border = BorderStroke(1.dp, colors.outlineVariant.copy(alpha = 0.65f)),
+    ) {
+        Column {
+            Row(
+                modifier = Modifier.fillMaxWidth()
+                    .clickable { expanded = !expanded }
+                    .heightIn(min = 60.dp)
+                    .padding(horizontal = 18.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Text(
+                    stringResource(title), modifier = Modifier.weight(1f),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold, color = colors.onSurface,
+                )
+                Icon(
+                    if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                    contentDescription = null, tint = colors.onSurfaceVariant,
+                )
+            }
+            if (expanded) {
+                HorizontalDivider(color = colors.outlineVariant.copy(alpha = 0.6f))
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(18.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp),
+                ) { content() }
+            }
         }
-        if (expanded) content()
     }
 }
 
 @Composable
 private fun SettingToggle(label: Int, checked: Boolean, enabled: Boolean, onChange: (Boolean) -> Unit) {
     val labelText = stringResource(label)
-    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        Text(labelText, modifier = Modifier.weight(1f))
-        Switch(modifier = Modifier.semantics { contentDescription = labelText }, checked = checked, enabled = enabled, onCheckedChange = onChange)
+    Row(
+        Modifier.fillMaxWidth().heightIn(min = 52.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Text(labelText, modifier = Modifier.weight(1f),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface)
+        Switch(modifier = Modifier.semantics { contentDescription = labelText },
+            checked = checked, enabled = enabled, onCheckedChange = onChange)
     }
 }
 
@@ -576,11 +613,28 @@ private fun SettingToggle(label: Int, checked: Boolean, enabled: Boolean, onChan
 @Composable
 private fun <T> ChoiceRow(label: Int, options: List<T>, selected: T, enabled: Boolean,
     text: (T) -> Int, onSelect: (T) -> Unit) {
-    Column {
-        Text(stringResource(label), style = MaterialTheme.typography.titleSmall)
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            options.forEach { option -> FilterChip(selected = selected == option, enabled = enabled,
-                onClick = { onSelect(option) }, label = { Text(stringResource(text(option))) }) }
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(stringResource(label), style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant)
+        val colors = MaterialTheme.colorScheme
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            options.forEach { option ->
+                val isSelected = selected == option
+                FilterChip(
+                    selected = isSelected, enabled = enabled,
+                    onClick = { onSelect(option) },
+                    shape = MaterialTheme.shapes.small,
+                    colors = FilterChipDefaults.filterChipColors(
+                        containerColor = colors.surfaceContainer,
+                        labelColor = colors.onSurfaceVariant,
+                        selectedContainerColor = colors.secondaryContainer,
+                        selectedLabelColor = colors.onSecondaryContainer,
+                    ),
+                    label = { Text(stringResource(text(option)),
+                        style = MaterialTheme.typography.labelLarge) },
+                )
+            }
         }
     }
 }
