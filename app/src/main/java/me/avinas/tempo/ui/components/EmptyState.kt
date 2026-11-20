@@ -96,9 +96,9 @@ private fun TimeRangeEmptyState(
             "Your history is safe. Play music to spark this month's stats."
         )
         TimeRange.THIS_YEAR -> Triple(
-            Icons.Rounded.AutoAwesome, 
-            "2026 has begun", 
-            "Your year in review starts now. Keep listening to build your story."
+            Icons.Rounded.AutoAwesome,
+            "${java.time.LocalDate.now().year} listening story",
+            "Your year in review grows with every track. Keep listening to build your story."
         )
         else -> Triple(
             Icons.Rounded.DateRange, 
@@ -120,9 +120,9 @@ private fun TimeRangeEmptyState(
         ) {
             // "System Status" Badge - Reassures the user the app is working
             Surface(
-                color = Color(0xFF22C55E).copy(alpha = 0.15f), 
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(100),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF22C55E).copy(alpha = 0.3f)),
+                color = MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                shape = MaterialTheme.shapes.extraLarge,
                 modifier = Modifier.padding(bottom = 24.dp)
             ) {
                 Row(
@@ -130,12 +130,12 @@ private fun TimeRangeEmptyState(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     // Pulsing Dot effect (Radar Animation)
-                    PulsingRadar(modifier = Modifier.size(24.dp), color = Color(0xFF22C55E))
+                    PulsingRadar(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onSecondaryContainer)
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = stringResource(R.string.empty_tracking_active),
                         style = MaterialTheme.typography.labelSmall,
-                        color = Color(0xFF22C55E),
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 0.5.sp
                     )
