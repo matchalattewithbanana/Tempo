@@ -83,53 +83,28 @@ fun TempoBottomNavigation(
     val palette = LocalTempoPalette.current
     Column(modifier = modifier.fillMaxWidth()) {
         CompactNowPlayingStrip()
-        Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .windowInsetsPadding(WindowInsets.navigationBars)
-            .padding(horizontal = 24.dp, vertical = 24.dp)
-            .shadow(
-                elevation = 16.dp,
-                shape = RoundedCornerShape(36.dp),
-                ambientColor = Color.Transparent,
-                spotColor = Color.Black.copy(alpha = 0.35f)
-            )
-            .height(72.dp)
-            .clip(RoundedCornerShape(36.dp))
-            .background(
-                // Vertical gradient fill
-                Brush.verticalGradient(
-                    colors = listOf(palette.elevatedSurface, palette.surface)
-                )
-            )
-            .drawBehind {
-                // Top border highlight line
-                drawRect(
-                    brush = Brush.horizontalGradient(
-                        colors = listOf(Color.Transparent, palette.onSurface.copy(alpha = 0.10f), Color.Transparent)
-                    ),
-                    topLeft = Offset.Zero,
-                    size = Size(size.width, 1.dp.toPx())
-                )
-            }
-            .border(
-                width = 1.dp,
-                brush = Brush.linearGradient(
-                    colors = listOf(
-                        palette.border.copy(alpha = 0.65f),
-                        palette.border.copy(alpha = 0.20f)
-                    )
-                ),
-                shape = RoundedCornerShape(36.dp)
-            )
-    ) {
-        // Glassmorphism overlay
+        // A compact, tonal Material navigation rail. Avoid a tall shadow,
+        // extra glass overlay and draw pass on every screen transition.
+        val railShape = MaterialTheme.shapes.extraLarge
         Box(
             modifier = Modifier
-                .fillMaxSize()
-                .background(palette.onSurface.copy(alpha = 0.02f))
-        )
-
+                .fillMaxWidth()
+                .windowInsetsPadding(WindowInsets.navigationBars)
+                .padding(horizontal = 20.dp, vertical = 12.dp)
+                .height(68.dp)
+                .shadow(
+                    elevation = 4.dp, shape = railShape,
+                    ambientColor = Color.Transparent,
+                    spotColor = Color.Black.copy(alpha = 0.12f),
+                )
+                .clip(railShape)
+                .background(MaterialTheme.colorScheme.surfaceContainer)
+                .border(
+                    1.dp,
+                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.75f),
+                    railShape,
+                ),
+        ) {
         Row(
             modifier = Modifier.fillMaxSize(),
             horizontalArrangement = Arrangement.SpaceEvenly,
@@ -305,12 +280,21 @@ private fun TempoNavItem(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(3.dp),
         ) {
-            Icon(
-                imageVector = if (selected) icon else unselectedIcon,
-                contentDescription = if (showLabel) null else label,
-                tint = iconColor,
-                modifier = Modifier.size(24.dp)
-            )
+            Box(
+                modifier = Modifier
+                    .width(56.dp)
+                    .height(30.dp)
+                    .clip(RoundedCornerShape(50))
+                    .background(if (selected) palette.accent.copy(alpha = 0.15f) else Color.Transparent),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = if (selected) icon else unselectedIcon,
+                    contentDescription = if (showLabel) null else label,
+                    tint = iconColor,
+                    modifier = Modifier.size(24.dp),
+                )
+            }
             if (showLabel) {
                 Text(
                     text = label,
