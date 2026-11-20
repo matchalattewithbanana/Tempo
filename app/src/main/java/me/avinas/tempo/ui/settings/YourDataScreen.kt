@@ -130,7 +130,9 @@ fun YourDataScreen(
             )
         },
     ) { padding ->
-        DeepOceanBackground {
+        // The root navigation already draws the selected Appearance backdrop.
+        // Avoid a second full-screen gradient when displaying this page.
+        Box(Modifier.fillMaxSize()) {
             Column(
                 modifier =
                     Modifier
