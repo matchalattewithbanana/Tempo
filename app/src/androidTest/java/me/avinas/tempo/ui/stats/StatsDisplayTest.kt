@@ -32,6 +32,11 @@ class StatsDisplayTest {
         assertEquals("59 min", formatStatsDuration(context, 3_599_000L, AppearanceStatsDuration.MINUTES, AppearanceDurationPrecision.WHOLE))
         assertEquals("<1 min", formatStatsDuration(context, 59_000L, AppearanceStatsDuration.MINUTES, AppearanceDurationPrecision.WHOLE))
         assertEquals("589.95 min", formatStatsDuration(context, 35_397_000L, AppearanceStatsDuration.MINUTES))
+        // Never prematurely round up at a unit boundary.
+        assertEquals("0.99 h", formatStatsDuration(context, 3_599_999L, AppearanceStatsDuration.HOURS))
+        assertEquals("0.99 min", formatStatsDuration(context, 59_999L, AppearanceStatsDuration.MINUTES))
+        assertEquals("59m 59s", formatStatsDuration(context, 3_599_999L, AppearanceStatsDuration.CLOCK_SECONDS))
+        assertEquals("1s", formatStatsDuration(context, 1_000L, AppearanceStatsDuration.CLOCK_SECONDS))
     }
 
     @Test

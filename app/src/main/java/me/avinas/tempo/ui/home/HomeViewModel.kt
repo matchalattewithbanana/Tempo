@@ -61,6 +61,7 @@ class HomeViewModel @Inject constructor(
     val flagsState: StateFlow<HomeFlags> = _flagsState.asStateFlow()
 
     private var loadJob: Job? = null
+    private var todayDetailsJob: Job? = null
     private var visibleScope: CoroutineScope? = null
     private val extendedInsightsKey = booleanPreferencesKey("home_extended_insights")
     private var extendedInsightsVisible = false
@@ -133,6 +134,8 @@ class HomeViewModel @Inject constructor(
         } finally {
             visibleScope = null
             loadJob?.cancel()
+            todayDetailsJob?.cancel()
+            todayDetailsJob = null
             _flagsState.update { it.copy(isRefreshing = false) }
         }
     }
@@ -206,7 +209,10 @@ class HomeViewModel @Inject constructor(
      */
     fun loadTodayDetails() {
         val scope = visibleScope ?: return
-        scope.launch {
+        // A newer play/day refresh replaces the previous expanded lookup instead
+        // of allowing overlapping five-row queries to race the sheet.
+        todayDetailsJob?.cancel()
+        todayDetailsJob = scope.launch {
             val today = java.time.LocalDate.now()
             try {
                 coroutineScope {
@@ -427,7 +433,7 @@ class HomeViewModel @Inject constructor(
                     }
                 }
 
-                val dailyAvgMs = if (activeDaysCount > 0) totals.totalTimeMs / activeDaysCount else 0L
+                val dailyAvgMs = preciseDailyAverageMs(totals.totalTimeMs, activeDaysCount)
 
                 val hasData = totals.playCount > 0
                 val isNewUser = earliestTimestamp == null
@@ -1031,6 +1037,10 @@ class HomeViewModel @Inject constructor(
         }
     }
 }
+
+/** Compute from unrounded milliseconds, including sub-minute listening. */
+internal fun preciseDailyAverageMs(totalMillis: Long, activeDays: Int): Long =
+    if (activeDays > 0) totalMillis.coerceAtLeast(0L) / activeDays else 0L
 
 @Immutable
 data class HomeUiState(

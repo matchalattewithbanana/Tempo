@@ -1701,30 +1701,6 @@ private fun rememberTodayAccentColor(imageUrl: String?): Color {
 // Formatters
 // ──────────────────────────────────────────────────────────────
 
-/** Compact form for tiles and per-artist totals ("38m", "2.4h"). */
-private fun formatShortDuration(ms: Long): String {
-    val minutes = ms / 60_000
-    return when {
-        ms <= 0L -> "0m"
-        minutes < 1 -> "<1m"
-        minutes < 60 -> "${minutes}m"
-        else -> String.format(Locale.US, "%.1fh", minutes / 60.0)
-    }
-}
-
-/** Hours-and-minutes form ("2h 41m", "38m") for per-artist time totals. */
-private fun formatLongListeningTime(ms: Long): String {
-    val totalMinutes = ms / 60_000
-    val hours = totalMinutes / 60
-    val mins = totalMinutes % 60
-    return when {
-        ms <= 0L -> "0m"
-        hours == 0L -> "${mins}m"
-        mins == 0L -> "${hours}h"
-        else -> "${hours}h ${mins}m"
-    }
-}
-
 private fun formatTrackDuration(ms: Long): String {
     val totalSeconds = ms / 1000
     val minutes = totalSeconds / 60
