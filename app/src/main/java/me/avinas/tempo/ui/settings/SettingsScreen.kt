@@ -24,6 +24,13 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.rounded.Palette
+import androidx.compose.material.icons.rounded.GraphicEq
+import androidx.compose.material.icons.rounded.Link
+import androidx.compose.material.icons.rounded.Storage
+import androidx.compose.material.icons.rounded.Info
+import me.avinas.tempo.ui.components.SettingsCategoryTile
+import me.avinas.tempo.ui.components.TempoEmblemStyle
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -298,9 +305,10 @@ fun SettingsScreen(
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
-            TopAppBar(
+            MediumFlexibleTopAppBar(
                 title = {
                     Text(
+                        style = MaterialTheme.typography.headlineSmallEmphasized,
                         text = when (settingsCategory) {
                             "general" -> stringResource(R.string.settings_category_general)
                             "tracking" -> stringResource(R.string.settings_category_tracking)
@@ -506,41 +514,45 @@ fun SettingsScreen(
                     }
                     Spacer(modifier = Modifier.height(16.dp))
                     SettingsSectionHeader(stringResource(R.string.settings_category_browse))
-                    GlassCard(
-                        contentPadding = PaddingValues(0.dp),
-                        variant = me.avinas.tempo.ui.components.GlassCardVariant.LowProminence,
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        Column {
-                            SettingsOption(
-                                title = stringResource(R.string.settings_category_general),
-                                subtitle = stringResource(R.string.settings_category_general_desc),
-                                onClick = { settingsCategory = "general" },
-                            )
-                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                            SettingsOption(
-                                title = stringResource(R.string.settings_category_tracking),
-                                subtitle = stringResource(R.string.settings_category_tracking_desc),
-                                onClick = { settingsCategory = "tracking" },
-                            )
-                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                            SettingsOption(
-                                title = stringResource(R.string.settings_category_connections),
-                                subtitle = stringResource(R.string.settings_category_connections_desc),
-                                onClick = { settingsCategory = "connections" },
-                            )
-                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                            SettingsOption(
-                                title = stringResource(R.string.settings_category_data),
-                                subtitle = stringResource(R.string.settings_category_data_desc),
-                                onClick = { settingsCategory = "data" },
-                            )
-                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                            SettingsOption(
-                                title = stringResource(R.string.settings_category_about),
-                                subtitle = stringResource(R.string.settings_category_about_desc),
-                                onClick = { settingsCategory = "about" },
-                            )
-                        }
+                        SettingsCategoryTile(
+                            title = stringResource(R.string.settings_category_general),
+                            subtitle = stringResource(R.string.settings_category_general_desc),
+                            icon = Icons.Rounded.Palette,
+                            style = TempoEmblemStyle.DISCOVERY,
+                            onClick = { settingsCategory = "general" },
+                        )
+                        SettingsCategoryTile(
+                            title = stringResource(R.string.settings_category_tracking),
+                            subtitle = stringResource(R.string.settings_category_tracking_desc),
+                            icon = Icons.Rounded.GraphicEq,
+                            style = TempoEmblemStyle.PULSE,
+                            onClick = { settingsCategory = "tracking" },
+                        )
+                        SettingsCategoryTile(
+                            title = stringResource(R.string.settings_category_connections),
+                            subtitle = stringResource(R.string.settings_category_connections_desc),
+                            icon = Icons.Rounded.Link,
+                            style = TempoEmblemStyle.MEMORY,
+                            onClick = { settingsCategory = "connections" },
+                        )
+                        SettingsCategoryTile(
+                            title = stringResource(R.string.settings_category_data),
+                            subtitle = stringResource(R.string.settings_category_data_desc),
+                            icon = Icons.Rounded.Storage,
+                            style = TempoEmblemStyle.MEMORY,
+                            onClick = { settingsCategory = "data" },
+                        )
+                        SettingsCategoryTile(
+                            title = stringResource(R.string.settings_category_about),
+                            subtitle = stringResource(R.string.settings_category_about_desc),
+                            icon = Icons.Rounded.Info,
+                            style = TempoEmblemStyle.DISCOVERY,
+                            onClick = { settingsCategory = "about" },
+                        )
                     }
                     } // Unfiltered settings overview
                 }
