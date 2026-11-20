@@ -42,24 +42,43 @@ internal fun CustomPaletteMaker(
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            PaletteSeedField(
-                value = draft.customSecondary,
-                label = stringResource(R.string.appearance_palette_secondary),
-                onValidChange = onSecondaryChange,
-                enabled = enabled,
-                modifier = Modifier.weight(1f),
-            )
-            PaletteSeedField(
-                value = draft.customTertiary,
-                label = stringResource(R.string.appearance_palette_tertiary),
-                onValidChange = onTertiaryChange,
-                enabled = enabled,
-                modifier = Modifier.weight(1f),
-            )
+        // Text fields need enough width for a six-digit hex value and a swatch.
+        // Never force two minimum-width Material text fields into a phone row.
+        BoxWithConstraints(Modifier.fillMaxWidth()) {
+            val compact = maxWidth < 580.dp
+            if (compact) {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    PaletteSeedField(
+                        value = draft.customSecondary,
+                        label = stringResource(R.string.appearance_palette_secondary),
+                        onValidChange = onSecondaryChange,
+                        enabled = enabled,
+                    )
+                    PaletteSeedField(
+                        value = draft.customTertiary,
+                        label = stringResource(R.string.appearance_palette_tertiary),
+                        onValidChange = onTertiaryChange,
+                        enabled = enabled,
+                    )
+                }
+            } else {
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    PaletteSeedField(
+                        value = draft.customSecondary,
+                        label = stringResource(R.string.appearance_palette_secondary),
+                        onValidChange = onSecondaryChange,
+                        enabled = enabled,
+                        modifier = Modifier.weight(1f),
+                    )
+                    PaletteSeedField(
+                        value = draft.customTertiary,
+                        label = stringResource(R.string.appearance_palette_tertiary),
+                        onValidChange = onTertiaryChange,
+                        enabled = enabled,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+            }
         }
         Text(
             stringResource(R.string.appearance_palette_tone_preview),
