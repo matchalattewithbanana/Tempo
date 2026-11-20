@@ -5,12 +5,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.ToggleButton
+import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -77,8 +77,7 @@ fun TimePeriodSelector(
                             }
                         },
                         shapes = when {
-                            rowRanges.size == 1 ->
-                                ButtonGroupDefaults.connectedMiddleButtonShapes()
+                            rowRanges.size == 1 -> ToggleButtonDefaults.shapes()
                             index == 0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
                             index == rowRanges.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
                             else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
