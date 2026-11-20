@@ -4,7 +4,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
-import androidx.annotation.MipmapRes
+import androidx.annotation.AnyRes
 import androidx.annotation.StringRes
 import me.avinas.tempo.R
 
@@ -17,7 +17,7 @@ import me.avinas.tempo.R
  */
 enum class LauncherLogo(
     val aliasClassName: String,
-    @MipmapRes val imageRes: Int,
+    @AnyRes val imageRes: Int,
     @StringRes val titleRes: Int,
     @StringRes val descriptionRes: Int,
 ) {
