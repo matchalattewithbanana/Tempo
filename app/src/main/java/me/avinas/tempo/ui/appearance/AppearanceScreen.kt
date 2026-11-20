@@ -9,6 +9,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -53,6 +54,20 @@ import me.avinas.tempo.ui.theme.DisplayFontFamily
 import me.avinas.tempo.ui.theme.LocalTempoPalette
 import me.avinas.tempo.ui.theme.TempoTheme
 
+private val NewAppearanceEditions = listOf(
+    AppearancePreset.MIDNIGHT_BLOOM,
+    AppearancePreset.SAKURA,
+    AppearancePreset.MATCHA,
+    AppearancePreset.COBALT,
+    AppearancePreset.PORCELAIN,
+    AppearancePreset.TERRACOTTA,
+    AppearancePreset.CITRINE,
+    AppearancePreset.MOCHA,
+    AppearancePreset.LAGOON,
+    AppearancePreset.LILAC,
+)
+private val SignatureAppearancePresets = AppearancePreset.entries.filterNot { it in NewAppearanceEditions }
+
 private val DraftSaver = Saver<AppearanceSettings, String>(
     save = { AppearanceCodec.encode(it) },
     restore = { runCatching { AppearanceCodec.decode(it) }.getOrDefault(AppearanceSettings()) },
@@ -76,6 +91,11 @@ fun AppearanceScreen(onNavigateBack: () -> Unit, viewModel: AppearanceViewModel 
         return
     }
     var draft by rememberSaveable(saved, stateSaver = DraftSaver) { mutableStateOf(saved) }
+    var presetsExpanded by rememberSaveable { mutableStateOf(true) }
+    val columns = if (LocalConfiguration.current.screenWidthDp < 350 ||
+        LocalDensity.current.fontScale >= 1.35f) 1 else 2
+    val newRows = remember(columns) { NewAppearanceEditions.chunked(columns) }
+    val signatureRows = remember(columns) { SignatureAppearancePresets.chunked(columns) }
     var lookName by rememberSaveable { mutableStateOf("") }
     var transferFailed by rememberSaveable { mutableStateOf(false) }
     var transferDone by rememberSaveable { mutableStateOf(false) }
@@ -266,27 +286,50 @@ fun AppearanceScreen(onNavigateBack: () -> Unit, viewModel: AppearanceViewModel 
             }
                 }
             }
-            item(key = "presets") {
-                AppearanceSection(R.string.appearance_presets, initiallyExpanded = true) {
-                BoxWithConstraints {
-                    val columns = if (maxWidth < 290.dp || LocalDensity.current.fontScale >= 1.4f) 1 else 2
-                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        AppearancePreset.entries.chunked(columns).forEach { row ->
-                            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                row.forEach { preset ->
-                                    AppearancePresetCard(
-                                        preset, saved.preset == preset, draft.preset == preset,
-                                        onClick = { draft = draft.copy(preset = preset) },
-                                        modifier = Modifier.weight(1f),
-                                        tone = preview.tone,
-                                        enabled = !busy,
-                                    )
-                                }
-                            }
+            item(key = "preset_collection_header") {
+                TextButton(onClick = { presetsExpanded = !presetsExpanded },
+                    modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(R.string.appearance_presets), modifier = Modifier.weight(1f),
+                        style = MaterialTheme.typography.titleMedium)
+                    Text(if (presetsExpanded) "−" else "+")
+                }
+            }
+            if (presetsExpanded) {
+                item(key = "new_edition_heading") {
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(stringResource(R.string.appearance_new_editions),
+                            color = MaterialTheme.colorScheme.primary,
+                            style = MaterialTheme.typography.titleSmall)
+                        Text(stringResource(R.string.appearance_gallery_hint),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+                items(count = newRows.size, key = { "new_preset_$it" }) { index ->
+                    Row(modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        newRows[index].forEach { preset ->
+                            AppearancePresetCard(preset, saved.preset == preset, draft.preset == preset,
+                                onClick = { draft = draft.copy(preset = preset) },
+                                modifier = Modifier.weight(1f), tone = preview.tone, enabled = !busy)
                         }
                     }
                 }
-            }
+                item(key = "signature_edition_heading") {
+                    Text(stringResource(R.string.appearance_signature_editions),
+                        color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.titleSmall)
+                }
+                items(count = signatureRows.size, key = { "signature_preset_$it" }) { index ->
+                    Row(modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        signatureRows[index].forEach { preset ->
+                            AppearancePresetCard(preset, saved.preset == preset, draft.preset == preset,
+                                onClick = { draft = draft.copy(preset = preset) },
+                                modifier = Modifier.weight(1f), tone = preview.tone, enabled = !busy)
+                        }
+                    }
+                }
             }
             item(key = "layout") {
                 AppearanceSection(R.string.appearance_layout_heading) {
@@ -568,6 +611,16 @@ private fun AppearancePresetCard(
         AppearancePreset.SOLSTICE -> stringResource(R.string.appearance_solstice)
         AppearancePreset.VERDANT -> stringResource(R.string.appearance_verdant)
         AppearancePreset.SLATE -> stringResource(R.string.appearance_slate)
+        AppearancePreset.MIDNIGHT_BLOOM -> stringResource(R.string.appearance_midnight_bloom)
+        AppearancePreset.SAKURA -> stringResource(R.string.appearance_sakura)
+        AppearancePreset.MATCHA -> stringResource(R.string.appearance_matcha)
+        AppearancePreset.COBALT -> stringResource(R.string.appearance_cobalt)
+        AppearancePreset.PORCELAIN -> stringResource(R.string.appearance_porcelain)
+        AppearancePreset.TERRACOTTA -> stringResource(R.string.appearance_terracotta)
+        AppearancePreset.CITRINE -> stringResource(R.string.appearance_citrine)
+        AppearancePreset.MOCHA -> stringResource(R.string.appearance_mocha)
+        AppearancePreset.LAGOON -> stringResource(R.string.appearance_lagoon)
+        AppearancePreset.LILAC -> stringResource(R.string.appearance_lilac)
     }
     val description = when (preset) {
         AppearancePreset.ABYSS -> stringResource(R.string.appearance_abyss_desc)
@@ -578,6 +631,16 @@ private fun AppearancePresetCard(
         AppearancePreset.SOLSTICE -> stringResource(R.string.appearance_solstice_desc)
         AppearancePreset.VERDANT -> stringResource(R.string.appearance_verdant_desc)
         AppearancePreset.SLATE -> stringResource(R.string.appearance_slate_desc)
+        AppearancePreset.MIDNIGHT_BLOOM -> stringResource(R.string.appearance_midnight_bloom_desc)
+        AppearancePreset.SAKURA -> stringResource(R.string.appearance_sakura_desc)
+        AppearancePreset.MATCHA -> stringResource(R.string.appearance_matcha_desc)
+        AppearancePreset.COBALT -> stringResource(R.string.appearance_cobalt_desc)
+        AppearancePreset.PORCELAIN -> stringResource(R.string.appearance_porcelain_desc)
+        AppearancePreset.TERRACOTTA -> stringResource(R.string.appearance_terracotta_desc)
+        AppearancePreset.CITRINE -> stringResource(R.string.appearance_citrine_desc)
+        AppearancePreset.MOCHA -> stringResource(R.string.appearance_mocha_desc)
+        AppearancePreset.LAGOON -> stringResource(R.string.appearance_lagoon_desc)
+        AppearancePreset.LILAC -> stringResource(R.string.appearance_lilac_desc)
     }
     Column(
         modifier = modifier
