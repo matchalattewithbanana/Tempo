@@ -215,9 +215,9 @@ fun BackupRestoreScreen(
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
-            MediumFlexibleTopAppBar(
+            TopAppBar(
                 title = { Text(stringResource(R.string.settings_backup_restore),
-                    style = MaterialTheme.typography.headlineSmallEmphasized,
+                    style = MaterialTheme.typography.titleLargeEmphasized,
                     color = MaterialTheme.colorScheme.onSurface) },
                 navigationIcon = {
                     IconButton(
@@ -258,14 +258,7 @@ fun BackupRestoreScreen(
                 // Data Overview Section
                 DataOverviewSection(uiState)
 
-                Text(
-                    text = stringResource(R.string.backup_restore_appearance_scope),
-                    modifier = Modifier.padding(top = 8.dp),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(16.dp))
                 
                 // Google Drive Section
                 GoogleDriveSection(
@@ -705,62 +698,64 @@ private fun GoogleDriveSection(
                 
                 HorizontalDivider(color = GlassBorderSoft)
                 
-                // Backup Now button
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                // The primary action belongs beneath its status text. Keeping
+                // them in one narrow Row squeezed the backup description down
+                // to a few characters per line on compact phones.
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "Backup to Drive",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        if (backupSettings.lastBackupTime != null) {
-                            Text(
-                                text = stringResource(
-                                    R.string.settings_backup_overview_last_success,
-                                    formatRelativeTime(backupSettings.lastBackupTime),
-                                ),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
+                    Text(
+                        text = "Backup to Drive",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    if (backupSettings.lastBackupTime != null) {
                         Text(
                             text = stringResource(
-                                when (backupSettings.lastBackupStatus) {
-                                    BackupStatus.NEVER -> R.string.settings_backup_overview_never
-                                    BackupStatus.SUCCESS -> R.string.settings_backup_overview_success
-                                    BackupStatus.FAILED -> R.string.settings_backup_overview_failed
-                                    BackupStatus.IN_PROGRESS -> R.string.settings_backup_overview_running
-                                }
+                                R.string.settings_backup_overview_last_success,
+                                formatRelativeTime(backupSettings.lastBackupTime),
                             ),
                             style = MaterialTheme.typography.bodySmall,
-                            color = if (backupSettings.lastBackupStatus == BackupStatus.FAILED) TempoError
-                                else MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                        Text(
-                            text = stringResource(R.string.settings_backup_status_shared_destination),
-                            style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
-                    
+                    Text(
+                        text = stringResource(
+                            when (backupSettings.lastBackupStatus) {
+                                BackupStatus.NEVER -> R.string.settings_backup_overview_never
+                                BackupStatus.SUCCESS -> R.string.settings_backup_overview_success
+                                BackupStatus.FAILED -> R.string.settings_backup_overview_failed
+                                BackupStatus.IN_PROGRESS -> R.string.settings_backup_overview_running
+                            }
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (backupSettings.lastBackupStatus == BackupStatus.FAILED) {
+                            MaterialTheme.colorScheme.error
+                        } else MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Text(
+                        text = stringResource(R.string.settings_backup_status_shared_destination),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                     Button(
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
                         onClick = onBackupNow,
                         enabled = driveOperation == DriveOperationState.Idle &&
                             backupSettings.isGoogleDriveEnabled,
-                        colors = ButtonDefaults.buttonColors(containerColor = TempoInfo),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = MaterialTheme.shapes.large,
                     ) {
-                        Icon(Icons.Default.CloudUpload, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Icon(
+                            Icons.Default.CloudUpload,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                        )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text("Backup Now")
                     }
                 }
-                
+
                 // Backup history
                 if (driveBackups.isNotEmpty()) {
                     HorizontalDivider(color = GlassBorderSoft)
