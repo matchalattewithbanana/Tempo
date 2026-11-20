@@ -2,8 +2,9 @@ package me.avinas.tempo.data.update
 
 /**
  * Version comparison for maintained Tempo release tags.
- * Final releases sort above betas of the same version; unknown legacy fork
- * tags are excluded from automatic installation rather than guessed.
+ * Final releases sort above betas of the same version. New betas have no
+ * numeric suffix; historical -beta.N and -fork tags remain readable for
+ * comparisons without renaming published releases.
  */
 data class TempoVersion(
     val major: Int, val minor: Int, val patch: Int, val beta: Int? = null,
@@ -18,13 +19,13 @@ data class TempoVersion(
     }
 
     companion object {
-        // Read older fork tags only for comparisons. Newly offered releases
-        // still require the stricter modern vX.Y.Z[-beta.N] release schema.
-        private val PATTERN = Regex("""^v?(\d+)\.(\d+)\.(\d+)(?:-fork\.\d+)?(?:-beta\.(\d+)|-preview)?$""")
+        // New tags use -beta only; retain parsing of historical -beta.N.
+        private val PATTERN = Regex("""^v?(\d+)\.(\d+)\.(\d+)(?:-fork\.\d+)?(?:-beta(?:\.(\d+))?|-preview)?$""")
         fun parse(value: String): TempoVersion? {
             val match = PATTERN.matchEntire(value.trim()) ?: return null
             return runCatching {
-                val prerelease = match.value.contains("-fork.") || match.value.endsWith("-preview")
+                val prerelease = match.value.contains("-fork.") ||
+                    match.value.endsWith("-preview") || match.value.endsWith("-beta")
                 TempoVersion(
                     match.groupValues[1].toInt(), match.groupValues[2].toInt(),
                     match.groupValues[3].toInt(),

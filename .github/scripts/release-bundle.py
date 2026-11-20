@@ -23,7 +23,7 @@ def get_metadata(channel):
     component = r"(0|[1-9][0-9]*)"
     pattern = rf"{component}\.{component}\.{component}"
     if channel == "beta":
-        pattern += r"-beta\.([1-9][0-9]*)"
+        pattern += r"-beta"
     matched = re.fullmatch(pattern, version)
     if not matched or any(int(part) > 65535 for part in matched.groups()):
         raise ValueError(f"Invalid {channel} release version: {version}")
@@ -35,24 +35,32 @@ def get_metadata(channel):
             "(patch 0..99, minor 0..10)"
         )
 
-    browser_version = ".".join(matched.groups())
+    # Browser manifest version must be numeric; .0 is beta and .1 stable.
+    # This internal suffix is not a numbered beta release.
+    browser_version = f"{major}.{minor}.{patch}." + ("0" if channel == "beta" else "1")
     manifest = json.loads((EXTENSION / "manifest.json").read_text())
     package = json.loads((EXTENSION / "package.json").read_text())
     lock = json.loads((EXTENSION / "package-lock.json").read_text())
-    if [manifest["version"], package["version"], lock["version"], lock["packages"][""]["version"]] != [browser_version] * 4:
-        raise ValueError(f"Extension manifest, package and lockfile must use {browser_version}")
+    if manifest.get("version") != browser_version or manifest.get("version_name") != version:
+        raise ValueError(f"Manifest must use version={browser_version}, version_name={version}")
+    if [package.get("version"), lock.get("version"), lock.get("packages", {}).get("", {}).get("version")] != [version] * 3:
+        raise ValueError(f"Browser package and lockfile must use {version}")
     if not Path(f"docs/releases/v{version}.md").is_file():
         raise ValueError(f"Missing release notes for {version}")
     return version, code_match[1], browser_version
 
 
-def validate_extension(path, target, version):
+def validate_extension(path, target, version, display_version):
     with zipfile.ZipFile(path) as archive:
         if archive.testzip() is not None:
             raise ValueError(f"Corrupt ZIP: {path}")
         manifest = json.loads(archive.read("manifest.json"))
         if manifest["version"] != version or manifest["manifest_version"] != 3:
             raise ValueError(f"Incorrect manifest version in {path}")
+        if target == "chrome" and manifest.get("version_name") != display_version:
+            raise ValueError(f"Incorrect Chromium display version in {path}")
+        if target == "firefox" and "version_name" in manifest:
+            raise ValueError(f"Unexpected version_name in Firefox manifest: {path}")
         background = manifest["background"]
         if target == "chrome":
             scripts = [background["service_worker"]]
@@ -75,7 +83,7 @@ def stage(channel, apk):
     files = [(apk, f"Tempo-{version}.apk")]
     for target, browser in (("chrome", "Chromium"), ("firefox", "Firefox")):
         path = EXTENSION / "dist" / f"tempo-stats-{target}.zip"
-        validate_extension(path, target, browser_version)
+        validate_extension(path, target, browser_version, version)
         files.append((path, f"Tempo-Stats-{browser}-{version}.zip"))
     BUNDLE.mkdir(exist_ok=False)
     checksums = []

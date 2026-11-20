@@ -37,17 +37,17 @@ class UpdateReleaseParsingTest {
     @Test fun stableChannelAcceptsOnlyPublishedStableApks() {
         assertNotNull(repository.parseRelease(release(), UpdateChannel.STABLE))
         assertNull(repository.parseRelease(release(
-            tag = "v4.9.10-beta.1", prerelease = true,
-            apkUrl = "https://github.com/matchalattewithbanana/Tempo/releases/download/v4.9.10-beta.1/Tempo-4.9.10-beta.1.apk",
+            tag = "v4.10.25-beta", prerelease = true,
+            apkUrl = "https://github.com/matchalattewithbanana/Tempo/releases/download/v4.10.25-beta/Tempo-4.10.25-beta.apk",
         ), UpdateChannel.STABLE))
     }
 
     @Test fun previewChannelIncludesPublishedBetaBuilds() {
         val candidate = repository.parseRelease(release(
-            tag = "v4.9.10-beta.1", prerelease = true,
-            apkUrl = "https://github.com/matchalattewithbanana/Tempo/releases/download/v4.9.10-beta.1/Tempo-4.9.10-beta.1.apk",
+            tag = "v4.10.25-beta", prerelease = true,
+            apkUrl = "https://github.com/matchalattewithbanana/Tempo/releases/download/v4.10.25-beta/Tempo-4.10.25-beta.apk",
         ), UpdateChannel.PREVIEW)
-        assertEquals("v4.9.10-beta.1", candidate?.tag)
+        assertEquals("v4.10.25-beta", candidate?.tag)
     }
 
     @Test fun maliciousLinksAndMissingDigestsAreNeverInstallerCandidates() {

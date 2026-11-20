@@ -93,7 +93,7 @@ class UpdateRepository @Inject constructor(@ApplicationContext private val conte
 
     /** GitHub is the sole update authority. Never accept an arbitrary APK link. */
     internal fun isReleaseUrl(tag: String, apkName: String, url: String): Boolean =
-        tag.matches(Regex("""v\d+\.\d+\.\d+(?:-beta\.\d+)?""")) &&
+        tag.matches(Regex("""v\d+\.\d+\.\d+(?:-beta(?:\.\d+)?)?""")) &&
             apkName == "Tempo-${tag.removePrefix("v")}.apk" &&
             url == "https://github.com/matchalattewithbanana/Tempo/releases/download/$tag/$apkName"
 
@@ -175,7 +175,7 @@ class UpdateRepository @Inject constructor(@ApplicationContext private val conte
     }
 
     fun downloadedFile(tag: String): File? {
-        if (!tag.matches(Regex("""v\d+\.\d+\.\d+(?:-beta\.\d+)?"""))) return null
+        if (!tag.matches(Regex("""v\d+\.\d+\.\d+(?:-beta(?:\.\d+)?)?"""))) return null
         val name = "Tempo-${tag.removePrefix("v")}.apk"
         if (!isReleaseUrl(tag, name,
                 "https://github.com/matchalattewithbanana/Tempo/releases/download/$tag/$name")) return null

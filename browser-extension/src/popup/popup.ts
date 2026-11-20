@@ -1732,7 +1732,12 @@ async function init(): Promise<void> {
   // Show the real manifest version instead of a hardcoded string.
   const versionEl = document.getElementById('version-info');
   if (versionEl) {
-    versionEl.textContent = `Tempo Stats v${chrome.runtime.getManifest().version}`;
+    const manifest = chrome.runtime.getManifest() as chrome.runtime.Manifest & { version_name?: string };
+    const match = manifest.version.match(/^(\d+\.\d+\.\d+)\.([01])$/);
+    const display = manifest.version_name || (match
+      ? (match[2] === '0' ? `${match[1]}-beta` : match[1])
+      : manifest.version);
+    versionEl.textContent = `Tempo Stats v${display}`;
   }
 }
 

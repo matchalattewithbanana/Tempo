@@ -16,17 +16,24 @@ class TempoVersionTest {
 
     @Test fun nextBetaUsesNumericPatchOrderAndStaysBelowItsStableVersion() {
         val currentStable = TempoVersion.parse("v4.9.9")!!
-        val candidate = TempoVersion.parse("v4.10.25-beta.1")!!
+        val candidate = TempoVersion.parse("v4.10.25-beta")!!
         val matchingStable = TempoVersion.parse("v4.10.25")!!
         assertTrue(candidate > currentStable)
         assertTrue(matchingStable > candidate)
-        assertEquals(1, candidate.beta)
+        assertEquals(0, candidate.beta)
     }
 
     @Test fun boundedVersionComponentsStayNumericallyComparable() {
         assertTrue(TempoVersion.parse("4.10.25")!! > TempoVersion.parse("4.9.99")!!)
         assertTrue(TempoVersion.parse("5.0.25")!! > TempoVersion.parse("4.10.99")!!)
         assertTrue(TempoVersion.parse("5.2.5")!! > TempoVersion.parse("5.0.99")!!)
+    }
+
+    @Test fun oldNumberedBetasRemainComparable() {
+        val historical = TempoVersion.parse("v4.9.0-beta.1")!!
+        assertEquals(1, historical.beta)
+        assertTrue(TempoVersion.parse("v4.9.0")!! > historical)
+        assertTrue(TempoVersion.parse("v4.10.25-beta")!! > historical)
     }
 
     @Test fun numericComponentsAreNotComparedLexicographically() {

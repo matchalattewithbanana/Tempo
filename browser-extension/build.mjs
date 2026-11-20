@@ -77,6 +77,9 @@ function buildFirefoxManifest(baseManifest) {
   const m = stripDistPrefix(baseManifest);
 
   delete m.minimum_chrome_version;
+  // Firefox does not support Chrome's display-only version_name field.
+  // The popup converts the internal .0 to an unnumbered beta label.
+  delete m.version_name;
 
   if (m.background) delete m.background.type;
 
