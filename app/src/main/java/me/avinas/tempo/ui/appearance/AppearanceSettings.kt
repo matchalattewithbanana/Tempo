@@ -25,6 +25,10 @@ enum class AppearanceShape { SOFT, MODERATE, SHARP }
 enum class AppearanceSurface { SATIN, SOLID }
 enum class AppearanceBackdrop { GRADIENT, FLAT, WASH }
 enum class AppearanceNowListening { INLINE, COMPACT, HIDDEN }
+/** Navigation style only changes the UI; routes and back stack remain identical. */
+enum class AppearanceNavigationStyle { BAR, FLOATING }
+/** Individual expensive effects are always opt-in. */
+enum class AppearanceEffectIntensity { GENTLE, EXPRESSIVE }
 enum class AppearanceHomeSection { SUMMARY, SPOTLIGHT, QUICK_STATS, TODAY, INSIGHTS }
 enum class AppearanceStatsTab { SONGS, ARTISTS, ALBUMS }
 enum class AppearanceStatsRange { WEEK, MONTH, YEAR, ALL_TIME, TODAY }
@@ -70,6 +74,11 @@ data class AppearanceSettings(
     val statsSummary: AppearanceStatsSummary = AppearanceStatsSummary.TRACKS,
     // Append new persisted options so older positional constructors remain source-compatible.
     val statsDurationPrecision: AppearanceDurationPrecision = AppearanceDurationPrecision.TWO,
+    val navigationStyle: AppearanceNavigationStyle = AppearanceNavigationStyle.BAR,
+    val ambientAnimation: Boolean = false,
+    val sensorTilt: Boolean = false,
+    val listEntranceMotion: Boolean = false,
+    val effectIntensity: AppearanceEffectIntensity = AppearanceEffectIntensity.GENTLE,
 ) {
     /** Retain opt-in beta tones when applying or importing an appearance. */
     fun forLiveApp(): AppearanceSettings = this

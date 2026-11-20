@@ -22,6 +22,9 @@ class AppearanceCodecTest {
             profileTab = AppearanceProfileTab.BADGES, showProfileNowPlaying = false, showProfileProgress = false,
             defaultShareTheme = ShareTheme.DAYLIGHT,
             customAccent = "F19345", backdrop = AppearanceBackdrop.WASH,
+            navigationStyle = AppearanceNavigationStyle.FLOATING,
+            ambientAnimation = true, sensorTilt = true, listEntranceMotion = true,
+            effectIntensity = AppearanceEffectIntensity.EXPRESSIVE,
         )
         assertEquals(settings, AppearanceCodec.decode(AppearanceCodec.encode(settings)))
     }
@@ -30,6 +33,10 @@ class AppearanceCodecTest {
         val decoded = AppearanceCodec.decode("""{"version":1,"preset":"future","density":"future",
             "homeOrder":["INSIGHTS","INSIGHTS","unknown"],"hiddenHome":["unknown","TODAY"]}""")
         assertEquals(AppearancePreset.ABYSS, decoded.preset)
+        assertEquals(AppearanceNavigationStyle.BAR, decoded.navigationStyle)
+        assertFalse(decoded.ambientAnimation)
+        assertFalse(decoded.sensorTilt)
+        assertFalse(decoded.listEntranceMotion)
         assertEquals(AppearanceDensity.COMFORTABLE, decoded.density)
         assertEquals(AppearanceBackdrop.GRADIENT, decoded.backdrop)
         assertEquals(AppearanceStatsSort.COMBINED, decoded.statsSort)

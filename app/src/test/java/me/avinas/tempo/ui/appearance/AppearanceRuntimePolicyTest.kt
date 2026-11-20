@@ -34,4 +34,28 @@ class AppearanceRuntimePolicyTest {
         assertFalse(policy.allowArtworkBackdrop)
         assertTrue(policy.allowArtworkAccent)
     }
+    @Test fun `extra effects require opt in and obey every safety gate`() {
+        val on = AppearanceSettings(
+            ambientAnimation = true, sensorTilt = true,
+            listEntranceMotion = true, adaptiveEffects = false,
+        )
+        val active = resolve(on)
+        assertTrue(active.allowAmbientAnimation)
+        assertTrue(active.allowSensorTilt)
+        assertTrue(active.allowListEntranceMotion)
+        assertFalse(resolve().allowAmbientAnimation)
+        listOf(
+            resolve(on, power = true),
+            resolve(on, thermal = true),
+            resolve(on, lowRam = true),
+            resolve(on, foreground = false),
+            resolve(on, animations = false),
+            resolve(on.copy(reduceMotion = true)),
+        ).forEach {
+            assertFalse(it.allowAmbientAnimation)
+            assertFalse(it.allowSensorTilt)
+            assertFalse(it.allowListEntranceMotion)
+        }
+    }
+
 }

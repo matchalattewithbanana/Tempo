@@ -21,6 +21,9 @@ data class AppearanceRuntimePolicy(
     val solidSurfaces: Boolean = false,
     val allowArtworkAccent: Boolean = true,
     val allowArtworkBackdrop: Boolean = true,
+    val allowAmbientAnimation: Boolean = false,
+    val allowSensorTilt: Boolean = false,
+    val allowListEntranceMotion: Boolean = false,
 ) {
     companion object {
         fun resolve(
@@ -32,11 +35,18 @@ data class AppearanceRuntimePolicy(
             foreground: Boolean,
         ): AppearanceRuntimePolicy {
             val constrained = powerSave || thermalLimited || !foreground || (settings.adaptiveEffects && lowRam)
+            // User-facing "adaptive" can relax static visual compromises,
+            // never the hard safety gate for continuous/sensor/list effects.
+            val extrasSafe = systemAnimationsEnabled && !settings.reduceMotion &&
+                !powerSave && !thermalLimited && !lowRam && foreground
             return AppearanceRuntimePolicy(
                 reduceMotion = settings.reduceMotion || !systemAnimationsEnabled || constrained,
                 solidSurfaces = settings.surface == AppearanceSurface.SOLID || constrained,
                 allowArtworkAccent = !constrained,
                 allowArtworkBackdrop = !constrained && settings.surface != AppearanceSurface.SOLID,
+                allowAmbientAnimation = settings.ambientAnimation && extrasSafe,
+                allowSensorTilt = settings.sensorTilt && extrasSafe,
+                allowListEntranceMotion = settings.listEntranceMotion && extrasSafe,
             )
         }
     }

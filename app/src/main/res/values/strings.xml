@@ -1969,4 +1969,16 @@
     <string name="logo_trail_description">Your listening journey</string>
     <string name="logo_vinyl">Vinyl Night</string>
     <string name="logo_vinyl_description">Records and statistics</string>
+    <!-- Optional expressive effects: default off; system and performance limits always win. -->
+    <string name="appearance_effects_opt_in_heading">Effects Studio · optional</string>
+    <string name="appearance_effects_opt_in_description">Enable the extra movement you enjoy. Ambient animation, tilt, and list entrances are off by default; battery saver, thermal limits, low-memory devices, backgrounding and reduced motion override them automatically.</string>
+    <string name="appearance_navigation_style">Navigation style</string>
+    <string name="appearance_floating_dock">Floating dock</string>
+    <string name="appearance_short_bar">Short bar</string>
+    <string name="appearance_ambient_animation">Ambient animated accents</string>
+    <string name="appearance_sensor_tilt">Move featured cards with device tilt</string>
+    <string name="appearance_list_motion">Animate list items as they appear</string>
+    <string name="appearance_effect_intensity">Effect intensity</string>
+    <string name="appearance_effect_gentle">Gentle</string>
+    <string name="appearance_effect_expressive">Expressive</string>
 </resources>
