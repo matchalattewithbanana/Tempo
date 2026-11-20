@@ -2,7 +2,7 @@
 
 ## Toolchain
 
-Use JDK 21 (also selected by the checked-in Gradle daemon criteria), Android SDK 36 and the repository's Gradle wrapper. The app supports API 26+. Exact dependency/plugin versions are in `gradle/libs.versions.toml`; use a compatible Android Studio release rather than a fixed outdated IDE recommendation.
+Use JDK 21 (also selected by the checked-in Gradle daemon criteria), Android SDK 37.1 for the current `main` branch, and the repository's Gradle wrapper. The app targets API 36 and supports Android API 26+. Exact dependency/plugin versions are in `gradle/libs.versions.toml`; use a compatible Android Studio release rather than a fixed outdated IDE recommendation.
 
 ```bash
 git clone https://github.com/matchalattewithbanana/Tempo.git
