@@ -266,8 +266,16 @@ fun AppearanceScreen(
                 )
             }
             when (draft.accentSource) {
-                AppearanceAccentSource.CUSTOM -> CustomAccentPicker(draft.customAccent, enabled = !busy) {
-                    draft = draft.copy(customAccent = it)
+                AppearanceAccentSource.CUSTOM -> {
+                    CustomAccentPicker(draft.customAccent, enabled = !busy) {
+                        draft = draft.copy(customAccent = it)
+                    }
+                    CustomPaletteMaker(
+                        draft = draft,
+                        enabled = !busy,
+                        onSecondaryChange = { draft = draft.copy(customSecondary = it) },
+                        onTertiaryChange = { draft = draft.copy(customTertiary = it) },
+                    )
                 }
                 AppearanceAccentSource.ARTWORK -> Text(
                     stringResource(R.string.appearance_artwork_scope),

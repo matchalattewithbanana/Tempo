@@ -1981,4 +1981,11 @@
     <string name="appearance_effect_intensity">Effect intensity</string>
     <string name="appearance_effect_gentle">Gentle</string>
     <string name="appearance_effect_expressive">Expressive</string>
+    <string name="appearance_palette_maker_title">Custom palette maker</string>
+    <string name="appearance_palette_maker_description">Choose up to three accent colors for Material surfaces. Keep a field blank to use the primary accent. Changes remain a preview until you press Apply.</string>
+    <string name="appearance_palette_secondary">Secondary</string>
+    <string name="appearance_palette_tertiary">Tertiary</string>
+    <string name="appearance_palette_tone_preview">Preview in each tone</string>
+    <string name="appearance_palette_preview_hint">Colors are adjusted when necessary to remain readable against your selected surfaces.</string>
+    <string name="appearance_palette_auto">Automatic</string>
 </resources>
