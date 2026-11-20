@@ -30,7 +30,7 @@ internal fun settingsBentoColumns(widthDp: Float, fontScale: Float): Int =
     if (widthDp < 370f || fontScale >= 1.3f) 1 else 2
 
 /**
- * Five destinations: a prominent Appearance tile, then four compact categories.
+ * A prominent Appearance Studio destination followed by Settings categories.
  * At accessibility font scales or on narrow phones, every destination becomes
  * a full-width row rather than an unreadable two-column card.
  */
@@ -58,10 +58,9 @@ fun TempoSettingsBento(
                             destination = destination,
                             hero = false,
                             modifier = Modifier.weight(1f)
-                                .heightIn(min = if (singleColumn) 104.dp else 164.dp),
+                                .heightIn(min = if (singleColumn || group.size == 1) 104.dp else 164.dp),
                         )
                     }
-                    if (group.size == 1 && !singleColumn) Spacer(Modifier.weight(1f))
                 }
             }
         }

@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.rounded.Palette
+import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material.icons.rounded.Link
 import androidx.compose.material.icons.rounded.Storage
@@ -555,11 +556,20 @@ fun SettingsScreen(
                     Spacer(modifier = Modifier.height(16.dp))
                     SettingsSectionHeader(stringResource(R.string.settings_category_browse))
                     me.avinas.tempo.ui.components.TempoSettingsBento(
-                        destinations = listOf(
+                        destinations = listOfNotNull(
+                            onNavigateToAppearance?.let { open ->
+                                me.avinas.tempo.ui.components.TempoSettingsDestination(
+                                    title = stringResource(R.string.appearance_title),
+                                    subtitle = stringResource(R.string.appearance_settings_summary),
+                                    icon = Icons.Rounded.Palette,
+                                    style = TempoEmblemStyle.DISCOVERY,
+                                    onClick = open,
+                                )
+                            },
                             me.avinas.tempo.ui.components.TempoSettingsDestination(
                                 title = stringResource(R.string.settings_category_general),
                                 subtitle = stringResource(R.string.settings_category_general_desc),
-                                icon = Icons.Rounded.Palette,
+                                icon = Icons.Rounded.Settings,
                                 style = TempoEmblemStyle.DISCOVERY,
                                 onClick = { settingsCategory = "general" },
                             ),
