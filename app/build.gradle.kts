@@ -174,6 +174,9 @@ android {
     }
 
     lint {
+        // Historical Compose locale reads are tracked as individual baseline entries.
+        // Keep strict lint enabled: new locale reads and every other new error still fail CI.
+        baseline = file("lint-baseline.xml")
         // Explicitly requested manual validation must fail on lint errors.
         abortOnError = true
         // Partial language packs use Android English fallback; track coverage as warnings.
