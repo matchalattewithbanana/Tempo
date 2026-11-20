@@ -109,6 +109,8 @@ internal fun scheduleWidgetUpdateAfterHistoryChange(context: Context) {
 }
 
 fun scheduleImmediateWidgetUpdate(context: Context) {
+    // Don't spin up WorkManager (and later Room/DataStore) when no widgets are placed.
+    if (placedWidgets(context).isEmpty()) return
     val workRequest = OneTimeWorkRequest.Builder(WidgetWorker::class.java).build()
     WorkManager.getInstance(context).enqueueUniqueWork(
         IMMEDIATE_WORK_NAME,

@@ -15,6 +15,7 @@ import me.avinas.tempo.ui.details.formatListeningTime
 import me.avinas.tempo.ui.theme.LocalTempoAppearance
 import java.text.NumberFormat
 import java.math.RoundingMode
+import java.util.Locale
 
 @StringRes
 internal fun statsDurationLabel(unit: AppearanceStatsDuration): Int = when (unit) {
@@ -98,11 +99,28 @@ internal fun formatStatsDuration(
     }
     val cutoff = millisPerUnit / scale
     val tiny = value > 0L && value < cutoff
-    val formatter = NumberFormat.getNumberInstance(context.resources.configuration.locales[0]).apply {
+    val formatter = durationNumberFormatter(context.resources.configuration.locales[0], precision)
+    val rendered = context.getString(res, formatter.format(if (tiny) cutoff.toDouble() / millisPerUnit else value.toDouble() / millisPerUnit))
+    return if (tiny) context.getString(R.string.stats_duration_less_than, rendered) else rendered
+}
+
+// NumberFormat is not thread-safe. Cache one per thread+locale+precision to avoid
+// repeatedly allocating ICU formatters as Home, Stats, sharing and widgets render.
+private data class CachedDurationFormatter(
+    val locale: Locale,
+    val precision: AppearanceDurationPrecision,
+    val formatter: NumberFormat,
+)
+private val threadDurationFormatter = ThreadLocal<CachedDurationFormatter>()
+
+private fun durationNumberFormatter(locale: Locale, precision: AppearanceDurationPrecision): NumberFormat {
+    val cached = threadDurationFormatter.get()
+    if (cached != null && cached.locale == locale && cached.precision == precision) return cached.formatter
+    val formatter = NumberFormat.getNumberInstance(locale).apply {
         maximumFractionDigits = precision.digits
         minimumFractionDigits = 0
         roundingMode = RoundingMode.DOWN
     }
-    val rendered = context.getString(res, formatter.format(if (tiny) cutoff.toDouble() / millisPerUnit else value.toDouble() / millisPerUnit))
-    return if (tiny) context.getString(R.string.stats_duration_less_than, rendered) else rendered
+    threadDurationFormatter.set(CachedDurationFormatter(locale, precision, formatter))
+    return formatter
 }
