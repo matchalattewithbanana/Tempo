@@ -159,6 +159,15 @@ jobs:
           profile: pixel_6
           disable-animations: true
           script: ./gradlew :app:connectedDebugAndroidTest --stacktrace
+      - name: Retain Android emulator test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-platform-test-results
+          path: |
+            app/build/reports/androidTests/
+            app/build/outputs/androidTest-results/
+          if-no-files-found: warn
 
   publish:
     name: Publish immutable GitHub prerelease
