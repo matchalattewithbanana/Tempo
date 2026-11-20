@@ -64,8 +64,9 @@ data class AppearanceSettings(
     val showProfileStreakWarning: Boolean = true,
     val defaultShareTheme: ShareTheme = ShareTheme.MIDNIGHT,
     val statsDuration: AppearanceStatsDuration = AppearanceStatsDuration.AUTO,
-    val statsDurationPrecision: AppearanceDurationPrecision = AppearanceDurationPrecision.TWO,
     val statsSummary: AppearanceStatsSummary = AppearanceStatsSummary.TRACKS,
+    // Append new persisted options so older positional constructors remain source-compatible.
+    val statsDurationPrecision: AppearanceDurationPrecision = AppearanceDurationPrecision.TWO,
 ) {
     /** Retain opt-in beta tones when applying or importing an appearance. */
     fun forLiveApp(): AppearanceSettings = this
