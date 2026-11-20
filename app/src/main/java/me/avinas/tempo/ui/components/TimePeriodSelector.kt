@@ -60,8 +60,8 @@ fun TimePeriodSelector(
             .fillMaxWidth()
             .padding(horizontal = 4.dp)
             .clip(railShape)
-            .background(MaterialTheme.colorScheme.surfaceContainerLowest)
-            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, railShape)
+            .background(MaterialTheme.colorScheme.surfaceContainerLow)
+            .border(0.75.dp, MaterialTheme.colorScheme.outlineVariant, railShape)
             .padding(3.dp)
     ) {
         Row(
@@ -85,22 +85,10 @@ fun TimePeriodSelector(
 
                 val itemWeight = 2f + displayText.length.toFloat()
 
-                val activeModifier = if (isSelected) {
-                    Modifier
-                        .shadow(
-                            elevation = 4.dp,
-                            shape = pillShape,
-                            ambientColor = Color.Black.copy(alpha = 0.25f),
-                            spotColor = Color.Black.copy(alpha = 0.35f)
-                        )
-                        .clip(pillShape)
-                        .background(MaterialTheme.colorScheme.primary)
-                        .border(0.5.dp, MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.18f), pillShape)
-                } else {
-                    Modifier
-                        .clip(pillShape)
-                        .background(Color.Transparent)
-                }
+                // Keep period selection tactile but avoid shadow render layers.
+                val activeModifier = Modifier
+                    .clip(pillShape)
+                    .background(if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent)
 
                 Box(
                     modifier = Modifier

@@ -118,6 +118,9 @@ fun TempoTheme(
             typography = androidx.compose.runtime.remember(effective.fontStyle, effective.boldText) {
                 AppearanceTypography.resolve(effective.fontStyle, effective.boldText)
             },
+            shapes = androidx.compose.runtime.remember(effective.shape) {
+                AppearanceMaterialShapes.resolve(effective.shape)
+            },
             content = content,
         )
     }
