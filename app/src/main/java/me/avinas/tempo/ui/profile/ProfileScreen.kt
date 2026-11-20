@@ -97,6 +97,8 @@ import me.avinas.tempo.ui.components.BadgeShareCard
 import me.avinas.tempo.ui.components.CachedAsyncImage
 import me.avinas.tempo.ui.components.CelebrationParticlesCanvas
 import me.avinas.tempo.ui.components.LiveNowPlayingCard
+import me.avinas.tempo.ui.components.TempoEmblem
+import me.avinas.tempo.ui.components.TempoEmblemStyle
 import me.avinas.tempo.ui.components.FrostedIconButton
 import me.avinas.tempo.ui.components.GlassCard
 import me.avinas.tempo.ui.components.GlassCardVariant
@@ -1573,7 +1575,7 @@ private fun EmptyChallengesState(modifier: Modifier = Modifier) {
     GlassCard(
         modifier = modifier,
         variant = GlassCardVariant.Obsidian,
-        shape = RoundedCornerShape(20.dp),
+        shape = me.avinas.tempo.ui.components.appearanceCardShape(),
         borderColor = appearancePalette.border.copy(alpha = 0.45f),
         borderWidth = 0.8.dp,
         contentPadding = PaddingValues(28.dp),
@@ -1583,32 +1585,20 @@ private fun EmptyChallengesState(modifier: Modifier = Modifier) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Box(
-                modifier =
-                    Modifier
-                        .size(52.dp)
-                        .clip(CircleShape)
-                        .background(appearancePalette.surfaceSunken)
-                        .border(0.8.dp, appearancePalette.border.copy(alpha = 0.45f), CircleShape),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    imageVector = Icons.Rounded.Schedule,
-                    contentDescription = null,
-                    tint = appearancePalette.mutedText,
-                    modifier = Modifier.size(26.dp),
-                )
-            }
+            TempoEmblem(
+                icon = Icons.Rounded.Schedule,
+                size = 76.dp,
+                style = TempoEmblemStyle.MEMORY,
+            )
             Text(
                 text = "Nothing queued yet",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = appearancePalette.mutedText,
+                style = MaterialTheme.typography.titleLargeEmphasized,
+                color = MaterialTheme.colorScheme.onSurface,
             )
             Text(
                 text = "Pull to refresh or continue listening — new daily quests will appear here.",
-                style = MaterialTheme.typography.bodySmall,
-                color = appearancePalette.mutedText,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
             )
         }
@@ -1920,11 +1910,23 @@ private fun LazyListScope.badgeSection(
     }
     if (filteredBadges.isEmpty()) {
         item(key = "badges_empty") {
-            Text(
-                stringResource(R.string.profile_no_badges),
-                modifier = contentModifier,
-                color = LocalTempoPalette.current.mutedText,
-            )
+            Column(
+                modifier = contentModifier.padding(top = 20.dp, bottom = 28.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                TempoEmblem(
+                    icon = Icons.Rounded.EmojiEvents,
+                    size = 84.dp,
+                    style = TempoEmblemStyle.DISCOVERY,
+                )
+                Text(
+                    text = stringResource(R.string.profile_no_badges),
+                    style = MaterialTheme.typography.titleMediumEmphasized,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textAlign = TextAlign.Center,
+                )
+            }
         }
     }
     itemsIndexed(

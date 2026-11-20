@@ -464,7 +464,6 @@ fun VibeHeader(
     onSettingsClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
-    val appearancePalette = LocalTempoPalette.current
     val colors = MaterialTheme.colorScheme
     Box(
         modifier = modifier

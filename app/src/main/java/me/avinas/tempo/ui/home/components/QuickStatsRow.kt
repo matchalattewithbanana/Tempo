@@ -147,7 +147,7 @@ fun QuickStatsRow(
                     else Modifier
                 ),
             variant = GlassCardVariant.QuietGlass,
-            shape = RoundedCornerShape(20.dp),
+            shape = me.avinas.tempo.ui.components.appearanceCardShape(),
             borderColor = MaterialTheme.colorScheme.outlineVariant,
             borderWidth = 0.8.dp,
             contentPadding = PaddingValues(14.dp)
