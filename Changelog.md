@@ -4,6 +4,17 @@ Fork-specific changes. Published tags and artifacts are listed in the [release c
 
 ## Unreleased
 
+### Material 3 Expressive foundation and whole-app controls
+
+- Upgraded to stable **Compose BOM 2026.11.01 / Material3 1.5.0** with compile SDK 37.1, AGP 9.5.1 and Gradle 9.8.2. Kept target SDK 36.
+- Switched the root app theme to `MaterialExpressiveTheme`; opt into the native expressive motion scheme only when Android animation, power, thermal and Tempo motion preferences allow it.
+- Implemented increased Material shapes and emphasized typography styles consistent with all saved appearance presets and Tempo's existing fonts.
+- Replaced custom bottom navigation with official adaptive `ShortNavigationBar`; moved Stats and Profile to Material `PrimaryTabRow` and History/Home time filters to expressive buttons.
+- Standardized Settings on Material `ListItem`, added expressive app-appearance choices and Update Center channels, improved Settings search field affordances and flexible Update Center heading.
+- Unified loading indicators across Home, Stats, History, Appearance and Update Center with wavy variants when allowed, and standard fallback when reduced-motion or constrained.
+- Preserved music-specific visualizations, playback and data flows. Added tests and migration documentation. No builds, releases or device-performance claims; verification is pending.
+
+
 ### Launcher artwork: faithful concept assets
 
 - Replaced all four provisional vector launcher illustrations with the **actual approved generated badge artwork**: Pulse Mint, Tempo Clock, Violet Trail, and Vinyl Night.

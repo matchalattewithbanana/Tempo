@@ -16,5 +16,16 @@ class AppearanceMaterialShapesTest {
         assertEquals(RoundedCornerShape(18.dp), moderate.large)
         assertEquals(RoundedCornerShape(4.dp), sharp.small)
         assertEquals(RoundedCornerShape(12.dp), sharp.large)
+        // Material 3 Expressive uses increased shapes for prominent
+        // controls and hero surfaces. They must track all three presets.
+        assertEquals(RoundedCornerShape(30.dp), soft.largeIncreased)
+        assertEquals(RoundedCornerShape(34.dp), soft.extraLargeIncreased)
+        assertEquals(RoundedCornerShape(40.dp), soft.extraExtraLarge)
+        assertEquals(RoundedCornerShape(24.dp), moderate.largeIncreased)
+        assertEquals(RoundedCornerShape(28.dp), moderate.extraLargeIncreased)
+        assertEquals(RoundedCornerShape(34.dp), moderate.extraExtraLarge)
+        assertEquals(RoundedCornerShape(16.dp), sharp.largeIncreased)
+        assertEquals(RoundedCornerShape(20.dp), sharp.extraLargeIncreased)
+        assertEquals(RoundedCornerShape(26.dp), sharp.extraExtraLarge)
     }
 }

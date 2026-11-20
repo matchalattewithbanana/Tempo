@@ -35,6 +35,14 @@ APK downloads run through WorkManager and show progress. Tempo accepts only its 
 
 The Update Center checks Android APK releases only. The Chromium/Firefox companion packages remain linked on each GitHub release page. An app version that has unreleased commits is not an available update until a new version is explicitly built and published.
 
+## Material 3 Expressive (2026)
+
+Tempo uses Google's stable Compose Material 3 Expressive 1.5.0 from BOM **2026.11.01**, while preserving the eighteen curated palettes and configurable corners/typography. Our app-level theme uses `MaterialExpressiveTheme`, the official motion scheme, and the corresponding increased shape and emphasized typography tokens. Core navigation now uses the official `ShortNavigationBar` and Material-selected destinations; History and Home use Material expressive toggle buttons for time ranges, and Profile/Stats have native tab rows. Settings uses `ListItem` and improved search, Appearance Studio uses expressive choices, and the Update Center has a flexible app bar and matching controls. Loading indicators are wavy only when motion is permitted by system accessibility and Tempo's low-resource policy.
+
+These controls are selectively chosen for music tracking; not every Material 3 Expressive component is appropriate (for example, FAB menus and carousels should not be added where no corresponding workflow exists). Existing artwork-driven stats, share cards and player surfaces remain purpose-designed.
+
+**Toolchain:** Compile SDK 37.1 / Android Gradle Plugin 9.5.1 / Gradle 9.8.2 / Compose BOM 2026.11.01. Target SDK remains 36. **Build, instrumented checks and physical-device validation are pending authorization.** See [Material 3 Expressive migration notes](docs/MATERIAL3_EXPRESSIVE.md).
+
 ## Material UI
 
 Tempo uses its existing Material 3 interface rather than adding a separate style system. **Appearance Studio → Layout → Corners** now controls the shape family of standard Material buttons, chips, menus and sheets. Settings and Appearance Studio have cleaner grouped sections, comfortable touch targets and readable color roles. The bottom navigation has a more compact tonal appearance, and listening-period selection is lighter without costly selection shadows.
