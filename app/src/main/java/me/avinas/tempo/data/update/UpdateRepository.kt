@@ -39,11 +39,13 @@ class UpdateRepository @Inject constructor(@ApplicationContext private val conte
         UpdateChannel.valueOf(prefs.getString("channel", "STABLE") ?: "STABLE")
     }.getOrDefault(UpdateChannel.STABLE)
     val automaticChecks: Boolean get() = prefs.getBoolean("auto_checks", false)
-    val ignoredTag: String? get() = prefs.getString("ignored_tag", null)
+    fun isIgnored(tag: String): Boolean = tag in (prefs.getStringSet("ignored_tags", emptySet()) ?: emptySet())
+        || prefs.getString("ignored_tag", null) == tag
     val lastCheckedAt: Long get() = prefs.getLong("last_checked", 0L)
 
     fun setChannel(channel: UpdateChannel) {
-        prefs.edit().putString("channel", channel.name).putString("ignored_tag", null).apply()
+        // Muting a release survives channel changes.
+        prefs.edit().putString("channel", channel.name).apply()
     }
 
     fun setAutomaticChecks(enabled: Boolean) {
@@ -63,11 +65,17 @@ class UpdateRepository @Inject constructor(@ApplicationContext private val conte
     }
 
     fun ignore(tag: String) {
-        prefs.edit().putString("ignored_tag", tag).apply()
+        val prior = prefs.getStringSet("ignored_tags", emptySet()).orEmpty().toMutableSet()
+        prior.add(tag)
+        prefs.edit().putStringSet("ignored_tags", prior).apply()
     }
-    fun wasNotified(tag: String): Boolean = prefs.getString("notified_tag", null) == tag
+    fun wasNotified(tag: String): Boolean =
+        tag in prefs.getStringSet("notified_tags", emptySet()).orEmpty() ||
+            prefs.getString("notified_tag", null) == tag
     fun markNotified(tag: String) {
-        prefs.edit().putString("notified_tag", tag).apply()
+        val prior = prefs.getStringSet("notified_tags", emptySet()).orEmpty().toMutableSet()
+        prior.add(tag)
+        prefs.edit().putStringSet("notified_tags", prior).apply()
     }
 
     suspend fun checkLatest(channel: UpdateChannel = this.channel): TempoRelease? = withContext(Dispatchers.IO) {

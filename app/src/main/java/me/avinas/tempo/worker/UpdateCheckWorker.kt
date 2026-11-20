@@ -47,7 +47,7 @@ class UpdateCheckWorker @AssistedInject constructor(
         return try {
             val latest = updates.checkLatest()
             if (latest != null && updates.hasUpgrade(latest) &&
-                latest.tag != updates.ignoredTag && !updates.wasNotified(latest.tag) &&
+                !updates.isIgnored(latest.tag) && !updates.wasNotified(latest.tag) &&
                 updates.automaticChecks
             ) {
                 val canNotify = Build.VERSION.SDK_INT < 33 ||

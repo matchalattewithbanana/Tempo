@@ -101,7 +101,7 @@ class UpdateCenterViewModel @Inject constructor(
                 _state.update {
                     it.copy(checking = false, release = latest,
                         newerAvailable = latest != null && repository.hasUpgrade(latest),
-                        ignored = latest != null && repository.ignoredTag == latest.tag,
+                        ignored = latest != null && repository.isIgnored(latest.tag),
                         downloaded = latest != null && repository.hasUpgrade(latest) &&
                             repository.downloadedFile(latest.tag)?.exists() == true,
                         lastCheckedAt = repository.lastCheckedAt)
