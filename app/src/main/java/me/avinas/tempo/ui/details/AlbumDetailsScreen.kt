@@ -734,7 +734,7 @@ private fun AlbumStatMasthead(
                     label = stringResource(R.string.details_tracks),
                     value = "${albumDetails.tracks.size}",
                     subtext = if (runtimeMs > 0) {
-                        me.avinas.tempo.ui.stats.displayStatsDuration(runtimeMs)
+                        formatListeningTime(runtimeMs)
                     } else {
                         stringResource(R.string.details_stat_recorded_library)
                     },
