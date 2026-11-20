@@ -31,11 +31,14 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -50,9 +53,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import me.avinas.tempo.R
+import me.avinas.tempo.ui.appearance.LocalAppearanceRuntimePolicy
 import me.avinas.tempo.data.analytics.AnalyticsCatalog
 import me.avinas.tempo.ui.components.DeepOceanBackground
 import me.avinas.tempo.ui.components.GlassCard
@@ -286,9 +291,8 @@ fun YourDataScreen(
 }
 
 /**
- * A [GlassCard] that shows a title and one-line description, and reveals its content only
- * when tapped. Expanded state survives configuration changes; [onExpand] fires each time
- * the card is opened so stale content can refresh itself.
+ * Compact Material expandable section. Refresh is a side effect of expanding
+ * the section, never of drawing it: recomposition must not re-run diagnostics.
  */
 @Composable
 private fun CollapsibleCard(
@@ -298,21 +302,26 @@ private fun CollapsibleCard(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     var expanded by rememberSaveable { mutableStateOf(false) }
+    val latestOnExpand by rememberUpdatedState(onExpand)
+    val reduceMotion = LocalAppearanceRuntimePolicy.current.reduceMotion
+    LaunchedEffect(expanded) {
+        if (expanded) latestOnExpand()
+    }
 
-    GlassCard(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .animateContentSize(),
-        contentPadding = PaddingValues(16.dp),
-        variant = GlassCardVariant.LowProminence,
+    Surface(
+        modifier = Modifier.fillMaxWidth().then(
+            if (reduceMotion) Modifier else Modifier.animateContentSize()
+        ),
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        shape = MaterialTheme.shapes.extraLarge,
     ) {
-        Column(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
             Row(
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .clickable { expanded = !expanded },
+                modifier = Modifier.fillMaxWidth().clickable { expanded = !expanded }
+                    .padding(vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
@@ -329,18 +338,15 @@ private fun CollapsibleCard(
                     modifier = Modifier.rotate(if (expanded) 180f else 0f),
                 )
             }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
             Text(
                 text = description,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = if (expanded) Int.MAX_VALUE else 2,
+                overflow = TextOverflow.Ellipsis,
             )
-
             if (expanded) {
-                onExpand()
-                Spacer(modifier = Modifier.height(12.dp))
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 content()
             }
         }
