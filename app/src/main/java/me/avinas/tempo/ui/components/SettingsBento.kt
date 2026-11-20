@@ -25,6 +25,10 @@ data class TempoSettingsDestination(
     val onClick: () -> Unit,
 )
 
+/** Pure breakpoint policy; small phones and large-text users get full-width cards. */
+internal fun settingsBentoColumns(widthDp: Float, fontScale: Float): Int =
+    if (widthDp < 370f || fontScale >= 1.3f) 1 else 2
+
 /**
  * Five destinations: a prominent Appearance tile, then four compact categories.
  * At accessibility font scales or on narrow phones, every destination becomes
@@ -37,7 +41,7 @@ fun TempoSettingsBento(
 ) {
     if (destinations.isEmpty()) return
     BoxWithConstraints(modifier.fillMaxWidth()) {
-        val singleColumn = maxWidth < 370.dp || LocalDensity.current.fontScale >= 1.3f
+        val singleColumn = settingsBentoColumns(maxWidth.value, LocalDensity.current.fontScale) == 1
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             TempoBentoDestination(
                 destination = destinations.first(),
