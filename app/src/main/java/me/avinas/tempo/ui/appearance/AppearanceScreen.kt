@@ -603,7 +603,10 @@ private fun AppearancePresetCard(
     tone: AppearanceTone = AppearanceTone.DARK,
     enabled: Boolean = true,
 ) {
-    val palette = AppearancePaletteResolver.resolve(AppearanceSettings(preset = preset, tone = tone), androidx.compose.foundation.isSystemInDarkTheme())
+    val systemDark = androidx.compose.foundation.isSystemInDarkTheme()
+    val palette = remember(preset, tone, systemDark) {
+        AppearancePaletteResolver.resolve(AppearanceSettings(preset = preset, tone = tone), systemDark)
+    }
     val shape = RoundedCornerShape(22.dp)
     val label = when (preset) {
         AppearancePreset.ABYSS -> stringResource(R.string.appearance_abyss)
