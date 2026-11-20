@@ -23,6 +23,8 @@ import me.avinas.tempo.ui.appearance.AppearancePalette
 import me.avinas.tempo.ui.appearance.AppearancePaletteResolver
 import me.avinas.tempo.ui.appearance.AppearancePreset
 import me.avinas.tempo.ui.appearance.*
+import me.avinas.tempo.ui.effects.LocalTempoTilt
+import me.avinas.tempo.ui.effects.rememberTempoTilt
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
@@ -111,6 +113,7 @@ fun TempoTheme(
         AppearancePaletteResolver.withAccent(basePalette, wallpaper.primary)
     } else basePalette
     val policy = rememberAppearanceRuntimePolicy(effective)
+    val tilt = rememberTempoTilt(policy.allowSensorTilt)
     val motionScheme = androidx.compose.runtime.remember(policy.reduceMotion) {
         if (policy.reduceMotion) TempoInstantMotionScheme else MotionScheme.expressive()
     }
@@ -133,6 +136,7 @@ fun TempoTheme(
         LocalTempoPalette provides palette,
         LocalTempoAppearance provides effective,
         LocalAppearanceRuntimePolicy provides policy,
+        LocalTempoTilt provides tilt,
     ) {
         MaterialExpressiveTheme(
             colorScheme = colorScheme,
