@@ -307,8 +307,13 @@ fun StatsScreen(
                     Spacer(modifier = Modifier.height(8.dp))
                 }
 
-                // 2. Stats Items
-                if (!uiState.isLoading && uiState.items.isEmpty()) {
+                // 2. Stats Items: paint layout-matched placeholders while
+                // the first page is loading, never a completely empty viewport.
+                if (uiState.isLoading && uiState.items.isEmpty()) {
+                    item(key = "stats_skeleton") {
+                        me.avinas.tempo.ui.components.TempoStatsLoadingSkeleton()
+                    }
+                } else if (!uiState.isLoading && uiState.items.isEmpty()) {
                     item(key = "empty_state") {
                         if (uiState.error != null) {
                             // Display error state if load failed

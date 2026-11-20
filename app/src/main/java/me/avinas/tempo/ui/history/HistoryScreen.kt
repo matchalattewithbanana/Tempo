@@ -792,6 +792,11 @@ fun HistoryListContent(
             
             // Empty State
             val allEmpty = groupedItems.isEmpty() && lastFmGroupedItems.isEmpty() && archiveItems.isEmpty()
+            if (isLoading && allEmpty) {
+                item(key = "history_skeleton") {
+                    me.avinas.tempo.ui.components.TempoHistoryLoadingSkeleton()
+                }
+            }
             if (!isLoading && loadFailed) {
                 item(key = "history_load_error") {
                     me.avinas.tempo.ui.components.LoadErrorNotice(

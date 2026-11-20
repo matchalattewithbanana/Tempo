@@ -240,9 +240,7 @@ fun HomeScreen(
                     }
                     if (!uiState.hasData && flags.isLoading) {
                         item(key = "loading") {
-                            Box(Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
-                                TempoCircularLoadingIndicator()
-                            }
+                            me.avinas.tempo.ui.components.TempoHomeLoadingSkeleton()
                         }
                     } else if (!uiState.hasData && !uiState.loadFailed) {
                         item(key = "empty") {
