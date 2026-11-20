@@ -21,11 +21,15 @@ See the [release catalog](docs/releases/README.md) for versions, checksums and u
 - Local notification and MediaSession playback tracking, with optional Spotify device broadcasts.
 - Listening history, charts, artist/album details, challenges and badges.
 - Spotify, Apple Music, Last.fm, YouTube Music, Deezer, Musicolet and browser-history imports.
-- Appearance presets, saved looks, light and system themes, and customizable Stats and Profile views.
+- Appearance presets, saved looks, light and system themes, customizable Stats and Profile views, and listening time shown as clock-style durations or configurable-precision decimal units.
 - Spotlight stories, share cards, and a customizable 3×3 album poster.
 - Local export/restore, optional Google Drive backups and an optional browser companion.
 
 Playback accuracy depends on the player's available signals. Now Playing is provisional; finished listens and imported records can have different timing evidence. Spotify API reconciliation requests a 20-minute background cadence, which Android may defer. Read [tracking accuracy](docs/TRACKING_AND_IMPORT_ACCURACY.md) before interpreting imported durations.
+
+## Listening-time display
+
+In **Appearance Studio → Stats → Listening time units**, choose automatic, decimal minutes/hours/days, or clock-style hours/minutes (optionally including seconds). Decimal units represent fractions of a unit: **589.95 min = 9h 49m 57s**; `.95 min` means 57 seconds, not 95 seconds. Decimal precision is adjustable from 0 to 3 places. Formatting does not modify the stored millisecond totals.
 
 ## Privacy
 

@@ -4,6 +4,23 @@ Fork-specific changes. Published tags and artifacts are listed in the [release c
 
 ## Unreleased
 
+### Added
+
+- Choose clock-style listening durations (hours/minutes, with optional seconds), or decimal minutes/hours/days with 0–3 decimal places. Appearance Studio shows a live example and explains fractional minutes.
+- Apply the saved listening-time preference to Home, Stats, song/artist/album details, Spotlight, shares, and Android widget totals.
+
+### Fixed
+
+- Home daily-average and peak-day durations now retain full milliseconds until display, avoiding whole-minute truncation.
+- Decimal duration values truncate at the selected precision instead of rounding up across hour/minute boundaries. Millisecond listening records are unchanged.
+
+### Performance
+
+- Compose Appearance Studio sections lazily; stop Supported Apps state collection while off-screen.
+- Defer extended Today rankings until the overview is opened, cancelling obsolete requests; cache localized duration number formatters and avoid scheduling widget refreshes with no widgets placed.
+
+Tests were added for conversion boundaries, Home averages, and appearance settings backup compatibility; Android build/device verification is still pending.
+
 ## [4.9.9]
 
 Nine commits after 4.9.0, counted before release preparation. Android version

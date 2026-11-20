@@ -972,6 +972,8 @@
     <string name="stats_duration_clock">Hours and minutes</string>
     <string name="stats_duration_clock_seconds">Hours, minutes and seconds</string>
     <string name="stats_duration_precision">Decimal places</string>
+    <string name="stats_duration_preview">Example: %1$s</string>
+    <string name="stats_duration_decimal_note">Decimals are fractions of a unit, not extra seconds. For example, 0.95 min equals 57 seconds. Choose a clock format for hours, minutes and seconds.</string>
     <string name="stats_precision_whole">Whole numbers</string>
     <string name="stats_precision_one">1 decimal</string>
     <string name="stats_precision_two">2 decimals</string>
