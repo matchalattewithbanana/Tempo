@@ -69,6 +69,8 @@ import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material3.*
+import me.avinas.tempo.ui.components.TempoCircularLoadingIndicator
+import me.avinas.tempo.ui.components.TempoLinearLoadingIndicator
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -393,7 +395,7 @@ fun StatsScreen(
                 if (uiState.isLoadingMore) {
                     item(key = "loading_more") {
                         Box(modifier = Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                            TempoCircularLoadingIndicator(color = MaterialTheme.colorScheme.primary)
                         }
                     }
                 }
@@ -418,7 +420,7 @@ fun StatsScreen(
             }
 
             if (uiState.isLoading) {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = MaterialTheme.colorScheme.primary)
+                TempoCircularLoadingIndicator(modifier = Modifier.align(Alignment.Center), color = MaterialTheme.colorScheme.primary)
             }
 
             // Search drawer: reveals horizontally from the search-icon side (End)
@@ -461,7 +463,7 @@ fun StatsScreen(
             }
             if (openingAlbum) {
                 val loadingDescription = stringResource(R.string.ui_loading)
-                LinearProgressIndicator(
+                TempoLinearLoadingIndicator(
                     modifier = Modifier.align(Alignment.TopCenter)
                         .statusBarsPadding()
                         .fillMaxWidth()

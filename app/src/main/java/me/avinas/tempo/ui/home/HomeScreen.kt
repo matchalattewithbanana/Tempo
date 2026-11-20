@@ -20,6 +20,8 @@ import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Piano
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material3.*
+import me.avinas.tempo.ui.components.TempoCircularLoadingIndicator
+import me.avinas.tempo.ui.components.TempoLinearLoadingIndicator
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -236,7 +238,7 @@ fun HomeScreen(
                     if (!uiState.hasData && flags.isLoading) {
                         item(key = "loading") {
                             Box(Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
-                                CircularProgressIndicator()
+                                TempoCircularLoadingIndicator()
                             }
                         }
                     } else if (!uiState.hasData && !uiState.loadFailed) {

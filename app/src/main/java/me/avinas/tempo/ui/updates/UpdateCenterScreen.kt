@@ -8,6 +8,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.SystemUpdate
 import androidx.compose.material3.*
+import me.avinas.tempo.ui.components.TempoCircularLoadingIndicator
+import me.avinas.tempo.ui.components.TempoLinearLoadingIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -77,7 +79,7 @@ fun UpdateCenterScreen(
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onPrimaryContainer,
                         )
-                        if (state.checking) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                        if (state.checking) TempoLinearLoadingIndicator(modifier = Modifier.fillMaxWidth())
                         OutlinedButton(onClick = viewModel::refresh, enabled = !state.checking,
                             modifier = Modifier.fillMaxWidth()) {
                             Text(stringResource(R.string.update_check_now))
@@ -156,7 +158,7 @@ fun UpdateCenterScreen(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant)
                             if (state.newerAvailable) {
                                 if (state.downloading) {
-                                    LinearProgressIndicator(progress = { state.percent / 100f },
+                                    TempoLinearLoadingIndicator(progress = { state.percent / 100f },
                                         modifier = Modifier.fillMaxWidth())
                                     Text(stringResource(R.string.update_download_progress, state.percent),
                                         style = MaterialTheme.typography.labelMedium)

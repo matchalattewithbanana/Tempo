@@ -19,6 +19,8 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
+import me.avinas.tempo.ui.components.TempoCircularLoadingIndicator
+import me.avinas.tempo.ui.components.TempoLinearLoadingIndicator
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -89,7 +91,7 @@ fun AppearanceScreen(
     val saved = loaded
     if (saved == null) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator()
+            TempoCircularLoadingIndicator()
             IconButton(onClick = onNavigateBack, modifier = Modifier.align(Alignment.TopStart).statusBarsPadding()) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.settings_back))
             }
@@ -283,7 +285,7 @@ fun AppearanceScreen(
                             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                                 Text(stringResource(R.string.appearance_preview_artist), style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurface)
-                                LinearProgressIndicator(progress = { 0.64f }, modifier = Modifier.fillMaxWidth())
+                                TempoLinearLoadingIndicator(progress = { 0.64f }, modifier = Modifier.fillMaxWidth())
                                 Text(stringResource(R.string.appearance_preview_pending), style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }

@@ -28,6 +28,8 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.rounded.Album
 import androidx.compose.material.icons.rounded.MusicNote
 import androidx.compose.material3.*
+import me.avinas.tempo.ui.components.TempoCircularLoadingIndicator
+import me.avinas.tempo.ui.components.TempoLinearLoadingIndicator
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -176,7 +178,7 @@ fun HistoryScreen(
         ) {
             Surface(shape = CircleShape, color = MaterialTheme.colorScheme.surfaceContainerHigh) {
                 Box(Modifier.padding(22.dp), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(
+                    TempoCircularLoadingIndicator(
                         modifier = Modifier.size(36.dp).semantics { contentDescription = loading },
                         strokeWidth = 3.dp,
                     )
@@ -954,7 +956,7 @@ fun HistoryListContent(
                             .padding(16.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        CircularProgressIndicator(
+                        TempoCircularLoadingIndicator(
                             color = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(24.dp),
                             strokeWidth = 2.5.dp
@@ -1017,7 +1019,7 @@ fun HistoryListContent(
                                 .padding(16.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            CircularProgressIndicator(
+                            TempoCircularLoadingIndicator(
                                 color = GoldDark,
                                 modifier = Modifier.size(24.dp),
                                 strokeWidth = 2.5.dp
