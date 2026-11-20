@@ -491,11 +491,16 @@ fun HistoryFilterSheetContent(
         )
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(androidx.compose.material3.ButtonGroupDefaults.ConnectedSpaceBetween),
         ) {
-            ranges.forEach { (key, label) ->
+            ranges.forEachIndexed { index, (key, label) ->
                 androidx.compose.material3.ToggleButton(
                     checked = selectedRange == key,
+                    shapes = when (index) {
+                        0 -> androidx.compose.material3.ButtonGroupDefaults.connectedLeadingButtonShapes()
+                        ranges.lastIndex -> androidx.compose.material3.ButtonGroupDefaults.connectedTrailingButtonShapes()
+                        else -> androidx.compose.material3.ButtonGroupDefaults.connectedMiddleButtonShapes()
+                    },
                     onCheckedChange = {
                         if (selectedRange != key) {
                             haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)

@@ -94,10 +94,13 @@ fun UpdateCenterScreen(
                         verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Text(stringResource(R.string.update_channel_title),
                             style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            UpdateChannel.entries.forEach { channel ->
+                        Row(horizontalArrangement = Arrangement.spacedBy(androidx.compose.material3.ButtonGroupDefaults.ConnectedSpaceBetween)) {
+                            UpdateChannel.entries.forEachIndexed { index, channel ->
                                 ToggleButton(
                                     checked = state.channel == channel,
+                                    shapes = if (index == 0)
+                                        androidx.compose.material3.ButtonGroupDefaults.connectedLeadingButtonShapes()
+                                    else androidx.compose.material3.ButtonGroupDefaults.connectedTrailingButtonShapes(),
                                     onCheckedChange = { viewModel.selectChannel(channel) },
                                     modifier = Modifier.weight(1f),
                                 ) {
