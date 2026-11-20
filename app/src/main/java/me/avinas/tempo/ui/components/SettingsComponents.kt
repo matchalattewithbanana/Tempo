@@ -12,7 +12,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import me.avinas.tempo.ui.theme.LocalTempoPalette
 
 /** Expressive section typography, shared by all Settings categories. */
 @Composable
@@ -22,7 +21,7 @@ fun SettingsSectionHeader(text: String) {
         style = MaterialTheme.typography.titleSmall,
         fontWeight = FontWeight.SemiBold,
         color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(start = 12.dp, top = 18.dp, bottom = 10.dp),
+        modifier = Modifier.padding(start = 4.dp, top = 8.dp, bottom = 8.dp),
     )
 }
 
@@ -34,7 +33,7 @@ fun SettingsOption(
     title: String,
     subtitle: String? = null,
     onClick: (() -> Unit)? = null,
-    textColor: Color = LocalTempoPalette.current.onSurface,
+    textColor: Color = MaterialTheme.colorScheme.onSurface,
     showArrow: Boolean = true,
 ) {
     ListItem(
@@ -43,7 +42,7 @@ fun SettingsOption(
                 fontWeight = FontWeight.Medium, color = textColor)
         },
         supportingContent = if (subtitle == null) null else {
-            { Text(subtitle, style = MaterialTheme.typography.bodyMedium,
+            { Text(subtitle, style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant) }
         },
         trailingContent = if (!showArrow || onClick == null) null else {
@@ -68,26 +67,19 @@ fun SettingsSwitch(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
 ) {
-    val palette = LocalTempoPalette.current
     ListItem(
         headlineContent = {
             Text(title, style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Medium)
         },
         supportingContent = if (subtitle == null) null else {
-            { Text(subtitle, style = MaterialTheme.typography.bodyMedium,
+            { Text(subtitle, style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant) }
         },
         trailingContent = {
             Switch(
                 checked = checked,
                 onCheckedChange = null,
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = palette.onAccent,
-                    checkedTrackColor = palette.accent,
-                    uncheckedThumbColor = palette.mutedText,
-                    uncheckedTrackColor = palette.elevatedSurface,
-                ),
             )
         },
         colors = ListItemDefaults.colors(containerColor = Color.Transparent),
