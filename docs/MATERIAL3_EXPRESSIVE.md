@@ -27,6 +27,7 @@
 | Shared dialogs | `Surface`, `Button`, `FilledTonalButton` | remove extra gradients/large shadows, follow themed shapes |
 | Snackbar feedback | `Snackbar` with native actions | focus/semantics and severity icon, no custom shadow stack |
 | Supported Apps search | `TextField` + `TempoLinearLoadingIndicator` | keep results visible while off-main query projection catches up |
+| Stats / History search | `TextField` with Material toneroles | reliable IME/focus, accessible clear/close, no custom glass shadow field |
 | Load / error / empty states | Material error/secondary containers | readable contrast in Light/Dark/OLED and a native Retry action |
 
 The existing `GlassCard` and music-specific surfaces are retained where they represent song art, statistics and listening history better than generic cards. They already use theme palette, corner and solid-surface policies. Material3 components are used in shared controls, not as a reason to add unrelated UI.
@@ -47,7 +48,7 @@ The existing `GlassCard` and music-specific surfaces are retained where they rep
 - Validate the three-tab short navigation on phones and collapsed WideNavigationRail at **839/840/841dp**, including gesture/system insets, landscape, rotation and large fonts. Verify Compact Now Playing on both layouts.
 - Inspect Home/Stats/History/Profile/Settings/Appearance/Update Center in Light, Dark, OLED and a dynamic wallpaper palette.
 - Check TalkBack and accessibility touch sizes, especially label-hidden navigation and time selection.
-- Test quick tab changes, large-history scrolling, and rapid Supported Apps searches for jank, memory churn, search-result freshness, and data refresh correctness.
+- Test quick tab changes, large-history scrolling, and rapid Supported Apps, Stats and History searches for jank, memory churn, search-result freshness, and data refresh correctness.
 - Check dialogs and snackbars in Light/Dark/OLED and at 1.3×/1.5× font scales: text wrapping, tap targets, accessibility focus, native action/dismiss behavior.
 - Confirm app tracking and compact-now-playing behavior continues while UI navigation animates.
 

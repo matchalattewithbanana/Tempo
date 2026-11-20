@@ -10,6 +10,7 @@ Fork-specific changes. Published tags and artifacts are listed in the [release c
 - Converted legacy dialogs from multi-layer gradient surfaces and 28dp shadows to native tonal Material `Surface` and expressive primary/tonal buttons.
 - Rebuilt shared snackbars with Material-provided action and dismiss buttons, keyboard/TalkBack semantics and tonal surfaces while retaining severity icons.
 - Improved **Manage Supported Apps** search: native expressive search field and a narrow loading indicator replace the full-screen loading flash while filtering. Initial device scanning still indicates loading explicitly.
+- Replaced the remaining hand-built **Stats** and **History** search fields with native Material text fields, standard IME/focus behavior, 48dp clear/close actions, and the selected Material tonal appearance.
 - Implemented native connected button-group shapes for time periods, History date filters, Update Center channels and Appearance Studio choices; rows reflow on narrow phones and larger font scales without squeezing five options into tiny targets.
 - Improved Home/Stats/History load errors with a readable Material error container and native Retry button. Fixed the year displayed in empty-state guidance and replaced a hardcoded success green with theme roles.
 - Added pure layout policies and unit tests for responsive connected-button columns and 840dp navigation-rail cutoff.

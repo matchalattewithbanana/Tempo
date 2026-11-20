@@ -28,8 +28,9 @@ import androidx.compose.ui.unit.dp
 import me.avinas.tempo.ui.theme.*
 
 /**
- * Unified dialog surface for Tempo. Solid, opaque, no glass.
- * Consistent shape (24dp), hairline border, soft shadow.
+ * Compatibility tokens for older dedicated dialogs. TempoDialogSurface itself
+ * uses the live Material shape scale and native tonal Surface, not these
+ * static corners or an additional shadow layer.
  */
 object TempoDialogShape {
     val radius = 24.dp

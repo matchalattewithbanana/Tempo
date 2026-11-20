@@ -37,7 +37,7 @@ The Update Center checks Android APK releases only. The Chromium/Firefox compani
 
 ## Material 3 Expressive — adaptive layout
 
-On phones, Tempo uses the expressive short navigation bar; on expanded windows (≥840dp), it switches to a native wide navigation rail while preserving Compact Now Playing. Home and Stats periods, History filters, Appearance Studio options, and Update Center channels use responsive connected Material 3 buttons. Shared dialogs and snackbars use lighter Material surfaces and accessible actions; Supported Apps search keeps results visible while filtering. Error and empty states use themed Material colors. These changes alter UI presentation only, not tracking, import, or backup logic.
+On phones, Tempo uses the expressive short navigation bar; on expanded windows (≥840dp), it switches to a native wide navigation rail while preserving Compact Now Playing. Home and Stats periods, History filters, Appearance Studio options, and Update Center channels use responsive connected Material 3 buttons. Shared dialogs and snackbars use lighter Material surfaces and accessible actions; Supported Apps search keeps results visible while filtering, and Stats/History search now uses native Material fields. Error and empty states use themed Material colors. These changes alter UI presentation only, not tracking, import, or backup logic.
 
 **Status:** source implementation on `main`; Android compilation and device/tablet visual testing are still pending.
 
