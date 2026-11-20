@@ -4,16 +4,18 @@
 
 | Version | Android code | Published | Purpose | Source / notes |
 | --- | --- | --- | --- | --- |
+| [4.10.25-beta](https://github.com/matchalattewithbanana/Tempo/releases/tag/v4.10.25-beta) | 4821 | 21 Nov 2026 IST | Material 3 Expressive and personalization beta with coordinated Android/browser packages | `fbdfd57` · [notes](v4.10.25-beta.md) · [validation](https://github.com/matchalattewithbanana/Tempo/actions/runs/44825331651) |
 | 4.9.9 | 4820 | See GitHub | First joint Android and browser bundle | [notes](v4.9.9.md) |
 | [4.9.0](https://github.com/matchalattewithbanana/Tempo/releases/tag/v4.9.0) | 4819 | 19 Nov 2026 IST | First stable GitHub release | `e0887af` · [notes](v4.9.0.md) |
 | [4.9.0-beta.1](https://github.com/matchalattewithbanana/Tempo/releases/tag/v4.9.0-beta.1) | 4818 | 17 Nov 2026 | Historical beta: reliability and import hardening | `289fcd0` · [notes](v4.9.0-beta.1.md) |
 | [4.8.16-fork.2-beta.1](https://github.com/matchalattewithbanana/Tempo/releases/tag/v4.8.16-fork.2-beta.1) | 4817 | 17 Nov 2026 | Historical Appearance Studio beta | `f99c502` · [notes](v4.8.16-fork.2-beta.1.md) |
 | [4.8.16-fork.1](https://github.com/matchalattewithbanana/Tempo/releases/tag/v4.8.16-fork.1) | 4816 | 16 Nov 2026 | Historical first fork preview | `11000a1` · [notes](v4.8.16-fork.1.md) |
 
-## Prepared beta (not yet published)
+## Current beta
 
-- **Tempo 4.10.25 Beta** is staged on `main` with Android versionCode **4821**, browser manifest **4.10.25.0** (internal) and package/display **4.10.25-beta**, and [release notes](v4.10.25-beta.md). The version was calculated from **116 commits after v4.9.9**, counted before release preparation, and normalized by the new patch-100 / minor-10 rollover rule.
-- **Status:** awaiting the manually dispatched, gated [Beta release workflow](https://github.com/matchalattewithbanana/Tempo/actions/workflows/beta-release.yml). A source commit and release note are not a published APK; add the release to the published table only after GitHub confirms a prerelease tag and all four assets.
+[Tempo 4.10.25 Beta](https://github.com/matchalattewithbanana/Tempo/releases/tag/v4.10.25-beta) is published as a GitHub prerelease with the Android APK, Chromium ZIP, Firefox ZIP and SHA-256 checksum file. The release was built from source commit [`fbdfd57`](https://github.com/matchalattewithbanana/Tempo/commit/fbdfd5769f8bf26c1720c49fafb956a5399a0f4f) and passed the gated [validation run](https://github.com/matchalattewithbanana/Tempo/actions/runs/44825331651). The version was calculated from 116 source commits after `v4.9.9`, using bounded carry-over versioning.
+
+This is a public-testing beta, not a stable Play Store release. Physical-device checks remain outstanding.
 
 ## Install and verify
 
