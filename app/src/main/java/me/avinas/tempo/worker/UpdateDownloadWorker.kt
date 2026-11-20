@@ -17,7 +17,7 @@ import dagger.assisted.AssistedInject
 import me.avinas.tempo.R
 import me.avinas.tempo.data.update.UpdateRepository
 
-/** Resumable at the WorkManager job level; never invokes the installer. */
+/** Survives screen/process death; restarts incomplete transfers safely. Never installs. */
 @HiltWorker
 class UpdateDownloadWorker @AssistedInject constructor(
     @Assisted private val context: Context,

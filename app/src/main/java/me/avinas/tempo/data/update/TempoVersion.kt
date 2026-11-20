@@ -18,12 +18,19 @@ data class TempoVersion(
     }
 
     companion object {
-        private val PATTERN = Regex("""^v?(\d+)\.(\d+)\.(\d+)(?:-beta\.(\d+))?$""")
+        // Read older fork tags only for comparisons. Newly offered releases
+        // still require the stricter modern vX.Y.Z[-beta.N] release schema.
+        private val PATTERN = Regex("""^v?(\d+)\.(\d+)\.(\d+)(?:-fork\.\d+)?(?:-beta\.(\d+)|-preview)?$""")
         fun parse(value: String): TempoVersion? {
             val match = PATTERN.matchEntire(value.trim()) ?: return null
             return runCatching {
-                TempoVersion(match.groupValues[1].toInt(), match.groupValues[2].toInt(),
-                    match.groupValues[3].toInt(), match.groupValues[4].takeIf { it.isNotEmpty() }?.toInt())
+                val prerelease = match.value.contains("-fork.") || match.value.endsWith("-preview")
+                TempoVersion(
+                    match.groupValues[1].toInt(), match.groupValues[2].toInt(),
+                    match.groupValues[3].toInt(),
+                    match.groupValues[4].takeIf { it.isNotEmpty() }?.toInt()
+                        ?: if (prerelease) 0 else null,
+                )
             }.getOrNull()
         }
     }

@@ -168,7 +168,7 @@ class UpdateRepository @Inject constructor(@ApplicationContext private val conte
     }
 
     fun downloadedFile(tag: String): File? {
-        val version = TempoVersion.parse(tag) ?: return null
+        if (!tag.matches(Regex("""v\d+\.\d+\.\d+(?:-beta\.\d+)?"""))) return null
         val name = "Tempo-${tag.removePrefix("v")}.apk"
         if (!isReleaseUrl(tag, name,
                 "https://github.com/matchalattewithbanana/Tempo/releases/download/$tag/$name")) return null
@@ -189,8 +189,12 @@ class UpdateRepository @Inject constructor(@ApplicationContext private val conte
             if (target.length() == expectedBytes && sha256(target) == expectedSha) return@withContext target
             target.delete()
         }
-        val partial = File(dir, "$apkName.part")
-        partial.delete()
+        // Unique per WorkManager attempt: cancellation cannot delete the next
+        // request's partial file when the user changes update channels.
+        dir.listFiles()?.filter { it.name.endsWith(".part") &&
+            System.currentTimeMillis() - it.lastModified() > 86_400_000L
+        }?.forEach { it.delete() }
+        val partial = File(dir, "$apkName.${java.util.UUID.randomUUID()}.part")
         var downloaded = 0L
         val digest = MessageDigest.getInstance("SHA-256")
         try {
