@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.map
 import org.json.JSONObject
 import javax.inject.Inject
 import javax.inject.Singleton
+import me.avinas.tempo.widget.utils.scheduleImmediateWidgetUpdate
 
 private val Context.appearanceDataStore by preferencesDataStore(
     name = "tempo_appearance",
@@ -68,6 +69,7 @@ class AppearancePreferencesRepository @Inject constructor(
             check((prefs[VERSION] ?: 0) <= CURRENT_VERSION) { "Unsupported appearance schema" }
             prefs.writeSettings(settings)
         }
+        scheduleImmediateWidgetUpdate(context)
     }
 
     private fun androidx.datastore.preferences.core.MutablePreferences.writeSettings(settings: AppearanceSettings) {
@@ -132,6 +134,7 @@ class AppearancePreferencesRepository @Inject constructor(
                 applied = true
             }
         }
+        if (applied) scheduleImmediateWidgetUpdate(context)
         return applied
     }
 

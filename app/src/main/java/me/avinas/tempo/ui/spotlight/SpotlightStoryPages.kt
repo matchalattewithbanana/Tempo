@@ -2428,10 +2428,9 @@ fun BingeSessionPage(page: SpotlightStoryPage.BingeSession) {
                             horizontalAlignment = Alignment.CenterHorizontally,
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            val mins = timeAnim.value.toInt()
-                            val h = mins / 60
-                            val m = mins % 60
-                            val timeText = stringResource(R.string.spotlight_time_hours, h, m)
+                            val timeText = me.avinas.tempo.ui.stats.displayStatsDuration(
+                                timeAnim.value.toLong().coerceAtLeast(0L) * 60_000L
+                            )
                             
                             Text(
                                 text = timeText,

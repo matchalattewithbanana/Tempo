@@ -48,7 +48,8 @@ class TempoDashboardWidget : GlanceAppWidget() {
 
             ListeningWidgetCard(context, context.getString(R.string.widget_today_listening), today = true) {
                 WidgetMetric(
-                    millis?.let { widgetListeningTime(context, it) } ?: "—",
+                    prefs[stringPreferencesKey(WidgetHub.PREF_TODAY_TIME_LABEL)]
+                ?: millis?.let { widgetListeningTime(context, it) } ?: "—",
                     context.getString(R.string.stats_period_listening_time),
                     GlanceModifier.defaultWeight(),
                     highlighted = true,

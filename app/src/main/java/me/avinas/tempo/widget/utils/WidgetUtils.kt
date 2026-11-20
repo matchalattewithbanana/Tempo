@@ -30,9 +30,11 @@ object WidgetHub {
     val CornerRadius = 24.dp
 
     const val PREF_WEEKLY_TIME = "weekly_time_ms"
+    const val PREF_WEEKLY_TIME_LABEL = "weekly_time_display"
     const val PREF_WEEKLY_PLAYS = "weekly_plays"
     const val PREF_WEEKLY_CHART_DATA = "weekly_chart_data"
     const val PREF_TODAY_TIME = "today_time_ms"
+    const val PREF_TODAY_TIME_LABEL = "today_time_display"
     const val PREF_TODAY_PLAYS = "today_plays"
     const val PREF_TODAY_TRACKS = "today_tracks"
     const val PREF_TOP_ARTIST_NAME = "top_artist_name"

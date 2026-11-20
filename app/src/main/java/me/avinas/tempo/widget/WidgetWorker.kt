@@ -26,6 +26,9 @@ import me.avinas.tempo.R
 import me.avinas.tempo.data.repository.SortBy
 import me.avinas.tempo.data.repository.StatsRepository
 import me.avinas.tempo.data.stats.TimeRange
+import me.avinas.tempo.ui.appearance.AppearancePreferencesRepository
+import me.avinas.tempo.ui.stats.formatStatsDuration
+import kotlinx.coroutines.flow.first
 import me.avinas.tempo.widget.utils.WidgetHub
 import me.avinas.tempo.widget.utils.WidgetType
 import me.avinas.tempo.widget.utils.placedWidgets
@@ -43,6 +46,7 @@ class WidgetWorker @AssistedInject constructor(
     @Assisted workerParams: WorkerParameters,
     private val statsRepository: StatsRepository,
     private val imageLoader: ImageLoader,
+    private val appearancePreferences: AppearancePreferencesRepository,
 ) : CoroutineWorker(context, workerParams) {
 
     override suspend fun doWork(): Result = try {
@@ -59,6 +63,11 @@ class WidgetWorker @AssistedInject constructor(
         val placed = placedWidgets(context)
         if (placed.isEmpty()) return
 
+        // One appearance snapshot for the entire batch; do not read DataStore per widget.
+        val appearance = appearancePreferences.settings.first()
+        fun durationLabel(millis: Long): String = formatStatsDuration(
+            context, millis, appearance.statsDuration, appearance.statsDurationPrecision
+        )
         val states = placed.keys.associateWith { mutableMapOf<String, String?>() }
 
         val weekly = states[WidgetType.WEEKLY]
@@ -76,6 +85,7 @@ class WidgetWorker @AssistedInject constructor(
         if (weekly != null) {
             val totals = statsRepository.getListeningTotals(TimeRange.THIS_WEEK, withLeeway = false)
             weekly[WidgetHub.PREF_WEEKLY_TIME] = totals.totalTimeMs.toString()
+            weekly[WidgetHub.PREF_WEEKLY_TIME_LABEL] = durationLabel(totals.totalTimeMs)
             weekly[WidgetHub.PREF_WEEKLY_PLAYS] = totals.playCount.toString()
         }
 
@@ -90,13 +100,14 @@ class WidgetWorker @AssistedInject constructor(
             weekly?.set(WidgetHub.PREF_TOP_ARTIST_IMAGE, artwork)
             artist?.set(WidgetHub.PREF_TOP_ARTIST_NAME, name)
             artist?.set(WidgetHub.PREF_TOP_ARTIST_IMAGE, artwork)
-            artist?.set(WidgetHub.PREF_TOP_ARTIST_HOURS, widgetListeningTime(context, lead?.totalTimeMs ?: 0L))
+            artist?.set(WidgetHub.PREF_TOP_ARTIST_HOURS, durationLabel(lead?.totalTimeMs ?: 0L))
             mix?.set(WidgetHub.PREF_TOP_ARTIST_IMAGE, artwork)
         }
 
         states[WidgetType.DASHBOARD]?.let { state ->
             val today = statsRepository.getListeningTotals(TimeRange.TODAY, withLeeway = false)
             state[WidgetHub.PREF_TODAY_TIME] = today.totalTimeMs.toString()
+            state[WidgetHub.PREF_TODAY_TIME_LABEL] = durationLabel(today.totalTimeMs)
             state[WidgetHub.PREF_TODAY_PLAYS] = today.playCount.toString()
             state[WidgetHub.PREF_TODAY_TRACKS] = today.uniqueTracks.toString()
         }

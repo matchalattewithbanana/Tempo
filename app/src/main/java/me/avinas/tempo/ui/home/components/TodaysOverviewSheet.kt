@@ -799,7 +799,7 @@ private fun HeroListeningCard(
 
                 MastheadSecondaryStat(
                     label = "AVG SESSION",
-                    value = formatShortDuration(overview.averageSessionDurationMs),
+                    value = me.avinas.tempo.ui.stats.displayStatsDuration(overview.averageSessionDurationMs),
                     subtext = "per listen",
                     modifier = Modifier.weight(1f),
                     valueColor = accent
@@ -920,7 +920,7 @@ private fun TodayVsYesterdayBar(
                         .background(accent)
                 )
                 Text(
-                    text = "TODAY · ${formatShortDuration(currentMs)}",
+                    text = "TODAY · ${me.avinas.tempo.ui.stats.displayStatsDuration(currentMs)}",
                     style = KickerSmall,
                     fontSize = 8.5.sp,
                     fontWeight = FontWeight.Bold,
@@ -930,7 +930,7 @@ private fun TodayVsYesterdayBar(
             }
 
             Text(
-                text = "YESTERDAY · ${formatShortDuration(previousMs)}",
+                text = "YESTERDAY · ${me.avinas.tempo.ui.stats.displayStatsDuration(previousMs)}",
                 style = KickerSmall,
                 fontSize = 8.5.sp,
                 fontWeight = FontWeight.Bold,

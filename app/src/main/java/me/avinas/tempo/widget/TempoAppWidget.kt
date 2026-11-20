@@ -87,8 +87,9 @@ class TempoAppWidget : GlanceAppWidget() {
 
     @Composable
     private fun SmallWidgetContent(prefs: Preferences) {
-        val totalTime = prefs[stringPreferencesKey(WidgetHub.PREF_WEEKLY_TIME)]?.toLongOrNull()
-            ?.let { widgetListeningTime(LocalContext.current, it) } ?: "—"
+        val totalTime = prefs[stringPreferencesKey(WidgetHub.PREF_WEEKLY_TIME_LABEL)]
+            ?: prefs[stringPreferencesKey(WidgetHub.PREF_WEEKLY_TIME)]?.toLongOrNull()
+                ?.let { widgetListeningTime(LocalContext.current, it) } ?: "—"
         
         Column(
             modifier = GlanceModifier.fillMaxSize(),
@@ -115,8 +116,9 @@ class TempoAppWidget : GlanceAppWidget() {
     @Composable
     private fun MediumWidgetContent(prefs: Preferences, availableHeight: androidx.compose.ui.unit.Dp) {
         val chartDataStr = prefs[stringPreferencesKey(WidgetHub.PREF_WEEKLY_CHART_DATA)] ?: ""
-        val totalTime = prefs[stringPreferencesKey(WidgetHub.PREF_WEEKLY_TIME)]?.toLongOrNull()
-            ?.let { widgetListeningTime(LocalContext.current, it) } ?: "—"
+        val totalTime = prefs[stringPreferencesKey(WidgetHub.PREF_WEEKLY_TIME_LABEL)]
+            ?: prefs[stringPreferencesKey(WidgetHub.PREF_WEEKLY_TIME)]?.toLongOrNull()
+                ?.let { widgetListeningTime(LocalContext.current, it) } ?: "—"
         val chartData = if (chartDataStr.isNotEmpty()) {
             chartDataStr.split(",").map { it.toFloatOrNull() ?: 0f }
         } else emptyList()
@@ -181,8 +183,9 @@ class TempoAppWidget : GlanceAppWidget() {
 
     @Composable
     private fun LargeWidgetContent(prefs: Preferences) {
-        val totalTime = prefs[stringPreferencesKey(WidgetHub.PREF_WEEKLY_TIME)]?.toLongOrNull()
-            ?.let { widgetListeningTime(LocalContext.current, it) } ?: "—"
+        val totalTime = prefs[stringPreferencesKey(WidgetHub.PREF_WEEKLY_TIME_LABEL)]
+            ?: prefs[stringPreferencesKey(WidgetHub.PREF_WEEKLY_TIME)]?.toLongOrNull()
+                ?.let { widgetListeningTime(LocalContext.current, it) } ?: "—"
         val context = LocalContext.current
         val plays = prefs[stringPreferencesKey(WidgetHub.PREF_WEEKLY_PLAYS)]?.toIntOrNull()
         val topArtist = prefs[stringPreferencesKey(WidgetHub.PREF_TOP_ARTIST_NAME)] ?: "No Data"
