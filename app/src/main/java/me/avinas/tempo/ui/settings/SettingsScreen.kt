@@ -122,6 +122,10 @@ fun SettingsScreen(
     var settingsCategory by rememberSaveable { mutableStateOf("overview") }
     var settingsSearch by rememberSaveable { mutableStateOf("") }
     val settingsScrollState = key(settingsCategory) { rememberScrollState() }
+    LaunchedEffect(settingsSearch) {
+        // Avoid displaying newly filtered results below the previous scroll position.
+        if (settingsSearch.isNotBlank()) settingsScrollState.scrollTo(0)
+    }
     val clearOrClose = {
         when {
             settingsCategory != "overview" -> settingsCategory = "overview"
@@ -343,14 +347,31 @@ fun SettingsScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) { TempoSnackbar(it) } },
     ) { padding ->
         Box(Modifier.fillMaxSize().tempoAmbientBackdrop()) {
-            Column(
-                modifier =
-                    Modifier
-                        .fillMaxSize()
-                        .padding(padding)
+            Column(Modifier.fillMaxSize().padding(padding)) {
+                if (settingsCategory == "overview") {
+                    OutlinedTextField(
+                        value = settingsSearch,
+                        onValueChange = { settingsSearch = it },
+                        label = { Text(stringResource(R.string.settings_search_label)) },
+                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                        trailingIcon = if (settingsSearch.isBlank()) null else {
+                            {
+                                IconButton(onClick = { settingsSearch = "" }) {
+                                    Icon(Icons.Default.Close, contentDescription = null)
+                                }
+                            }
+                        },
+                        shape = MaterialTheme.shapes.extraLarge,
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
+                    )
+                }
+                Column(
+                    modifier = Modifier.weight(1f)
+                        .fillMaxWidth()
                         .verticalScroll(settingsScrollState)
-                        .padding(16.dp),
-            ) {
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                ) {
                 if (settingsCategory != "overview") {
                     val hero = when (settingsCategory) {
                         "general" -> Triple(
@@ -392,23 +413,6 @@ fun SettingsScreen(
                     Spacer(Modifier.height(12.dp))
                 }
                 if (settingsCategory == "overview") {
-                    OutlinedTextField(
-                        value = settingsSearch,
-                        onValueChange = { settingsSearch = it },
-                        label = { Text(stringResource(R.string.settings_search_label)) },
-                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                        trailingIcon = if (settingsSearch.isBlank()) null else {
-                            {
-                                IconButton(onClick = { settingsSearch = "" }) {
-                                    Icon(Icons.Default.Close, contentDescription = null)
-                                }
-                            }
-                        },
-                        shape = MaterialTheme.shapes.extraLarge,
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                    Spacer(Modifier.height(16.dp))
                     if (settingsSearch.isNotBlank()) {
                         val tokens = settingsSearch.trim().split(Regex("\\s+"))
                         val directResults = listOf(
@@ -1450,6 +1454,7 @@ fun SettingsScreen(
 
                 } // Community and About
                 Spacer(modifier = Modifier.height(32.dp))
+                }
             }
         }
     }
