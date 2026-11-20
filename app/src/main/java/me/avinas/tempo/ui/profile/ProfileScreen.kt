@@ -1476,61 +1476,35 @@ private fun StreakRiskBanner(
 // Segmented Tab Switcher
 // ──────────────────────────────────────────────────────────────
 
+/**
+ * Native M3 Expressive tabs keep profile achievements and badges discoverable
+ * and remove the old offset-indicator animation and extra compositing layers.
+ */
 @Composable
 private fun TabSwitcher(
     tabs: List<String>,
     selectedTab: Int,
     onTabSelected: (Int) -> Unit,
 ) {
-    val appearancePalette = LocalTempoPalette.current
-    val reducedMotion = rememberReducedMotion()
-    BoxWithConstraints(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
-                .background(appearancePalette.surfaceSunken)
-                .border(0.8.dp, appearancePalette.border.copy(alpha = 0.45f), RoundedCornerShape(16.dp))
-                .padding(4.dp),
+    androidx.compose.material3.Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.extraLarge,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
     ) {
-        val tabWidth = maxWidth / tabs.size
-        val indicatorPosition by animateFloatAsState(
-            targetValue = selectedTab.toFloat(),
-            animationSpec = tween(durationMillis = if (reducedMotion) 0 else 160, easing = FastOutSlowInEasing),
-            label = "tabIndicator",
-        )
-        Box(modifier = Modifier.matchParentSize()) {
-            Box(
-                modifier =
-                    Modifier
-                        .offset {
-                            IntOffset(
-                                x = (tabWidth.toPx() * indicatorPosition).roundToInt(),
-                                y = 0,
-                            )
-                        }.width(tabWidth)
-                        .fillMaxHeight()
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(appearancePalette.accent.copy(alpha = 0.16f))
-                        .border(0.8.dp, appearancePalette.accent.copy(alpha = 0.42f), RoundedCornerShape(12.dp)),
-            )
-        }
-        Row(modifier = Modifier.fillMaxWidth().selectableGroup()) {
+        androidx.compose.material3.PrimaryTabRow(
+            selectedTabIndex = selectedTab.coerceIn(0, (tabs.size - 1).coerceAtLeast(0)),
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            contentColor = MaterialTheme.colorScheme.onSurface,
+        ) {
             tabs.forEachIndexed { index, title ->
-                val selected = selectedTab == index
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                    color = if (selected) appearancePalette.onSurface else appearancePalette.mutedText,
-                    maxLines = 1,
-                    textAlign = TextAlign.Center,
-                    modifier =
-                        Modifier
-                            .weight(1f)
-                            .clip(RoundedCornerShape(12.dp))
-                            .selectable(selected = selected, role = Role.Tab) { onTabSelected(index) }
-                            .padding(vertical = 11.dp, horizontal = 8.dp),
+                androidx.compose.material3.Tab(
+                    selected = selectedTab == index,
+                    onClick = { if (selectedTab != index) onTabSelected(index) },
+                    text = {
+                        Text(title, maxLines = 1,
+                            style = MaterialTheme.typography.labelLarge,
+                            overflow = TextOverflow.Ellipsis)
+                    },
                 )
             }
         }

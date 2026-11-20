@@ -480,88 +480,31 @@ fun HistoryFilterSheetContent(
         )
         Spacer(modifier = Modifier.height(10.dp))
 
-        // Segmented Pill Bar for Time Range
+        // Expressive segmented choices retain the History filter keys but
+        // use native focus, selection and touch-target behavior.
         val ranges = listOf(
             "All Time" to stringResource(R.string.history_all_time),
             "Last 7 Days" to stringResource(R.string.history_7_days_abbr),
-            "Last 30 Days" to stringResource(R.string.history_30_days_abbr)
+            "Last 30 Days" to stringResource(R.string.history_30_days_abbr),
         )
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp)
-                .clip(RoundedCornerShape(24.dp))
-                .background(MaterialTheme.colorScheme.surfaceContainerLowest)
-                .innerShadow(
-                    color = Color.Black.copy(alpha = if (LocalTempoPalette.current.isDark) 0.55f else 0.12f),
-                    cornersRadius = 24.dp,
-                    blur = 4.dp,
-                    offsetY = 1.dp
-                )
-                .border(
-                    1.dp,
-                    MaterialTheme.colorScheme.outlineVariant,
-                    RoundedCornerShape(24.dp)
-                )
-                .padding(3.dp)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Row(
-                modifier = Modifier.fillMaxSize(),
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                ranges.forEach { (key, label) ->
-                    val isSelected = selectedRange == key
-                    val contentColor by animateColorAsState(
-                        targetValue = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                        label = "filterRangeContentColor"
-                    )
-
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight()
-                            .then(
-                                if (isSelected) {
-                                    Modifier
-                                        .shadow(
-                                            elevation = 4.dp,
-                                            shape = RoundedCornerShape(21.dp),
-                                            spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
-                                            ambientColor = Color.Black.copy(alpha = 0.7f)
-                                        )
-                                        .clip(RoundedCornerShape(21.dp))
-                                        .background(MaterialTheme.colorScheme.primary)
-                                        .border(
-                                            1.dp,
-                                            Brush.verticalGradient(
-                                                listOf(
-                                                    Color.White.copy(alpha = 0.45f),
-                                                    Color.Transparent
-                                                )
-                                            ),
-                                            RoundedCornerShape(21.dp)
-                                        )
-                                } else {
-                                    Modifier.clip(RoundedCornerShape(21.dp))
-                                }
-                            )
-                            .premiumClickable(
-                                onClick = {
-                                    haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                    selectedRange = key
-                                },
-                                pressedScale = 0.96f
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = label,
-                            color = contentColor,
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
-                        )
-                    }
+            ranges.forEach { (key, label) ->
+                androidx.compose.material3.ToggleButton(
+                    checked = selectedRange == key,
+                    onCheckedChange = {
+                        if (selectedRange != key) {
+                            haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            selectedRange = key
+                        }
+                    },
+                    modifier = Modifier.weight(1f).heightIn(min = 48.dp)
+                        .semantics { role = Role.RadioButton },
+                ) {
+                    Text(label, style = MaterialTheme.typography.labelLarge,
+                        maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
         }
