@@ -5,6 +5,8 @@ package me.avinas.tempo.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -14,24 +16,20 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
-/** Independent music-first bento tiles, using Tempo's Material color roles. */
+/** A single featured destination plus compact, scannable category rows. */
 data class TempoSettingsDestination(
     val title: String,
     val subtitle: String,
     val icon: ImageVector,
     val style: TempoEmblemStyle,
     val onClick: () -> Unit,
+    val featured: Boolean = false,
 )
 
-/** Pure breakpoint policy; small phones and large-text users get full-width cards. */
+/** Don't squeeze two text-heavy Settings destinations onto a phone screen. */
 internal fun settingsBentoColumns(widthDp: Float, fontScale: Float): Int =
-    if (widthDp < 370f || fontScale >= 1.3f) 1 else 2
+    if (widthDp < 680f || fontScale >= 1.3f) 1 else 2
 
-/**
- * A prominent Appearance Studio destination followed by Settings categories.
- * At accessibility font scales or on narrow phones, every destination becomes
- * a full-width row rather than an unreadable two-column card.
- */
 @Composable
 fun TempoSettingsBento(
     destinations: List<TempoSettingsDestination>,
@@ -39,26 +37,30 @@ fun TempoSettingsBento(
 ) {
     if (destinations.isEmpty()) return
     BoxWithConstraints(modifier.fillMaxWidth()) {
-        val singleColumn = settingsBentoColumns(maxWidth.value, LocalDensity.current.fontScale) == 1
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            TempoBentoDestination(
-                destination = destinations.first(),
-                hero = true,
-                modifier = Modifier.fillMaxWidth().heightIn(min = 142.dp),
-            )
-            destinations.drop(1).chunked(if (singleColumn) 1 else 2).forEach { group ->
+        val columns = settingsBentoColumns(maxWidth.value, LocalDensity.current.fontScale)
+        val featured = destinations.firstOrNull { it.featured }
+        val regular = destinations.filterNot { it.featured }
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            featured?.let {
+                TempoBentoDestination(
+                    destination = it,
+                    hero = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+            regular.chunked(columns).forEach { group ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     group.forEach { destination ->
                         TempoBentoDestination(
                             destination = destination,
                             hero = false,
-                            modifier = Modifier.weight(1f)
-                                .heightIn(min = if (singleColumn || group.size == 1) 104.dp else 164.dp),
+                            modifier = Modifier.weight(1f),
                         )
                     }
+                    if (group.size < columns) Spacer(Modifier.weight(1f))
                 }
             }
         }
@@ -72,7 +74,7 @@ private fun TempoBentoDestination(
     modifier: Modifier = Modifier,
 ) {
     val scheme = MaterialTheme.colorScheme
-    val (background, foreground, decorativeShape) = when (destination.style) {
+    val (accentContainer, accentForeground, emblemShape) = when (destination.style) {
         TempoEmblemStyle.PULSE -> Triple(
             scheme.primaryContainer, scheme.onPrimaryContainer, MaterialShapes.Cookie9Sided.toShape(),
         )
@@ -86,41 +88,47 @@ private fun TempoBentoDestination(
             scheme.errorContainer, scheme.onErrorContainer, MaterialShapes.SoftBurst.toShape(),
         )
     }
+    val foreground = if (hero) accentForeground else scheme.onSurface
     Surface(
         onClick = destination.onClick,
-        modifier = modifier,
+        modifier = modifier.heightIn(min = if (hero) 124.dp else 76.dp),
         shape = MaterialTheme.shapes.extraLarge,
-        color = background,
+        color = if (hero) accentContainer else scheme.surfaceContainerLow,
         contentColor = foreground,
-        tonalElevation = 0.dp,
     ) {
-        Box(Modifier.fillMaxSize()) {
-            // Low-contrast native polygon replaces a bitmap, looping spinner,
-            // graphicsLayer blur or an uncacheable radial shader.
-            Box(
-                modifier = Modifier.align(Alignment.BottomEnd)
-                    .offset(x = 28.dp, y = 26.dp)
-                    .size(if (hero) 148.dp else 90.dp)
-                    .background(foreground.copy(alpha = 0.085f), decorativeShape),
-            )
-            Column(
-                modifier = Modifier.fillMaxSize()
-                    .padding(horizontal = if (hero) 22.dp else 16.dp, vertical = 17.dp),
-                verticalArrangement = Arrangement.SpaceBetween,
-            ) {
+        Box(Modifier.fillMaxWidth()) {
+            if (hero) {
                 Box(
-                    modifier = Modifier.size(if (hero) 48.dp else 38.dp)
-                        .background(foreground.copy(alpha = 0.12f), decorativeShape),
-                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.align(Alignment.CenterEnd)
+                        .offset(x = 34.dp, y = 28.dp)
+                        .size(130.dp)
+                        .background(accentForeground.copy(alpha = 0.07f), emblemShape),
+                )
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = if (hero) 20.dp else 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Surface(
+                    modifier = Modifier.size(if (hero) 56.dp else 46.dp),
+                    shape = emblemShape,
+                    color = if (hero) accentForeground.copy(alpha = 0.12f) else accentContainer,
+                    contentColor = if (hero) accentForeground else accentForeground,
                 ) {
-                    Icon(
-                        imageVector = destination.icon,
-                        contentDescription = null,
-                        modifier = Modifier.size(if (hero) 26.dp else 21.dp),
-                        tint = foreground,
-                    )
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = destination.icon,
+                            contentDescription = null,
+                            modifier = Modifier.size(if (hero) 28.dp else 23.dp),
+                        )
+                    }
                 }
-                Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
                     Text(
                         destination.title,
                         style = if (hero) MaterialTheme.typography.titleLargeEmphasized
@@ -132,24 +140,17 @@ private fun TempoBentoDestination(
                     Text(
                         destination.subtitle,
                         style = MaterialTheme.typography.bodySmall,
-                        color = foreground.copy(alpha = 0.82f),
-                        maxLines = if (hero) 2 else 2,
+                        color = if (hero) foreground.copy(alpha = 0.82f) else scheme.onSurfaceVariant,
+                        maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
-            }
-            if (hero) {
-                Row(
-                    modifier = Modifier.align(Alignment.TopEnd).padding(20.dp),
-                    horizontalArrangement = Arrangement.spacedBy((-7).dp),
-                ) {
-                    listOf(scheme.primary, scheme.secondary, scheme.tertiary).forEach { color ->
-                        Box(Modifier.size(19.dp)
-                            .background(background, CircleShape)
-                            .padding(2.dp)
-                            .background(color, CircleShape))
-                    }
-                }
+                Icon(
+                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = null,
+                    tint = foreground.copy(alpha = 0.70f),
+                    modifier = Modifier.size(22.dp),
+                )
             }
         }
     }
