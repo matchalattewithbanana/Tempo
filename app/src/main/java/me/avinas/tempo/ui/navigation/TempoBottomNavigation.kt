@@ -72,68 +72,69 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 
+import androidx.compose.material3.ShortNavigationBar
+import androidx.compose.material3.ShortNavigationBarItem
+import androidx.compose.material3.ShortNavigationBarArrangement
+import androidx.compose.material3.NavigationItemIconPosition
+
+/**
+ * M3 Expressive short navigation: one accessible destination component handles
+ * selection, motion, large-font sizing, TalkBack, and Material ripple feedback.
+ * The compact now-playing strip remains independent so tracking never waits on
+ * an animation or navigation transition.
+ */
 @Composable
 fun TempoBottomNavigation(
     currentDestination: NavDestination?,
     onNavigateToHome: () -> Unit,
     onNavigateToStats: () -> Unit,
     onNavigateToHistory: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
-    val palette = LocalTempoPalette.current
+    val haptics = LocalHapticFeedback.current
+    val showLabels = LocalTempoAppearance.current.showNavigationLabels
+    val destinations = listOf(
+        Triple(Screen.Home.route, Icons.Rounded.Home to Icons.Outlined.Home, stringResource(R.string.nav_home)),
+        Triple(Screen.Stats.route, Icons.Rounded.Leaderboard to Icons.Outlined.Leaderboard, stringResource(R.string.nav_stats)),
+        Triple(Screen.History.route, Icons.Rounded.History to Icons.Outlined.History, stringResource(R.string.nav_history)),
+    )
+    val actions = listOf(onNavigateToHome, onNavigateToStats, onNavigateToHistory)
     Column(modifier = modifier.fillMaxWidth()) {
         CompactNowPlayingStrip()
-        // A compact, tonal Material navigation rail. Avoid a tall shadow,
-        // extra glass overlay and draw pass on every screen transition.
-        val railShape = MaterialTheme.shapes.extraLarge
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .windowInsetsPadding(WindowInsets.navigationBars)
-                .padding(horizontal = 20.dp, vertical = 12.dp)
-                .height(68.dp)
-                .shadow(
-                    elevation = 4.dp, shape = railShape,
-                    ambientColor = Color.Transparent,
-                    spotColor = Color.Black.copy(alpha = 0.12f),
-                )
-                .clip(railShape)
-                .background(MaterialTheme.colorScheme.surfaceContainer)
-                .border(
-                    1.dp,
-                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.75f),
-                    railShape,
-                ),
-        ) {
-        Row(
-            modifier = Modifier.fillMaxSize(),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            TempoNavItem(
-                selected = currentDestination?.hierarchy?.any { it.route == Screen.Home.route } == true,
-                onClick = onNavigateToHome,
-                icon = Icons.Rounded.Home,
-                unselectedIcon = Icons.Outlined.Home,
-                label = stringResource(R.string.nav_home)
-            )
-            
-            TempoNavItem(
-                selected = currentDestination?.hierarchy?.any { it.route == Screen.Stats.route } == true,
-                onClick = onNavigateToStats,
-                icon = Icons.Rounded.Leaderboard,
-                unselectedIcon = Icons.Outlined.Leaderboard,
-                label = stringResource(R.string.nav_stats)
-            )
-            
-            TempoNavItem(
-                selected = currentDestination?.hierarchy?.any { it.route == Screen.History.route } == true,
-                onClick = onNavigateToHistory,
-                icon = Icons.Rounded.History,
-                unselectedIcon = Icons.Outlined.History,
-                label = stringResource(R.string.nav_history)
-            )
-        }
+        BoxWithConstraints(Modifier.fillMaxWidth()) {
+            val wide = maxWidth >= 600.dp
+            ShortNavigationBar(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = if (wide) 28.dp else 14.dp, vertical = 8.dp)
+                    .clip(MaterialTheme.shapes.extraLarge),
+                containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                contentColor = MaterialTheme.colorScheme.onSurface,
+                arrangement = if (wide) ShortNavigationBarArrangement.Centered
+                    else ShortNavigationBarArrangement.EqualWeight,
+            ) {
+                destinations.forEachIndexed { index, destination ->
+                    val selected = currentDestination?.hierarchy?.any { it.route == destination.first } == true
+                    ShortNavigationBarItem(
+                        selected = selected,
+                        onClick = {
+                            if (!selected) {
+                                haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                actions[index]()
+                            }
+                        },
+                        icon = {
+                            Icon(
+                                imageVector = if (selected) destination.second.first else destination.second.second,
+                                contentDescription = if (showLabels) null else destination.third,
+                            )
+                        },
+                        label = { if (showLabels) Text(destination.third, maxLines = 1) },
+                        iconPosition = if (wide) NavigationItemIconPosition.Start
+                            else NavigationItemIconPosition.Top,
+                    )
+                }
+            }
         }
     }
 }
@@ -216,93 +217,3 @@ private fun CompactNowPlayingStrip() {
     }
 }
 
-@Composable
-private fun TempoNavItem(
-    selected: Boolean,
-    onClick: () -> Unit,
-    icon: ImageVector,
-    unselectedIcon: ImageVector,
-    label: String
-) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val haptics = LocalHapticFeedback.current
-    val isSelected = selected
-    val showLabel = LocalTempoAppearance.current.showNavigationLabels
-
-    val palette = LocalTempoPalette.current
-    val reducedMotion = rememberReducedMotion()
-    val selectedColor = palette.accent
-    val unselectedColor = palette.mutedText
-
-    val iconColor by animateColorAsState(
-        targetValue = if (selected) selectedColor else unselectedColor,
-        label = "iconColor"
-    )
-
-    // Separate selection bounce and touch-press animations
-    val selectionScale by animateFloatAsState(
-        targetValue = if (!reducedMotion && selected) 1.03f else 1.0f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessLow
-        ),
-        label = "selectionScale"
-    )
-    val pressed by interactionSource.collectIsPressedAsState()
-    val pressScale by animateFloatAsState(
-        targetValue = if (!reducedMotion && pressed) 0.88f else 1f,
-        animationSpec = tween(120, easing = FastOutSlowInEasing),
-        label = "pressScale"
-    )
-
-    // Labels make destinations discoverable; selected icon/text color is the indicator.
-    Box(
-        modifier = Modifier
-            .clip(RoundedCornerShape(20.dp))
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null, // Scale press feedback instead of ripple
-                onClick = {
-                    haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                    onClick()
-                }
-            )
-            .semantics {
-                role = Role.Tab
-                this.selected = isSelected
-            }
-            .sizeIn(minWidth = 48.dp, minHeight = 48.dp)
-            .padding(horizontal = 10.dp, vertical = 7.dp)
-            .scale(selectionScale * pressScale),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(3.dp),
-        ) {
-            Box(
-                modifier = Modifier
-                    .width(56.dp)
-                    .height(30.dp)
-                    .clip(RoundedCornerShape(50))
-                    .background(if (selected) palette.accent.copy(alpha = 0.15f) else Color.Transparent),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    imageVector = if (selected) icon else unselectedIcon,
-                    contentDescription = if (showLabel) null else label,
-                    tint = iconColor,
-                    modifier = Modifier.size(24.dp),
-                )
-            }
-            if (showLabel) {
-                Text(
-                    text = label,
-                    color = iconColor,
-                    style = MaterialTheme.typography.labelSmall,
-                    maxLines = 1,
-                )
-            }
-        }
-    }
-}
