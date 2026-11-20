@@ -200,6 +200,49 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Extended Today rankings are only needed inside the overview sheet. Keep
+     * initial Home loads to one track and artist instead of scanning for five.
+     */
+    fun loadTodayDetails() {
+        val scope = visibleScope ?: return
+        scope.launch {
+            val today = java.time.LocalDate.now()
+            try {
+                coroutineScope {
+                    val tracks = async {
+                        dbSemaphore.withPermit {
+                            statsRepository.getTopTracks(TimeRange.TODAY,
+                                sortBy = me.avinas.tempo.data.repository.SortBy.PLAY_COUNT, pageSize = 5)
+                        }
+                    }
+                    val artists = async {
+                        dbSemaphore.withPermit {
+                            statsRepository.getTopArtists(TimeRange.TODAY,
+                                sortBy = me.avinas.tempo.data.repository.SortBy.PLAY_COUNT, pageSize = 5)
+                        }
+                    }
+                    val trackItems = tracks.await().items.take(5)
+                    val artistItems = artists.await().items.take(5)
+                    if (java.time.LocalDate.now() == today) {
+                        _uiState.update { state ->
+                            state.copy(
+                                todayTopTracks = trackItems,
+                                todayTopArtists = artistItems,
+                                todayTopTrack = trackItems.firstOrNull(),
+                                todayTopArtist = artistItems.firstOrNull(),
+                            )
+                        }
+                    }
+                }
+            } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                // The lightweight preview remains available if extended rankings fail.
+            }
+        }
+    }
+
     fun onTimeRangeSelected(timeRange: TimeRange) {
         if (_uiState.value.selectedTimeRange == timeRange) return
         _uiState.update {
@@ -276,8 +319,8 @@ class HomeViewModel @Inject constructor(
                 
                 // Today's Listen Widget data
                 val todayOverviewDeferred = if (loadToday) async { dbSemaphore.withPermit { statsRepository.getListeningOverview(TimeRange.TODAY) } } else null
-                val todayTopTracksDeferred = if (loadToday) async { dbSemaphore.withPermit { statsRepository.getTopTracks(TimeRange.TODAY, sortBy = me.avinas.tempo.data.repository.SortBy.PLAY_COUNT, pageSize = 5) } } else null
-                val todayTopArtistsDeferred = if (loadToday) async { dbSemaphore.withPermit { statsRepository.getTopArtists(TimeRange.TODAY, sortBy = me.avinas.tempo.data.repository.SortBy.PLAY_COUNT, pageSize = 5) } } else null
+                val todayTopTracksDeferred = if (loadToday) async { dbSemaphore.withPermit { statsRepository.getTopTracks(TimeRange.TODAY, sortBy = me.avinas.tempo.data.repository.SortBy.PLAY_COUNT, pageSize = 1) } } else null
+                val todayTopArtistsDeferred = if (loadToday) async { dbSemaphore.withPermit { statsRepository.getTopArtists(TimeRange.TODAY, sortBy = me.avinas.tempo.data.repository.SortBy.PLAY_COUNT, pageSize = 1) } } else null
                 val todayHourlyDeferred = if (loadToday) async { dbSemaphore.withPermit { statsRepository.getHourlyDistribution(TimeRange.TODAY) } } else null
                 val todayPeriodComparisonDeferred = when {
                     !loadToday -> null

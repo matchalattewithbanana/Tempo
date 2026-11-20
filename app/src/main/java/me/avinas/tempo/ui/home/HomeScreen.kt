@@ -82,6 +82,9 @@ fun HomeScreen(
     val lifecycleOwner = LocalLifecycleOwner.current
     var isLaunchingReview by remember { mutableStateOf(false) }
     var showTodaysOverview by remember { mutableStateOf(false) }
+    LaunchedEffect(showTodaysOverview, uiState.todayOverview?.totalListeningTimeMs) {
+        if (showTodaysOverview) viewModel.loadTodayDetails()
+    }
     // Saved in DataStore so a compact or expanded Home remains your choice.
     val showExtendedInsights by viewModel.expandedInsights.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()

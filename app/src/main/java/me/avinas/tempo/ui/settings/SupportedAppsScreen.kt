@@ -58,6 +58,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -116,7 +117,7 @@ fun SupportedAppsScreen(
     onNavigateBack: () -> Unit,
     viewModel: AppPreferenceViewModel = hiltViewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val trackingRules = remember(context) { TrackingRulesPreferences(context.applicationContext) }
 
@@ -133,7 +134,7 @@ fun SupportedAppsScreen(
     val minimumPlayDurationMs = remember(rulesRevision) { trackingRules.minimumPlayDurationMs }
     val defaultMaxMusicDurationMs = remember(rulesRevision) { trackingRules.defaultMaxMusicDurationMs }
     val trackUnrecognizedApps = remember(rulesRevision) { trackingRules.trackUnrecognizedApps }
-    val searchQuery by viewModel.searchQuery.collectAsState()
+    val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
     val listState = androidx.compose.foundation.lazy.rememberLazyListState()
     LaunchedEffect(uiState.searchQuery) { listState.scrollToItem(0) }
     val overrideCount = uiState.contentOverrides.size
@@ -467,7 +468,7 @@ fun SupportedAppsScreen(
     }
 
     if (showAddAppDialog) {
-        val installedApps by viewModel.installedApps.collectAsState()
+        val installedApps by viewModel.installedApps.collectAsStateWithLifecycle()
         AddAppDialog(
             installedApps = installedApps,
             onDismiss = { showAddAppDialog = false },

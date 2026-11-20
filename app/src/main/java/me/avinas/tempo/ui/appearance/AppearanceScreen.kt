@@ -8,6 +8,7 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -34,6 +35,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -58,10 +60,10 @@ private val DraftSaver = Saver<AppearanceSettings, String>(
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AppearanceScreen(onNavigateBack: () -> Unit, viewModel: AppearanceViewModel = hiltViewModel()) {
-    val loaded by viewModel.settings.collectAsState()
-    val saving by viewModel.saving.collectAsState()
-    val saveFailed by viewModel.saveFailed.collectAsState()
-    val looks by viewModel.savedLooks.collectAsState()
+    val loaded by viewModel.settings.collectAsStateWithLifecycle()
+    val saving by viewModel.saving.collectAsStateWithLifecycle()
+    val saveFailed by viewModel.saveFailed.collectAsStateWithLifecycle()
+    val looks by viewModel.savedLooks.collectAsStateWithLifecycle()
     val saved = loaded
     if (saved == null) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -189,8 +191,15 @@ fun AppearanceScreen(onNavigateBack: () -> Unit, viewModel: AppearanceViewModel 
             }
         },
     ) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(18.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        // Compose only the visible studio sections. Previously the entire studio,
+        // including presets, fonts and saved looks, was composed on every preference edit.
+        LazyColumn(
+            modifier = Modifier.fillMaxSize().padding(padding),
+            contentPadding = PaddingValues(18.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            item(key = "preview") {
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
             Text(stringResource(R.string.appearance_gallery_heading), style = MaterialTheme.typography.headlineMedium)
             Text(stringResource(R.string.appearance_gallery_description), style = MaterialTheme.typography.bodyMedium)
             ChoiceRow(R.string.appearance_tone_heading, AppearanceTone.entries, draft.tone, !busy,
@@ -254,7 +263,10 @@ fun AppearanceScreen(onNavigateBack: () -> Unit, viewModel: AppearanceViewModel 
                     }
                 }
             }
-            AppearanceSection(R.string.appearance_presets, initiallyExpanded = true) {
+                }
+            }
+            item(key = "presets") {
+                AppearanceSection(R.string.appearance_presets, initiallyExpanded = true) {
                 BoxWithConstraints {
                     val columns = if (maxWidth < 290.dp || LocalDensity.current.fontScale >= 1.4f) 1 else 2
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -274,7 +286,9 @@ fun AppearanceScreen(onNavigateBack: () -> Unit, viewModel: AppearanceViewModel 
                     }
                 }
             }
-            AppearanceSection(R.string.appearance_layout_heading) {
+            }
+            item(key = "layout") {
+                AppearanceSection(R.string.appearance_layout_heading) {
                 BoxWithConstraints {
                     val columns = if (maxWidth < 290.dp || LocalDensity.current.fontScale >= 1.4f) 1 else 2
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -300,7 +314,9 @@ fun AppearanceScreen(onNavigateBack: () -> Unit, viewModel: AppearanceViewModel 
                 } }) { draft = draft.copy(shape = it) }
                 SettingToggle(R.string.appearance_bold, draft.boldText, !busy) { draft = draft.copy(boldText = it) }
             }
-            AppearanceSection(R.string.appearance_effects_heading) {
+            }
+            item(key = "effects") {
+                AppearanceSection(R.string.appearance_effects_heading) {
                 ChoiceRow(R.string.appearance_finish, AppearanceSurface.entries, draft.surface, !busy,
                     { if (it == AppearanceSurface.SOLID) R.string.appearance_solid else R.string.appearance_satin }) { draft = draft.copy(surface = it) }
                 SettingToggle(R.string.appearance_reduce_motion, draft.reduceMotion, !busy) { draft = draft.copy(reduceMotion = it) }
@@ -313,7 +329,9 @@ fun AppearanceScreen(onNavigateBack: () -> Unit, viewModel: AppearanceViewModel 
                 SettingToggle(R.string.appearance_adaptive, draft.adaptiveEffects, !busy) { draft = draft.copy(adaptiveEffects = it) }
                 Text(stringResource(R.string.appearance_effect_policy), style = MaterialTheme.typography.bodySmall)
             }
-            AppearanceSection(R.string.appearance_arrangement) {
+            }
+            item(key = "arrangement") {
+                AppearanceSection(R.string.appearance_arrangement) {
                 ChoiceRow(R.string.appearance_now_listening, AppearanceNowListening.entries, draft.nowListening, !busy, { when (it) {
                     AppearanceNowListening.INLINE -> R.string.appearance_inline
                     AppearanceNowListening.COMPACT -> R.string.appearance_compact
@@ -361,7 +379,9 @@ fun AppearanceScreen(onNavigateBack: () -> Unit, viewModel: AppearanceViewModel 
                     },
                 ) { Text(stringResource(R.string.appearance_reset_home_cards)) }
             }
-            AppearanceSection(R.string.appearance_stats_settings) {
+            }
+            item(key = "stats") {
+                AppearanceSection(R.string.appearance_stats_settings) {
                 ChoiceRow(R.string.appearance_stats_start, AppearanceStatsTab.entries, draft.statsTab, !busy, { when (it) {
                     AppearanceStatsTab.SONGS -> R.string.appearance_songs
                     AppearanceStatsTab.ARTISTS -> R.string.appearance_artists
@@ -401,12 +421,16 @@ fun AppearanceScreen(onNavigateBack: () -> Unit, viewModel: AppearanceViewModel 
                     draft = draft.copy(highlightTopResult = it)
                 }
             }
-            AppearanceSection(R.string.nav_history) {
+            }
+            item(key = "history") {
+                AppearanceSection(R.string.nav_history) {
                 SettingToggle(R.string.appearance_history_artwork, draft.showHistoryArtwork, !busy) {
                     draft = draft.copy(showHistoryArtwork = it)
                 }
             }
-            AppearanceSection(R.string.appearance_profile_settings) {
+            }
+            item(key = "profile") {
+                AppearanceSection(R.string.appearance_profile_settings) {
                 ChoiceRow(R.string.appearance_profile_start, AppearanceProfileTab.entries, draft.profileTab, !busy, { when (it) {
                     AppearanceProfileTab.CHALLENGES -> R.string.share_profile_challenges
                     AppearanceProfileTab.BADGES -> R.string.profile_badges
@@ -421,12 +445,16 @@ fun AppearanceScreen(onNavigateBack: () -> Unit, viewModel: AppearanceViewModel 
                     draft = draft.copy(showProfileStreakWarning = it)
                 }
             }
-            AppearanceSection(R.string.appearance_sharing_settings) {
+            }
+            item(key = "sharing") {
+                AppearanceSection(R.string.appearance_sharing_settings) {
                 ChoiceRow(
                     R.string.appearance_share_theme, ShareTheme.entries, draft.defaultShareTheme, !busy, ::shareThemeLabel,
                 ) { draft = draft.copy(defaultShareTheme = it) }
             }
-            AppearanceSection(R.string.appearance_saved_looks) {
+            }
+            item(key = "saved_looks") {
+                AppearanceSection(R.string.appearance_saved_looks) {
                 OutlinedTextField(value = lookName, onValueChange = { lookName = it.take(40) }, enabled = !busy,
                     label = { Text(stringResource(R.string.appearance_look_name)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
                 OutlinedButton(enabled = !busy && lookName.isNotBlank() && (looks.size < 12 || lookName.trim() in looks),
@@ -447,13 +475,18 @@ fun AppearanceScreen(onNavigateBack: () -> Unit, viewModel: AppearanceViewModel 
                     }) { Text(stringResource(R.string.appearance_export)) }
                 }
             }
-            OutlinedButton(enabled = !busy, onClick = { draft = AppearanceSettings() }) {
+            }
+            item(key = "restore_and_status") {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    OutlinedButton(enabled = !busy, onClick = { draft = AppearanceSettings() }) {
                 Text(stringResource(R.string.appearance_restore))
             }
             if (saveFailed) Text(stringResource(R.string.appearance_save_failed), color = MaterialTheme.colorScheme.error)
             if (transferFailed) Text(stringResource(R.string.appearance_transfer_failed), color = MaterialTheme.colorScheme.error)
             if (transferDone) Text(stringResource(R.string.appearance_transfer_done))
-            Spacer(Modifier.height(12.dp))
+                    Spacer(Modifier.height(12.dp))
+                }
+            }
         }
     }
 }
