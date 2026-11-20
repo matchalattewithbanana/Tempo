@@ -731,85 +731,37 @@ fun EmptyStatsState() {
     }
 }
 
+/**
+ * Material 3 Expressive primary tabs: native keyboard/reader semantics,
+ * adaptive indicator motion, and no per-tab shadow layers on scroll.
+ */
 @Composable
 fun StatsTabSelector(selectedTab: StatsTab, onTabSelected: (StatsTab) -> Unit) {
-    val palette = LocalTempoPalette.current
-    val selectedBorder = remember(palette) {
-        Brush.verticalGradient(listOf(palette.onAccent.copy(alpha = 0.34f), Color.Transparent))
-    }
-    Box(
-        modifier = Modifier
-            .padding(horizontal = 16.dp)
-            .fillMaxWidth()
-            .height(54.dp)
-            .clip(RoundedCornerShape(25.dp))
-            .background(palette.surfaceSunken)
-            .innerShadow(
-                color = Color.Black.copy(alpha = if (palette.isDark) 0.55f else 0.12f),
-                cornersRadius = 25.dp,
-                blur = 4.dp,
-                offsetY = 2.dp
-            )
-            .border(
-                1.dp,
-                MaterialTheme.colorScheme.outlineVariant,
-                RoundedCornerShape(25.dp)
-            )
-            .padding(3.dp)
+    androidx.compose.material3.Surface(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+        shape = MaterialTheme.shapes.extraLarge,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
     ) {
-        Row(
-            modifier = Modifier.fillMaxSize().selectableGroup(),
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        androidx.compose.material3.PrimaryTabRow(
+            selectedTabIndex = StatsTab.entries.indexOf(selectedTab),
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            contentColor = MaterialTheme.colorScheme.onSurface,
         ) {
             StatsTab.entries.forEach { tab ->
-                val isSelected = tab == selectedTab
-                val contentColor by animateColorAsState(
-                    targetValue = if (isSelected) palette.onAccent else palette.mutedText,
-                    label = "tabContentColor"
-                )
-
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                        .then(
-                            if (isSelected) {
-                                Modifier
-                                    .shadow(
-                                        elevation = 4.dp,
-                                        shape = RoundedCornerShape(22.dp),
-                                        spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
-                                        ambientColor = Color.Black.copy(alpha = 0.7f)
-                                    )
-                                    .clip(RoundedCornerShape(22.dp))
-                                    .background(palette.accent)
-                                    .border(
-                                        1.dp,
-                                        selectedBorder,
-                                        RoundedCornerShape(22.dp)
-                                    )
-                            } else {
-                                Modifier.clip(RoundedCornerShape(22.dp))
-                            }
+                androidx.compose.material3.Tab(
+                    selected = tab == selectedTab,
+                    onClick = { if (tab != selectedTab) onTabSelected(tab) },
+                    text = {
+                        Text(
+                            when (tab) {
+                                StatsTab.TOP_SONGS -> stringResource(R.string.stats_tab_songs)
+                                StatsTab.TOP_ARTISTS -> stringResource(R.string.stats_tab_artists)
+                                StatsTab.TOP_ALBUMS -> stringResource(R.string.stats_tab_albums)
+                            },
+                            style = MaterialTheme.typography.labelLarge,
                         )
-                        .selectable(
-                            selected = isSelected,
-                            role = Role.Tab,
-                            onClick = { if (!isSelected) onTabSelected(tab) },
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = when (tab) {
-                            StatsTab.TOP_SONGS -> stringResource(R.string.stats_tab_songs)
-                            StatsTab.TOP_ARTISTS -> stringResource(R.string.stats_tab_artists)
-                            StatsTab.TOP_ALBUMS -> stringResource(R.string.stats_tab_albums)
-                        },
-                        color = contentColor,
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
-                    )
-                }
+                    },
+                )
             }
         }
     }
