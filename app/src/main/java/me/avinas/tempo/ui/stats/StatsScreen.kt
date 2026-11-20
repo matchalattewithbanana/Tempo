@@ -767,6 +767,11 @@ fun StatsTabSelector(selectedTab: StatsTab, onTabSelected: (StatsTab) -> Unit) {
     }
 }
 
+/**
+ * Native Material 3 Expressive search field for songs, artists and albums.
+ * This keeps input focus, IME handling and clear/close actions accessible
+ * without a nested glass surface or a separate shadow-render pass.
+ */
 @Composable
 private fun StatsSearchField(
     query: String,
@@ -774,86 +779,49 @@ private fun StatsSearchField(
     placeholder: String,
     modifier: Modifier = Modifier,
     focusRequester: FocusRequester? = null,
-    onClose: (() -> Unit)? = null
+    onClose: (() -> Unit)? = null,
 ) {
-    GlassCard(
+    val focusManager = LocalFocusManager.current
+    TextField(
+        value = query,
+        onValueChange = onQueryChange,
         modifier = modifier
             .fillMaxWidth()
-            .height(46.dp),
-        shape = RoundedCornerShape(23.dp),
-        contentPadding = PaddingValues(horizontal = 14.dp),
-        variant = me.avinas.tempo.ui.components.GlassCardVariant.Obsidian,
-        shadowElevation = 8.dp
-    ) {
-        val focusManager = LocalFocusManager.current
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxSize()
-        ) {
+            .then(focusRequester?.let { Modifier.focusRequester(it) } ?: Modifier),
+        singleLine = true,
+        shape = MaterialTheme.shapes.extraLarge,
+        placeholder = {
+            Text(placeholder, maxLines = 1,
+                style = MaterialTheme.typography.bodyLarge,
+                overflow = TextOverflow.Ellipsis)
+        },
+        leadingIcon = {
             if (onClose != null) {
-                // Drawer mode: leading close affordance.
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .clickable(onClick = onClose),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = stringResource(R.string.stats_search_close),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(20.dp)
-                    )
+                IconButton(onClick = onClose) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = stringResource(R.string.stats_search_close))
                 }
-                Spacer(modifier = Modifier.width(6.dp))
+            } else {
+                Icon(Icons.Default.Search, contentDescription = null)
             }
-            Icon(
-                imageVector = Icons.Default.Search,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(modifier = Modifier.width(10.dp))
-            Box(modifier = Modifier.weight(1f)) {
-                if (query.isEmpty()) {
-                    Text(
-                        text = placeholder,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                }
-                BasicTextField(
-                    value = query,
-                    onValueChange = onQueryChange,
-                    textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface),
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                    keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() }),
-                    cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .then(focusRequester?.let { Modifier.focusRequester(it) } ?: Modifier)
-                )
-            }
+        },
+        trailingIcon = {
             if (query.isNotEmpty()) {
-                // 48dp touch target for clear button
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
-                        .clickable { onQueryChange("") },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = stringResource(R.string.stats_search_clear),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(20.dp)
-                    )
+                IconButton(onClick = { onQueryChange("") }) {
+                    Icon(Icons.Default.Close,
+                        contentDescription = stringResource(R.string.stats_search_clear))
                 }
             }
-        }
-    }
+        },
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+        keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() }),
+        colors = TextFieldDefaults.colors(
+            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+        ),
+    )
 }
 
 @Composable
