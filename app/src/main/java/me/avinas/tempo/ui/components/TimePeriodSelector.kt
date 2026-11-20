@@ -21,6 +21,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -86,7 +87,10 @@ fun TimePeriodSelector(
                         modifier = Modifier
                             .weight(1f)
                             .heightIn(min = 48.dp)
-                            .semantics { role = Role.RadioButton },
+                            .semantics {
+                                role = Role.RadioButton
+                                selected = range == selectedRange
+                            },
                     ) {
                         Text(
                             label,
