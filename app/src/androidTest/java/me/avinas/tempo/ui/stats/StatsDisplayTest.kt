@@ -6,6 +6,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import me.avinas.tempo.data.stats.CombinedBasicStats
 import me.avinas.tempo.ui.appearance.AppearanceStatsDuration
+import me.avinas.tempo.ui.appearance.AppearanceDurationPrecision
 import me.avinas.tempo.ui.appearance.AppearanceStatsSummary
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -25,6 +26,12 @@ class StatsDisplayTest {
         assertEquals("1.25 d", formatStatsDuration(context, 108_000_000L, AppearanceStatsDuration.DAYS))
         assertEquals("<0.01 d", formatStatsDuration(context, 1_000L, AppearanceStatsDuration.DAYS))
         assertEquals("0 d", formatStatsDuration(context, 0L, AppearanceStatsDuration.DAYS))
+        assertEquals("9h 49m 57s", formatStatsDuration(context, 35_397_000L, AppearanceStatsDuration.CLOCK_SECONDS))
+        assertEquals("9h 49m", formatStatsDuration(context, 35_397_000L, AppearanceStatsDuration.CLOCK))
+        assertEquals("59.98 min", formatStatsDuration(context, 3_599_000L, AppearanceStatsDuration.MINUTES))
+        assertEquals("59 min", formatStatsDuration(context, 3_599_000L, AppearanceStatsDuration.MINUTES, AppearanceDurationPrecision.WHOLE))
+        assertEquals("<1 min", formatStatsDuration(context, 59_000L, AppearanceStatsDuration.MINUTES, AppearanceDurationPrecision.WHOLE))
+        assertEquals("589.95 min", formatStatsDuration(context, 35_397_000L, AppearanceStatsDuration.MINUTES))
     }
 
     @Test

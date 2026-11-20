@@ -211,10 +211,10 @@ class HomeViewModel @Inject constructor(
                 periodComparison = null,
                 dailyListening = emptyList(),
                 chartLabels = emptyList(),
-                dailyAvgMinutes = 0L,
+                dailyAvgMs = 0L,
                 activeDaysCount = 0,
                 totalDaysCount = 0,
-                peakDayMinutes = 0L,
+                peakDayMs = 0L,
                 insights = emptyList(),
             )
         }
@@ -364,7 +364,6 @@ class HomeViewModel @Inject constructor(
 
                 val activeDaysCount = activeDaysDeferred?.await() ?: 0
                 val peakDayMs = peakDayMsDeferred?.await() ?: 0L
-                val peakDayMinutes = peakDayMs / 1000 / 60
                 val earliestTimestamp = earliestTimestampDeferred.await()
 
                 val today = java.time.LocalDate.now()
@@ -385,8 +384,7 @@ class HomeViewModel @Inject constructor(
                     }
                 }
 
-                val totalListeningMinutes = totals.totalTimeMs / 60_000
-                val dailyAvgMinutes = if (activeDaysCount > 0) totalListeningMinutes / activeDaysCount else 0L
+                val dailyAvgMs = if (activeDaysCount > 0) totals.totalTimeMs / activeDaysCount else 0L
 
                 val hasData = totals.playCount > 0
                 val isNewUser = earliestTimestamp == null
@@ -397,10 +395,10 @@ class HomeViewModel @Inject constructor(
                         periodComparison = periodComparison,
                         chartLabels = chartLabels,
                         dailyListening = dailyListening,
-                        dailyAvgMinutes = dailyAvgMinutes,
+                        dailyAvgMs = dailyAvgMs,
                         activeDaysCount = activeDaysCount,
                         totalDaysCount = totalDaysCount,
-                        peakDayMinutes = peakDayMinutes,
+                        peakDayMs = peakDayMs,
                         topTrack = topTracks?.items?.firstOrNull(),
                         topArtist = topArtists?.items?.firstOrNull(),
                         spotlightTopTrack = spotlightTopTrack,
@@ -1004,10 +1002,10 @@ data class HomeUiState(
     val periodComparison: me.avinas.tempo.data.stats.PeriodComparison? = null,
     val dailyListening: List<me.avinas.tempo.data.stats.DailyListening> = emptyList(),
     val chartLabels: List<String> = emptyList(),
-    val dailyAvgMinutes: Long = 0L,
+    val dailyAvgMs: Long = 0L,
     val activeDaysCount: Int = 0,
     val totalDaysCount: Int = 0,
-    val peakDayMinutes: Long = 0L,
+    val peakDayMs: Long = 0L,
     val topTrack: me.avinas.tempo.data.stats.TopTrack? = null,
     val topArtist: me.avinas.tempo.data.stats.TopArtist? = null,
     val audioFeatures: me.avinas.tempo.data.stats.AudioFeaturesStats? = null,

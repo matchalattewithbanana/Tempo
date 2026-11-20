@@ -26,7 +26,8 @@ enum class AppearanceHomeSection { SUMMARY, SPOTLIGHT, QUICK_STATS, TODAY, INSIG
 enum class AppearanceStatsTab { SONGS, ARTISTS, ALBUMS }
 enum class AppearanceStatsRange { WEEK, MONTH, YEAR, ALL_TIME, TODAY }
 enum class AppearanceStatsSort { COMBINED, PLAYS, TIME }
-enum class AppearanceStatsDuration { AUTO, MINUTES, HOURS, DAYS }
+enum class AppearanceStatsDuration { AUTO, MINUTES, HOURS, DAYS, CLOCK, CLOCK_SECONDS }
+enum class AppearanceDurationPrecision(val digits: Int) { WHOLE(0), ONE(1), TWO(2), THREE(3) }
 enum class AppearanceStatsSummary { TRACKS, ARTISTS, ALBUMS }
 enum class AppearanceProfileTab { CHALLENGES, BADGES }
 
@@ -63,6 +64,7 @@ data class AppearanceSettings(
     val showProfileStreakWarning: Boolean = true,
     val defaultShareTheme: ShareTheme = ShareTheme.MIDNIGHT,
     val statsDuration: AppearanceStatsDuration = AppearanceStatsDuration.AUTO,
+    val statsDurationPrecision: AppearanceDurationPrecision = AppearanceDurationPrecision.TWO,
     val statsSummary: AppearanceStatsSummary = AppearanceStatsSummary.TRACKS,
 ) {
     /** Retain opt-in beta tones when applying or importing an appearance. */

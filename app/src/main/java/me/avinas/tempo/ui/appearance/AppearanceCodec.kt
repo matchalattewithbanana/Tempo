@@ -6,7 +6,7 @@ import org.json.JSONObject
 
 /** Portable, size-bounded appearance-only format. No paths, account data or history. */
 object AppearanceCodec {
-    const val VERSION = 2
+    const val VERSION = 3
     const val MAX_BYTES = 32 * 1024
     fun encode(value: AppearanceSettings): String = JSONObject().apply {
         put("version", VERSION)
@@ -36,6 +36,7 @@ object AppearanceCodec {
         put("showProfileStreakWarning", value.showProfileStreakWarning)
         put("defaultShareTheme", value.defaultShareTheme.name)
         put("statsDuration", value.statsDuration.name)
+        put("statsDurationPrecision", value.statsDurationPrecision.name)
         put("statsSummary", value.statsSummary.name)
     }.toString()
 
@@ -83,6 +84,7 @@ object AppearanceCodec {
             showProfileStreakWarning = json.optBoolean("showProfileStreakWarning", true),
             defaultShareTheme = enumOrDefault(json.optString("defaultShareTheme"), ShareTheme.MIDNIGHT),
             statsDuration = enumOrDefault(json.optString("statsDuration"), AppearanceStatsDuration.AUTO),
+            statsDurationPrecision = enumOrDefault(json.optString("statsDurationPrecision"), AppearanceDurationPrecision.TWO),
             statsSummary = enumOrDefault(json.optString("statsSummary"), AppearanceStatsSummary.TRACKS),
         )
     }

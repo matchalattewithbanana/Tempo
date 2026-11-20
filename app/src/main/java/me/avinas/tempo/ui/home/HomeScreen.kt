@@ -281,10 +281,10 @@ fun HomeScreen(
                                     trendData = trendData,
                                     selectedRange = uiState.selectedTimeRange,
                                     dailyLabels = dailyLabels,
-                                    dailyAvgMinutes = uiState.dailyAvgMinutes,
+                                    dailyAvgMinutes = uiState.dailyAvgMs,
                                     activeDays = uiState.activeDaysCount,
                                     totalDays = uiState.totalDaysCount,
-                                    peakDayMinutes = uiState.peakDayMinutes
+                                    peakDayMinutes = uiState.peakDayMs
                                 )
                             }
                         } }

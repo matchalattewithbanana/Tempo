@@ -71,10 +71,10 @@ fun HeroCard(
     trendData: List<Float>,
     selectedRange: TimeRange,
     dailyLabels: List<String> = emptyList(),
-    dailyAvgMinutes: Long = 0L,
+    dailyAvgMs: Long = 0L,
     activeDays: Int = 0,
     totalDays: Int = 0,
-    peakDayMinutes: Long = 0L,
+    peakDayMs: Long = 0L,
     modifier: Modifier = Modifier
 ) {
     val appearancePalette = LocalTempoPalette.current
@@ -91,8 +91,8 @@ fun HeroCard(
         me.avinas.tempo.utils.TempoCopyEngine.getHeroGreeting(userName)
     }
 
-    val dailyAvgFormatted = me.avinas.tempo.ui.stats.displayStatsDuration(dailyAvgMinutes * 60_000)
-    val peakFormatted = me.avinas.tempo.ui.stats.displayStatsDuration(peakDayMinutes * 60_000)
+    val dailyAvgFormatted = me.avinas.tempo.ui.stats.displayStatsDuration(dailyAvgMs)
+    val peakFormatted = me.avinas.tempo.ui.stats.displayStatsDuration(peakDayMs)
 
     GlassCard(
         modifier = modifier.fillMaxWidth(),

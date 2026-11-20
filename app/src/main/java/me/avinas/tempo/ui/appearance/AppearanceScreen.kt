@@ -41,6 +41,7 @@ import me.avinas.tempo.R
 import me.avinas.tempo.ui.components.ShareTheme
 import me.avinas.tempo.ui.components.shareThemeLabel
 import me.avinas.tempo.ui.stats.statsDurationLabel
+import me.avinas.tempo.ui.stats.statsDurationPrecisionLabel
 import me.avinas.tempo.ui.stats.statsSummaryLabel
 import me.avinas.tempo.ui.components.appearanceBackdropBrush
 import me.avinas.tempo.ui.components.GlassCard
@@ -379,6 +380,13 @@ fun AppearanceScreen(onNavigateBack: () -> Unit, viewModel: AppearanceViewModel 
                     R.string.stats_duration_display, AppearanceStatsDuration.entries,
                     draft.statsDuration, !busy, ::statsDurationLabel,
                 ) { draft = draft.copy(statsDuration = it) }
+                if (draft.statsDuration == AppearanceStatsDuration.MINUTES ||
+                    draft.statsDuration == AppearanceStatsDuration.HOURS ||
+                    draft.statsDuration == AppearanceStatsDuration.DAYS) {
+                    ChoiceRow(R.string.stats_duration_precision, AppearanceDurationPrecision.entries,
+                        draft.statsDurationPrecision, !busy, ::statsDurationPrecisionLabel,
+                    ) { draft = draft.copy(statsDurationPrecision = it) }
+                }
                 ChoiceRow(
                     R.string.stats_summary_count, AppearanceStatsSummary.entries,
                     draft.statsSummary, !busy && draft.showStatsSummary, ::statsSummaryLabel,
