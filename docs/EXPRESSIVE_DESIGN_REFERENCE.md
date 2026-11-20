@@ -44,6 +44,36 @@ Device review must include:
 - Settings hub tap/focus targets, orientation changes, back navigation and existing search.
 - Memory and frame-time comparison on the Home, Stats and History scrolling traces before claiming any measured performance improvement.
 
+## Deeper audit of Orion's native UI (November 2026)
+
+The review covered `Root.kt`, `Theme.kt`, `Common.kt`, `Settings.kt`, `PaletteMaker.kt`, `StoreScreen.kt`, `Detail.kt`, `Sheets.kt`, `Guide.kt`, `About.kt`, `Community.kt`, `MyApps.kt`, `Swipe.kt`, `Pixel.kt`, and relevant screens. Each technique below was checked in Orion's own source, not inferred from a screenshot.
+
+| Reference pattern | Actual source | Independent Tempo decision |
+| --- | --- | --- |
+| Bento with a featured entry and compact secondary destinations | [Settings.kt](https://github.com/RookieEnough/Orion-Store/blob/main/app/src/main/java/com/orion/store/ui/Settings.kt) `Hub` / `Bento` | Introduce `TempoSettingsBento` using existing destination callbacks, a real Appearance Studio hero, tonal tiles and 1-column fallback |
+| Category-specific landing headers with native material polygons | `Settings.kt` `Page` | Add `TempoSettingsCategoryHero` to each existing Settings category with no extra navigation stack |
+| Systematic motion with immediate accessibility fallback | [Theme.kt](https://github.com/RookieEnough/Orion-Store/blob/main/app/src/main/java/com/orion/store/ui/Theme.kt) `InstantMotion` | Implement Tempo's own six-spec instant motion scheme; standard motion is **not** the same as zero motion |
+| Click response that respects touch and keyboard focus | [Common.kt](https://github.com/RookieEnough/Orion-Store/blob/main/app/src/main/java/com/orion/store/ui/Common.kt) `springClick` | Upgrade `premiumClickable` to fast Material spatial specs, ripple and focus response; skip scaling in reduced-motion mode |
+| Source-consistent typography across all expressive styles | `Theme.kt` `typography` | Fill in remaining emphasized type roles and custom font transformations; opt into Material APIs in Gradle |
+| Loading that preserves the next screen's layout | [StoreScreen.kt](https://github.com/RookieEnough/Orion-Store/blob/main/app/src/main/java/com/orion/store/ui/StoreScreen.kt) `StoreSkeleton` | Add static, accessible, music-specific skeletons for initial Home, Stats and History loads |
+| Palette editor with live scheme preview | [PaletteMaker.kt](https://github.com/RookieEnough/Orion-Store/blob/main/app/src/main/java/com/orion/store/ui/PaletteMaker.kt) | Improve Tempo's already-present 18 theme previews via selected shape motion and music-shaped preview icons. A multi-seed palette editor needs a separate persisted-settings specification |
+| Segmented list shapes and animated expandable content | [Sheets.kt](https://github.com/RookieEnough/Orion-Store/blob/main/app/src/main/java/com/orion/store/ui/Sheets.kt) | Add short expressive transitions to Appearance Studio's expanding sections; keep long data lists static for responsiveness |
+| Rich content detail and swipe affordances | [Detail.kt](https://github.com/RookieEnough/Orion-Store/blob/main/app/src/main/java/com/orion/store/ui/Detail.kt), [Swipe.kt](https://github.com/RookieEnough/Orion-Store/blob/main/app/src/main/java/com/orion/store/ui/Swipe.kt) | Consider art-led Song/Artist/Album pages and optional accessible swipe actions only after device UX testing |
+| Multiple dock styles with visible labels | [Root.kt](https://github.com/RookieEnough/Orion-Store/blob/main/app/src/main/java/com/orion/store/ui/Root.kt) `FloatingNav` | Keep native short navigation / rail now; optional configurable floating dock requires insets, gesture and compact Now Playing validation |
+
+### Current implementation safeguards
+
+- **No Orion code or artwork was ported.** Orion's GPLv3 licensing and Tempo's custom licensing are not interchangeable.
+- The new bento and category heroes use Material color roles and static shapes, not hardcoded gradients, periodic effects or image assets.
+- Non-animated placeholders display only for empty, initial states; existing content and playback behavior remain unchanged.
+- `MaterialTheme.motionScheme.fastSpatialSpec()` now drives brief selection feedback. All six Material animation families snap under Tempo's reduced-motion policy.
+- Settings pages and Appearance Studio keep their existing routes, persisted settings and back-navigation.
+- The Settings bento uses one column below 370dp or at font scales of 1.3× and higher; the pure breakpoint policy has new regression tests.
+
+### Known validation gap
+
+Changes are committed to `main` **without compiling, running instrumentation, or checking pixel output on an Android device**. Material API opt-ins make source intent explicit; they do not certify the dependency/toolchain combination. Device QA should inspect the bento at 320dp/370dp, 1.3× fonts and OLED; check theme previews, active-player scrolling, skeleton state transitions, and whether TalkBack correctly describes icon-only elements.
+
 ## Next visual milestones
 
 Retune the remaining visual duplicates on track/artist/album details, import/restore flows and Spotlight story editor. Choose deliberately where a shape or action morph helps recognition; do not add permanent shimmer, blur or animated gradients merely to look expressive.

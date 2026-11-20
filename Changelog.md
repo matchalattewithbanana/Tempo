@@ -4,6 +4,18 @@ Fork-specific changes. Published tags and artifacts are listed in the [release c
 
 ## Unreleased
 
+### Material 3 Expressive — deeper Orion design review
+
+- Audited Orion's native Settings hub, palette editor, navigation docks, motion code, content skeletons, segmented sheets, details, and onboarding in addition to screenshots.
+- Improved shared clickable response with ripple, focused-state feedback and native fast spatial animation; replaced standard reduced-motion fallback with six snap-based Material motion specs.
+- Filled the remaining expressive typography roles and propagated custom fonts/bold-text choices; registered experimental Material3 API opt-ins centrally in the app Gradle module.
+- Built a music-first tonal Settings bento with a direct Appearance Studio hero, responsive secondary tiles, and original static Material polygon accents. Added matching hero headers to the five Settings subpages.
+- Replaced blank initial-load areas with accessible static music-card skeletons on Home, Stats and History.
+- Added fast selected-corner feedback to appearance presets, themed mini album tiles and restrained expand/collapse transitions.
+- Added Settings bento breakpoint regression tests and expanded visual audit documentation.
+- All source-only commits carry `[skip ci]`: no Android build, release, device screenshots or performance claims.
+
+
 ### Orion-inspired Material 3 Expressive visual refinement
 
 - Audited Orion Store's native Compose components and screenshot gallery as design references, creating original Tempo-owned primitives rather than copying GPL source.

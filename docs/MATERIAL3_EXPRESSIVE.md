@@ -8,7 +8,7 @@
 - Android Gradle Plugin `9.5.1`, Gradle `9.8.2`, compile SDK `37.1`, Lifecycle `2.11.0` (required by Compose's current lifecycle/lint integration).
 - Android target SDK remains `36`; any change to this is a separate compatibility task.
 - `MaterialExpressiveTheme` wraps every Compose screen. This is not a second theme engine.
-- Material motion is expressive by default, but `AppearanceRuntimePolicy.reduceMotion` activates the standard motion scheme for system-disabled animations, reduced-motion preferences, power-save, thermal limits or background/low-resource constraints.
+- Material motion is expressive by default, but `AppearanceRuntimePolicy.reduceMotion` activates a six-spec instantaneous motion scheme for system-disabled animations, reduced-motion preferences, power-save, thermal limits or background/low-resource constraints.
 
 ## Component migration
 
@@ -24,6 +24,11 @@
 | Update Center | `MediumFlexibleTopAppBar`, connected `ToggleButton` group | coherent header and stable/preview channel selection |
 | Loading | `CircularWavyProgressIndicator`, `LinearWavyProgressIndicator` | expressive but reduced-motion-safe loading states |
 | Stat cards | `MaterialTheme.motionScheme.fastSpatialSpec/fastEffectsSpec` | consistent short entrance effects without bouncy slow springs |
+| Settings bento / category hero | Tonal original Tempo surface composition + native static Material shapes | Featured Appearance shortcut, recognizable settings destinations, sensible 1–2 column fallback |
+| Initial loading | `TempoHomeLoadingSkeleton`, `TempoStatsLoadingSkeleton`, `TempoHistoryLoadingSkeleton` | Stable layout geometry and a single accessible loading announcement instead of blank space |
+| Reduced motion | `TempoInstantMotionScheme` (all six specs snap) | Actual no-motion behavior rather than replacing expressive animations with still-animated standard motion |
+| Preset selection | `fastSpatialSpec`, expressive icon tile | Short selected-state corner animation that respects user motion settings |
+| Settings subpages | `TempoSettingsCategoryHero` | Consistent screen identity with accessible emphasized titles |
 | Shared dialogs | `Surface`, `Button`, `FilledTonalButton` | remove extra gradients/large shadows, follow themed shapes |
 | Snackbar feedback | `Snackbar` with native actions | focus/semantics and severity icon, no custom shadow stack |
 | Supported Apps search | `TextField` + `TempoLinearLoadingIndicator` | keep results visible while off-main query projection catches up |
