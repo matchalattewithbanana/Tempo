@@ -729,7 +729,10 @@ private fun <T> ChoiceRow(
                             else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
                         },
                         modifier = Modifier.weight(1f).heightIn(min = 52.dp)
-                            .semantics { role = Role.RadioButton },
+                            .semantics {
+                                role = Role.RadioButton
+                                selected = selected == option
+                            },
                     ) {
                         Text(
                             stringResource(text(option)),
