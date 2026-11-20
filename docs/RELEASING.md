@@ -6,7 +6,12 @@ Use `MAJOR.MINOR.PATCH-beta.N` for beta display versions and `vMAJOR.MINOR.PATCH
 
 In the 4.9 series, advance the previous patch by the number of commits after the
 last stable tag, counted before release preparation. Use `git rev-list --count LAST_TAG..main`
-and include merged commits. For 4.9.9, the count after `v4.9.0` was nine. Keeping the
+and include merged commits. For 4.9.9, the count after `v4.9.0` was nine. For the next beta,
+`v4.9.9..main` was **116** commits before release-preparation changes on
+21 November 2026; `9 + 116 = 125` gives **`4.9.125-beta.1`**.
+The extension version is `4.9.125.1`, and Android versionCode is `4821`.
+Any further fixes before publication should stay under this explicit release
+candidate, rather than silently recalculating the already-prepared version. Keeping the
 previous patch as the starting point ensures subsequent versions keep increasing.
 
 The extension uses the same numeric version as Android for stable releases.

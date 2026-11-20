@@ -9,6 +9,7 @@
 - [Google Drive setup](GOOGLE_DRIVE_SETUP.md)
 - [Browser companion](../browser-extension/README.md)
 - [Release catalog](releases/README.md) and [fork changelog](../Changelog.md)
+- [Material 3 Expressive implementation roadmap](MATERIAL3_EXPRESSIVE_ROADMAP.md)
 
 ## Development and maintenance
 

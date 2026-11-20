@@ -211,6 +211,8 @@ On the source branch, selectable launcher artwork includes **Tempo Classic**, **
 
 The unreleased **Effects Studio** adds independently opt-in ambient animation, gravity-based tilt and per-item entrances, with automatic accessibility, power, thermal and low-memory fallbacks. A native floating navigation dock is also optional. The custom palette maker supports three color seeds and previews in Light, Dark and OLED.
 
+For the remaining immersive-detail, search, adaptive-layout and personalization work, see the [Material 3 Expressive roadmap](docs/MATERIAL3_EXPRESSIVE_ROADMAP.md).
+
 Explore the [Material 3 Expressive migration](docs/MATERIAL3_EXPRESSIVE.md), [visual design reference](docs/EXPRESSIVE_DESIGN_REFERENCE.md) and [changelog](Changelog.md). These describe source changes; compilation, visual accessibility checks and physical-device performance verification are still pending for the latest unreleased work.
 
 <p align="center">

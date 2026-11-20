@@ -4,6 +4,15 @@ Fork-specific changes. Published tags and artifacts are listed in the [release c
 
 ## Unreleased
 
+### Beta release candidate — 4.9.125-beta.1 (2026-11-21)
+
+- Prepared a coordinated **Android + Chromium + Firefox** prerelease candidate on `main` for the source changes since stable v4.9.9; this is *not* the completion of the future Material 3 Expressive roadmap.
+- Version derived from the recorded 4.9-series policy: **4.9.9 + 116 commits after v4.9.9 = 4.9.125-beta.1** (commit count taken before release-preparation commits). Android `versionCode` advanced **4820 → 4821**; browser packages use **4.9.125.1**.
+- Added [the staged Expressive implementation roadmap](docs/MATERIAL3_EXPRESSIVE_ROADMAP.md), acceptance criteria, performance/accessibility baselines and beta exit gates.
+- Release assets, signing continuity and publication must pass the manual beta workflow; code preparation alone is **not** a published or tested APK.
+- [Beta notes](docs/releases/v4.9.125-beta.1.md).
+
+
 ### Optional Expressive Effects Studio, floating dock and custom palettes
 
 - Added three **independent opt-in** effects, all off by default: continuous low-alpha ambient tonal animation, foreground-only sensor-driven featured-card tilt, and bounded entrance motion for lazy music items.

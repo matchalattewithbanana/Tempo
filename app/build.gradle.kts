@@ -22,8 +22,8 @@ val localProperties =
 // cannot be read back, so these two must never drift apart.
 // versionCode is a monotonically increasing Android install version, independent
 // from the SemVer display/tag version. Never decrement it when changing branches.
-val appVersionCode = 4820
-val appVersionName = "4.9.9"
+val appVersionCode = 4821
+val appVersionName = "4.9.125-beta.1"
 
 android {
     namespace = "me.avinas.tempo"
