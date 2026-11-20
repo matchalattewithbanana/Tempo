@@ -4,6 +4,7 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.snap
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -36,19 +37,17 @@ fun StatCard(
     content: @Composable () -> Unit
 ) {
     val reducedMotion = rememberReducedMotion()
+    val motionScheme = MaterialTheme.motionScheme
     var isVisible by remember { mutableStateOf(false) }
     val scale by animateFloatAsState(
-        targetValue = if (isVisible || reducedMotion) 1f else 0.95f,
-        animationSpec = if (reducedMotion) tween(0) else spring(
-            dampingRatio = Spring.DampingRatioLowBouncy,
-            stiffness = Spring.StiffnessLow
-        ),
-        label = "scale"
+        targetValue = if (isVisible || reducedMotion) 1f else 0.97f,
+        animationSpec = if (reducedMotion) snap() else motionScheme.fastSpatialSpec(),
+        label = "scale",
     )
     val alpha by animateFloatAsState(
         targetValue = if (isVisible || reducedMotion) 1f else 0f,
-        animationSpec = tween(if (reducedMotion) 0 else 300),
-        label = "alpha"
+        animationSpec = if (reducedMotion) snap() else motionScheme.fastEffectsSpec(),
+        label = "alpha",
     )
 
     LaunchedEffect(Unit) {
