@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+
 package me.avinas.tempo.ui.theme
 
 import android.app.Activity
@@ -6,6 +8,8 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.material3.MotionScheme
+import androidx.compose.animation.core.FiniteAnimationSpec
+import androidx.compose.animation.core.snap
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
@@ -76,6 +80,18 @@ val LocalTempoPalette = staticCompositionLocalOf {
 }
 val LocalTempoAppearance = staticCompositionLocalOf { AppearanceSettings() }
 
+/** Accessibility / low-power mode must actually stop Material transitions.
+ * MotionScheme.standard() still animates; the six instant specs do not.
+ */
+private object TempoInstantMotionScheme : MotionScheme {
+    override fun <T> defaultSpatialSpec(): FiniteAnimationSpec<T> = snap()
+    override fun <T> fastSpatialSpec(): FiniteAnimationSpec<T> = snap()
+    override fun <T> slowSpatialSpec(): FiniteAnimationSpec<T> = snap()
+    override fun <T> defaultEffectsSpec(): FiniteAnimationSpec<T> = snap()
+    override fun <T> fastEffectsSpec(): FiniteAnimationSpec<T> = snap()
+    override fun <T> slowEffectsSpec(): FiniteAnimationSpec<T> = snap()
+}
+
 @Composable
 fun TempoTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
@@ -96,7 +112,7 @@ fun TempoTheme(
     } else basePalette
     val policy = rememberAppearanceRuntimePolicy(effective)
     val motionScheme = androidx.compose.runtime.remember(policy.reduceMotion) {
-        if (policy.reduceMotion) MotionScheme.standard() else MotionScheme.expressive()
+        if (policy.reduceMotion) TempoInstantMotionScheme else MotionScheme.expressive()
     }
     val colorScheme = if (effective.preset == AppearancePreset.ABYSS && effective.tone == AppearanceTone.DARK &&
         (effective.accentSource == AppearanceAccentSource.PRESET || effective.accentSource == AppearanceAccentSource.ARTWORK)) DarkColorScheme else palette.materialColorScheme()

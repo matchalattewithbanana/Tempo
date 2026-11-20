@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+
 package me.avinas.tempo.ui.appearance
 
 import androidx.compose.material3.Typography
@@ -19,6 +21,12 @@ object AppearanceTypography {
             labelLarge = original.labelLarge.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold),
             labelMedium = original.labelMedium.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold),
             labelSmall = original.labelSmall.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold),
+            bodyLargeEmphasized = original.bodyLargeEmphasized.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold),
+            bodyMediumEmphasized = original.bodyMediumEmphasized.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold),
+            bodySmallEmphasized = original.bodySmallEmphasized.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold),
+            labelLargeEmphasized = original.labelLargeEmphasized.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold),
+            labelMediumEmphasized = original.labelMediumEmphasized.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold),
+            labelSmallEmphasized = original.labelSmallEmphasized.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold),
         )
         val headingFont = when (style) {
             AppearanceFontStyle.TEMPO -> return base
@@ -36,9 +44,13 @@ object AppearanceTypography {
             titleLarge = base.titleLarge.copy(fontFamily = headingFont),
             displayLargeEmphasized = base.displayLargeEmphasized.copy(fontFamily = headingFont),
             displayMediumEmphasized = base.displayMediumEmphasized.copy(fontFamily = headingFont),
+            displaySmallEmphasized = base.displaySmallEmphasized.copy(fontFamily = headingFont),
             headlineLargeEmphasized = base.headlineLargeEmphasized.copy(fontFamily = headingFont),
             headlineMediumEmphasized = base.headlineMediumEmphasized.copy(fontFamily = headingFont),
+            headlineSmallEmphasized = base.headlineSmallEmphasized.copy(fontFamily = headingFont),
             titleLargeEmphasized = base.titleLargeEmphasized.copy(fontFamily = headingFont),
+            titleMediumEmphasized = base.titleMediumEmphasized.copy(fontFamily = headingFont),
+            titleSmallEmphasized = base.titleSmallEmphasized.copy(fontFamily = headingFont),
         )
     }
 }

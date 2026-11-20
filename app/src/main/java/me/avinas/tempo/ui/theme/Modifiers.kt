@@ -10,6 +10,10 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ripple
+import androidx.compose.animation.core.snap
 import androidx.compose.ui.graphics.asComposeRenderEffect
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.draw.clip
@@ -91,11 +95,17 @@ fun Modifier.premiumClickable(
 ): Modifier = composed {
     val interactionSource = androidx.compose.runtime.remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
+    val isFocused by interactionSource.collectIsFocusedAsState()
     val reducedMotion = rememberReducedMotion()
+    val spatial = MaterialTheme.motionScheme.fastSpatialSpec<Float>()
 
     val scale by androidx.compose.animation.core.animateFloatAsState(
-        targetValue = if (isPressed && !reducedMotion) pressedScale else 1f,
-        animationSpec = androidx.compose.animation.core.tween(120, easing = androidx.compose.animation.core.FastOutSlowInEasing),
+        targetValue = if (reducedMotion) 1f else when {
+            isPressed -> pressedScale
+            isFocused -> 1.015f
+            else -> 1f
+        },
+        animationSpec = if (reducedMotion) snap() else spatial,
         label = "premium_click_scale"
     )
 
@@ -106,7 +116,7 @@ fun Modifier.premiumClickable(
         }
         .clickable(
             interactionSource = interactionSource,
-            indication = null,
+            indication = ripple(),
             onClick = onClick
         )
 }
