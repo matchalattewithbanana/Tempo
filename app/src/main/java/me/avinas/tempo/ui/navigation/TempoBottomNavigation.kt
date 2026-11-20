@@ -78,7 +78,6 @@ import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.FloatingToolbarDefaults
 import androidx.compose.material3.FilledIconToggleButton
 import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.ShortNavigationBarItem
 import androidx.compose.material3.ShortNavigationBarArrangement
 import androidx.compose.material3.NavigationItemIconPosition
@@ -132,7 +131,7 @@ fun TempoBottomNavigation(
                                 }
                             },
                             modifier = Modifier.size(
-                                width = if (showLabels) 92.dp else 60.dp,
+                                width = if (showLabels) 80.dp else 56.dp,
                                 height = 62.dp,
                             ),
                             shapes = IconButtonDefaults.toggleableShapes(),
@@ -157,6 +156,7 @@ fun TempoBottomNavigation(
                                     destination.third,
                                     style = MaterialTheme.typography.labelSmall,
                                     maxLines = 1,
+                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                                 )
                             }
                         }
