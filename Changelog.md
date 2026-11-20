@@ -4,6 +4,16 @@ Fork-specific changes. Published tags and artifacts are listed in the [release c
 
 ## Unreleased
 
+### Appearance Studio — curated preset collection
+
+- Added **ten complete presets** (Midnight Bloom, Sakura, Matcha, Cobalt, Porcelain, Terracotta, Citrine, Mocha, Lagoon and Lilac), bringing the library to 18.
+- Designed separate Light and Dark palettes for each edition, including canvas, raised and inset cards, border, readable primary/secondary text, and accent/on-accent combinations.
+- Turned the preset collection into lazily rendered, grouped rows with realistic miniatures for the selected tone. This avoids composing all cards at once.
+- Added an opt-out setting to apply coordinated heading typography, shape, finish, and backdrop when choosing an edition. Original presets preserve their existing layout behavior.
+- Fixed default frosted icon-button contrast in Light mode and restored preset accent behavior while keeping the saved custom accent value available.
+- Added palette contrast and style-selection regression tests; Android build and on-device visual review are still pending.
+
+
 ### Added
 
 - Choose clock-style listening durations (hours/minutes, with optional seconds), or decimal minutes/hours/days with 0–3 decimal places. Appearance Studio shows a live example and explains fractional minutes.

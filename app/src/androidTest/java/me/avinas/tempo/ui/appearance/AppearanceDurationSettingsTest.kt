@@ -18,6 +18,22 @@ class AppearanceDurationSettingsTest {
     }
 
     @Test
+    fun curatedPresetIdentifiersSurviveAppearanceExportAndImport() {
+        val presets = listOf(
+            AppearancePreset.MIDNIGHT_BLOOM, AppearancePreset.SAKURA,
+            AppearancePreset.MATCHA, AppearancePreset.COBALT,
+            AppearancePreset.PORCELAIN, AppearancePreset.TERRACOTTA,
+            AppearancePreset.CITRINE, AppearancePreset.MOCHA,
+            AppearancePreset.LAGOON, AppearancePreset.LILAC,
+        )
+        presets.forEach { preset ->
+            val stored = AppearanceCodec.encode(AppearanceSettings(preset = preset))
+            assertEquals(preset, AppearanceCodec.decode(stored).preset)
+            assertEquals(preset, AppearancePreset.decode(preset.name))
+        }
+    }
+
+    @Test
     fun oldAppearanceWithoutPrecisionUsesDefault() {
         val old = JSONObject(AppearanceCodec.encode(AppearanceSettings(
             statsDuration = AppearanceStatsDuration.HOURS,
