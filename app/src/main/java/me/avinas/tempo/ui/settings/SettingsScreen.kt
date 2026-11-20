@@ -22,6 +22,8 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -343,6 +345,15 @@ fun SettingsScreen(
                         value = settingsSearch,
                         onValueChange = { settingsSearch = it },
                         label = { Text(stringResource(R.string.settings_search_label)) },
+                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                        trailingIcon = if (settingsSearch.isBlank()) null else {
+                            {
+                                IconButton(onClick = { settingsSearch = "" }) {
+                                    Icon(Icons.Default.Close, contentDescription = null)
+                                }
+                            }
+                        },
+                        shape = MaterialTheme.shapes.extraLarge,
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                     )

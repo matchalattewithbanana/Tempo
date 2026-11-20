@@ -36,8 +36,8 @@ fun UpdateCenterScreen(
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.update_center_title)) },
+            MediumFlexibleTopAppBar(
+                title = { Text(stringResource(R.string.update_center_title), style = MaterialTheme.typography.headlineSmallEmphasized) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack,
@@ -96,12 +96,14 @@ fun UpdateCenterScreen(
                             style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             UpdateChannel.entries.forEach { channel ->
-                                FilterChip(
-                                    selected = state.channel == channel,
-                                    onClick = { viewModel.selectChannel(channel) },
-                                    label = { Text(stringResource(if (channel == UpdateChannel.STABLE)
-                                        R.string.update_stable else R.string.update_preview)) },
-                                )
+                                ToggleButton(
+                                    checked = state.channel == channel,
+                                    onCheckedChange = { viewModel.selectChannel(channel) },
+                                    modifier = Modifier.weight(1f),
+                                ) {
+                                    Text(stringResource(if (channel == UpdateChannel.STABLE)
+                                        R.string.update_stable else R.string.update_preview))
+                                }
                             }
                         }
                         Text(stringResource(if (state.channel == UpdateChannel.STABLE)

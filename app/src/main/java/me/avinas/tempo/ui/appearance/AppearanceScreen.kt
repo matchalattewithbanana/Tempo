@@ -634,24 +634,19 @@ private fun <T> ChoiceRow(label: Int, options: List<T>, selected: T, enabled: Bo
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(stringResource(label), style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant)
-        val colors = MaterialTheme.colorScheme
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            verticalArrangement = Arrangement.spacedBy(6.dp)) {
             options.forEach { option ->
-                val isSelected = selected == option
-                FilterChip(
-                    selected = isSelected, enabled = enabled,
-                    onClick = { onSelect(option) },
-                    shape = MaterialTheme.shapes.small,
-                    colors = FilterChipDefaults.filterChipColors(
-                        containerColor = colors.surfaceContainer,
-                        labelColor = colors.onSurfaceVariant,
-                        selectedContainerColor = colors.secondaryContainer,
-                        selectedLabelColor = colors.onSecondaryContainer,
-                    ),
-                    label = { Text(stringResource(text(option)),
-                        style = MaterialTheme.typography.labelLarge) },
-                )
+                ToggleButton(
+                    checked = selected == option,
+                    enabled = enabled,
+                    onCheckedChange = { onSelect(option) },
+                    modifier = Modifier.heightIn(min = 48.dp)
+                        .semantics { role = Role.RadioButton },
+                ) {
+                    Text(stringResource(text(option)),
+                        style = MaterialTheme.typography.labelLarge)
+                }
             }
         }
     }
