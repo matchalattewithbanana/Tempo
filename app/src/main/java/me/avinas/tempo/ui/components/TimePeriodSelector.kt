@@ -46,11 +46,7 @@ fun TimePeriodSelector(
     val widthDp = LocalConfiguration.current.screenWidthDp
     val fontScale = LocalDensity.current.fontScale
     val haptic = LocalHapticFeedback.current
-    val maxPerRow = when {
-        widthDp < 360 || fontScale >= 1.3f -> 2
-        widthDp >= 600 && fontScale < 1.2f -> 5
-        else -> 3
-    }
+    val maxPerRow = connectedChoiceColumns(widthDp, fontScale, availableRanges.size)
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(4.dp),

@@ -45,6 +45,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import me.avinas.tempo.R
+import me.avinas.tempo.ui.components.connectedChoiceColumns
 import me.avinas.tempo.ui.components.ShareTheme
 import me.avinas.tempo.ui.components.shareThemeLabel
 import me.avinas.tempo.ui.stats.statsDurationLabel
@@ -645,13 +646,7 @@ private fun <T> ChoiceRow(
     if (options.isEmpty()) return
     val widthDp = LocalConfiguration.current.screenWidthDp
     val fontScale = LocalDensity.current.fontScale
-    val baseColumns = when {
-        widthDp < 360 || fontScale >= 1.3f -> 2
-        widthDp >= 600 && fontScale < 1.2f -> 5
-        else -> 3
-    }
-    // Four settings should form balanced 2×2 choices on standard phones.
-    val columns = if (options.size == 4 && baseColumns == 3) 2 else baseColumns
+    val columns = connectedChoiceColumns(widthDp, fontScale, options.size)
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
             stringResource(label),
