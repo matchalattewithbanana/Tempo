@@ -23,7 +23,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
@@ -141,33 +142,46 @@ fun Modifier.tempoAmbientBackdrop(): Modifier = composed {
                 ),
                 label = "ambient_phase",
             )
-        this.drawBehind {
-            val a = phase.value
+        this.drawWithCache {
             val radius = size.maxDimension * 0.37f
-            val center1 = Offset(
-                size.width * (0.21f + 0.12f * cos(a)),
-                size.height * (0.18f + 0.07f * sin(a)),
+            val centerOfBrush = Offset(radius, radius)
+            // Brushes are created only when size/colors/intensity change, not
+            // every animation frame. The phase is read ONLY in onDrawBehind.
+            val primaryBrush = Brush.radialGradient(
+                listOf(colors.primary.copy(alpha = if (strong) 0.12f else 0.065f),
+                    colors.primary.copy(alpha = 0f)),
+                center = centerOfBrush, radius = radius,
             )
-            val center2 = Offset(
-                size.width * (0.78f + 0.10f * sin(a)),
-                size.height * (0.69f + 0.08f * cos(a)),
+            val tertiaryBrush = Brush.radialGradient(
+                listOf(colors.tertiary.copy(alpha = if (strong) 0.10f else 0.05f),
+                    colors.tertiary.copy(alpha = 0f)),
+                center = centerOfBrush, radius = radius,
             )
-            drawCircle(
-                brush = Brush.radialGradient(
-                    listOf(colors.primary.copy(alpha = if (strong) 0.12f else 0.065f),
-                        colors.primary.copy(alpha = 0f)),
-                    center = center1, radius = radius,
-                ),
-                radius = radius, center = center1,
-            )
-            drawCircle(
-                brush = Brush.radialGradient(
-                    listOf(colors.tertiary.copy(alpha = if (strong) 0.10f else 0.05f),
-                        colors.tertiary.copy(alpha = 0f)),
-                    center = center2, radius = radius,
-                ),
-                radius = radius, center = center2,
-            )
+            onDrawBehind {
+                val a = phase.value
+                val center1 = Offset(
+                    size.width * (0.21f + 0.12f * cos(a)),
+                    size.height * (0.18f + 0.07f * sin(a)),
+                )
+                val center2 = Offset(
+                    size.width * (0.78f + 0.10f * sin(a)),
+                    size.height * (0.69f + 0.08f * cos(a)),
+                )
+                withTransform({
+                    translate(center1.x - radius, center1.y - radius)
+                }) {
+                    drawCircle(
+                        brush = primaryBrush, radius = radius, center = centerOfBrush,
+                    )
+                }
+                withTransform({
+                    translate(center2.x - radius, center2.y - radius)
+                }) {
+                    drawCircle(
+                        brush = tertiaryBrush, radius = radius, center = centerOfBrush,
+                    )
+                }
+            }
         }
     }
 }
