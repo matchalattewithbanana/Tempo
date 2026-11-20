@@ -61,6 +61,87 @@ data class AppearancePalette(
 
 object AppearancePaletteResolver {
     fun forPreset(preset: AppearancePreset): AppearancePalette = when (preset) {
+        AppearancePreset.MIDNIGHT_BLOOM -> AppearancePalette(
+            preset = preset,
+            accent = Color(0xFFD7A2E9), onAccent = Color(0xFF21192C),
+            background = Color(0xFF14101E), topBackground = Color(0xFF281C36),
+            surface = Color(0xFF211A2B), elevatedSurface = Color(0xFF352741),
+            surfaceSunken = Color(0xFF0E0B17), onSurface = Color(0xFFF5EDFA),
+            mutedText = Color(0xFFBBAACD), border = Color(0xFF5D4B6A),
+        )
+        AppearancePreset.SAKURA -> AppearancePalette(
+            preset = preset,
+            accent = Color(0xFFFFB2C3), onAccent = Color(0xFF341724),
+            background = Color(0xFF241316), topBackground = Color(0xFF3B2228),
+            surface = Color(0xFF322024), elevatedSurface = Color(0xFF4A2C33),
+            surfaceSunken = Color(0xFF190D11), onSurface = Color(0xFFFFF0F2),
+            mutedText = Color(0xFFD4B0BA), border = Color(0xFF76505A),
+        )
+        AppearancePreset.MATCHA -> AppearancePalette(
+            preset = preset,
+            accent = Color(0xFFBEDB89), onAccent = Color(0xFF263417),
+            background = Color(0xFF151C14), topBackground = Color(0xFF283626),
+            surface = Color(0xFF222C20), elevatedSurface = Color(0xFF354532),
+            surfaceSunken = Color(0xFF0D120C), onSurface = Color(0xFFF1F7E8),
+            mutedText = Color(0xFFB9CBAD), border = Color(0xFF536A4D),
+        )
+        AppearancePreset.COBALT -> AppearancePalette(
+            preset = preset,
+            accent = Color(0xFF8CAAFF), onAccent = Color(0xFF15284C),
+            background = Color(0xFF0A1431), topBackground = Color(0xFF18284F),
+            surface = Color(0xFF132446), elevatedSurface = Color(0xFF243B65),
+            surfaceSunken = Color(0xFF071024), onSurface = Color(0xFFEEF3FF),
+            mutedText = Color(0xFFAEC0E8), border = Color(0xFF4B6495),
+        )
+        AppearancePreset.PORCELAIN -> AppearancePalette(
+            preset = preset,
+            accent = Color(0xFF9CDBEE), onAccent = Color(0xFF1E3442),
+            background = Color(0xFF101923), topBackground = Color(0xFF21323C),
+            surface = Color(0xFF192831), elevatedSurface = Color(0xFF2A414D),
+            surfaceSunken = Color(0xFF0B1219), onSurface = Color(0xFFE9F6FB),
+            mutedText = Color(0xFFADCAD5), border = Color(0xFF4B6976),
+        )
+        AppearancePreset.TERRACOTTA -> AppearancePalette(
+            preset = preset,
+            accent = Color(0xFFF1AB8B), onAccent = Color(0xFF3A2018),
+            background = Color(0xFF241715), topBackground = Color(0xFF3B2922),
+            surface = Color(0xFF35231E), elevatedSurface = Color(0xFF4D3027),
+            surfaceSunken = Color(0xFF190F0D), onSurface = Color(0xFFFFF0E8),
+            mutedText = Color(0xFFD7B5A5), border = Color(0xFF795342),
+        )
+        AppearancePreset.CITRINE -> AppearancePalette(
+            preset = preset,
+            accent = Color(0xFFD4EE73), onAccent = Color(0xFF29321B),
+            background = Color(0xFF151A12), topBackground = Color(0xFF293223),
+            surface = Color(0xFF232B1F), elevatedSurface = Color(0xFF37402B),
+            surfaceSunken = Color(0xFF0C100A), onSurface = Color(0xFFF5F8D7),
+            mutedText = Color(0xFFC6D0AC), border = Color(0xFF63734A),
+        )
+        AppearancePreset.MOCHA -> AppearancePalette(
+            preset = preset,
+            accent = Color(0xFFE4BAA0), onAccent = Color(0xFF352319),
+            background = Color(0xFF1B1513), topBackground = Color(0xFF33241F),
+            surface = Color(0xFF2A201B), elevatedSurface = Color(0xFF423127),
+            surfaceSunken = Color(0xFF120D0B), onSurface = Color(0xFFFAEFE5),
+            mutedText = Color(0xFFCDB5A5), border = Color(0xFF6F5343),
+        )
+        AppearancePreset.LAGOON -> AppearancePalette(
+            preset = preset,
+            accent = Color(0xFF70E1CE), onAccent = Color(0xFF14312E),
+            background = Color(0xFF0A1E20), topBackground = Color(0xFF164045),
+            surface = Color(0xFF123236), elevatedSurface = Color(0xFF1D4B4D),
+            surfaceSunken = Color(0xFF071416), onSurface = Color(0xFFE6FFF7),
+            mutedText = Color(0xFFABD5CA), border = Color(0xFF397778),
+        )
+        AppearancePreset.LILAC -> AppearancePalette(
+            preset = preset,
+            accent = Color(0xFFD9B6F9), onAccent = Color(0xFF362344),
+            background = Color(0xFF21172A), topBackground = Color(0xFF392347),
+            surface = Color(0xFF30203C), elevatedSurface = Color(0xFF4B3158),
+            surfaceSunken = Color(0xFF160E1D), onSurface = Color(0xFFF5EAFE),
+            mutedText = Color(0xFFC8B0DA), border = Color(0xFF725681),
+        )
+
         AppearancePreset.EMBER -> AppearancePalette(
             preset = preset, accent = Color(0xFFFF91A3), onAccent = Color(0xFF300D18),
             background = Color(0xFF1C0D15), topBackground = Color(0xFF301822),
@@ -149,6 +230,91 @@ object AppearancePaletteResolver {
     }
 
     private fun lightPalette(base: AppearancePalette): AppearancePalette {
+        // The new editions use fully authored light surfaces, not generic dark tints.
+        // Each light palette has its own canvas, raised card, inset, text and border.
+        when (base.preset) {
+            AppearancePreset.MIDNIGHT_BLOOM -> return base.copy(
+                accent = Color(0xFF72438B), onAccent = Color(0xFFFFFFFF),
+                background = Color(0xFFF6F0FA), topBackground = Color(0xFFF0E6F6),
+                surface = Color(0xFFFFFCFE), elevatedSurface = Color(0xFFE9DCF0),
+                surfaceSunken = Color(0xFFE3D3EA), onSurface = Color(0xFF24182C),
+                mutedText = Color(0xFF5C4E63), border = Color(0xFFA98CB6),
+                isDark = false,
+            )
+            AppearancePreset.SAKURA -> return base.copy(
+                accent = Color(0xFF9D3553), onAccent = Color(0xFFFFFFFF),
+                background = Color(0xFFFFF1F3), topBackground = Color(0xFFFFE3E9),
+                surface = Color(0xFFFFF9FA), elevatedSurface = Color(0xFFF6DDE3),
+                surfaceSunken = Color(0xFFF2CED9), onSurface = Color(0xFF351923),
+                mutedText = Color(0xFF724C57), border = Color(0xFFD3A5AF),
+                isDark = false,
+            )
+            AppearancePreset.MATCHA -> return base.copy(
+                accent = Color(0xFF3A6034), onAccent = Color(0xFFFFFFFF),
+                background = Color(0xFFF2F5EA), topBackground = Color(0xFFE9F0DF),
+                surface = Color(0xFFFEFFF7), elevatedSurface = Color(0xFFE0EAD4),
+                surfaceSunken = Color(0xFFD6E3C8), onSurface = Color(0xFF253022),
+                mutedText = Color(0xFF52654C), border = Color(0xFFA4BA93),
+                isDark = false,
+            )
+            AppearancePreset.COBALT -> return base.copy(
+                accent = Color(0xFF264DAD), onAccent = Color(0xFFFFFFFF),
+                background = Color(0xFFEDF2FF), topBackground = Color(0xFFE1EAFF),
+                surface = Color(0xFFFAFCFF), elevatedSurface = Color(0xFFDCE7FB),
+                surfaceSunken = Color(0xFFD0DFFA), onSurface = Color(0xFF151F40),
+                mutedText = Color(0xFF465678), border = Color(0xFF9EB5DD),
+                isDark = false,
+            )
+            AppearancePreset.PORCELAIN -> return base.copy(
+                accent = Color(0xFF16617E), onAccent = Color(0xFFFFFFFF),
+                background = Color(0xFFF7F8F5), topBackground = Color(0xFFEEF5F4),
+                surface = Color(0xFFFFFFFF), elevatedSurface = Color(0xFFE5F0F1),
+                surfaceSunken = Color(0xFFDBE9E9), onSurface = Color(0xFF1C2B31),
+                mutedText = Color(0xFF50636B), border = Color(0xFFA6BDC1),
+                isDark = false,
+            )
+            AppearancePreset.TERRACOTTA -> return base.copy(
+                accent = Color(0xFF8D3E27), onAccent = Color(0xFFFFFFFF),
+                background = Color(0xFFFFF2EA), topBackground = Color(0xFFFCE7DA),
+                surface = Color(0xFFFFFBF6), elevatedSurface = Color(0xFFF5E0D1),
+                surfaceSunken = Color(0xFFF1D3BE), onSurface = Color(0xFF35211B),
+                mutedText = Color(0xFF70534A), border = Color(0xFFC9A28F),
+                isDark = false,
+            )
+            AppearancePreset.CITRINE -> return base.copy(
+                accent = Color(0xFF506514), onAccent = Color(0xFFFFFFFF),
+                background = Color(0xFFF7F8E8), topBackground = Color(0xFFF0F5D8),
+                surface = Color(0xFFFFFFF8), elevatedSurface = Color(0xFFEBF0CF),
+                surfaceSunken = Color(0xFFE0E8B9), onSurface = Color(0xFF283014),
+                mutedText = Color(0xFF596244), border = Color(0xFFB7C78E),
+                isDark = false,
+            )
+            AppearancePreset.MOCHA -> return base.copy(
+                accent = Color(0xFF76513C), onAccent = Color(0xFFFFFFFF),
+                background = Color(0xFFF7F0EA), topBackground = Color(0xFFF1E5D9),
+                surface = Color(0xFFFEFBF7), elevatedSurface = Color(0xFFEDE0D5),
+                surfaceSunken = Color(0xFFE3D2C2), onSurface = Color(0xFF30231D),
+                mutedText = Color(0xFF6A564B), border = Color(0xFFC4AC99),
+                isDark = false,
+            )
+            AppearancePreset.LAGOON -> return base.copy(
+                accent = Color(0xFF006A69), onAccent = Color(0xFFFFFFFF),
+                background = Color(0xFFEAF8F5), topBackground = Color(0xFFDAF3ED),
+                surface = Color(0xFFF7FFFD), elevatedSurface = Color(0xFFD1F0E9),
+                surfaceSunken = Color(0xFFC3E7DF), onSurface = Color(0xFF123331),
+                mutedText = Color(0xFF3B625F), border = Color(0xFF9BCBC4),
+                isDark = false,
+            )
+            AppearancePreset.LILAC -> return base.copy(
+                accent = Color(0xFF75449C), onAccent = Color(0xFFFFFFFF),
+                background = Color(0xFFF7F0FE), topBackground = Color(0xFFEFE3FB),
+                surface = Color(0xFFFFFBFF), elevatedSurface = Color(0xFFEBDCFA),
+                surfaceSunken = Color(0xFFE2D1F1), onSurface = Color(0xFF30213C),
+                mutedText = Color(0xFF65546F), border = Color(0xFFC2A5D6),
+                isDark = false,
+            )
+            else -> Unit
+        }
         val (canvas, accent) = when (base.preset) {
             AppearancePreset.ABYSS -> Color(0xFFEAF5F0) to Color(0xFF00614E)
             AppearancePreset.OBSIDIAN_GOLD -> Color(0xFFF6EED8) to Color(0xFF6A4B05)
@@ -158,6 +324,7 @@ object AppearancePaletteResolver {
             AppearancePreset.SOLSTICE -> Color(0xFFFFEEDC) to Color(0xFF8B3A1B)
             AppearancePreset.VERDANT -> Color(0xFFEDF4E3) to Color(0xFF3D5E22)
             AppearancePreset.SLATE -> Color(0xFFEDF0F4) to Color(0xFF46556D)
+            else -> error("New light editions handled above")
         }
         return base.copy(
             accent = accent,

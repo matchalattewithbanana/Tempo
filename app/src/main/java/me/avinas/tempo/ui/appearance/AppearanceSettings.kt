@@ -4,7 +4,10 @@ import me.avinas.tempo.ui.components.ShareTheme
 
 /** Stable persisted identifiers. Unknown values fall back without touching listening data. */
 enum class AppearancePreset {
-    ABYSS, OBSIDIAN_GOLD, AURORA, GLACIER, EMBER, SOLSTICE, VERDANT, SLATE;
+    ABYSS, OBSIDIAN_GOLD, AURORA, GLACIER, EMBER, SOLSTICE, VERDANT, SLATE,
+    // Stable IDs: append presets; never rename shipped values in imported looks.
+    MIDNIGHT_BLOOM, SAKURA, MATCHA, COBALT, PORCELAIN,
+    TERRACOTTA, CITRINE, MOCHA, LAGOON, LILAC;
     companion object {
         fun decode(raw: String?): AppearancePreset = entries.firstOrNull { it.name == raw } ?: ABYSS
     }
