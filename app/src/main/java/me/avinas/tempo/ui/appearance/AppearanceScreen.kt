@@ -202,8 +202,9 @@ fun AppearanceScreen(
     val preview = draft
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
-        topBar = { TopAppBar(
-            title = { Text(stringResource(R.string.appearance_title)) },
+        topBar = { MediumFlexibleTopAppBar(
+            title = { Text(stringResource(R.string.appearance_title),
+                style = MaterialTheme.typography.headlineSmallEmphasized) },
             navigationIcon = { IconButton(onClick = requestBack, enabled = !busy && exitApplyTarget == null) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.settings_back))
             } },
@@ -627,25 +628,62 @@ private fun SettingToggle(label: Int, checked: Boolean, enabled: Boolean, onChan
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
+/**
+ * Responsive connected Material 3 Expressive controls. A single option group
+ * stays connected within each row, even for large text and compact phones.
+ * Re-selecting the active option is a no-op, avoiding redundant preview work.
+ */
 @Composable
-private fun <T> ChoiceRow(label: Int, options: List<T>, selected: T, enabled: Boolean,
-    text: (T) -> Int, onSelect: (T) -> Unit) {
+private fun <T> ChoiceRow(
+    label: Int,
+    options: List<T>,
+    selected: T,
+    enabled: Boolean,
+    text: (T) -> Int,
+    onSelect: (T) -> Unit,
+) {
+    if (options.isEmpty()) return
+    val widthDp = LocalConfiguration.current.screenWidthDp
+    val fontScale = LocalDensity.current.fontScale
+    val baseColumns = when {
+        widthDp < 360 || fontScale >= 1.3f -> 2
+        widthDp >= 600 && fontScale < 1.2f -> 5
+        else -> 3
+    }
+    // Four settings should form balanced 2×2 choices on standard phones.
+    val columns = if (options.size == 4 && baseColumns == 3) 2 else baseColumns
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(stringResource(label), style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant)
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            options.forEach { option ->
-                ToggleButton(
-                    checked = selected == option,
-                    enabled = enabled,
-                    onCheckedChange = { onSelect(option) },
-                    modifier = Modifier.heightIn(min = 48.dp)
-                        .semantics { role = Role.RadioButton },
-                ) {
-                    Text(stringResource(text(option)),
-                        style = MaterialTheme.typography.labelLarge)
+        Text(
+            stringResource(label),
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        options.chunked(columns).forEach { group ->
+            Row(
+                modifier = Modifier.fillMaxWidth().selectableGroup(),
+                horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+            ) {
+                group.forEachIndexed { index, option ->
+                    ToggleButton(
+                        checked = selected == option,
+                        enabled = enabled,
+                        onCheckedChange = { if (selected != option) onSelect(option) },
+                        shapes = when {
+                            group.size == 1 -> ToggleButtonDefaults.shapes()
+                            index == 0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                            index == group.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                            else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                        },
+                        modifier = Modifier.weight(1f).heightIn(min = 52.dp)
+                            .semantics { role = Role.RadioButton },
+                    ) {
+                        Text(
+                            stringResource(text(option)),
+                            style = MaterialTheme.typography.labelLarge,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
                 }
             }
         }
