@@ -1,9 +1,7 @@
 package me.avinas.tempo.ui.history
 
 import me.avinas.tempo.ui.effects.tempoAmbientBackdrop
-import me.avinas.tempo.ui.effects.tempoTiltSurface
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -17,7 +15,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -31,7 +28,6 @@ import androidx.compose.material.icons.rounded.Album
 import androidx.compose.material.icons.rounded.MusicNote
 import androidx.compose.material3.*
 import me.avinas.tempo.ui.components.TempoCircularLoadingIndicator
-import me.avinas.tempo.ui.components.TempoLinearLoadingIndicator
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -40,7 +36,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
@@ -846,7 +841,7 @@ fun HistoryListContent(
                         title = stringResource(R.string.history_lastfm_history),
                         subtitle = stringResource(R.string.history_lastfm_subtitle),
                         icon = Icons.Default.History,
-                        iconTint = GoldDark
+                        iconTint = MaterialTheme.colorScheme.secondary
                     )
                 }
                 
@@ -884,7 +879,7 @@ fun HistoryListContent(
                             contentAlignment = Alignment.Center
                         ) {
                             TempoCircularLoadingIndicator(
-                                color = GoldDark,
+                                color = MaterialTheme.colorScheme.secondary,
                                 modifier = Modifier.size(24.dp),
                                 strokeWidth = 2.5.dp
                             )
