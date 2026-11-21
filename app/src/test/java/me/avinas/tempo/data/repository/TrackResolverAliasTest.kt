@@ -58,12 +58,14 @@ class TrackResolverAliasTest {
         exactTitleMatch: Track? = null,
         aliasTarget: Track? = null,
         fuzzyCandidate: Track? = null,
+        exactCandidates: List<Track> = emptyList(),
     ): Harness {
         val inserted = mutableListOf<Track>()
 
         val trackRepository = createProxy<TrackRepository> { method, args ->
             when (method) {
                 "findByTitleAndArtist" -> exactTitleMatch
+                "findCandidatesByTitle" -> exactCandidates
                 "findByTitleAndArtistFuzzy" -> fuzzyCandidate
                 "getById" -> null
                 "insert" -> {
@@ -130,6 +132,25 @@ class TrackResolverAliasTest {
         val resolution = h.resolver.resolve(query("Mayiliragae"))
 
         assertEquals(11L, resolution.trackId)
+        assertFalse(resolution.isNewTrack)
+        assertTrue(h.inserted().isEmpty())
+    }
+
+    @Test
+    fun `compatible alternate track prevents duplication when first title result has different ID`() = runTest {
+        val differentRemaster = track(id = 21L, title = "Hush", artist = "The Marías")
+            .copy(spotifyId = "old-recording")
+        val anonymousAlternate = track(id = 22L, title = "Hush", artist = "The Marías")
+        val h = harness(
+            exactTitleMatch = differentRemaster,
+            exactCandidates = listOf(differentRemaster, anonymousAlternate),
+        )
+        val resolution = h.resolver.resolve(
+            TrackResolver.Query(
+                title = "Hush", artist = "The Marías", spotifyId = "new-recording",
+            )
+        )
+        assertEquals(22L, resolution.trackId)
         assertFalse(resolution.isNewTrack)
         assertTrue(h.inserted().isEmpty())
     }
