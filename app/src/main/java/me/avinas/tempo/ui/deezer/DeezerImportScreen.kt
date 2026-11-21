@@ -295,7 +295,7 @@ private fun IdleContent(
             Text(
                 text = stringResource(R.string.deezer_import_short_plays_note),
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }
@@ -351,7 +351,7 @@ private fun ImportingContent(
             Text(
                 text = stringResource(R.string.deezer_import_background_hint),
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
             )
             Spacer(modifier = Modifier.height(16.dp))
@@ -413,7 +413,7 @@ private fun CompletedContent(
                 Text(
                     text = stringResource(R.string.deezer_import_warnings, result.errors.size),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
                 )
 
