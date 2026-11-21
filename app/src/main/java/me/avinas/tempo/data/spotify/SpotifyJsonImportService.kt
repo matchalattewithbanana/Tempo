@@ -21,6 +21,8 @@ import me.avinas.tempo.data.local.entities.EnrichmentStatus
 import me.avinas.tempo.data.local.entities.ListeningEvent
 import me.avinas.tempo.data.repository.ArtistLinkingService
 import me.avinas.tempo.data.repository.TrackResolver
+import me.avinas.tempo.data.repository.StatsRepository
+import me.avinas.tempo.data.repository.RefreshCoordinator
 import okio.buffer
 import okio.Buffer
 import okio.BufferedSink
@@ -40,7 +42,9 @@ class SpotifyJsonImportService @Inject constructor(
     private val trackResolver: TrackResolver,
     private val listeningEventDao: ListeningEventDao,
     private val artistLinkingService: ArtistLinkingService,
-    private val enrichedMetadataDao: EnrichedMetadataDao
+    private val enrichedMetadataDao: EnrichedMetadataDao,
+    private val statsRepository: StatsRepository,
+    private val refreshCoordinator: RefreshCoordinator,
 ) {
     companion object {
         private const val TAG = "SpotifyJsonImport"
@@ -122,6 +126,7 @@ class SpotifyJsonImportService @Inject constructor(
         var totalEntries = 0
         var tracksImported = 0
         var eventsCreated = 0
+        var eventsReconciled = 0
         var duplicatesSkipped = 0
         var podcastsSkipped = 0
         var lowQualitySkipped = 0
@@ -190,6 +195,7 @@ class SpotifyJsonImportService @Inject constructor(
                     var fileMusicProcessed = 0
                     var tracksInFile = 0
                     var eventsInFile = 0
+                    var reconciledInFile = 0
                     var duplicatesInFile = 0
                     var lowQualityInFile = 0
                     val chunk = ArrayList<ParsedEntry>(FLUSH_BATCH_SIZE)
@@ -207,6 +213,7 @@ class SpotifyJsonImportService @Inject constructor(
                                     totalEntries - podcastsSkipped, errors)
                                 tracksInFile += counts.tracksImported
                                 eventsInFile += counts.eventsCreated
+                                reconciledInFile += counts.eventsReconciled
                                 duplicatesInFile += counts.duplicatesSkipped
                                 lowQualityInFile += counts.lowQualitySkipped
                                 fileMusicProcessed += chunk.size
@@ -220,6 +227,7 @@ class SpotifyJsonImportService @Inject constructor(
                             totalEntries - podcastsSkipped, errors)
                         tracksInFile += counts.tracksImported
                         eventsInFile += counts.eventsCreated
+                        reconciledInFile += counts.eventsReconciled
                         duplicatesInFile += counts.duplicatesSkipped
                         lowQualityInFile += counts.lowQualitySkipped
                         fileMusicProcessed += chunk.size
@@ -228,6 +236,7 @@ class SpotifyJsonImportService @Inject constructor(
                     musicProcessedSoFar += fileMusicProcessed
                     tracksImported += tracksInFile
                     eventsCreated += eventsInFile
+                    eventsReconciled += reconciledInFile
                     duplicatesSkipped += duplicatesInFile
                     lowQualitySkipped += lowQualityInFile
 
@@ -265,6 +274,10 @@ class SpotifyJsonImportService @Inject constructor(
             errors = errors
         )
 
+        if (eventsCreated > 0 || eventsReconciled > 0 || tracksImported > 0) {
+            statsRepository.invalidateCache()
+            refreshCoordinator.notifyNewTrackRecorded()
+        }
         _importState.value = ImportState.Completed(result)
         Log.i(TAG, "Import complete: $tracksImported tracks, $eventsCreated events, $duplicatesSkipped duplicates, $podcastsSkipped podcasts, $lowQualitySkipped low-quality skipped")
         result
@@ -273,6 +286,7 @@ class SpotifyJsonImportService @Inject constructor(
     private data class EntryProcessCounts(
         val tracksImported: Int,
         val eventsCreated: Int,
+        val eventsReconciled: Int,
         val duplicatesSkipped: Int,
         val lowQualitySkipped: Int
     )
@@ -288,6 +302,7 @@ class SpotifyJsonImportService @Inject constructor(
         val pendingEnrichedMetadata = mutableListOf<Pair<Long, ParsedEntry>>()
         var tracksImported = 0
         var eventsCreated = 0
+        var eventsReconciled = 0
         var duplicatesSkipped = 0
         var lowQualitySkipped = 0
 
@@ -295,6 +310,7 @@ class SpotifyJsonImportService @Inject constructor(
             if (pendingEvents.isNotEmpty()) {
                 val r = insertPendingBatch(pendingEvents, errors)
                 eventsCreated += r.inserted
+                eventsReconciled += r.replaced
                 duplicatesSkipped += r.skipped
                 pendingEvents.clear()
             }
@@ -348,10 +364,11 @@ class SpotifyJsonImportService @Inject constructor(
 
         flush()
 
-        return EntryProcessCounts(tracksImported, eventsCreated, duplicatesSkipped, lowQualitySkipped)
+        return EntryProcessCounts(tracksImported, eventsCreated, eventsReconciled,
+            duplicatesSkipped, lowQualitySkipped)
     }
 
-    private data class FlushResult(val inserted: Int, val skipped: Int)
+    private data class FlushResult(val inserted: Int, val skipped: Int, val replaced: Int)
 
     private suspend fun insertPendingBatch(
         pendingEvents: List<ListeningEvent>,
@@ -359,18 +376,20 @@ class SpotifyJsonImportService @Inject constructor(
     ): FlushResult {
         return try {
             val result = listeningEventDao.insertAllBatchedWithDedup(pendingEvents)
-            FlushResult(result.newlyAdded, result.skipped)
+            FlushResult(result.newlyAdded, result.skipped, result.replaced)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
             Log.e(TAG, "Batch insert failed, retrying Spotify plays individually", e)
             var inserted = 0
             var skipped = 0
+            var replaced = 0
             for (event in pendingEvents) {
                 coroutineContext.ensureActive()
                 try {
                     val result = listeningEventDao.insertAllBatchedWithDedup(listOf(event))
                     inserted += result.newlyAdded
+                    replaced += result.replaced
                     skipped += result.skipped
                 } catch (cancelled: CancellationException) {
                     throw cancelled
@@ -379,7 +398,7 @@ class SpotifyJsonImportService @Inject constructor(
                     addCappedError(errors, "Failed to save a Spotify play")
                 }
             }
-            FlushResult(inserted, skipped)
+            FlushResult(inserted, skipped, replaced)
         }
     }
 
