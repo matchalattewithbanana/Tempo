@@ -2,11 +2,7 @@ package me.avinas.tempo.ui.settings
 
 import me.avinas.tempo.ui.effects.tempoAmbientBackdrop
 import android.app.Activity
-import android.content.ActivityNotFoundException
-import android.content.Intent
 import android.net.Uri
-import android.provider.Settings
-import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -14,10 +10,8 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.semantics.Role
 import androidx.compose.material.icons.Icons
@@ -57,10 +51,6 @@ import me.avinas.tempo.data.importexport.ImportConflictStrategy
 import me.avinas.tempo.data.importexport.ImportExportResult
 import me.avinas.tempo.data.local.entities.AlbumArtSource
 import me.avinas.tempo.data.drive.BackupStatus
-import me.avinas.tempo.ui.components.SettingsOption
-import me.avinas.tempo.ui.components.SettingsSectionHeader
-import me.avinas.tempo.ui.components.TempoSettingsGroup
-import me.avinas.tempo.ui.components.SettingsSwitch
 import me.avinas.tempo.ui.components.TempoDialogBody
 import me.avinas.tempo.ui.components.TempoDialogButtonRow
 import me.avinas.tempo.ui.components.TempoDialogDangerButton
@@ -107,7 +97,6 @@ fun SettingsScreen(
         }
     }
     BackHandler(enabled = settingsSection != null || settingsSearch.isNotEmpty(), onBack = clearOrClose)
-    val scope = rememberCoroutineScope()
     var notificationListenerGranted by remember { mutableStateOf(false) }
     var trackingHeartbeat by remember { mutableStateOf<TrackingServiceHeartbeat.Snapshot?>(null) }
     var trackingStatusCheckedAt by remember { mutableLongStateOf(System.currentTimeMillis()) }
