@@ -251,10 +251,25 @@ interface ListeningEventDao {
         val toInsert = ArrayList<ListeningEvent>(layer1Survivors.size)
         val toDelete = mutableSetOf<Long>()
 
-        for ((trackId, trackEvents) in layer1Survivors.groupBy { it.track_id }) {
-            val equivalentTrackIds = if (trackEvents.any { it.source.contains("import") }) {
-                getEquivalentTrackIds(trackId).ifEmpty { listOf(trackId) }
-            } else listOf(trackId)
+        // Pre-group aliases BEFORE reconciling: two separate track IDs in this
+        // very same batch must share the same candidate slots. Otherwise each
+        // track group sees only the DB, both appear new, and both are written.
+        // Live-only single-event saves skip the alias queries for low latency.
+        val importedBatch = layer1Survivors.any { it.source.contains("import") }
+        val equivalentByTrackId = HashMap<Long, List<Long>>()
+        if (importedBatch) {
+            for (trackId in layer1Survivors.map { it.track_id }.distinct()) {
+                equivalentByTrackId[trackId] =
+                    getEquivalentTrackIds(trackId).ifEmpty { listOf(trackId) }
+            }
+        }
+        val grouped = layer1Survivors.groupBy { event ->
+            equivalentByTrackId[event.track_id]?.minOrNull() ?: event.track_id
+        }
+        for ((_, trackEvents) in grouped) {
+            val equivalentTrackIds = trackEvents.flatMap { event ->
+                equivalentByTrackId[event.track_id] ?: listOf(event.track_id)
+            }.distinct()
             val candidates = TreeMap<Long, MutableList<Slot>>()
             fun addSlot(slot: Slot) {
                 candidates.getOrPut(slot.play.timestamp) { mutableListOf() }.add(slot)
