@@ -40,7 +40,11 @@ internal fun TrackingSettingsSection(
 ) {
     val context = LocalContext.current
     val resources = LocalResources.current
-    SettingsSectionList(state = state, modifier = modifier) {
+    SettingsSectionList(
+        state = state,
+        tone = SettingsSection.TRACKING.tone,
+        modifier = modifier,
+    ) {
         item(key = "tracking-source") {
             val trackingHealth = trackingHeartbeat?.let { heartbeat ->
                 evaluateTrackingHealth(
