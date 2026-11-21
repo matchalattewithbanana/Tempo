@@ -11,8 +11,13 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.*
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -86,10 +91,6 @@ fun AppearanceScreen(
     var draft by rememberSaveable(saved, stateSaver = DraftSaver) { mutableStateOf(saved) }
     var presetsExpanded by rememberSaveable { mutableStateOf(false) }
     var applySuggestedDetails by rememberSaveable { mutableStateOf(false) }
-    val columns = if (LocalConfiguration.current.screenWidthDp < 350 ||
-        LocalDensity.current.fontScale >= 1.35f) 1 else 2
-    val newRows = remember(columns) { NewAppearanceEditions.chunked(columns) }
-    val signatureRows = remember(columns) { SignatureAppearancePresets.chunked(columns) }
     var lookName by rememberSaveable { mutableStateOf("") }
     val transfer by viewModel.transferState.collectAsStateWithLifecycle()
     val busy = saving || transfer.busy
@@ -262,62 +263,130 @@ fun AppearanceScreen(
             }
                 }
             }
-            item(key = "preset_collection_header") {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    TextButton(
+            item(key = "preset_collection") {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Surface(
                         onClick = { presetsExpanded = !presetsExpanded },
                         modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.extraLarge,
+                        color = MaterialTheme.colorScheme.surfaceContainerLow,
+                        contentColor = MaterialTheme.colorScheme.onSurface,
                     ) {
-                        Text(
-                            stringResource(R.string.appearance_presets),
-                            modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.titleMediumEmphasized,
-                        )
-                        Text(if (presetsExpanded) "−" else "+")
-                    }
-                    Text(
-                        stringResource(R.string.appearance_preset_preview_explainer),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                    )
-                }
-            }
-            if (presetsExpanded) {
-                item(key = "new_edition_heading") {
-                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text(stringResource(R.string.appearance_new_editions),
-                            color = MaterialTheme.colorScheme.primary,
-                            style = MaterialTheme.typography.titleSmall)
-                        Text(stringResource(R.string.appearance_gallery_hint),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            style = MaterialTheme.typography.bodySmall)
-                        SettingToggle(R.string.appearance_apply_curated_style,
-                            applySuggestedDetails, !busy) { applySuggestedDetails = it }
-                    }
-                }
-                items(count = newRows.size, key = { "new_preset_$it" }) { index ->
-                    Row(modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        newRows[index].forEach { preset ->
-                            AppearancePresetCard(preset, saved.preset == preset, draft.preset == preset,
-                                onClick = { draft = draft.withCuratedPreset(preset, applySuggestedDetails) },
-                                modifier = Modifier.weight(1f), tone = preview.tone, enabled = !busy)
+                        Row(
+                            modifier = Modifier.fillMaxWidth()
+                                .heightIn(min = 64.dp)
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            Column(
+                                modifier = Modifier.weight(1f),
+                                verticalArrangement = Arrangement.spacedBy(2.dp),
+                            ) {
+                                Text(
+                                    stringResource(R.string.appearance_presets),
+                                    style = MaterialTheme.typography.titleMediumEmphasized,
+                                )
+                                Text(
+                                    stringResource(R.string.appearance_preset_preview_explainer),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 2,
+                                )
+                            }
+                            Text(
+                                if (presetsExpanded) "−" else "+",
+                                style = MaterialTheme.typography.titleLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
                         }
                     }
-                }
-                item(key = "signature_edition_heading") {
-                    Text(stringResource(R.string.appearance_signature_editions),
-                        color = MaterialTheme.colorScheme.primary,
-                        style = MaterialTheme.typography.titleSmall)
-                }
-                items(count = signatureRows.size, key = { "signature_preset_$it" }) { index ->
-                    Row(modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        signatureRows[index].forEach { preset ->
-                            AppearancePresetCard(preset, saved.preset == preset, draft.preset == preset,
-                                onClick = { draft = draft.withCuratedPreset(preset, applySuggestedDetails) },
-                                modifier = Modifier.weight(1f), tone = preview.tone, enabled = !busy)
+
+                    AnimatedVisibility(
+                        visible = presetsExpanded,
+                        enter = expandVertically(
+                            animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
+                        ) + fadeIn(
+                            animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+                        ),
+                        exit = shrinkVertically(
+                            animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+                        ) + fadeOut(
+                            animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
+                        ),
+                    ) {
+                        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Text(
+                                    stringResource(R.string.appearance_new_editions),
+                                    style = MaterialTheme.typography.titleSmallEmphasized,
+                                )
+                                Text(
+                                    stringResource(R.string.appearance_gallery_hint),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    style = MaterialTheme.typography.bodySmall,
+                                )
+                                SettingToggle(
+                                    R.string.appearance_apply_curated_style,
+                                    applySuggestedDetails,
+                                    !busy,
+                                ) { applySuggestedDetails = it }
+                            }
+                            LazyRow(
+                                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                contentPadding = PaddingValues(horizontal = 2.dp),
+                            ) {
+                                items(
+                                    count = NewAppearanceEditions.size,
+                                    key = { NewAppearanceEditions[it].name },
+                                ) { index ->
+                                    val preset = NewAppearanceEditions[index]
+                                    AppearancePresetCard(
+                                        preset = preset,
+                                        active = saved.preset == preset,
+                                        selected = draft.preset == preset,
+                                        onClick = {
+                                            draft = draft.withCuratedPreset(
+                                                preset,
+                                                applySuggestedDetails,
+                                            )
+                                        },
+                                        modifier = Modifier.width(184.dp),
+                                        tone = preview.tone,
+                                        enabled = !busy,
+                                    )
+                                }
+                            }
+
+                            Text(
+                                stringResource(R.string.appearance_signature_editions),
+                                style = MaterialTheme.typography.titleSmallEmphasized,
+                            )
+                            LazyRow(
+                                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                contentPadding = PaddingValues(horizontal = 2.dp),
+                            ) {
+                                items(
+                                    count = SignatureAppearancePresets.size,
+                                    key = { SignatureAppearancePresets[it].name },
+                                ) { index ->
+                                    val preset = SignatureAppearancePresets[index]
+                                    AppearancePresetCard(
+                                        preset = preset,
+                                        active = saved.preset == preset,
+                                        selected = draft.preset == preset,
+                                        onClick = {
+                                            draft = draft.withCuratedPreset(
+                                                preset,
+                                                applySuggestedDetails,
+                                            )
+                                        },
+                                        modifier = Modifier.width(184.dp),
+                                        tone = preview.tone,
+                                        enabled = !busy,
+                                    )
+                                }
+                            }
                         }
                     }
                 }
