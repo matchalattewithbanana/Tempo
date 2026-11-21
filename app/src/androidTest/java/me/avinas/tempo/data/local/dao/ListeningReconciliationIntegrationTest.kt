@@ -7,6 +7,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.runBlocking
 import me.avinas.tempo.data.local.AppDatabase
 import me.avinas.tempo.data.local.EventFingerprint
+import me.avinas.tempo.data.local.ReconciliationTrackScope
 import me.avinas.tempo.data.local.entities.ListeningEvent
 import me.avinas.tempo.data.local.entities.Track
 import me.avinas.tempo.data.repository.RoomListeningRepository
@@ -544,7 +545,8 @@ class ListeningReconciliationIntegrationTest {
         // Replayed backup source remains a live package name rather than
         // "import", but its track identity differs from the active library.
         assertEquals(0, dao.insertAllBatchedWithDedup(
-            listOf(original(duplicateTrack)), forceAliasLookup = true,
+            listOf(original(duplicateTrack)),
+            trackScope = ReconciliationTrackScope.COMPATIBLE_ALIASES,
         ).newlyAdded)
         assertEquals(1, dao.getCount())
         assertEquals(90_000L, dao.getEventsForTrack(primary).sumOf { it.playDuration })
