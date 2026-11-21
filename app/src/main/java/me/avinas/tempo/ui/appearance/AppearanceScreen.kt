@@ -13,12 +13,15 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.*
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -635,7 +638,7 @@ private fun AppearanceSection(
         Column {
             Row(
                 modifier = Modifier.fillMaxWidth()
-                    .clickable { expanded = !expanded }
+                    .clickable(role = Role.Button) { expanded = !expanded }
                     .heightIn(min = 60.dp)
                     .padding(horizontal = 18.dp, vertical = 14.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -653,8 +656,12 @@ private fun AppearanceSection(
             }
             AnimatedVisibility(
                 visible = expanded,
-                enter = fadeIn(MaterialTheme.motionScheme.fastEffectsSpec()),
-                exit = fadeOut(MaterialTheme.motionScheme.fastEffectsSpec()),
+                enter = expandVertically(
+                    animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec<androidx.compose.ui.unit.IntSize>(),
+                ) + fadeIn(MaterialTheme.motionScheme.fastEffectsSpec()),
+                exit = shrinkVertically(
+                    animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec<androidx.compose.ui.unit.IntSize>(),
+                ) + fadeOut(MaterialTheme.motionScheme.fastEffectsSpec()),
             ) {
                 Column {
                     HorizontalDivider(color = colors.outlineVariant.copy(alpha = 0.6f))
@@ -668,26 +675,38 @@ private fun AppearanceSection(
     }
 }
 
+/** The whole Settings-style row is one switch target, including its label. */
 @Composable
 private fun SettingToggle(label: Int, checked: Boolean, enabled: Boolean, onChange: (Boolean) -> Unit) {
     val labelText = stringResource(label)
     Row(
-        Modifier.fillMaxWidth().heightIn(min = 52.dp),
+        modifier = Modifier.fillMaxWidth()
+            .heightIn(min = 56.dp)
+            .toggleable(
+                value = checked,
+                enabled = enabled,
+                role = Role.Switch,
+                onValueChange = onChange,
+            )
+            .padding(horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Text(labelText, modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface)
-        Switch(modifier = Modifier.semantics { contentDescription = labelText },
-            checked = checked, enabled = enabled, onCheckedChange = onChange)
+        Text(
+            labelText,
+            modifier = Modifier.weight(1f),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        Switch(checked = checked, enabled = enabled, onCheckedChange = null)
     }
 }
 
 /**
- * Responsive connected Material 3 Expressive controls. A single option group
- * stays connected within each row, even for large text and compact phones.
- * Re-selecting the active option is a no-op, avoiding redundant preview work.
+ * M3 Expressive connected groups for up to five single-select options.
+ * Larger collections (e.g. the six duration modes) use filter chips instead;
+ * a single large segmented row would be hard to read on a narrow phone.
+ * Layout uses the actual pane width, not the physical screen width.
  */
 @Composable
 private fun <T> ChoiceRow(
@@ -699,48 +718,87 @@ private fun <T> ChoiceRow(
     onSelect: (T) -> Unit,
 ) {
     if (options.isEmpty()) return
-    val widthDp = LocalConfiguration.current.screenWidthDp
-    val fontScale = LocalDensity.current.fontScale
-    val columns = connectedChoiceColumns(widthDp, fontScale, options.size)
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
             stringResource(label),
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        options.chunked(columns).forEach { group ->
-            Row(
+        if (options.size > 5) {
+            FlowRow(
                 modifier = Modifier.fillMaxWidth().selectableGroup(),
-                horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                group.forEachIndexed { index, option ->
+                options.forEach { option ->
                     val isChosen = selected == option
-                    ToggleButton(
-                        checked = isChosen,
+                    FilterChip(
+                        selected = isChosen,
                         enabled = enabled,
-                        onCheckedChange = { if (!isChosen) onSelect(option) },
-                        shapes = when {
-                            group.size == 1 -> ToggleButtonShapes(
-                                shape = ToggleButtonDefaults.shape,
-                                pressedShape = ToggleButtonDefaults.pressedShape,
-                                checkedShape = ToggleButtonDefaults.checkedShape,
+                        onClick = { if (!isChosen) onSelect(option) },
+                        modifier = Modifier.heightIn(min = 48.dp),
+                        label = {
+                            Text(
+                                stringResource(text(option)),
+                                style = if (isChosen) MaterialTheme.typography.labelLargeEmphasized
+                                    else MaterialTheme.typography.labelLarge,
                             )
-                            index == 0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-                            index == group.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
-                            else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
                         },
-                        modifier = Modifier.weight(1f).heightIn(min = 52.dp)
-                            .semantics {
-                                role = Role.RadioButton
-                                this.selected = isChosen
-                            },
-                    ) {
-                        Text(
-                            stringResource(text(option)),
-                            style = MaterialTheme.typography.labelLarge,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis,
-                        )
+                        leadingIcon = if (isChosen) {
+                            { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp)) }
+                        } else null,
+                    )
+                }
+            }
+        } else {
+            BoxWithConstraints(Modifier.fillMaxWidth()) {
+                val columns = connectedChoiceColumns(
+                    widthDp = maxWidth.value.toInt(),
+                    fontScale = LocalDensity.current.fontScale,
+                    optionCount = options.size,
+                )
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    options.chunked(columns).forEach { group ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth().selectableGroup(),
+                            horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+                        ) {
+                            group.forEachIndexed { index, option ->
+                                val isChosen = selected == option
+                                ToggleButton(
+                                    checked = isChosen,
+                                    enabled = enabled,
+                                    onCheckedChange = { if (!isChosen) onSelect(option) },
+                                    shapes = when {
+                                        group.size == 1 -> ToggleButtonShapes(
+                                            shape = ToggleButtonDefaults.shape,
+                                            pressedShape = ToggleButtonDefaults.pressedShape,
+                                            checkedShape = ToggleButtonDefaults.checkedShape,
+                                        )
+                                        index == 0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                                        index == group.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                                        else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                                    },
+                                    modifier = Modifier.weight(1f).heightIn(min = 52.dp)
+                                        .semantics {
+                                            role = Role.RadioButton
+                                            this.selected = isChosen
+                                        },
+                                ) {
+                                    if (isChosen) {
+                                        Icon(Icons.Default.Check, contentDescription = null,
+                                            modifier = Modifier.size(16.dp))
+                                        Spacer(Modifier.width(4.dp))
+                                    }
+                                    Text(
+                                        stringResource(text(option)),
+                                        style = if (isChosen) MaterialTheme.typography.labelLargeEmphasized
+                                            else MaterialTheme.typography.labelLarge,
+                                        maxLines = 2,
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }
