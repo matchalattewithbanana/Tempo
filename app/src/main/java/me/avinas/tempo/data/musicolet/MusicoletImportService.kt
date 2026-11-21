@@ -327,6 +327,7 @@ class MusicoletImportService
         ): ImportedCounts {
             var tracksImported = 0
             var eventsCreated = 0
+            var eventsReconciled = 0
             var duplicatesSkipped = 0
             var earliest: Long? = null
             var latest: Long? = null
@@ -345,27 +346,23 @@ class MusicoletImportService
                 try {
                     val insert = listeningEventDao.insertAllBatchedWithDedup(pending)
                     eventsCreated += insert.newlyAdded
+                    eventsReconciled += insert.replaced
                     duplicatesSkipped += insert.skipped
                 } catch (e: Exception) {
-                    // One poisoned batch must not lose the rest of the import; the DAO's
-                    // own dedup is bypassed here, so re-check the tolerance window per row.
-                    Log.e(TAG, "Batch insert failed, falling back to individual inserts", e)
+                    // Never bypass the transactional deduplication boundary when
+                    // retrying a batch. A raw insert can inflate listening totals.
+                    Log.e(TAG, "Batch insert failed, retrying each play through reconciliation", e)
                     for (event in pending) {
+                        coroutineContext.ensureActive()
                         try {
-                            val near =
-                                listeningEventDao.countEventsNearTimestamp(
-                                    event.track_id,
-                                    event.timestamp - ListeningEventDao.DUPLICATE_TOLERANCE_MS,
-                                    event.timestamp + ListeningEventDao.DUPLICATE_TOLERANCE_MS,
-                                )
-                            if (near == 0) {
-                                listeningEventDao.insert(event)
-                                eventsCreated++
-                            } else {
-                                duplicatesSkipped++
-                            }
+                            val result = listeningEventDao.insertAllBatchedWithDedup(listOf(event))
+                            eventsCreated += result.newlyAdded
+                            eventsReconciled += result.replaced
+                            duplicatesSkipped += result.skipped
+                        } catch (cancelled: CancellationException) {
+                            throw cancelled
                         } catch (e2: Exception) {
-                            Log.w(TAG, "Failed to insert event for track ${event.track_id}", e2)
+                            Log.w(TAG, "Failed to reconcile event for track ${event.track_id}", e2)
                         }
                     }
                 }
@@ -417,7 +414,7 @@ class MusicoletImportService
             }
             flush()
 
-            if (eventsCreated > 0) {
+            if (eventsCreated > 0 || eventsReconciled > 0) {
                 try {
                     statsRepository.invalidateCache()
                 } catch (e: Exception) {
