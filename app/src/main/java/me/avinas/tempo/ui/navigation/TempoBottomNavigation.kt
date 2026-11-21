@@ -3,11 +3,6 @@
 package me.avinas.tempo.ui.navigation
 
 import me.avinas.tempo.R
-import me.avinas.tempo.ui.theme.TempoDarkSurface
-import me.avinas.tempo.ui.theme.TempoDarkSurfaceElevated
-import me.avinas.tempo.ui.theme.TextPrimary
-import me.avinas.tempo.ui.theme.TextSecondary
-import me.avinas.tempo.ui.theme.LocalTempoPalette
 import me.avinas.tempo.ui.theme.LocalTempoAppearance
 import me.avinas.tempo.ui.appearance.AppearanceNowListening
 import me.avinas.tempo.ui.appearance.AppearanceNavigationStyle
@@ -17,26 +12,13 @@ import me.avinas.tempo.ui.components.AlbumArtImage
 import me.avinas.tempo.ui.components.NowPlayingArtworkViewModel
 import me.avinas.tempo.ui.components.NowPlayingArtworkIdentity
 import androidx.hilt.navigation.compose.hiltViewModel
-import me.avinas.tempo.ui.theme.rememberReducedMotion
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Home
@@ -61,23 +43,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.scale
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -88,10 +60,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.toShape
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.HorizontalFloatingToolbar
-import androidx.compose.material3.FloatingToolbarDefaults
-import androidx.compose.material3.FilledIconToggleButton
-import androidx.compose.material3.IconButtonDefaults
 
 /**
  * Stable Material navigation for the three top-level destinations.
