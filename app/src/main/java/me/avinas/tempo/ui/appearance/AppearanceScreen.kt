@@ -210,9 +210,9 @@ fun AppearanceScreen(
     val preview = draft
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
-        topBar = { MediumFlexibleTopAppBar(
+        topBar = { TopAppBar(
             title = { Text(stringResource(R.string.appearance_title),
-                style = MaterialTheme.typography.headlineSmallEmphasized) },
+                style = MaterialTheme.typography.titleLargeEmphasized) },
             navigationIcon = { IconButton(onClick = requestBack, enabled = !busy && exitApplyTarget == null) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.settings_back))
             } },
