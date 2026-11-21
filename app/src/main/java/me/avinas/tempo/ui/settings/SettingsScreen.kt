@@ -1044,138 +1044,144 @@ fun SettingsScreen(
                     }
                 } // Connections
                 if (settingsCategory == "data") {
-                    item(key = "data") {
-                // Data Management
-                SettingsSectionHeader(stringResource(R.string.settings_your_data))
-                TempoSettingsGroup {
-                    Column {
-                        // The opt-out for anonymous app-health reporting lives here, at the
-                        // top of "Your Data" next to backup/restore rather than buried in
-                        // About. Hidden entirely in builds that cannot report (no analytics
-                        // endpoint, or debug), since a switch for collection that cannot
-                        // happen would be misleading.
-                        if (uiState.analyticsConfigured) {
-                            SettingsSwitch(
-                                title = stringResource(R.string.settings_analytics_toggle),
-                                subtitle = stringResource(R.string.settings_analytics_toggle_desc),
-                                checked = uiState.analyticsEnabled,
-                                onCheckedChange = viewModel::setAnalyticsEnabled,
-                            )
-                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                            // Offered even while reporting is off: someone who has just turned
-                            // it off may still want the id they used beforehand replaced.
-                            SettingsOption(
-                                title = stringResource(R.string.settings_analytics_reset_id),
-                                subtitle = stringResource(R.string.settings_analytics_reset_id_desc),
-                                onClick = viewModel::resetAnalyticsId,
-                            )
-                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    item(key = "data-backups") {
+                        SettingsSectionHeader(stringResource(R.string.settings_backup_restore))
+                        val backupStatus = if (!backupOverview.isGoogleDriveEnabled) {
+                            R.string.settings_backup_overview_disabled
+                        } else when (backupOverview.lastBackupStatus) {
+                            BackupStatus.NEVER -> R.string.settings_backup_overview_never
+                            BackupStatus.SUCCESS -> R.string.settings_backup_overview_success
+                            BackupStatus.FAILED -> R.string.settings_backup_overview_failed
+                            BackupStatus.IN_PROGRESS -> R.string.settings_backup_overview_running
                         }
-                        SettingsSwitch(
-                            title = stringResource(R.string.settings_smart_merge),
-                            subtitle = stringResource(R.string.settings_smart_merge_desc),
-                            checked = uiState.mergeAlternateVersions,
-                            onCheckedChange = viewModel::toggleMergeAlternateVersions,
-                        )
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                        SettingsOption(
-                            title = stringResource(R.string.settings_backup_restore),
-                            subtitle = stringResource(R.string.settings_backup_restore_desc),
-                            onClick = { onNavigateToBackup?.invoke() },
-                        )
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                        SettingsOption(
-                            title = "Check listening-history accuracy",
-                            subtitle = "Scan for duplicate plays and inaccurate Spotify API estimates. Repairs require a backup.",
-                            onClick = {
-                                historyBackupConfirmed = false
-                                showHistoryAuditDialog = true
-                                viewModel.scanHistoryQuality()
-                            },
-                        )
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                        SettingsOption(
-                            title = stringResource(R.string.settings_data_diagnostics),
-                            subtitle = stringResource(R.string.settings_data_diagnostics_desc),
-                            onClick = { onNavigateToYourData?.invoke() },
-                        )
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                        SettingsOption(
-                            title = stringResource(R.string.enrichment_report_settings_option),
-                            subtitle = stringResource(R.string.enrichment_report_settings_option_desc),
-                            onClick = { onNavigateToEnrichmentReport?.invoke() },
-                        )
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                        SettingsOption(
-                            title = stringResource(R.string.settings_clear_all),
-                            textColor = TempoError,
-                            onClick = { showClearDataDialog = true },
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-
-
+                        val backupSubtitle = backupOverview.lastBackupTime
+                            ?.takeIf { it > 0L && it <= System.currentTimeMillis() }
+                            ?.let { timestamp ->
+                                val formatted = java.text.DateFormat.getDateTimeInstance(
+                                    java.text.DateFormat.SHORT, java.text.DateFormat.SHORT,
+                                ).format(java.util.Date(timestamp))
+                                stringResource(R.string.settings_backup_overview_last_success, formatted)
+                            } ?: stringResource(backupStatus)
+                        TempoSettingsGroup {
+                            SettingsOption(
+                                title = stringResource(R.string.settings_backup_restore),
+                                subtitle = backupSubtitle,
+                                onClick = onNavigateToBackup,
+                            )
+                        }
+                        Spacer(Modifier.height(16.dp))
                     }
                     item(key = "data-imports") {
-                        Spacer(modifier = Modifier.height(8.dp))
                         SettingsSectionHeader(stringResource(R.string.settings_import_history))
-                        Surface(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = MaterialTheme.shapes.extraLarge,
-                            color = MaterialTheme.colorScheme.surfaceContainerLow,
-                        ) {
+                        TempoSettingsGroup {
                             Column {
-                        SettingsOption(
-                            title = stringResource(R.string.settings_import_spotify_json),
-                            subtitle = stringResource(R.string.settings_import_spotify_json_desc),
-                            onClick = { onNavigateToSpotifyJsonImport?.invoke() },
-                        )
-
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-
-                        SettingsOption(
-                            title = stringResource(R.string.settings_import_deezer),
-                            subtitle = stringResource(R.string.settings_import_deezer_desc),
-                            onClick = { onNavigateToDeezerImport?.invoke() },
-                        )
-
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-
-                        SettingsOption(
-                            title = stringResource(R.string.settings_import_apple_music),
-                            subtitle = stringResource(R.string.settings_import_apple_music_desc),
-                            onClick = { onNavigateToAppleMusicImport?.invoke() },
-                        )
-
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-
-                        SettingsOption(
-                            title = stringResource(R.string.settings_import_youtube_music),
-                            subtitle = stringResource(R.string.settings_import_youtube_music_desc),
-                            onClick = { onNavigateToYouTubeMusicImport?.invoke() },
-                        )
-
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-
-                        SettingsOption(
-                            title = stringResource(R.string.settings_import_musicolet),
-                            subtitle = stringResource(R.string.settings_import_musicolet_desc),
-                            onClick = { onNavigateToMusicoletImport?.invoke() },
-                        )
-
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-
-                        SettingsOption(
-                            title = stringResource(R.string.settings_import_extension),
-                            subtitle = stringResource(R.string.settings_import_extension_desc),
-                            onClick = { onNavigateToExtensionImport?.invoke() },
-                        )
+                                SettingsSwitch(
+                                    title = stringResource(R.string.settings_smart_merge),
+                                    subtitle = stringResource(R.string.settings_smart_merge_desc),
+                                    checked = uiState.mergeAlternateVersions,
+                                    onCheckedChange = viewModel::toggleMergeAlternateVersions,
+                                )
+                                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                                SettingsOption(
+                                    title = stringResource(R.string.settings_import_spotify_json),
+                                    subtitle = stringResource(R.string.settings_import_spotify_json_desc),
+                                    onClick = onNavigateToSpotifyJsonImport,
+                                )
+                                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                                SettingsOption(
+                                    title = stringResource(R.string.settings_import_apple_music),
+                                    subtitle = stringResource(R.string.settings_import_apple_music_desc),
+                                    onClick = onNavigateToAppleMusicImport,
+                                )
+                                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                                SettingsOption(
+                                    title = stringResource(R.string.settings_import_deezer),
+                                    subtitle = stringResource(R.string.settings_import_deezer_desc),
+                                    onClick = onNavigateToDeezerImport,
+                                )
+                                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                                SettingsOption(
+                                    title = stringResource(R.string.settings_import_youtube_music),
+                                    subtitle = stringResource(R.string.settings_import_youtube_music_desc),
+                                    onClick = onNavigateToYouTubeMusicImport,
+                                )
+                                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                                SettingsOption(
+                                    title = stringResource(R.string.settings_import_musicolet),
+                                    subtitle = stringResource(R.string.settings_import_musicolet_desc),
+                                    onClick = onNavigateToMusicoletImport,
+                                )
+                                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                                SettingsOption(
+                                    title = stringResource(R.string.settings_import_extension),
+                                    subtitle = stringResource(R.string.settings_import_extension_desc),
+                                    onClick = onNavigateToExtensionImport,
+                                )
                             }
                         }
-                        Spacer(modifier = Modifier.height(24.dp))
+                        Spacer(Modifier.height(16.dp))
+                    }
+                    item(key = "data-accuracy") {
+                        SettingsSectionHeader(stringResource(R.string.settings_your_data))
+                        TempoSettingsGroup {
+                            Column {
+                                SettingsOption(
+                                    title = "Check listening-history accuracy",
+                                    subtitle = "Check duplicates and inaccurate estimates before repairing your backed-up history.",
+                                    onClick = {
+                                        historyBackupConfirmed = false
+                                        showHistoryAuditDialog = true
+                                        viewModel.scanHistoryQuality()
+                                    },
+                                )
+                                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                                SettingsOption(
+                                    title = stringResource(R.string.settings_data_diagnostics),
+                                    subtitle = stringResource(R.string.settings_data_diagnostics_desc),
+                                    onClick = onNavigateToYourData,
+                                )
+                                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                                SettingsOption(
+                                    title = stringResource(R.string.enrichment_report_settings_option),
+                                    subtitle = stringResource(R.string.enrichment_report_settings_option_desc),
+                                    onClick = onNavigateToEnrichmentReport,
+                                )
+                            }
+                        }
+                        Spacer(Modifier.height(16.dp))
+                    }
+                    if (uiState.analyticsConfigured) {
+                        item(key = "data-privacy") {
+                            SettingsSectionHeader(stringResource(R.string.settings_privacy_policy))
+                            TempoSettingsGroup {
+                                Column {
+                                    SettingsSwitch(
+                                        title = stringResource(R.string.settings_analytics_toggle),
+                                        subtitle = stringResource(R.string.settings_analytics_toggle_desc),
+                                        checked = uiState.analyticsEnabled,
+                                        onCheckedChange = viewModel::setAnalyticsEnabled,
+                                    )
+                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                                    SettingsOption(
+                                        title = stringResource(R.string.settings_analytics_reset_id),
+                                        subtitle = stringResource(R.string.settings_analytics_reset_id_desc),
+                                        onClick = viewModel::resetAnalyticsId,
+                                    )
+                                }
+                            }
+                            Spacer(Modifier.height(16.dp))
+                        }
+                    }
+                    item(key = "data-reset") {
+                        SettingsSectionHeader(stringResource(R.string.settings_data_reset_section))
+                        TempoSettingsGroup {
+                            SettingsOption(
+                                title = stringResource(R.string.settings_clear_all),
+                                textColor = MaterialTheme.colorScheme.error,
+                                onClick = { showClearDataDialog = true },
+                            )
+                        }
+                        Spacer(Modifier.height(24.dp))
                     }
                 } // Library and data
                 if (settingsCategory == "about") {
