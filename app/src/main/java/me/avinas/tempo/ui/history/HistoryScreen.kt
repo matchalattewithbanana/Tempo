@@ -2,7 +2,6 @@ package me.avinas.tempo.ui.history
 
 import me.avinas.tempo.ui.effects.tempoAmbientBackdrop
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -213,13 +212,18 @@ fun HistoryScreen(
                     listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 0
                 }
             }
-            val headerAlpha by animateFloatAsState(
-                targetValue = if (isScrolled) 1f else 0f,
-                label = "historyHeaderAlpha"
+            val headerColor by androidx.compose.animation.animateColorAsState(
+                targetValue = if (isScrolled) {
+                    MaterialTheme.colorScheme.surfaceContainer
+                } else {
+                    Color.Transparent
+                },
+                animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
+                label = "historyHeaderColor",
             )
 
             Surface(
-                color = MaterialTheme.colorScheme.background.copy(alpha = 0.95f * headerAlpha),
+                color = headerColor,
                 modifier = Modifier
                     .align(Alignment.TopCenter)
                     .fillMaxWidth()
@@ -325,14 +329,6 @@ fun HistoryScreen(
                         }
                     }
 
-                    if (isScrolled) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(0.8.dp)
-                                .background(GlassBorderSoft.copy(alpha = 0.6f * headerAlpha))
-                        )
-                    }
                 }
             }
         }
