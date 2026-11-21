@@ -1302,11 +1302,20 @@ private fun HeroAvatar(
 // Summary Stats Block
 // ──────────────────────────────────────────────────────────────
 
+private data class ProfileMetricSpec(
+    val value: String,
+    val label: String,
+    val icon: androidx.compose.ui.graphics.vector.ImageVector,
+    val tone: me.avinas.tempo.ui.components.TempoTileTone,
+    val supportingText: String? = null,
+)
+
 /**
  * A listener's progress should be something worth returning to, not three
  * numbers compressed into one black panel. Music progress gets an adaptive,
  * colorful 2×2 bento and a direct entrance to the badge collection.
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun MasterStatMasthead(
     userLevel: UserLevel,
@@ -1334,56 +1343,56 @@ private fun MasterStatMasthead(
     val badgeSwatch = me.avinas.tempo.ui.components.tempoTileSwatch(
         me.avinas.tempo.ui.components.TempoTileTone.SKY
     )
+    val metrics = (
+        if (hideStreaks) emptyList() else listOf(
+            ProfileMetricSpec(
+                value = streakValue,
+                label = stringResource(R.string.profile_bento_current_streak),
+                icon = Icons.Rounded.LocalFireDepartment,
+                tone = me.avinas.tempo.ui.components.TempoTileTone.ROSE,
+                supportingText = if (streakAtRisk) stringResource(R.string.profile_bento_streak_warning) else null,
+            ),
+            ProfileMetricSpec(
+                value = bestStreakValue,
+                label = stringResource(R.string.profile_bento_best_streak),
+                icon = Icons.Rounded.Whatshot,
+                tone = me.avinas.tempo.ui.components.TempoTileTone.AQUA,
+            ),
+        )
+    ) + listOf(
+        ProfileMetricSpec(
+            value = String.format(Locale.getDefault(), "%,d", userLevel.totalXp),
+            label = stringResource(R.string.profile_bento_total_xp),
+            icon = Icons.Rounded.Bolt,
+            tone = me.avinas.tempo.ui.components.TempoTileTone.AMBER,
+        ),
+        ProfileMetricSpec(
+            value = userLevel.currentLevel.toString(),
+            label = stringResource(R.string.profile_bento_level),
+            icon = Icons.Rounded.EmojiEvents,
+            tone = me.avinas.tempo.ui.components.TempoTileTone.LILAC,
+        ),
+    )
     BoxWithConstraints(Modifier.fillMaxWidth()) {
         val singleColumn = maxWidth < 360.dp || LocalDensity.current.fontScale >= 1.3f
+        @Composable
+        fun Metric(spec: ProfileMetricSpec, modifier: Modifier) {
+            me.avinas.tempo.ui.components.TempoMetricTile(
+                modifier = modifier,
+                icon = spec.icon,
+                value = spec.value,
+                label = spec.label,
+                tone = spec.tone,
+                supportingText = spec.supportingText,
+            )
+        }
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            val tiles: List<@Composable (Modifier) -> Unit> = buildList {
-                if (!hideStreaks) {
-                    add { tile ->
-                        me.avinas.tempo.ui.components.TempoMetricTile(
-                            modifier = tile,
-                            icon = Icons.Rounded.LocalFireDepartment,
-                            value = streakValue,
-                            label = stringResource(R.string.profile_bento_current_streak),
-                            tone = me.avinas.tempo.ui.components.TempoTileTone.ROSE,
-                            supportingText = if (streakAtRisk) stringResource(R.string.profile_bento_streak_warning) else null,
-                        )
-                    }
-                    add { tile ->
-                        me.avinas.tempo.ui.components.TempoMetricTile(
-                            modifier = tile,
-                            icon = Icons.Rounded.Whatshot,
-                            value = bestStreakValue,
-                            label = stringResource(R.string.profile_bento_best_streak),
-                            tone = me.avinas.tempo.ui.components.TempoTileTone.AQUA,
-                        )
-                    }
-                }
-                add { tile ->
-                    me.avinas.tempo.ui.components.TempoMetricTile(
-                        modifier = tile,
-                        icon = Icons.Rounded.Bolt,
-                        value = String.format(Locale.getDefault(), "%,d", userLevel.totalXp),
-                        label = stringResource(R.string.profile_bento_total_xp),
-                        tone = me.avinas.tempo.ui.components.TempoTileTone.AMBER,
-                    )
-                }
-                add { tile ->
-                    me.avinas.tempo.ui.components.TempoMetricTile(
-                        modifier = tile,
-                        icon = Icons.Rounded.EmojiEvents,
-                        value = userLevel.currentLevel.toString(),
-                        label = stringResource(R.string.profile_bento_level),
-                        tone = me.avinas.tempo.ui.components.TempoTileTone.LILAC,
-                    )
-                }
-            }
             if (singleColumn) {
-                tiles.forEach { tile -> tile(Modifier.fillMaxWidth()) }
+                metrics.forEach { metric -> Metric(metric, Modifier.fillMaxWidth()) }
             } else {
-                tiles.chunked(2).forEach { pair ->
+                metrics.chunked(2).forEach { pair ->
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        pair.forEach { tile -> tile(Modifier.weight(1f)) }
+                        pair.forEach { metric -> Metric(metric, Modifier.weight(1f)) }
                     }
                 }
             }
