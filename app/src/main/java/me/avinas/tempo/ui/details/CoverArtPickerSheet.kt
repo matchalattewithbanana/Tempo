@@ -133,8 +133,10 @@ internal fun CoverArtPickerSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = TempoDarkSurface,
-        contentColor = TextPrimary,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        contentColor = MaterialTheme.colorScheme.onSurface,
+        shape = MaterialTheme.shapes.extraLarge,
+        dragHandle = { androidx.compose.material3.BottomSheetDefaults.DragHandle() },
     ) {
         Column(
             modifier = Modifier
