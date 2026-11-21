@@ -7,4 +7,6 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <!-- System splash is theme-aware instead of always flashing pitch-black. -->
+    <color name="tempo_splash_background">#FFF8F6F0</color>
 </resources>
