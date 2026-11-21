@@ -22,7 +22,6 @@ data class TempoSettingsDestination(
     val title: String,
     val subtitle: String,
     val icon: ImageVector,
-    val style: TempoEmblemStyle,
     val onClick: () -> Unit,
     val featured: Boolean = false,
     val tone: TempoTileTone = TempoTileTone.SKY,
