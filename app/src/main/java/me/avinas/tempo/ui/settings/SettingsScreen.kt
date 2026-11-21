@@ -710,6 +710,27 @@ fun SettingsScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                     }
+                    item(key = "general-progress") {
+                        SettingsSectionHeader(stringResource(R.string.settings_listening_goals))
+                        TempoSettingsGroup {
+                            Column {
+                                SettingsSwitch(
+                                    title = stringResource(R.string.settings_enable_gamification),
+                                    subtitle = stringResource(R.string.settings_enable_gamification_desc),
+                                    checked = uiState.isGamificationEnabled,
+                                    onCheckedChange = viewModel::toggleGamificationEnabled,
+                                )
+                                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                                SettingsSwitch(
+                                    title = stringResource(R.string.settings_hide_streaks),
+                                    subtitle = stringResource(R.string.settings_hide_streaks_desc),
+                                    checked = uiState.hideStreaks,
+                                    onCheckedChange = viewModel::toggleHideStreaks,
+                                )
+                            }
+                        }
+                        Spacer(Modifier.height(16.dp))
+                    }
                 } // General
                 if (settingsCategory == "tracking") {
                     item(key = "tracking-source") {
@@ -780,12 +801,7 @@ fun SettingsScreen(
                             checked = uiState.pauseTrackingOnLowBattery,
                             onCheckedChange = viewModel::togglePauseTrackingOnLowBattery,
                         )
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                        SettingsOption(
-                            title = stringResource(R.string.settings_cover_source_title),
-                            subtitle = selectedCoverSourceName,
-                            onClick = { showCoverSourceDialog = true },
-                        )
+
                     }
                 }
 
@@ -845,20 +861,6 @@ fun SettingsScreen(
                             subtitle = stringResource(R.string.settings_extended_audio_desc),
                             checked = uiState.extendedAudioAnalysisEnabled,
                             onCheckedChange = viewModel::toggleExtendedAudioAnalysis,
-                        )
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                        SettingsSwitch(
-                            title = stringResource(R.string.settings_enable_gamification),
-                            subtitle = stringResource(R.string.settings_enable_gamification_desc),
-                            checked = uiState.isGamificationEnabled,
-                            onCheckedChange = viewModel::toggleGamificationEnabled,
-                        )
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                        SettingsSwitch(
-                            title = stringResource(R.string.settings_hide_streaks),
-                            subtitle = stringResource(R.string.settings_hide_streaks_desc),
-                            checked = uiState.hideStreaks,
-                            onCheckedChange = viewModel::toggleHideStreaks,
                         )
                     }
                 }
@@ -991,10 +993,6 @@ fun SettingsScreen(
                                 spotifyBroadcastEnabled = enabled
                             },
                         )
-
-                        // Uses either Spotify broadcast or the regular Android
-                        // tracking fallback, even when broadcast mode is disabled.
-                        LiveNowPlayingCard(modifier = Modifier.padding(horizontal = 16.dp))
 
                     }
                 }
@@ -1172,6 +1170,12 @@ fun SettingsScreen(
                                     title = stringResource(R.string.enrichment_report_settings_option),
                                     subtitle = stringResource(R.string.enrichment_report_settings_option_desc),
                                     onClick = onNavigateToEnrichmentReport,
+                                )
+                                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                                SettingsOption(
+                                    title = stringResource(R.string.settings_cover_source_title),
+                                    subtitle = selectedCoverSourceName,
+                                    onClick = { showCoverSourceDialog = true },
                                 )
                             }
                         }
