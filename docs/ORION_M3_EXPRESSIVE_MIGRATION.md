@@ -27,6 +27,21 @@ The request is not just to add polygons or an expressive Settings hub. The same 
 
 **Existing Tempo foundation, already in code:** `TempoTheme` uses `MaterialExpressiveTheme`, `MotionScheme.expressive()` and an instant-motion fallback; `AppearanceMaterialShapes`, `AppearanceTypography`, `AppearancePaletteResolver`, `CustomPaletteMaker`, `TempoEmblem`, `TempoSectionHeading`, `ListeningSkeletons`, a category bento and adaptive nav policy already exist. Do **not** re-implement these from scratch.
 
+## Orion screenshot follow-up — profile and category bento (21 November 2026)
+
+The reference screenshots show a soft light background, vivid pastel asymmetrical tiles, a distinct identity card, concise quick controls and a badge-collection panel. For Tempo the underlying product is music discovery and analysis, not app inventory: the equivalent priorities are listening period totals, top music, streaks, XP, artist/track stories and saved listening identity.
+
+A new **original Tempo tonal tile system** now supplies five light/dark/OLED-aware multi-accent treatments (Aqua, Sky, Lilac, Rose, Amber) whose text color remains the semantic `onSurface` role. It uses Material polygon icons and restrained background marks; nothing was copied from Orion's GPL UI source.
+
+- `TempoExpressiveTiles.kt`: reusable adaptive metric cards; compact-density preference respected.
+- `SettingsBento.kt`: featured full-width Appearance tile; on 360dp+ and normal type, one tall category beside two compact categories, followed by paired categories; below 360dp or at 1.3×+ type, a full-width list. Distinct category colors and music tracking moved ahead of general settings. All cards remain real navigation actions.
+- `ProfileScreen.kt`: listener identity is now a soft tonal 'Listening story' card; its level progress uses an ordinary Material surface. The compressed dark stat masthead is now a colorful responsive 2×2 bento, with a tappable badge-collection surface showing live progress and opening the existing Badges tab. Streak hiding remains respected.
+- `StatsScreen.kt`: the selected period's actual listening time is the lead tile; plays and selected summary counts become responsive side-by-side colored metrics using the existing unit formatter.
+- `HomeComponents.kt`: the weekly recap now uses the same coherent pastel language with real artwork and metrics.
+- `SettingsBentoLayoutTest.kt`: updated pure threshold tests. No instrumentation run.
+
+These are **source-level changes only**. A fresh Android build, screenshot testing on 320/360/393/412dp and high-font / light / OLED variants, and memory/frame-time checks remain mandatory. Do not equate committed UI with verified visual quality.
+
 ## Component contract — apply throughout the app
 
 1. **Color**: text and controls use native semantic roles (`surfaceContainerLow/High`, `onSurface`, `onSurfaceVariant`, `primaryContainer`, `onPrimaryContainer`, etc.). Light, Dark, OLED and wallpaper/custom schemes are first-class. Artwork-derived accents must pass contrast checks and must not change functional semantics.
