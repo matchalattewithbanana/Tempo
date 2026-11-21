@@ -678,7 +678,25 @@ class HistoryViewModel @Inject constructor(
             try {
                 val state = _uiState.value
                 val item = (state.rawItems + state.lastFmItems).firstOrNull { it.id == id }
-                if (item == null || listeningRepository.deleteById(id) <= 0) {
+                if (item == null) {
+                    _uiState.update { it.copy(mutationError = R.string.history_delete_failed) }
+                    return@launch
+                }
+
+                val deleted = transactionRunner.run {
+                    if (listeningRepository.deleteById(id) <= 0) {
+                        false
+                    } else {
+                        // Keep orphan cleanup in the same Room transaction as the event delete.
+                        // A concurrent tracker insert cannot slip between the emptiness check and
+                        // track removal and accidentally lose a newly recorded play.
+                        if (listeningRepository.getEventsForTrack(item.track_id).isEmpty()) {
+                            trackRepository.deleteById(item.track_id)
+                        }
+                        true
+                    }
+                }
+                if (!deleted) {
                     _uiState.update { it.copy(mutationError = R.string.history_delete_failed) }
                     return@launch
                 }
@@ -698,15 +716,6 @@ class HistoryViewModel @Inject constructor(
                     )
                 }
                 statsRepository.invalidateCache()
-                try {
-                    if (listeningRepository.getEventsForTrack(item.track_id).isEmpty()) {
-                        trackRepository.deleteById(item.track_id)
-                    }
-                } catch (cancelled: kotlinx.coroutines.CancellationException) {
-                    throw cancelled
-                } catch (failure: Exception) {
-                    Log.w(TAG, "Orphan cleanup failed after deleting history entry", failure)
-                }
             } catch (cancelled: kotlinx.coroutines.CancellationException) {
                 throw cancelled
             } catch (failure: Exception) {
