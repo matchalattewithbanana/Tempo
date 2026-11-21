@@ -45,7 +45,7 @@ fun TempoDialogSurface(
     // Dialog already lives in a modal window; drawing a second 28dp shadow
     // and several gradient overlays wastes work and looks muddy in light mode.
     androidx.compose.material3.Surface(
-        modifier = modifier.fillMaxWidth().widthIn(max = 560.dp),
+        modifier = modifier.widthIn(max = 560.dp).fillMaxWidth(),
         shape = MaterialTheme.shapes.extraLarge,
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
         contentColor = MaterialTheme.colorScheme.onSurface,
@@ -205,6 +205,10 @@ fun TempoDialogSecondaryButton(
 /**
  * Two-button row: secondary left, primary right.
  */
+/**
+ * Standard confirmation pair: secondary action first, primary action second.
+ * Preserve focus order when stacked on small screens or with large fonts.
+ */
 @Composable
 fun TempoDialogButtonRow(
     primaryText: String,
@@ -215,49 +219,84 @@ fun TempoDialogButtonRow(
     primaryEnabled: Boolean = true,
     secondaryEnabled: Boolean = true,
     primaryColor: Color = MaterialTheme.colorScheme.primary,
-    primaryContentColor: Color = MaterialTheme.colorScheme.onPrimary
+    primaryContentColor: Color = MaterialTheme.colorScheme.onPrimary,
 ) {
-    val appearancePalette = LocalTempoPalette.current
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    BoxWithConstraints(modifier.fillMaxWidth()) {
+        // Adaptive breakpoint is a Tempo decision; Material requires the
+        // touch targets to remain usable as typography and width change.
+        val stacked = maxWidth < 360.dp ||
+            androidx.compose.ui.platform.LocalDensity.current.fontScale >= 1.3f
+        if (stacked) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                TempoDialogRowSecondary(secondaryText, onSecondary, secondaryEnabled, Modifier.fillMaxWidth())
+                TempoDialogRowPrimary(
+                    primaryText, onPrimary, primaryEnabled,
+                    primaryColor, primaryContentColor, Modifier.fillMaxWidth(),
+                )
+            }
+        } else {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                TempoDialogRowSecondary(secondaryText, onSecondary, secondaryEnabled, Modifier.weight(1f))
+                TempoDialogRowPrimary(
+                    primaryText, onPrimary, primaryEnabled,
+                    primaryColor, primaryContentColor, Modifier.weight(1f),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun TempoDialogRowSecondary(
+    label: String,
+    onClick: () -> Unit,
+    enabled: Boolean,
+    modifier: Modifier,
+) {
+    androidx.compose.material3.FilledTonalButton(
+        onClick = onClick,
+        enabled = enabled,
+        modifier = modifier.heightIn(min = 48.dp),
+        shapes = ButtonDefaults.shapes(),
     ) {
-        androidx.compose.material3.FilledTonalButton(
-            onClick = onSecondary,
-            enabled = secondaryEnabled,
-            modifier = Modifier
-                .weight(1f)
-                .heightIn(min = 48.dp),
-            colors = ButtonDefaults.filledTonalButtonColors(
-                containerColor = appearancePalette.mutedText.copy(alpha = 0.14f),
-                contentColor = MaterialTheme.colorScheme.onSurface,
-            ),
-            shapes = ButtonDefaults.shapes()
-        ) {
-            Text(
-                text = secondaryText,
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Medium
-            )
-        }
-        Button(
-            onClick = onPrimary,
-            enabled = primaryEnabled,
-            modifier = Modifier
-                .weight(1f)
-                .heightIn(min = 48.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = primaryColor,
-                contentColor = primaryContentColor
-            ),
-            shapes = ButtonDefaults.shapes()
-        ) {
-            Text(
-                text = primaryText,
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.SemiBold
-            )
-        }
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelLarge,
+            maxLines = 3,
+        )
+    }
+}
+
+@Composable
+private fun TempoDialogRowPrimary(
+    label: String,
+    onClick: () -> Unit,
+    enabled: Boolean,
+    container: Color,
+    foreground: Color,
+    modifier: Modifier,
+) {
+    Button(
+        onClick = onClick,
+        enabled = enabled,
+        modifier = modifier.heightIn(min = 48.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = container,
+            contentColor = foreground,
+        ),
+        shapes = ButtonDefaults.shapes(),
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelLargeEmphasized,
+            maxLines = 3,
+        )
     }
 }
 
