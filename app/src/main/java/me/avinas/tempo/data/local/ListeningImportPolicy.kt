@@ -2,7 +2,12 @@ package me.avinas.tempo.data.local
 
 import me.avinas.tempo.data.local.entities.ListeningEvent
 
-internal object ListeningImportPolicy {
+internal enum class ReconciliationTrackScope {
+    SOURCE_DEFAULT,
+    COMPATIBLE_ALIASES,
+}
+
+object ListeningImportPolicy {
     const val SAME_SOURCE_TOLERANCE_MS = 5_000L
     private const val CROSS_SOURCE_TOLERANCE_MS = 60_000L
     private const val MEASURED_OVERLAP_MIN_MS = 15_000L
