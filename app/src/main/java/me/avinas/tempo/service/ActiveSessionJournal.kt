@@ -34,8 +34,17 @@ internal class ActiveSessionJournal(
      */
     suspend fun beginRun(): List<SessionState> {
         val needsRecovery = persistence.wasUncleanShutdown()
+        val recovered =
+            if (needsRecovery) {
+                persistence.loadSessions()
+            } else {
+                // A clean previous run should have cleared this already. Clear defensively before
+                // marking the new run active so a crash during startup cannot resurrect stale data.
+                persistence.clearSessions()
+                emptyList()
+            }
         persistence.markServiceActive()
-        return if (needsRecovery) persistence.loadSessions() else emptyList()
+        return recovered
     }
 
     suspend fun recoveryHandled() {
@@ -60,7 +69,10 @@ internal class ActiveSessionJournal(
     }
 
     fun stopAutoSaveAndCheckpoint(sessions: () -> Collection<PlaybackSession>) {
-        autoSaveJob?.cancel()
+        // Null means this idle state was already finalized. Avoid a SharedPreferences commit on
+        // every notification/lifecycle update while nothing is playing.
+        val job = autoSaveJob ?: return
+        job.cancel()
         autoSaveJob = null
         scope.launch { checkpoint(sessions()) }
     }
