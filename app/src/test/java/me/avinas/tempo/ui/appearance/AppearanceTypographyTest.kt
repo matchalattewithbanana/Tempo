@@ -1,7 +1,6 @@
 package me.avinas.tempo.ui.appearance
 
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotEquals
 import org.junit.Test
 
 class AppearanceTypographyTest {
