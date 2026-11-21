@@ -1,4 +1,6 @@
-# Documentation
+# Repository documentation index
+
+> For the curated documentation-site entry point, start at [Tempo documentation](index.md). This file remains a compact repository index for existing links.
 
 ## Using Tempo
 
