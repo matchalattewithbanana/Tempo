@@ -171,7 +171,7 @@ class ExtensionPlaysImportService @Inject constructor(
                 if (batch.isEmpty()) return
                 try {
                     val inserted = listeningEventDao.insertAllBatchedWithDedup(batch)
-                    eventsImported += inserted.inserted
+                    eventsImported += inserted.newlyAdded
                     duplicates += inserted.skipped
                 } catch (e: CancellationException) {
                     // Re-queue unflushed events on cancellation unless running the terminal flush.
