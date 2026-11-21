@@ -8,6 +8,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.sp
@@ -91,6 +93,35 @@ fun GlassCard(
         end = contentPadding.calculateEndPadding(direction) * 0.75f,
         bottom = contentPadding.calculateBottomPadding() * 0.75f,
     ) else contentPadding
+    // All ordinary low-prominence cards across Home, Stats, History, Profile,
+    // details and Settings should follow the same Material 3 tonal roles.
+    // Keep explicit artwork/accent/colored cards on the opt-in artistic path.
+    // This also avoids a gradient brush, border and draw pass for every row.
+    if (variant == GlassCardVariant.LowProminence &&
+        backgroundColor == GlassFrostMedium &&
+        accentColor == null &&
+        borderColor == null &&
+        borderWidth == null &&
+        shadowElevation == 0.dp
+    ) {
+        Surface(
+            modifier = modifier,
+            shape = shape,
+            color = MaterialTheme.colorScheme.surfaceContainerLow,
+            contentColor = MaterialTheme.colorScheme.onSurface,
+        ) {
+            Box(
+                modifier = Modifier
+                    .then(if (fillMaxWidth) Modifier.fillMaxWidth() else Modifier)
+                    .padding(effectivePadding),
+                contentAlignment = contentAlignment,
+            ) {
+                content()
+            }
+        }
+        return
+    }
+
     val customPalette = palette != AppearancePaletteResolver.forPreset(AppearancePreset.ABYSS)
     val accent = accentColor ?: palette.accent
 
