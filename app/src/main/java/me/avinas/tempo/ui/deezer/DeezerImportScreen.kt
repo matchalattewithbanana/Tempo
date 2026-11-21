@@ -53,7 +53,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import me.avinas.tempo.R
 import me.avinas.tempo.data.deezer.DeezerDataImportService
-import me.avinas.tempo.ui.components.DeepOceanBackground
 import me.avinas.tempo.ui.components.GlassCard
 import me.avinas.tempo.ui.theme.TextPrimary
 import me.avinas.tempo.ui.theme.TextSecondary
@@ -85,7 +84,7 @@ fun DeezerImportScreen(
         selectedUri = uri
     }
 
-    DeepOceanBackground {
+    androidx.compose.foundation.layout.Box(Modifier.fillMaxSize()) {
         Scaffold(
             containerColor = Color.Transparent,
             topBar = {
