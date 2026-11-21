@@ -72,6 +72,7 @@ import me.avinas.tempo.data.drive.BackupStatus
 import me.avinas.tempo.ui.components.GlassCard
 import me.avinas.tempo.ui.components.SettingsOption
 import me.avinas.tempo.ui.components.SettingsSectionHeader
+import me.avinas.tempo.ui.components.TempoSettingsGroup
 import me.avinas.tempo.ui.components.SettingsSwitch
 import me.avinas.tempo.ui.components.TempoDialogBody
 import me.avinas.tempo.ui.components.TempoDialogButtonRow
@@ -658,10 +659,7 @@ fun SettingsScreen(
                     }
                     item(key = "general-language") {
                 SettingsSectionHeader(stringResource(R.string.settings_language))
-                GlassCard(
-                    contentPadding = PaddingValues(0.dp),
-                    variant = me.avinas.tempo.ui.components.GlassCardVariant.LowProminence,
-                ) {
+                TempoSettingsGroup {
                     SettingsOption(
                         title = stringResource(R.string.settings_language_title),
                         subtitle = currentLanguageSubtitle,
@@ -675,10 +673,7 @@ fun SettingsScreen(
                     }
                     item(key = "general-notifications") {
                 SettingsSectionHeader(stringResource(R.string.settings_notifications))
-                GlassCard(
-                    contentPadding = PaddingValues(0.dp),
-                    variant = me.avinas.tempo.ui.components.GlassCardVariant.LowProminence,
-                ) {
+                TempoSettingsGroup {
                     Column {
                         SettingsSwitch(
                             title = stringResource(R.string.settings_daily_summary),
@@ -720,10 +715,7 @@ fun SettingsScreen(
                     item(key = "tracking-source") {
                 // Tracking
                 SettingsSectionHeader(stringResource(R.string.settings_music_tracking))
-                GlassCard(
-                    contentPadding = PaddingValues(0.dp),
-                    variant = me.avinas.tempo.ui.components.GlassCardVariant.LowProminence,
-                ) {
+                TempoSettingsGroup {
                     Column {
                         SettingsOption(
                             title = stringResource(R.string.settings_manage_permissions),
@@ -775,11 +767,7 @@ fun SettingsScreen(
                 // Background Protection - Only for Xiaomi/MIUI devices
                 if (isXiaomiDevice) {
                     SettingsSectionHeader(stringResource(R.string.settings_background_protection))
-                    GlassCard(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentPadding = PaddingValues(0.dp),
-                        variant = me.avinas.tempo.ui.components.GlassCardVariant.LowProminence,
-                    ) {
+                    TempoSettingsGroup {
                         SettingsOption(
                             title =
                                 if (autostartState == OemBackgroundHelper.AutostartState.DISABLED) {
@@ -799,10 +787,7 @@ fun SettingsScreen(
                     }
                     item(key = "tracking-filtering") {
                 SettingsSectionHeader(stringResource(R.string.settings_content_filtering))
-                GlassCard(
-                    contentPadding = PaddingValues(0.dp),
-                    variant = me.avinas.tempo.ui.components.GlassCardVariant.LowProminence,
-                ) {
+                TempoSettingsGroup {
                     Column {
                         SettingsSwitch(
                             title = stringResource(R.string.settings_filter_podcasts),
@@ -826,10 +811,7 @@ fun SettingsScreen(
                     }
                     item(key = "tracking-statistics") {
                 SettingsSectionHeader(stringResource(R.string.settings_advanced_stats))
-                GlassCard(
-                    contentPadding = PaddingValues(0.dp),
-                    variant = me.avinas.tempo.ui.components.GlassCardVariant.LowProminence,
-                ) {
+                TempoSettingsGroup {
                     Column {
                         SettingsSwitch(
                             title = stringResource(R.string.settings_extended_audio),
@@ -862,10 +844,7 @@ fun SettingsScreen(
                     item(key = "connections-services") {
                 // Account connections and automatic sync controls
                 SettingsSectionHeader(stringResource(R.string.settings_category_connections))
-                GlassCard(
-                    contentPadding = PaddingValues(0.dp),
-                    variant = me.avinas.tempo.ui.components.GlassCardVariant.LowProminence,
-                ) {
+                TempoSettingsGroup {
                     Column {
                         if (uiState.isLastFmConnected) {
                             SettingsOption(
@@ -999,10 +978,7 @@ fun SettingsScreen(
                     }
                     item(key = "connections-desktop") {
                 SettingsSectionHeader(stringResource(R.string.desktop_link_section_header))
-                GlassCard(
-                    contentPadding = PaddingValues(0.dp),
-                    variant = me.avinas.tempo.ui.components.GlassCardVariant.LowProminence,
-                ) {
+                TempoSettingsGroup {
                     Column {
                         // Battery status warning if critical or low
                         if (isBatteryCritical) {
@@ -1071,10 +1047,7 @@ fun SettingsScreen(
                     item(key = "data") {
                 // Data Management
                 SettingsSectionHeader(stringResource(R.string.settings_your_data))
-                GlassCard(
-                    contentPadding = PaddingValues(0.dp),
-                    variant = me.avinas.tempo.ui.components.GlassCardVariant.LowProminence,
-                ) {
+                TempoSettingsGroup {
                     Column {
                         // The opt-out for anonymous app-health reporting lives here, at the
                         // top of "Your Data" next to backup/restore rather than buried in
@@ -1213,10 +1186,7 @@ fun SettingsScreen(
                     }
                     item(key = "about-community") {
                 SettingsSectionHeader(stringResource(R.string.settings_community))
-                GlassCard(
-                    contentPadding = PaddingValues(0.dp),
-                    variant = me.avinas.tempo.ui.components.GlassCardVariant.LowProminence,
-                ) {
+                TempoSettingsGroup {
                     Column {
                         SettingsOption(
                             title = stringResource(R.string.settings_reddit),
@@ -1270,10 +1240,7 @@ fun SettingsScreen(
                     }
                     item(key = "about-links") {
                 SettingsSectionHeader(stringResource(R.string.settings_about))
-                GlassCard(
-                    contentPadding = PaddingValues(0.dp),
-                    variant = me.avinas.tempo.ui.components.GlassCardVariant.LowProminence,
-                ) {
+                TempoSettingsGroup {
                     Column {
                         SettingsOption(
                             title = stringResource(
