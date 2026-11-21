@@ -113,8 +113,8 @@ fun AppearanceScreen(
         return
     }
     var draft by rememberSaveable(saved, stateSaver = DraftSaver) { mutableStateOf(saved) }
-    var presetsExpanded by rememberSaveable { mutableStateOf(true) }
-    var applySuggestedDetails by rememberSaveable { mutableStateOf(true) }
+    var presetsExpanded by rememberSaveable { mutableStateOf(false) }
+    var applySuggestedDetails by rememberSaveable { mutableStateOf(false) }
     val columns = if (LocalConfiguration.current.screenWidthDp < 350 ||
         LocalDensity.current.fontScale >= 1.35f) 1 else 2
     val newRows = remember(columns) { NewAppearanceEditions.chunked(columns) }
@@ -319,11 +319,24 @@ fun AppearanceScreen(
                 }
             }
             item(key = "preset_collection_header") {
-                TextButton(onClick = { presetsExpanded = !presetsExpanded },
-                    modifier = Modifier.fillMaxWidth()) {
-                    Text(stringResource(R.string.appearance_presets), modifier = Modifier.weight(1f),
-                        style = MaterialTheme.typography.titleMedium)
-                    Text(if (presetsExpanded) "−" else "+")
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    TextButton(
+                        onClick = { presetsExpanded = !presetsExpanded },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(
+                            stringResource(R.string.appearance_presets),
+                            modifier = Modifier.weight(1f),
+                            style = MaterialTheme.typography.titleMediumEmphasized,
+                        )
+                        Text(if (presetsExpanded) "−" else "+")
+                    }
+                    Text(
+                        stringResource(R.string.appearance_preset_preview_explainer),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                    )
                 }
             }
             if (presetsExpanded) {
@@ -831,15 +844,10 @@ private fun AppearancePresetCard(
     val palette = remember(preset, tone, systemDark) {
         AppearancePaletteResolver.resolve(AppearanceSettings(preset = preset, tone = tone), systemDark)
     }
-    // Fast spatial morph when the draft chooses a palette; the theme's
-    // instant motion scheme makes this snap for reduced-motion settings.
-    val corner by androidx.compose.animation.core.animateDpAsState(
-        targetValue = if (selected) 28.dp else 20.dp,
-        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
-        label = "preset_selected_corner",
-    )
-    val shape = RoundedCornerShape(corner)
-    val previewInnerShape = RoundedCornerShape(corner - 7.dp)
+    // A selection border is sufficient feedback. Resizing/morphing the
+    // preview cards on tap caused layout shifts and abrupt visual flashes.
+    val shape = MaterialTheme.shapes.extraLarge
+    val previewInnerShape = MaterialTheme.shapes.large
     val label = when (preset) {
         AppearancePreset.ABYSS -> stringResource(R.string.appearance_abyss)
         AppearancePreset.OBSIDIAN_GOLD -> stringResource(R.string.appearance_gold)
@@ -884,7 +892,7 @@ private fun AppearancePresetCard(
         modifier = modifier
             .clip(shape)
             .background(
-                if (selected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.26f)
+                if (selected) MaterialTheme.colorScheme.surfaceContainerHigh
                 else MaterialTheme.colorScheme.surfaceContainerLow
             )
             .border(
@@ -903,7 +911,7 @@ private fun AppearancePresetCard(
         // A real miniature of the theme: canvas, raised card, typography,
         // progress accent and surface swatches, including the selected light tone.
         Box(
-            modifier = Modifier.fillMaxWidth().height(170.dp)
+            modifier = Modifier.fillMaxWidth().height(132.dp)
                 .clip(previewInnerShape)
                 .background(Brush.verticalGradient(listOf(palette.topBackground, palette.background))),
         ) {
