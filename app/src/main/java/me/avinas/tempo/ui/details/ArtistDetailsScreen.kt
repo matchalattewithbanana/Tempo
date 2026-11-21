@@ -247,7 +247,7 @@ fun ArtistDetailsContent(
     var showCollapsedTitle by remember { mutableStateOf(false) }
     val headerScrimAlpha by animateFloatAsState(
         targetValue = if (showCollapsedTitle) 1f else 0f,
-        animationSpec = tween(220),
+        animationSpec = MaterialTheme.motionScheme.fastEffectsSpec<Float>(),
         label = "headerScrim",
     )
 
@@ -492,8 +492,10 @@ private fun ArtistTopBarNavigation(
 
         AnimatedVisibility(
             visible = showCollapsedTitle,
-            enter = fadeIn(tween(180)) + slideInVertically(tween(180)) { -10 },
-            exit = fadeOut(tween(140)) + slideOutVertically(tween(140)) { -10 },
+            enter = fadeIn(MaterialTheme.motionScheme.fastEffectsSpec<Float>()) +
+                    slideInVertically(MaterialTheme.motionScheme.fastSpatialSpec<androidx.compose.ui.unit.IntOffset>()) { -10 },
+            exit = fadeOut(MaterialTheme.motionScheme.fastEffectsSpec<Float>()) +
+                    slideOutVertically(MaterialTheme.motionScheme.fastSpatialSpec<androidx.compose.ui.unit.IntOffset>()) { -10 },
             modifier = Modifier.weight(1f).padding(horizontal = 12.dp)
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
