@@ -1206,13 +1206,9 @@ fun ArchiveHistoryListItem(item: ArchiveHistoryItem) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp),
-        backgroundColor = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.5f),
-        accentColor = GoldDark,
         shape = RoundedCornerShape(16.dp),
         contentPadding = PaddingValues(12.dp),
-        variant = GlassCardVariant.LowProminence,
-        borderColor = GlassBorderSoft,
-        borderWidth = 0.8.dp
+        variant = GlassCardVariant.LowProminence
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -1226,7 +1222,7 @@ fun ArchiveHistoryListItem(item: ArchiveHistoryItem) {
                     modifier = Modifier
                         .size(52.dp)
                         .clip(RoundedCornerShape(10.dp))
-                        .border(0.5.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(10.dp)),
+                        .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(10.dp)),
                     targetSizeDp = 52,
                     placeholder = {
                         Box(
@@ -1404,11 +1400,8 @@ fun HistoryListItem(
                     }
                 ),
             shape = RoundedCornerShape(16.dp),
-            backgroundColor = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.6f),
             contentPadding = PaddingValues(12.dp),
-            variant = GlassCardVariant.LowProminence,
-            borderColor = GlassBorderSoft,
-            borderWidth = 0.8.dp
+            variant = GlassCardVariant.LowProminence
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically
@@ -1417,7 +1410,7 @@ fun HistoryListItem(
                     modifier = Modifier
                         .size(52.dp)
                         .clip(RoundedCornerShape(10.dp))
-                        .border(0.5.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(10.dp)),
+                        .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(10.dp)),
                     contentAlignment = Alignment.Center
                 ) {
                     if (!me.avinas.tempo.ui.theme.LocalTempoAppearance.current.showHistoryArtwork || item.album_art_url.isNullOrBlank()) {
