@@ -562,7 +562,7 @@ class DeezerDataImportService @Inject constructor(
             if (pendingEvents.isEmpty()) return
             try {
                 val result = listeningEventDao.insertAllBatchedWithDedup(pendingEvents)
-                eventsCreated += result.inserted
+                eventsCreated += result.newlyAdded
                 duplicatesSkipped += result.skipped
             } catch (e: CancellationException) {
                 throw e
@@ -575,7 +575,7 @@ class DeezerDataImportService @Inject constructor(
                         // Retrying one event at a time isolates a bad row without
                         // degrading cross-source deduplication semantics.
                         val singleResult = listeningEventDao.insertAllBatchedWithDedup(listOf(event))
-                        eventsCreated += singleResult.inserted
+                        eventsCreated += singleResult.newlyAdded
                         duplicatesSkipped += singleResult.skipped
                     } catch (ce: CancellationException) {
                         throw ce
