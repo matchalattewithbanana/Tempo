@@ -24,7 +24,7 @@ class AppearanceMaterialShapesTest {
                 s.extraSmall, s.small, s.medium, s.large, s.largeIncreased,
                 s.extraLarge, s.extraLargeIncreased, s.extraExtraLarge,
             ).forEach { shape ->
-                org.junit.Assert.assertTrue("Unknown shape for $preference: $shape", shape in allowed)
+                org.junit.Assert.assertTrue("Unknown shape for $preference: $shape", (shape as RoundedCornerShape) in allowed)
             }
         }
     }
