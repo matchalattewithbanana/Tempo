@@ -134,8 +134,11 @@ private fun TempoBentoDestination(
         onClick = destination.onClick,
         modifier = modifier.heightIn(min = height),
         shape = MaterialTheme.shapes.extraExtraLarge,
-        color = swatch.container,
-        contentColor = swatch.foreground,
+        // One featured destination earns the accent surface. Other destinations
+        // use a quieter Material surface so hierarchy survives custom palettes.
+        color = if (kind == BentoKind.FEATURED) swatch.container
+            else MaterialTheme.colorScheme.surfaceContainerLow,
+        contentColor = MaterialTheme.colorScheme.onSurface,
     ) {
         Box(
             Modifier.fillMaxWidth().heightIn(min = height)
