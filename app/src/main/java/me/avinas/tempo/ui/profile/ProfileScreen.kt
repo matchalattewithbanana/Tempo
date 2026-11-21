@@ -1304,14 +1304,46 @@ private data class ProfileMetricSpec(
 
 @Composable
 private fun ProfileProgressTile(spec: ProfileMetricSpec, modifier: Modifier) {
-    me.avinas.tempo.ui.components.TempoMetricTile(
-        modifier = modifier,
-        icon = spec.icon,
-        value = spec.value,
-        label = spec.label,
-        tone = spec.tone,
-        supportingText = spec.supportingText,
-    )
+    val scheme = MaterialTheme.colorScheme
+    Surface(
+        modifier = modifier.heightIn(min = 104.dp),
+        shape = MaterialTheme.shapes.large,
+        color = scheme.surfaceContainerLow,
+        contentColor = scheme.onSurface,
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(5.dp),
+        ) {
+            Icon(
+                imageVector = spec.icon,
+                contentDescription = null,
+                modifier = Modifier.size(22.dp),
+                tint = scheme.primary,
+            )
+            Text(
+                text = spec.value,
+                style = MaterialTheme.typography.titleLargeEmphasized,
+                color = scheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = spec.label,
+                style = MaterialTheme.typography.labelMedium,
+                color = scheme.onSurfaceVariant,
+                maxLines = 2,
+            )
+            spec.supportingText?.let { note ->
+                Text(
+                    text = note,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = scheme.error,
+                    maxLines = 2,
+                )
+            }
+        }
+    }
 }
 
 /**
@@ -1347,58 +1379,45 @@ private fun MasterStatMasthead(
     val badgeSwatch = me.avinas.tempo.ui.components.tempoTileSwatch(
         me.avinas.tempo.ui.components.TempoTileTone.SKY
     )
-    val metrics = (
-        if (hideStreaks) emptyList() else listOf(
-            ProfileMetricSpec(
-                value = streakValue,
-                label = stringResource(R.string.profile_bento_current_streak),
-                icon = Icons.Rounded.LocalFireDepartment,
-                tone = me.avinas.tempo.ui.components.TempoTileTone.ROSE,
-                supportingText = if (streakAtRisk) stringResource(R.string.profile_bento_streak_warning) else null,
-            ),
-            ProfileMetricSpec(
-                value = bestStreakValue,
-                label = stringResource(R.string.profile_bento_best_streak),
-                icon = Icons.Rounded.Whatshot,
-                tone = me.avinas.tempo.ui.components.TempoTileTone.AQUA,
-            ),
-        )
-    ) + listOf(
+    // Level and total XP already appear in the identity/level progress section.
+    // Do not repeat them as two enormous cards before Challenges/Badges.
+    val metrics = if (hideStreaks) emptyList() else listOf(
         ProfileMetricSpec(
-            value = String.format(Locale.getDefault(), "%,d", userLevel.totalXp),
-            label = stringResource(R.string.profile_bento_total_xp),
-            icon = Icons.Rounded.Bolt,
-            tone = me.avinas.tempo.ui.components.TempoTileTone.AMBER,
+            value = streakValue,
+            label = stringResource(R.string.profile_bento_current_streak),
+            icon = Icons.Rounded.LocalFireDepartment,
+            tone = me.avinas.tempo.ui.components.TempoTileTone.ROSE,
+            supportingText = if (streakAtRisk) stringResource(R.string.profile_bento_streak_warning) else null,
         ),
         ProfileMetricSpec(
-            value = userLevel.currentLevel.toString(),
-            label = stringResource(R.string.profile_bento_level),
-            icon = Icons.Rounded.EmojiEvents,
-            tone = me.avinas.tempo.ui.components.TempoTileTone.LILAC,
+            value = bestStreakValue,
+            label = stringResource(R.string.profile_bento_best_streak),
+            icon = Icons.Rounded.Whatshot,
+            tone = me.avinas.tempo.ui.components.TempoTileTone.AQUA,
         ),
     )
     BoxWithConstraints(Modifier.fillMaxWidth()) {
-        val singleColumn = maxWidth < 360.dp || LocalDensity.current.fontScale >= 1.3f
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        val singleColumn = maxWidth < 285.dp || LocalDensity.current.fontScale >= 1.6f
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             if (singleColumn) {
                 metrics.forEach { metric -> ProfileProgressTile(metric, Modifier.fillMaxWidth()) }
-            } else {
-                metrics.chunked(2).forEach { pair ->
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        pair.forEach { metric -> ProfileProgressTile(metric, Modifier.weight(1f)) }
+            } else if (metrics.isNotEmpty()) {
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    metrics.forEach { metric ->
+                        ProfileProgressTile(metric, Modifier.weight(1f))
                     }
                 }
             }
             Surface(
                 onClick = onBadgesClick,
-                modifier = Modifier.fillMaxWidth().heightIn(min = 164.dp),
+                modifier = Modifier.fillMaxWidth().heightIn(min = 100.dp),
                 shape = MaterialTheme.shapes.extraExtraLarge,
                 color = badgeSwatch.container,
                 contentColor = badgeSwatch.foreground,
             ) {
                 Column(
-                    Modifier.fillMaxWidth().padding(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    Modifier.fillMaxWidth().padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Column(
@@ -1439,25 +1458,7 @@ private fun MasterStatMasthead(
                         color = badgeSwatch.foreground,
                         trackColor = badgeSwatch.foreground.copy(alpha = 0.15f),
                     )
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        repeat(3) { index ->
-                            Surface(
-                                shape = MaterialShapes.Cookie6Sided.toShape(),
-                                color = badgeSwatch.iconContainer,
-                                contentColor = badgeSwatch.foreground,
-                                modifier = Modifier.size(42.dp),
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Icon(
-                                        if (index < earnedCount) Icons.Rounded.MilitaryTech
-                                        else Icons.Rounded.Lock,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(22.dp),
-                                    )
-                                }
-                            }
-                        }
-                    }
+
                 }
             }
         }
