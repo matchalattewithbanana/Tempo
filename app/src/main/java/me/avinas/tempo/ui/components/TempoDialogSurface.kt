@@ -224,8 +224,10 @@ fun TempoDialogButtonRow(
     BoxWithConstraints(modifier.fillMaxWidth()) {
         // Adaptive breakpoint is a Tempo decision; Material requires the
         // touch targets to remain usable as typography and width change.
-        val stacked = maxWidth < 360.dp ||
-            androidx.compose.ui.platform.LocalDensity.current.fontScale >= 1.3f
+        val stacked = stackTempoDialogActions(
+            maxWidth.value,
+            androidx.compose.ui.platform.LocalDensity.current.fontScale,
+        )
         if (stacked) {
             Column(
                 modifier = Modifier.fillMaxWidth(),
