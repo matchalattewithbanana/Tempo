@@ -35,7 +35,6 @@ import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -444,12 +443,12 @@ fun StatsScreen(
                 visible = searchOpen,
                 enter = if (reducedMotion) EnterTransition.None else expandHorizontally(
                     expandFrom = Alignment.End,
-                    animationSpec = tween(280, easing = FastOutSlowInEasing)
-                ) + fadeIn(animationSpec = tween(220)),
+                    animationSpec = MaterialTheme.motionScheme.fastSpatialSpec<androidx.compose.ui.unit.IntSize>()
+                ) + fadeIn(animationSpec = MaterialTheme.motionScheme.fastEffectsSpec<Float>()),
                 exit = if (reducedMotion) ExitTransition.None else shrinkHorizontally(
                     shrinkTowards = Alignment.End,
-                    animationSpec = tween(220, easing = FastOutSlowInEasing)
-                ) + fadeOut(animationSpec = tween(160)),
+                    animationSpec = MaterialTheme.motionScheme.fastSpatialSpec<androidx.compose.ui.unit.IntSize>()
+                ) + fadeOut(animationSpec = MaterialTheme.motionScheme.fastEffectsSpec<Float>()),
                 modifier = Modifier.align(Alignment.TopCenter)
             ) {
                 Box(
