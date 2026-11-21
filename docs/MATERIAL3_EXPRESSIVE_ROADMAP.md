@@ -210,3 +210,16 @@ This corrective pass:
 
 **Still blocking sign-off:** Kotlin/Room/Compose compilation, Android instrumented tests, rendered comparison at compact and large text widths, TalkBack and insets, real-world import/restore idempotence, and an investigation of the duplicate song shown as both Stats hero and #2. The screenshots may reflect duplicate track identities or old inflated imports; an apparently duplicated row must not be hidden without evidence. See [#98](https://github.com/matchalattewithbanana/Tempo/issues/98) and [#95](https://github.com/matchalattewithbanana/Tempo/issues/95).
 
+
+### Expressive follow-up — 21 November 2026 (after screenshot repair)
+
+The explicit Material 3 Expressive review checked the plugin's 2026 navigation, containment, color, motion, typography and layout guidance against the current Compose implementation.
+
+- **Profile identity:** one primary accent surface, no abstract Clover decoration behind text, no nested XP progress card, larger-name wrapping and a stacked identity variant for narrow/high-font interfaces; one Material progress indicator using foreground + translucent track roles.
+- **Profile summary:** short streak cards use a full-width fallback when compact constraints or accessibility font scaling make two side-by-side cards too narrow. `ProfileLayoutPolicyTest` covers 320/393/840dp choices at several text scales.
+- **High-priority themed state:** the at-risk streak banner now uses `errorContainer/onErrorContainer` instead of a dark glass surface with palette-dependent text.
+- **Motion:** level progress uses a spatial spring; selected route transitions remain direct; the OS owns splash dismissal. No added perpetual or load-blocking animation.
+- **Navigation tradeoff:** the previous `ShortNavigationBar` visibly lost destination items on the user's phone; this branch keeps the stable `NavigationBar` fallback with three fixed destinations and their labels visible by default, despite the official Expressive preference for the flexible component. Reconsider only after a validated Compose-library/device fix.
+- **Personalization:** the user-controlled icon-only navigation option remains available, despite M3 preferring persistent labels, rather than deleting a previously exposed user choice.
+
+**Still unverified:** Kotlin/Compose compilation, instrumented layout checks, light/dark/OLED/custom themes, TalkBack with 200% fonts, RTL, foldable 840dp rail, and actual animation/jank inspection on Android. These source edits are not part of the already published `5.1.69-beta` APK. See [#98](https://github.com/matchalattewithbanana/Tempo/issues/98).
