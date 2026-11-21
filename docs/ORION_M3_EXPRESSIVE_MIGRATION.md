@@ -9,6 +9,38 @@ The goal is an **independently designed music-listening app with the same degree
 
 The request is not just to add polygons or an expressive Settings hub. The same color roles, adaptive spacing, type scale, page scaffolds, navigation, segmented rows, dialogs, loading states, bottom sheets, focus/gesture affordances, and opt-in motion must cover all user-visible flows, including the extension and widgets where Android Material3 cannot run directly.
 
+## Material 3 Expressive skill migration — cross-app foundation pass (21 November 2026)
+
+**Basis:** the installed `m3-expressive` skill, including its current component-selection, containment, navigation, layout, motion, color, input, and feedback references. In particular, use native `MaterialExpressiveTheme`, tone-based surfaces, `onSurface/onSurfaceVariant` text roles, 48dp interactive targets, **spatial** springs for motion of elements, **effects** springs for color/opacity, and M3's named component semantics instead of custom fake controls. These are the Material rules. **Tempo-specific decisions** (not official M3 geometry): 360dp as the breakpoint for stacked dialog buttons, ≥1.3× font scale forcing full width, five muted accent tile themes, and the choice to keep music artwork visually editorial.
+
+### Code committed on main in this cross-app pass
+
+| Scope | Applied migration | Protected behaviors |
+| --- | --- | --- |
+| Default cards across the app | `GlassCard` now routes **unaccented** High and Low Prominence cards through native Material tonal `Surface` with semantic text colors, instead of expensive shadow/gradient/border stacks. Explicit art-led cards retain their intentional treatments | Card contents, specialized artwork, all callbacks and backing data |
+| App bars, labels and metrics | Shared `FrostedIconButton` uses a native actionable 48dp Material surface. Section kicker and telemetry cells use semantic `outlineVariant`/type roles; numeric data allows two lines | Existing icon actions and labels |
+| Dialogs and forms | `TempoDialogSurface` uses one bounded tonal Surface, semantic primary/danger buttons, Material TextField states and shape tokens. Two-action dialogs adapt from side-by-side to full-width stacked actions based on width and font scale; pure policy + unit test added | Existing confirm/dismiss callbacks; enabled and error states |
+| Empty states | Both default empty-state layouts use native Material surfaces; potentially misleading “tracking active” replaced by neutral waiting text; perpetual radar animation removed | Supported-apps action and period-specific messages |
+| Material tiles/bento | Metric tiles use actual clickable Material surfaces when actions are present; abstract shapes appear on icons rather than behind the data text. Settings bento retains its expressive and accessible adaptive navigation but avoids oversized ornamental backing shapes | Actual metrics, button actions, appearance density |
+| Stats and history | Stats search expands via spatial springs with effects fade. History filter sheet uses native Material drag handle and Material sheet shape | History pagination, search, filter state, dialogs |
+| Daily Listening and music details | Daily Listening section reveals no longer stagger, its sheet animation separates spatial movement and effects opacity. Song, Artist, Album collapsed headers use Material schemes | Live playback, audio preview, chart data, page actions |
+| Connection and import journeys | Spotify, Apple, Deezer, Musicolet, Last.fm, YouTube Music and desktop routes inherit a single app background, instead of duplicate full-screen overdraw. Semantic supporting text no longer attenuates contrast unnecessarily | Import/restore state machines, file selection, refresh/cancel/undo |
+| Onboarding and restore | Privacy, permission, battery and how-it-works copy uses theme roles. The restore accordion uses M3 spatial/effects springs, its Google/local backup and Last.fm options use readable theme-aware controls, with the existing operations unchanged | Permission requests, backup restore, conflict prompts, auth callbacks |
+| Cover-art picker and Spotlight | Native Material bottom-sheet handle and tonal styling in cover picker; Spotlight overlays use Material transitions, one background, and native themed loading/empty states | Media artwork selection, story cards, exports and content |
+| Android widgets | Glance Light/Dark ColorProviders now map semantic primary/secondary/tertiary and surface container roles, and weekly widget no longer hardcodes a dark background | Widget open actions, stored metrics and refresh schedule |
+
+**Source-level safety checks:** the modified Kotlin files have had delimiter/duplicate-import checks (still not an Android compiler). The pure dialog policy test is committed but not run. No CI, Gradle build, emulator/instrumented test, APK or GitHub release was started in this pass.
+
+### Remaining work — necessary before claiming “everything upgraded”
+
+- **Visual validation:** compile, run unit/instrumentation tests and screenshot comparisons in Light/Dark/OLED/custom, narrow/expanded widths and larger typography; verify 48dp touch targets, TalkBack, keyboard/IME, gestures, back stack and system-inset behavior. In particular, test older Android widgets and the 12+ splash.
+- **Editorial media:** Spotlight story stages, `ShareCards.kt`, `ShareTheme.kt`, share canvas/export rendering and purpose-built badge artwork intentionally use explicit colors and backgrounds. Inspect each preview against exported content before changing them to Material roles; a global color replace would corrupt users' shared image styles.
+- **Remaining specific layouts:** finish individual song/artist/album sections, Profile badges and gamification displays, remaining advanced settings flows, loading/error states and expanded-screen navigation beyond the shared primitives. Iterate screen-by-screen with screenshots.
+- **Cross-platform companion:** browser extension remains web-native (not Jetpack Compose), should adopt equivalent readable tokens and interactions separately, then be tested in-browser.
+- **Performance acceptance:** compare first meaningful frame, startup/Now Playing state updates, p50/p95 frame pacing on scrolling stats/history, artwork requests, memory and background tracking health against last tested build.
+
+A complete app-wide visual redesign is **not yet verified or signed off**. Keep [#94](https://github.com/matchalattewithbanana/Tempo/issues/94) open until this matrix and the remaining art-heavy surfaces are validated.
+
 ## Reference code inspected
 
 | Orion module | What it actually does | Original Tempo adaptation |
