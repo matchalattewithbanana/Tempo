@@ -493,74 +493,6 @@ class MusicTrackingService : NotificationListenerService() {
         return true
     }
 
-    /**
-     * Check if notification content is likely an advertisement.
-     * Uses heuristics similar to LocalMediaMetadata.isLikelyAdvertisement().
-     */
-    private fun isLikelyAdvertisementFromNotification(
-        title: String,
-        artist: String,
-        album: String?,
-        packageName: String,
-    ): Boolean {
-        val lowerTitle = title.lowercase()
-        val lowerArtist = artist.lowercase()
-
-        // Common ad title patterns
-        val adTitlePatterns =
-            listOf(
-                "advertisement",
-                "sponsored",
-                "ad break",
-                "premium",
-                "upgrade",
-                "subscribe",
-                "commercial",
-                "promo",
-                "promotion",
-            )
-
-        // Check title for ad keywords
-        if (adTitlePatterns.any { lowerTitle.contains(it) }) {
-            return true
-        }
-
-        // Spotify-specific ad detection
-        if (packageName == "com.spotify.music") {
-            if (lowerArtist == "spotify" || lowerArtist.contains("spotify")) {
-                return true
-            }
-            if (album?.lowercase()?.contains("spotify") == true) {
-                return true
-            }
-        }
-
-        // YouTube Music ad detection - YTM ads often have generic titles
-        if (packageName == "com.google.android.apps.youtube.music") {
-            if (lowerArtist == "youtube" || lowerArtist.contains("youtube music")) {
-                return true
-            }
-        }
-
-        // Artist name matches common ad sources
-        val adArtists =
-            listOf(
-                "advertisement",
-                "ad",
-                "spotify",
-                "youtube",
-                "google",
-                "amazon",
-                "apple",
-                "commercial",
-            )
-        if (adArtists.any { lowerArtist == it || lowerArtist.startsWith("$it ") }) {
-            return true
-        }
-
-        return false
-    }
-
     // Dependencies - initialized in onCreate via Hilt EntryPoint
     private lateinit var trackRepository: TrackRepository
     private lateinit var listeningRepository: ListeningRepository
@@ -2064,7 +1996,12 @@ class MusicTrackingService : NotificationListenerService() {
                 if (artist.isNotBlank() &&
                     !me.avinas.tempo.utils.ArtistParser
                         .isUnknownArtist(artist) &&
-                    isLikelyAdvertisementFromNotification(title, artist, album, packageName)
+                    LocalMediaMetadata(
+                        title = title,
+                        artist = artist,
+                        album = album,
+                        sourcePackage = packageName,
+                    ).isLikelyAdvertisement()
                 ) {
                     if (loggedAdvertisementSkips.put(title, true) == null) {
                         Log.d(TAG, "Skipping likely advertisement: '$title' from $packageName")
