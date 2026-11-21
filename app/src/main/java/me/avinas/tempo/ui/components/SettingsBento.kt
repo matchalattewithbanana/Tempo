@@ -15,6 +15,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import me.avinas.tempo.ui.theme.LocalTempoAppearance
+import me.avinas.tempo.ui.appearance.AppearanceDensity
 
 /** Featured and secondary destinations share a recognizable, playful language. */
 data class TempoSettingsDestination(
@@ -120,13 +122,15 @@ private fun TempoBentoDestination(
     modifier: Modifier = Modifier,
 ) {
     val swatch = tempoTileSwatch(destination.tone)
-    val height = when (kind) {
+    val dense = LocalTempoAppearance.current.density == AppearanceDensity.COMPACT
+    val regularHeight = when (kind) {
         BentoKind.FEATURED -> 168.dp
         BentoKind.TALL -> 266.dp
         BentoKind.SHORT -> 128.dp
         BentoKind.SQUARE -> 168.dp
         BentoKind.SINGLE -> 104.dp
     }
+    val height = if (dense) (regularHeight - 14.dp).coerceAtLeast(92.dp) else regularHeight
     Surface(
         onClick = destination.onClick,
         modifier = modifier.heightIn(min = height),
