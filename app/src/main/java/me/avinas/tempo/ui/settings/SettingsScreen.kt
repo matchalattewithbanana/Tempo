@@ -453,12 +453,21 @@ fun SettingsScreen(
                         destinations = listOfNotNull(
                             onNavigateToAppearance?.let { open ->
                                 me.avinas.tempo.ui.components.TempoSettingsDestination(
+                                title = stringResource(R.string.settings_category_tracking),
+                                subtitle = stringResource(R.string.settings_category_tracking_desc),
+                                icon = Icons.Rounded.GraphicEq,
+                                style = TempoEmblemStyle.PULSE,
+                                tone = me.avinas.tempo.ui.components.TempoTileTone.AQUA,
+                                onClick = { settingsCategory = "tracking" },
+                            ),
+                            me.avinas.tempo.ui.components.TempoSettingsDestination(
                                     title = stringResource(R.string.appearance_title),
                                     subtitle = stringResource(R.string.appearance_settings_summary),
                                     icon = Icons.Rounded.Palette,
                                     style = TempoEmblemStyle.DISCOVERY,
                                     onClick = open,
                                     featured = true,
+                                    tone = me.avinas.tempo.ui.components.TempoTileTone.ROSE,
                                 )
                             },
                             me.avinas.tempo.ui.components.TempoSettingsDestination(
@@ -466,20 +475,15 @@ fun SettingsScreen(
                                 subtitle = stringResource(R.string.settings_category_general_desc),
                                 icon = Icons.Rounded.Settings,
                                 style = TempoEmblemStyle.DISCOVERY,
+                                tone = me.avinas.tempo.ui.components.TempoTileTone.LILAC,
                                 onClick = { settingsCategory = "general" },
-                            ),
-                            me.avinas.tempo.ui.components.TempoSettingsDestination(
-                                title = stringResource(R.string.settings_category_tracking),
-                                subtitle = stringResource(R.string.settings_category_tracking_desc),
-                                icon = Icons.Rounded.GraphicEq,
-                                style = TempoEmblemStyle.PULSE,
-                                onClick = { settingsCategory = "tracking" },
                             ),
                             me.avinas.tempo.ui.components.TempoSettingsDestination(
                                 title = stringResource(R.string.settings_category_connections),
                                 subtitle = stringResource(R.string.settings_category_connections_desc),
                                 icon = Icons.Rounded.Link,
                                 style = TempoEmblemStyle.MEMORY,
+                                tone = me.avinas.tempo.ui.components.TempoTileTone.SKY,
                                 onClick = { settingsCategory = "connections" },
                             ),
                             me.avinas.tempo.ui.components.TempoSettingsDestination(
@@ -487,6 +491,7 @@ fun SettingsScreen(
                                 subtitle = stringResource(R.string.settings_category_data_desc),
                                 icon = Icons.Rounded.Storage,
                                 style = TempoEmblemStyle.MEMORY,
+                                tone = me.avinas.tempo.ui.components.TempoTileTone.AMBER,
                                 onClick = { settingsCategory = "data" },
                             ),
                             me.avinas.tempo.ui.components.TempoSettingsDestination(
@@ -494,6 +499,7 @@ fun SettingsScreen(
                                 subtitle = stringResource(R.string.settings_category_about_desc),
                                 icon = Icons.Rounded.Info,
                                 style = TempoEmblemStyle.DISCOVERY,
+                                tone = me.avinas.tempo.ui.components.TempoTileTone.ROSE,
                                 onClick = { settingsCategory = "about" },
                             ),
                         ),
