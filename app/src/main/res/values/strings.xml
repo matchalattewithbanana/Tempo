@@ -1717,6 +1717,10 @@
     <string name="settings_data_reset_section">Reset and delete</string>
     <string name="settings_connected_accounts">Connected accounts</string>
     <string name="settings_listening_goals">Listening goals and achievements</string>
+    <string name="settings_data_backup_section">Cloud and local backups</string>
+    <string name="settings_history_tools">Listening-history tools</string>
+    <string name="settings_privacy_controls">Privacy controls</string>
+    <string name="settings_about_resources">Legal, help and updates</string>
     <string name="appearance_preset_preview_explainer">Choose a palette to preview it. Fonts and layout stay unchanged unless you opt in, and nothing changes in the app until Apply.</string>
     <string name="settings_backup_overview_never">No Drive backup started on this device yet</string>
     <string name="settings_backup_overview_success">Last Drive backup succeeded</string>
