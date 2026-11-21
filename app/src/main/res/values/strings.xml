@@ -1694,10 +1694,10 @@
     <string name="settings_category_general_desc">Profile, language and notifications</string>
     <string name="settings_category_tracking">Music tracking</string>
     <string name="settings_category_tracking_desc">Player access, filtering and battery protection</string>
-    <string name="settings_category_connections">Connections &amp; imports</string>
-    <string name="settings_category_connections_desc">Spotify, Last.fm, desktop and history imports</string>
+    <string name="settings_category_connections">Connections &amp; sync</string>
+    <string name="settings_category_connections_desc">Spotify, Last.fm and desktop connections</string>
     <string name="settings_category_data">Library &amp; data</string>
-    <string name="settings_category_data_desc">Backups, history accuracy and metadata</string>
+    <string name="settings_category_data_desc">Backups, imports, listening accuracy and metadata</string>
     <string name="settings_category_about">About &amp; community</string>
     <string name="settings_category_about_desc">Version, support and privacy</string>
     <string name="settings_tracking_access_status">Tracking access</string>
@@ -1714,6 +1714,9 @@
     <string name="settings_health_minutes_ago">%1$d minutes ago</string>
     <string name="settings_health_no_signal">No player callback recorded yet</string>
     <string name="settings_backup_overview_header">Google Drive backup status</string>
+    <string name="settings_data_reset_section">Reset and delete</string>
+    <string name="settings_connected_accounts">Connected accounts</string>
+    <string name="appearance_preset_preview_explainer">Choose a palette to preview it. Fonts and layout stay unchanged unless you opt in, and nothing changes in the app until Apply.</string>
     <string name="settings_backup_overview_never">No Drive backup started on this device yet</string>
     <string name="settings_backup_overview_success">Last Drive backup succeeded</string>
     <string name="settings_backup_overview_failed">Last Drive backup failed — review connection</string>
