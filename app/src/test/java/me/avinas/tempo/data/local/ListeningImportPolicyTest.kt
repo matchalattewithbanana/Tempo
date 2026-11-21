@@ -45,6 +45,14 @@ class ListeningImportPolicyTest {
         assertNotNull(ListeningImportPolicy.matchDistance(older, extended))
     }
 
+    @Test fun secondPrecisionSpotifySessionsWithOverlappingIntervalsAreNotAutoMerged() {
+        val source = "com.spotify.music.import.json"
+        val unrounded = start + 123L
+        val first = play(source, startMs = unrounded)
+        val another = play(source, startMs = unrounded + 40_000L)
+        assertNull(ListeningImportPolicy.matchDistance(first, another))
+    }
+
     @Test fun unrelatedObservedSessionsFromIndependentDevicesStaySeparate() {
         val android = play("com.spotify.music", session = "android-1")
         val desktop = play("desktop:SpotifyWeb", session = "desktop-1")
