@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -34,6 +35,22 @@ data class TempoTileSwatch(
     val shape: Shape,
 )
 
+/** Text/icons must remain readable even after a custom palette changes a tile's base. */
+internal fun tileForegroundFor(container: Color, iconContainer: Color, preferred: Color): Color {
+    fun contrast(a: Color, b: Color): Float {
+        val light = maxOf(a.luminance(), b.luminance())
+        val dark = minOf(a.luminance(), b.luminance())
+        return (light + 0.05f) / (dark + 0.05f)
+    }
+    fun weakest(color: Color) = minOf(
+        contrast(color, container), contrast(color, iconContainer),
+    )
+    if (weakest(preferred) >= 4.5f) return preferred
+    // Very light/dark custom surfaces may make the normal text role unsuitable.
+    // Fall back to the stronger polarity rather than an arbitrary accent.
+    return if (weakest(Color.Black) >= weakest(Color.White)) Color.Black else Color.White
+}
+
 @Composable
 fun tempoTileSwatch(tone: TempoTileTone): TempoTileSwatch {
     val scheme = MaterialTheme.colorScheme
@@ -55,7 +72,11 @@ fun tempoTileSwatch(tone: TempoTileTone): TempoTileSwatch {
     val base = scheme.surfaceContainerLow
     val container = lerp(base, seed, if (dark) 0.21f else 0.32f)
     val iconContainer = lerp(container, seed, if (dark) 0.24f else 0.36f)
-    return TempoTileSwatch(container, iconContainer, scheme.onSurface, shape)
+    return TempoTileSwatch(
+        container, iconContainer,
+        tileForegroundFor(container, iconContainer, scheme.onSurface),
+        shape,
+    )
 }
 
 /** Shared, responsive metric tile used by Profile and listening analytics. */
