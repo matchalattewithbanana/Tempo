@@ -15,6 +15,14 @@ class ExpressiveLayoutPolicyTest {
         assertEquals(4, connectedChoiceColumns(700, 1f, 4))
     }
 
+    @Test fun largeSingleChoiceSetsUseChipsInsteadOfCrowdedButtonGroups() {
+        org.junit.Assert.assertFalse(shouldUseFilterChips(0))
+        org.junit.Assert.assertFalse(shouldUseFilterChips(2))
+        org.junit.Assert.assertFalse(shouldUseFilterChips(5))
+        org.junit.Assert.assertTrue(shouldUseFilterChips(6))
+        org.junit.Assert.assertTrue(shouldUseFilterChips(9))
+    }
+
     @Test fun choicesNeverExceedActualOptions() {
         assertEquals(1, connectedChoiceColumns(390, 1f, 1))
         assertEquals(1, connectedChoiceColumns(390, 1f, 0))
