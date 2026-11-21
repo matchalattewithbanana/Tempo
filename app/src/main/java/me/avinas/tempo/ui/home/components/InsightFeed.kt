@@ -290,12 +290,11 @@ fun ConstellationWeb(
                 ) {
                     Text(
                         text = type.name.replace("_", " "),
-                        style = TextStyle(
-                            fontSize = 10.sp,
+                        style = MaterialTheme.typography.labelSmall.copy(
                             fontWeight = FontWeight.Bold,
-                            letterSpacing = 0.5.sp
                         ),
-                        color = if (isSelected) Color.White else nodeColor.copy(alpha = 0.6f),
+                        color = if (isSelected) MaterialTheme.colorScheme.onSurface
+                            else MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -1478,7 +1477,7 @@ private fun TempoBPMVisualizer(bpm: Float, color: Color) {
                         style = TextStyle(
                             fontFamily = AppFontFamily,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 9.sp,
+                            fontSize = MaterialTheme.typography.labelSmall.fontSize,
                             letterSpacing = 0.5.sp
                         ),
                         color = color,
