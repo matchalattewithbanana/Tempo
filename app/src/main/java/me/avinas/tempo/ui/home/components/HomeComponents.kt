@@ -654,6 +654,15 @@ fun SpotlightStoryCard(
  * An adaptive, tonal four-part listening digest. Content stays readable in
  * Light, Dark and OLED: no hardcoded white-on-translucent text.
  */
+private data class WeekDigestSpec(
+    val label: String,
+    val value: String,
+    val icon: ImageVector,
+    val tone: me.avinas.tempo.ui.components.TempoTileTone,
+    val imageUrl: String? = null,
+)
+
+/** The weekly digest is an actual visual recap, not four generic black cards. */
 @Composable
 fun WeekInReviewGrid(
     topArtistName: String?,
@@ -664,6 +673,34 @@ fun WeekInReviewGrid(
     newDiscoveries: Int,
     modifier: Modifier = Modifier,
 ) {
+    val tiles = listOf(
+        WeekDigestSpec(
+            stringResource(R.string.home_top_artist),
+            topArtistName ?: "—",
+            Icons.Rounded.Person,
+            me.avinas.tempo.ui.components.TempoTileTone.ROSE,
+            topArtistImage,
+        ),
+        WeekDigestSpec(
+            stringResource(R.string.home_listen_time),
+            totalHours,
+            Icons.Default.Timer,
+            me.avinas.tempo.ui.components.TempoTileTone.SKY,
+        ),
+        WeekDigestSpec(
+            stringResource(R.string.desktop_stats_top_track),
+            topTrackName ?: "—",
+            Icons.Rounded.MusicNote,
+            me.avinas.tempo.ui.components.TempoTileTone.LILAC,
+            topTrackImage,
+        ),
+        WeekDigestSpec(
+            stringResource(R.string.home_new_finds),
+            newDiscoveries.toString(),
+            Icons.Default.Explore,
+            me.avinas.tempo.ui.components.TempoTileTone.AQUA,
+        ),
+    )
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -675,118 +712,81 @@ fun WeekInReviewGrid(
             modifier = Modifier.padding(horizontal = 4.dp),
         )
         BoxWithConstraints(Modifier.fillMaxWidth()) {
-            val twoColumns = weekDigestColumns(maxWidth.value, androidx.compose.ui.platform.LocalDensity.current.fontScale) == 2
-            val tiles: List<@Composable (Modifier) -> Unit> = listOf(
-                { tile ->
-                    WeekDigestTile(
-                        label = stringResource(R.string.home_top_artist),
-                        value = topArtistName ?: "—",
-                        modifier = tile,
-                        accent = MaterialTheme.colorScheme.tertiaryContainer,
-                        accentContent = MaterialTheme.colorScheme.onTertiaryContainer,
-                        imageUrl = topArtistImage,
-                        icon = Icons.Rounded.Person,
-                    )
-                },
-                { tile ->
-                    WeekDigestTile(
-                        label = stringResource(R.string.home_listen_time),
-                        value = totalHours,
-                        modifier = tile,
-                        accent = MaterialTheme.colorScheme.primaryContainer,
-                        accentContent = MaterialTheme.colorScheme.onPrimaryContainer,
-                        icon = Icons.Default.Timer,
-                    )
-                },
-                { tile ->
-                    WeekDigestTile(
-                        label = stringResource(R.string.desktop_stats_top_track),
-                        value = topTrackName ?: "—",
-                        modifier = tile,
-                        accent = MaterialTheme.colorScheme.secondaryContainer,
-                        accentContent = MaterialTheme.colorScheme.onSecondaryContainer,
-                        imageUrl = topTrackImage,
-                        icon = Icons.Rounded.MusicNote,
-                    )
-                },
-                { tile ->
-                    WeekDigestTile(
-                        label = stringResource(R.string.home_new_finds),
-                        value = newDiscoveries.toString(),
-                        modifier = tile,
-                        accent = MaterialTheme.colorScheme.tertiaryContainer,
-                        accentContent = MaterialTheme.colorScheme.onTertiaryContainer,
-                        icon = Icons.Default.Explore,
-                    )
-                },
+            val columns = weekDigestColumns(
+                maxWidth.value,
+                androidx.compose.ui.platform.LocalDensity.current.fontScale,
             )
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                if (twoColumns) {
+                if (columns == 2) {
                     tiles.chunked(2).forEach { pair ->
                         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            pair.forEach { tile -> tile(Modifier.weight(1f)) }
+                            pair.forEach { tile ->
+                                WeekDigestTile(tile, Modifier.weight(1f))
+                            }
                         }
                     }
                 } else {
-                    tiles.forEach { tile -> tile(Modifier.fillMaxWidth()) }
+                    tiles.forEach { tile -> WeekDigestTile(tile, Modifier.fillMaxWidth()) }
                 }
             }
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun WeekDigestTile(
-    label: String,
-    value: String,
-    modifier: Modifier,
-    accent: Color,
-    accentContent: Color,
-    icon: ImageVector,
-    imageUrl: String? = null,
-) {
+private fun WeekDigestTile(spec: WeekDigestSpec, modifier: Modifier) {
+    val swatch = me.avinas.tempo.ui.components.tempoTileSwatch(spec.tone)
     Surface(
-        modifier = modifier.heightIn(min = 142.dp),
+        modifier = modifier.heightIn(min = 160.dp),
         shape = MaterialTheme.shapes.extraLarge,
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-        contentColor = MaterialTheme.colorScheme.onSurface,
+        color = swatch.container,
+        contentColor = swatch.foreground,
     ) {
-        Column(
-            modifier = Modifier.fillMaxWidth().padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            Surface(
-                shape = MaterialShapes.Cookie6Sided.toShape(),
-                color = accent,
-                contentColor = accentContent,
-                modifier = Modifier.size(48.dp),
+        Box(Modifier.fillMaxWidth().clip(MaterialTheme.shapes.extraLarge)) {
+            Box(
+                Modifier.align(Alignment.BottomEnd)
+                    .offset(x = 27.dp, y = 34.dp)
+                    .size(95.dp)
+                    .background(swatch.foreground.copy(alpha = 0.06f), swatch.shape),
+            )
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                Box(contentAlignment = Alignment.Center) {
-                    if (!imageUrl.isNullOrBlank()) {
-                        CachedAsyncImage(
-                            imageUrl = imageUrl,
-                            contentDescription = null,
-                            modifier = Modifier.fillMaxSize().clip(MaterialShapes.Cookie6Sided.toShape()),
-                            contentScale = ContentScale.Crop,
-                        )
-                    } else {
-                        Icon(icon, contentDescription = null, modifier = Modifier.size(24.dp))
+                Surface(
+                    shape = swatch.shape,
+                    color = swatch.iconContainer,
+                    contentColor = swatch.foreground,
+                    modifier = Modifier.size(48.dp),
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        if (!spec.imageUrl.isNullOrBlank()) {
+                            CachedAsyncImage(
+                                imageUrl = spec.imageUrl,
+                                contentDescription = null,
+                                modifier = Modifier.fillMaxSize().clip(swatch.shape),
+                                contentScale = ContentScale.Crop,
+                            )
+                        } else {
+                            Icon(spec.icon, contentDescription = null, modifier = Modifier.size(24.dp))
+                        }
                     }
                 }
+                Text(
+                    text = spec.label,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = swatch.foreground.copy(alpha = 0.80f),
+                    maxLines = 2,
+                )
+                Text(
+                    text = spec.value,
+                    style = MaterialTheme.typography.titleMediumEmphasized,
+                    color = swatch.foreground,
+                    maxLines = 3,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                )
             }
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 2,
-            )
-            Text(
-                text = value,
-                style = MaterialTheme.typography.titleMediumEmphasized,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 2,
-                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-            )
         }
     }
 }
