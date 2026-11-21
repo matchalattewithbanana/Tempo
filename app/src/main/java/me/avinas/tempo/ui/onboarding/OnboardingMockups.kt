@@ -28,14 +28,11 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -726,10 +723,8 @@ private fun DrawScope.drawOrbitNoteUnit(
     }
 }
 
-// Only this small canvas owns the frame-clock — the parent BoxWithConstraints
-// + art Image compose once and never recompose per frame (the Image already
-// skipped via unchanged inputs; now the parent doesn't even re-enter
-// composition). The canvas covers just the orbit square to cut overdraw.
+// Static decorative notes. The canvas covers only the orbit square to keep
+// overdraw bounded without running a frame clock.
 @Composable
 private fun OrbitNotesCanvas(
     cx: Dp,
@@ -737,25 +732,10 @@ private fun OrbitNotesCanvas(
     radius: Dp,
     modifier: Modifier = Modifier,
 ) {
-    val reducedMotion = rememberReducedMotion()
-    // Frame-clock drive — the angle derives from monotonic display time,
-    // so motion has no iteration restart and runs identically on
-    // 60/90/120Hz screens. Static frame when reduced motion is on.
-    var elapsedNs by remember { mutableLongStateOf(0L) }
-    if (!reducedMotion) {
-        LaunchedEffect(Unit) {
-            val start = withFrameNanos { it }
-            while (true) {
-                elapsedNs = withFrameNanos { it } - start
-            }
-        }
-    }
-    val revolve =
-        if (reducedMotion) {
-            20f
-        } else {
-            ((elapsedNs / 1_000_000_000.0 * (360.0 / 20.0)) % 360.0).toFloat()
-        }
+    // Decorative orbit is intentionally static. The Welcome screen already has
+    // one foreground hero transition; continuous background rotation added
+    // attention cost without communicating state or interaction.
+    val revolve = 20f
     val flag =
         remember {
             // Solid filled flag so the eighth reads vs the hollow quarter at 6–8dp.
