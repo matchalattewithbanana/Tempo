@@ -2,6 +2,35 @@
 
 Audit of the Tempo Android app (Kotlin/Compose/Room), ~159K LOC across 463 source files.
 
+## Source reliability follow-up — 22 November 2026
+
+The following changes were committed with `[skip ci]` and are **source-reviewed but not yet
+Android-compiled or device-validated**. They must not be treated as release verification.
+
+- **Service teardown (#76):** `MusicTrackingService.onDestroy()` no longer uses
+  `runBlocking`. Active sessions use `ActiveSessionJournal` for immediate/periodic durable
+  checkpoints and unclean-run markers; the final bounded drain runs on a teardown IO scope.
+- **Startup I/O (#75):** Room's migration safety snapshot remains lazy and executes on the thread
+  that first opens Room. Current application/service first-use paths are IO-owned, and session
+  marker reads/commits were removed from synchronous service initialization. Large-upgrade
+  StrictMode/startup tracing is still required.
+- **Offline recovery (#82):** the pending-event queue is row-oriented SQLite with incremental
+  writes and corruption quarantine rather than whole-queue JSON rewrites. Large 1k/10k recovery
+  benchmarks remain outstanding.
+- **Home:** database fan-out/concurrency pacing moved to `HomeDashboardLoader`; pure calendar
+  shaping moved to `HomeChartProcessor`. `HomeViewModel` no longer owns the Room semaphore or
+  the query graph.
+- **Restore:** unbounded backup rows are decoded once into a disposable SQLite
+  `RestoreStagingStore`; the main Room transaction replays typed staged rows rather than parsing
+  JSONL while holding the write transaction. The staging DB commits every 5,000 rows to bound its
+  own rollback-journal growth.
+- **Settings:** runtime permission/heartbeat/battery/OEM/Spotify polling moved below Compose into
+  `SettingsViewModel`.
+
+New unit/instrumented tests were added for chart shaping, Settings section ownership, typed restore
+staging and pure listening-event reconciliation plans. They are intentionally unexecuted until the
+next authorized validation run.
+
 ## Later performance work — 18 November 2026
 
 The verification statement immediately below describes the earlier audit entries.
