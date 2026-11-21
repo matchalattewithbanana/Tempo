@@ -593,7 +593,7 @@ private fun SpotlightLoadingView(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             CircularProgressIndicator(
-                color = TempoPrimary,
+                color = MaterialTheme.colorScheme.primary,
                 strokeWidth = 3.dp,
                 modifier = Modifier.size(36.dp)
             )
@@ -605,13 +605,13 @@ private fun SpotlightLoadingView(
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp
                 ),
-                color = TextPrimary
+                color = MaterialTheme.colorScheme.onSurface
             )
             Spacer(modifier = Modifier.height(6.dp))
             Text(
                 text = "Building your personalized music cards and story",
                 style = MaterialTheme.typography.bodySmall,
-                color = TextSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
             )
         }
@@ -632,24 +632,21 @@ private fun SpotlightEmptyView(
             .padding(horizontal = 24.dp),
         contentAlignment = Alignment.Center
     ) {
-        GlassCard(
+        Surface(
             modifier = Modifier.fillMaxWidth(),
-            variant = GlassCardVariant.Obsidian,
-            shape = RoundedCornerShape(22.dp),
-            borderColor = GlassBorderSoft,
-            borderWidth = 0.8.dp,
-            contentPadding = PaddingValues(28.dp)
+            shape = MaterialTheme.shapes.extraLarge,
+            color = MaterialTheme.colorScheme.surfaceContainerLow,
+            contentColor = MaterialTheme.colorScheme.onSurface,
         ) {
             Column(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Box(
                     modifier = Modifier
                         .size(56.dp)
                         .clip(CircleShape)
-                        .background(TempoDarkSurfaceSunken)
-                        .border(0.8.dp, GlassBorderSoft, CircleShape),
+                        .background(MaterialTheme.colorScheme.secondaryContainer),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -669,7 +666,7 @@ private fun SpotlightEmptyView(
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp
                     ),
-                    color = TextPrimary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
                 Spacer(modifier = Modifier.height(6.dp))
@@ -677,7 +674,7 @@ private fun SpotlightEmptyView(
                 Text(
                     text = "Keep listening to your favorite tracks or switch time periods below to see your music visualized.",
                     style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
                     lineHeight = 18.sp
                 )
