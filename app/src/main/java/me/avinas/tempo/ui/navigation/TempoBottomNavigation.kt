@@ -84,12 +84,12 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 
-import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.ShortNavigationBar
+import androidx.compose.material3.ShortNavigationBarItem
+import androidx.compose.material3.ShortNavigationBarArrangement
 import androidx.compose.material3.Surface
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.FloatingToolbarDefaults
 import androidx.compose.material3.FilledIconToggleButton
@@ -177,11 +177,13 @@ fun TempoBottomNavigation(
                 }
             }
         } else {
-        // Native Material navigation stays compact and horizontally weighted.
-        // The ShortNavigationBar layout in the reported screenshot inflated
-        // the selected Home destination and obscured page content.
-        NavigationBar(
+        // Native M3 Expressive short bar with equally weighted destinations.
+        // EqualWeight prevents a selected destination from taking over the bar;
+        // AppNavigation measures the entire bar plus system insets before laying
+        // out the content, so the final history row is not obscured.
+        ShortNavigationBar(
             modifier = Modifier.fillMaxWidth(),
+            arrangement = ShortNavigationBarArrangement.EqualWeight,
             containerColor = MaterialTheme.colorScheme.surfaceContainer,
             contentColor = MaterialTheme.colorScheme.onSurface,
         ) {
@@ -189,7 +191,7 @@ fun TempoBottomNavigation(
                 val selected = currentDestination?.hierarchy?.any {
                     it.route == destination.first
                 } == true
-                NavigationBarItem(
+                ShortNavigationBarItem(
                     selected = selected,
                     onClick = {
                         if (!selected) {
@@ -204,17 +206,11 @@ fun TempoBottomNavigation(
                             contentDescription = if (showLabels) null else destination.third,
                         )
                     },
+                    // Labels remain visible by default. The opt-in icon-only
+                    // personalization mode retains accessibility descriptions.
                     label = if (showLabels) {
                         { Text(destination.third, maxLines = 1) }
                     } else null,
-                    alwaysShowLabel = showLabels,
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                        selectedTextColor = MaterialTheme.colorScheme.onSurface,
-                        indicatorColor = MaterialTheme.colorScheme.secondaryContainer,
-                        unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    ),
                 )
             }
         }
