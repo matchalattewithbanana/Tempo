@@ -228,6 +228,52 @@ internal fun <T> ChoiceRow(
     }
 }
 
+@Composable
+internal fun HomeSectionOrderRow(
+    sectionName: String,
+    visible: Boolean,
+    enabled: Boolean,
+    canMoveUp: Boolean,
+    canMoveDown: Boolean,
+    moveUpLabel: String,
+    moveDownLabel: String,
+    onVisibleChange: (Boolean) -> Unit,
+    onMoveUp: () -> Unit,
+    onMoveDown: () -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Row(
+            modifier = Modifier.weight(1f)
+                .toggleable(
+                    value = visible,
+                    enabled = enabled,
+                    role = Role.Checkbox,
+                    onValueChange = onVisibleChange,
+                )
+                .padding(vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Checkbox(checked = visible, enabled = enabled, onCheckedChange = null)
+            Text(
+                sectionName,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+        }
+        IconButton(onClick = onMoveUp, enabled = enabled && canMoveUp) {
+            Icon(Icons.Default.KeyboardArrowUp, contentDescription = "$moveUpLabel: $sectionName")
+        }
+        IconButton(onClick = onMoveDown, enabled = enabled && canMoveDown) {
+            Icon(Icons.Default.KeyboardArrowDown, contentDescription = "$moveDownLabel: $sectionName")
+        }
+    }
+}
+
 internal fun sectionLabel(section: AppearanceHomeSection): Int = when (section) {
     AppearanceHomeSection.SUMMARY -> R.string.appearance_summary
     AppearanceHomeSection.SPOTLIGHT -> R.string.appearance_spotlight

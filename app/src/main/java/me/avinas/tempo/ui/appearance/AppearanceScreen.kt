@@ -19,12 +19,10 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import me.avinas.tempo.ui.components.TempoCircularLoadingIndicator
-import me.avinas.tempo.ui.components.TempoLinearLoadingIndicator
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -43,10 +41,6 @@ import me.avinas.tempo.ui.stats.statsDurationLabel
 import me.avinas.tempo.ui.stats.statsDurationPrecisionLabel
 import me.avinas.tempo.ui.stats.formatStatsDuration
 import me.avinas.tempo.ui.stats.statsSummaryLabel
-import me.avinas.tempo.ui.components.appearanceBackdropBrush
-import me.avinas.tempo.ui.components.GlassCard
-import me.avinas.tempo.ui.theme.LocalTempoPalette
-import me.avinas.tempo.ui.theme.TempoTheme
 
 private val NewAppearanceEditions = listOf(
     AppearancePreset.MIDNIGHT_BLOOM,
@@ -158,7 +152,6 @@ fun AppearanceScreen(
         )
     }
 
-    val preview = draft
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = { TopAppBar(
@@ -239,28 +232,7 @@ fun AppearanceScreen(
                 AppearanceBackdrop.FLAT -> R.string.appearance_backdrop_flat
                 AppearanceBackdrop.WASH -> R.string.appearance_backdrop_wash
             } }) { draft = draft.copy(backdrop = it) }
-            // Actual card/text tokens, isolated from saved app state and system bars.
-            TempoTheme(appearance = preview, preview = true) {
-                val palette = LocalTempoPalette.current
-                val brush = remember(palette, preview.backdrop) { appearanceBackdropBrush(palette, preview.backdrop) }
-                Surface(shape = RoundedCornerShape(22.dp), color = palette.background) {
-                    Column(
-                        Modifier.fillMaxWidth().background(brush).padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp),
-                    ) {
-                        Text(stringResource(R.string.appearance_preview_song), style = MaterialTheme.typography.headlineSmall)
-                        GlassCard {
-                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                Text(stringResource(R.string.appearance_preview_artist), style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurface)
-                                TempoLinearLoadingIndicator(progress = { 0.64f }, modifier = Modifier.fillMaxWidth())
-                                Text(stringResource(R.string.appearance_preview_pending), style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            }
-                        }
-                    }
-                }
-            }
+            AppearancePreviewPanel(draft)
                 }
             }
             item(key = "preset_collection") {
@@ -491,27 +463,36 @@ fun AppearanceScreen(
                     val sectionName = stringResource(sectionLabel(section))
                     val moveLabel = stringResource(R.string.appearance_move_up)
                     val moveDownLabel = stringResource(R.string.appearance_move_down)
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Checkbox(modifier = Modifier.semantics { contentDescription = sectionName }, checked = section !in draft.hiddenHomeSections, enabled = !busy, onCheckedChange = { visible ->
-                            draft = draft.copy(hiddenHomeSections = if (visible) draft.hiddenHomeSections - section else draft.hiddenHomeSections + section)
-                        })
-                        Text(stringResource(sectionLabel(section)), modifier = Modifier.weight(1f))
-                        TextButton(modifier = Modifier.semantics { contentDescription = "$moveLabel: $sectionName" }, enabled = !busy && index > 0, onClick = {
+                    HomeSectionOrderRow(
+                        sectionName = sectionName,
+                        visible = section !in draft.hiddenHomeSections,
+                        enabled = !busy,
+                        canMoveUp = index > 0,
+                        canMoveDown = index < draft.homeOrder.lastIndex,
+                        moveUpLabel = moveLabel,
+                        moveDownLabel = moveDownLabel,
+                        onVisibleChange = { visible ->
+                            draft = draft.copy(
+                                hiddenHomeSections = if (visible) {
+                                    draft.hiddenHomeSections - section
+                                } else {
+                                    draft.hiddenHomeSections + section
+                                },
+                            )
+                        },
+                        onMoveUp = {
                             val order = draft.homeOrder.toMutableList()
-                            order[index] = order[index - 1]; order[index - 1] = section
+                            order[index] = order[index - 1]
+                            order[index - 1] = section
                             draft = draft.copy(homeOrder = order)
-                        }) { Text(moveLabel) }
-                        TextButton(
-                            modifier = Modifier.semantics { contentDescription = "$moveDownLabel: $sectionName" },
-                            enabled = !busy && index < draft.homeOrder.lastIndex,
-                            onClick = {
-                                val order = draft.homeOrder.toMutableList()
-                                order[index] = order[index + 1]
-                                order[index + 1] = section
-                                draft = draft.copy(homeOrder = order)
-                            },
-                        ) { Text(moveDownLabel) }
-                    }
+                        },
+                        onMoveDown = {
+                            val order = draft.homeOrder.toMutableList()
+                            order[index] = order[index + 1]
+                            order[index + 1] = section
+                            draft = draft.copy(homeOrder = order)
+                        },
+                    )
                 }
                 TextButton(
                     enabled = !busy && (draft.homeOrder != AppearanceHomeSection.entries.toList() ||
