@@ -323,18 +323,12 @@ class YouTubeMusicImportService
                         Log.e(TAG, "Batch insert failed, falling back to individual inserts", e)
                         for (event in batch) {
                             try {
-                                val count =
-                                    listeningEventDao.countEventsNearTimestamp(
-                                        event.track_id,
-                                        event.timestamp - ListeningEventDao.DUPLICATE_TOLERANCE_MS,
-                                        event.timestamp + ListeningEventDao.DUPLICATE_TOLERANCE_MS,
-                                    )
-                                if (count == 0) {
-                                    listeningEventDao.insert(event)
-                                    eventsCreated++
-                                } else {
-                                    duplicatesSkipped++
-                                }
+                                // Never bypass centralized DB reconciliation after a
+                                // bulk failure: raw insert() can silently duplicate
+                                // Spotify/YouTube/Last.fm plays and inflate totals.
+                                val result = listeningEventDao.insertAllBatchedWithDedup(listOf(event))
+                                eventsCreated += result.inserted
+                                duplicatesSkipped += result.skipped
                             } catch (e2: Exception) {
                                 Log.e(TAG, "Failed to insert event for track ${event.track_id}", e2)
                             }
