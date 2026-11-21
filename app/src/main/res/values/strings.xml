@@ -1990,6 +1990,7 @@
     <string name="appearance_palette_auto">Automatic</string>
 
     <!-- Expressive listening passport and progress bento. -->
+    <string name="profile_bento_passport">YOUR LISTENING STORY</string>
     <string name="profile_bento_current_streak">Current streak</string>
     <string name="profile_bento_best_streak">Best streak</string>
     <string name="profile_bento_total_xp">Total XP</string>
