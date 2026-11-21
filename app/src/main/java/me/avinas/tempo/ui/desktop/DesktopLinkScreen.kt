@@ -44,7 +44,6 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import me.avinas.tempo.R
-import me.avinas.tempo.ui.components.DeepOceanBackground
 import me.avinas.tempo.ui.components.GlassCard
 import me.avinas.tempo.ui.components.GlassCardVariant
 import me.avinas.tempo.ui.theme.*
@@ -107,7 +106,7 @@ fun DesktopLinkScreen(
             )
         }
     ) { padding ->
-        DeepOceanBackground {
+        androidx.compose.foundation.layout.Box(Modifier.fillMaxSize()) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
