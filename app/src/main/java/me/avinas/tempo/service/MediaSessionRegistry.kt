@@ -165,7 +165,7 @@ internal class MediaSessionRegistry(
         // exposes several tokens for a reconnect/cast handoff.
         val preferred =
             rawControllers
-                .groupBy(MediaController::getPackageName)
+                .groupBy { it.packageName }
                 .values
                 .map { group ->
                     group.firstOrNull { controller ->
