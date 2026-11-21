@@ -9,15 +9,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import me.avinas.tempo.ui.theme.LocalTempoAppearance
-import me.avinas.tempo.ui.appearance.AppearanceDensity
 
-/** Featured and secondary destinations share a recognizable, playful language. */
+/** Category navigation is informational, not a second grid of tall hero cards. */
 data class TempoSettingsDestination(
     val title: String,
     val subtitle: String,
@@ -28,15 +25,10 @@ data class TempoSettingsDestination(
     val tone: TempoTileTone = TempoTileTone.SKY,
 )
 
-/** Compact phones and accessibility text scales always get full-width cards. */
+/** Compact windows must keep search and category labels readable at full width. */
 internal fun settingsBentoColumns(widthDp: Float, fontScale: Float): Int =
-    if (widthDp < 360f || fontScale >= 1.3f) 1 else 2
+    if (widthDp < 600f || fontScale >= 1.3f) 1 else 2
 
-/**
- * Original staggered Material bento. A featured full-width tile is followed
- * by one tall destination beside two compact ones and a final paired row.
- * All data, navigation actions and accessibility labels remain intact.
- */
 @Composable
 fun TempoSettingsBento(
     destinations: List<TempoSettingsDestination>,
@@ -45,66 +37,26 @@ fun TempoSettingsBento(
     if (destinations.isEmpty()) return
     BoxWithConstraints(modifier.fillMaxWidth()) {
         val columns = settingsBentoColumns(maxWidth.value, LocalDensity.current.fontScale)
-        val featured = destinations.firstOrNull { it.featured }
-        val regular = destinations.filterNot { it.featured }
         Column(
             modifier = Modifier.widthIn(max = 850.dp).fillMaxWidth().align(Alignment.Center),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            featured?.let {
-                TempoBentoDestination(
-                    destination = it,
-                    kind = BentoKind.FEATURED,
+            // Keep source order stable. Previously the featured tile jumped out
+            // of the category sequence and a bento forced some destinations to
+            // occupy several hundred dp, pushing practical Settings offscreen.
+            destinations.chunked(columns).forEach { group ->
+                Row(
                     modifier = Modifier.fillMaxWidth(),
-                )
-            }
-            if (columns == 1) {
-                regular.forEach { destination ->
-                    TempoBentoDestination(
-                        destination = destination,
-                        kind = BentoKind.SINGLE,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                }
-            } else {
-                if (regular.size >= 3) {
-                    Row(
-                        Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    ) {
-                        TempoBentoDestination(
-                            destination = regular[0],
-                            kind = BentoKind.TALL,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    group.forEach { destination ->
+                        SettingsCategoryDestination(
+                            destination = destination,
                             modifier = Modifier.weight(1f),
                         )
-                        Column(
-                            modifier = Modifier.weight(1f),
-                            verticalArrangement = Arrangement.spacedBy(10.dp),
-                        ) {
-                            regular.subList(1, 3).forEach { destination ->
-                                TempoBentoDestination(
-                                    destination = destination,
-                                    kind = BentoKind.SHORT,
-                                    modifier = Modifier.fillMaxWidth(),
-                                )
-                            }
-                        }
                     }
-                }
-                val remaining = if (regular.size >= 3) regular.drop(3) else regular
-                remaining.chunked(2).forEach { group ->
-                    Row(
-                        Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    ) {
-                        group.forEach { destination ->
-                            TempoBentoDestination(
-                                destination = destination,
-                                kind = BentoKind.SQUARE,
-                                modifier = Modifier.weight(1f),
-                            )
-                        }
-                        if (group.size == 1) Spacer(Modifier.weight(1f))
+                    repeat(columns - group.size) {
+                        Spacer(Modifier.weight(1f))
                     }
                 }
             }
@@ -112,114 +64,58 @@ fun TempoSettingsBento(
     }
 }
 
-private enum class BentoKind { FEATURED, TALL, SHORT, SQUARE, SINGLE }
-
 @Composable
-private fun TempoBentoDestination(
+private fun SettingsCategoryDestination(
     destination: TempoSettingsDestination,
-    kind: BentoKind,
     modifier: Modifier = Modifier,
 ) {
-    val swatch = tempoTileSwatch(destination.tone)
-    val dense = LocalTempoAppearance.current.density == AppearanceDensity.COMPACT
-    val regularHeight = when (kind) {
-        BentoKind.FEATURED -> 168.dp
-        BentoKind.TALL -> 266.dp
-        BentoKind.SHORT -> 128.dp
-        BentoKind.SQUARE -> 168.dp
-        BentoKind.SINGLE -> 104.dp
-    }
-    val height = if (dense) (regularHeight - 14.dp).coerceAtLeast(92.dp) else regularHeight
+    val scheme = MaterialTheme.colorScheme
     Surface(
+        modifier = modifier.heightIn(min = 82.dp),
         onClick = destination.onClick,
-        modifier = modifier.heightIn(min = height),
-        shape = MaterialTheme.shapes.extraExtraLarge,
-        // One featured destination earns the accent surface. Other destinations
-        // use a quieter Material surface so hierarchy survives custom palettes.
-        color = if (kind == BentoKind.FEATURED) swatch.container
-            else MaterialTheme.colorScheme.surfaceContainerLow,
-        contentColor = MaterialTheme.colorScheme.onSurface,
+        shape = MaterialTheme.shapes.large,
+        color = if (destination.featured) scheme.secondaryContainer else scheme.surfaceContainerLow,
+        contentColor = if (destination.featured) scheme.onSecondaryContainer else scheme.onSurface,
     ) {
-        Box(
-            Modifier.fillMaxWidth().heightIn(min = height)
-                .clip(MaterialTheme.shapes.extraExtraLarge),
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            when (kind) {
-                BentoKind.SHORT, BentoKind.SINGLE -> {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    ) {
-                        BentoIcon(destination.icon, swatch, 40.dp)
-                        Column(
-                            modifier = Modifier.weight(1f),
-                            verticalArrangement = Arrangement.spacedBy(3.dp),
-                        ) {
-                            BentoLabel(destination.title, false)
-                            Text(
-                                destination.subtitle,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = swatch.foreground,
-                                maxLines = if (kind == BentoKind.SINGLE) 2 else 3,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                        }
-                    }
-                }
-                else -> {
-                    Column(
-                        Modifier.fillMaxWidth().heightIn(min = height).padding(18.dp),
-                        verticalArrangement = Arrangement.SpaceBetween,
-                    ) {
-                        BentoIcon(
-                            destination.icon,
-                            swatch,
-                            if (kind == BentoKind.FEATURED) 52.dp else 46.dp,
-                        )
-                        Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                            BentoLabel(destination.title, kind == BentoKind.FEATURED)
-                            Text(
-                                destination.subtitle,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = swatch.foreground,
-                                maxLines = if (kind == BentoKind.TALL) 4 else 3,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                        }
-                    }
+            Surface(
+                shape = MaterialTheme.shapes.medium,
+                color = if (destination.featured) scheme.onSecondaryContainer.copy(alpha = 0.10f)
+                    else scheme.secondaryContainer,
+                contentColor = if (destination.featured) scheme.onSecondaryContainer else scheme.onSecondaryContainer,
+                modifier = Modifier.size(42.dp),
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(destination.icon, contentDescription = null, modifier = Modifier.size(22.dp))
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun BentoLabel(title: String, featured: Boolean) {
-    Text(
-        text = title,
-        style = if (featured) MaterialTheme.typography.headlineSmallEmphasized
-            else MaterialTheme.typography.titleMediumEmphasized,
-        color = MaterialTheme.colorScheme.onSurface,
-        maxLines = 3,
-        overflow = TextOverflow.Ellipsis,
-    )
-}
-
-@Composable
-private fun BentoIcon(
-    icon: ImageVector,
-    swatch: TempoTileSwatch,
-    size: androidx.compose.ui.unit.Dp,
-) {
-    Surface(
-        modifier = Modifier.size(size),
-        shape = swatch.shape,
-        color = swatch.iconContainer,
-        contentColor = swatch.foreground,
-    ) {
-        Box(contentAlignment = Alignment.Center) {
-            Icon(icon, contentDescription = null, modifier = Modifier.size(size * 0.47f))
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                Text(
+                    text = destination.title,
+                    style = MaterialTheme.typography.titleSmallEmphasized,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    text = destination.subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (destination.featured) scheme.onSecondaryContainer else scheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp),
+            )
         }
     }
 }
