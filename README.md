@@ -29,7 +29,7 @@
   &nbsp;·&nbsp;
   <a href="browser-extension/README.md#install-from-github">Browser companion</a>
   &nbsp;·&nbsp;
-  <a href="docs/README.md">Documentation</a>
+  <a href="docs/index.md">Documentation</a>
   &nbsp;·&nbsp;
   <a href="https://github.com/matchalattewithbanana/Tempo/issues">Report an issue</a>
 </p>
@@ -231,7 +231,7 @@ This is the Android client and its optional browser companion. Playback tracking
 | [`app/src/main/java/me/avinas/tempo/`](app/src/main/java/me/avinas/tempo) | Android app: playback/tracking, data, services, Compose screens and settings |
 | [`app/src/main/res/`](app/src/main/res) | Android resources, including Material artwork and launcher icons |
 | [`browser-extension/`](browser-extension) | Chromium and Firefox listening companion |
-| [`docs/`](docs/README.md) | Architecture, accuracy, reliability, privacy, releases and engineering notes |
+| [`docs/`](docs/index.md) | Architecture, accuracy, reliability, privacy, releases and engineering notes |
 | [`Screenshots/`](Screenshots) | Historical UI captures for reference |
 
 For a deeper tour, see [architecture](docs/ARCHITECTURE.md) and [development setup](docs/DEVELOPMENT.md).
@@ -280,7 +280,7 @@ Tempo keeps its primary listening library in app-private local storage. Optional
 | --- | --- |
 | [Privacy policy](PRIVACY.md) · [Browser privacy](browser-extension/PRIVACY.md) | Stored data, optional network flows, retention and user controls |
 | [Tracking accuracy](docs/TRACKING_AND_IMPORT_ACCURACY.md) | Timing evidence, import matching and reconciliation |
-| [Docs index](docs/README.md) | Feature guides, audits and development reference |
+| [Docs index](docs/index.md) | Feature guides, audits and development reference |
 | [Support](SUPPORT.md) · [Issues](https://github.com/matchalattewithbanana/Tempo/issues) | Troubleshooting, reproducible bug reports and feature suggestions |
 | [Security](SECURITY.md) | Responsible vulnerability disclosure |
 | [Changelog](Changelog.md) · [Release catalog](docs/releases/README.md) | Published releases versus unreleased work |
