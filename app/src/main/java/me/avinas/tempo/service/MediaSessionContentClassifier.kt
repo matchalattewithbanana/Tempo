@@ -22,23 +22,27 @@ internal class MediaSessionContentClassifier(
             metadata?.getString(MediaMetadata.METADATA_KEY_TITLE)
                 ?: metadata?.getString(MediaMetadata.METADATA_KEY_DISPLAY_TITLE)
                 ?: return false
-        val artist =
-            metadata.getString(MediaMetadata.METADATA_KEY_ARTIST)
-                ?: metadata.getString(MediaMetadata.METADATA_KEY_ALBUM_ARTIST)
-                ?: "Unknown Artist"
         val duration = metadata.getLong(MediaMetadata.METADATA_KEY_DURATION)
 
-        when (
-            trackingPolicy.evaluateMedia(
-                packageName = packageName,
-                title = title,
-                artist = artist,
-                durationMs = duration,
-            )
-        ) {
-            TrackingRuntimePolicy.MediaVerdict.FORCE_ALLOW -> return true
-            TrackingRuntimePolicy.MediaVerdict.REJECT -> return false
-            TrackingRuntimePolicy.MediaVerdict.DEFER -> Unit
+        // Preserve the old service behavior: policy needs a meaningful title, while the generic
+        // MediaSession heuristics below may still classify a blank-but-present title.
+        if (title.isNotBlank()) {
+            val artist =
+                metadata.getString(MediaMetadata.METADATA_KEY_ARTIST)
+                    ?: metadata.getString(MediaMetadata.METADATA_KEY_ALBUM_ARTIST)
+                    ?: "Unknown Artist"
+            when (
+                trackingPolicy.evaluateMedia(
+                    packageName = packageName,
+                    title = title,
+                    artist = artist,
+                    durationMs = duration,
+                )
+            ) {
+                TrackingRuntimePolicy.MediaVerdict.FORCE_ALLOW -> return true
+                TrackingRuntimePolicy.MediaVerdict.REJECT -> return false
+                TrackingRuntimePolicy.MediaVerdict.DEFER -> Unit
+            }
         }
 
         if (duration in 1 until MIN_MUSIC_DURATION_MS) {
