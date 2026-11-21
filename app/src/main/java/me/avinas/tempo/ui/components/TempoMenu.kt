@@ -95,7 +95,7 @@ fun TempoDropdownMenuItem(
         !enabled -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f)
         isDestructive -> MaterialTheme.colorScheme.error
         leadingIconTint != null -> leadingIconTint
-        isSelected -> MaterialTheme.colorScheme.primary
+        isSelected -> MaterialTheme.colorScheme.onSecondaryContainer
         else -> MaterialTheme.colorScheme.onSurfaceVariant
     }
 
@@ -134,15 +134,14 @@ fun TempoDropdownMenuItem(
                     modifier = Modifier
                         .size(32.dp)
                         .clip(RoundedCornerShape(8.dp))
-                        .background(iconBgColor)
-,
+                        .background(iconBgColor),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = leadingIcon,
                         contentDescription = null,
                         tint = iconColor,
-                        modifier = Modifier.size(17.dp)
+                        modifier = Modifier.size(24.dp)
                     )
                 }
             }
