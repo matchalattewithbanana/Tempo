@@ -81,15 +81,65 @@ when available. The daily and recent history files provide track metadata only. 
 minimum duration, duplicate events and rows with unresolved artists appear in the import summary.
 A track split across multiple playback rows can count as multiple plays.
 
-## Data already imported
+## Import deduplication, Drive conflict modes and existing history
 
-These changes affect **new imports and syncs only**. Tempo does not
-automatically rewrite or delete historical listening events, including previously
-reconstructed synthetic plays or the old importer’s duration estimates.
+Spotify's *ReadMeFirst_ExtendedStreamingHistory* describes the `ts` field as
+the **UTC end time of the stream** and `ms_played` as the measured milliseconds
+played. These are not equivalent to the song's catalog length. The importer
+derives a nominal start time from end minus listened milliseconds; it never
+invents completion or uses offline upload time as a replacement timestamp.
+Older `StreamingHistory` exports have minute-level end times, so merging their
+data with second-precision `endsong` requires corroborating duration and
+playback-interval overlap, not end timestamps alone.
 
-Before reimporting a large archive, create a Tempo backup. Inspect imports on a
-test profile if you rely on historic stats; automatic deletion of older records is
-intentionally avoided.
+**Every active structured import** (Spotify, Apple, Deezer, Last.fm, YouTube,
+browser extension and local/Drive ZIP restore) passes playback events through
+the database's transactional reconciliation layer. YouTube's per-event failure
+fallback now uses the same layer instead of raw inserts.
+
+Each batch uses three protections:
+
+1. Recompute a deterministic source/track/play fingerprint **after** mapping
+   backup IDs to local tracks and normalizing inconsistent timing; check saved
+   fingerprints in the live database, as well as repeats within that batch.
+2. Resolve conservative, metadata-compatible track aliases in indexed batches.
+   Do not merge differing known Spotify, YouTube or MusicBrainz identities,
+   or explicitly incompatible albums. Compare equivalent-track events *together*
+   inside the current batch and against existing database rows.
+3. For measured streams, reconcile even if recorded starts are more than a
+   minute apart when at least half the shorter playback interval genuinely
+   overlaps. Disjoint / barely overlapping intervals, distinct live sessions,
+   and independent phone/desktop playback remain separate. Unknown-duration
+   scrobbles are not treated as sufficient evidence for broad temporal matches.
+
+**Backup restore behavior:**
+
+- **Skip Duplicates:** insert missing plays and entities; keep existing
+  equivalent listening records and local profile/settings/gamification entries.
+- **Replace Existing:** insert missing plays, refresh exact matched events,
+  replace same-source temporal duplicates and apply backup preferences,
+  profile and gamification values. Higher-authority measured live events are
+  still protected from lower-authority imports; unrelated listening history
+  is not erased.
+- The result distinguishes genuinely **new plays**, **existing plays
+  replaced**, and **incoming duplicates skipped**. The event reconciliation
+  always queries the active database; it is not just a file-level check.
+
+**Existing databases:** Re-importing a file prevents new duplicate accumulation,
+but cannot prove that every older, differently sourced event was redundant.
+Tempo intentionally avoids a destructive automatic global cleanup. In Settings
+→ Data → **Check listening-history accuracy**, a read-only scan now counts
+**exact repeated non-null content fingerprints**. After exporting a backup,
+the user can explicitly delete those proven duplicates while retaining the
+oldest event ID. Legacy NULL fingerprints, ambiguous temporal overlaps and
+separate source-representations are **not** removed by that action. The existing
+Spotify API-estimate repair remains a separate, explicit operation.
+
+**Verification:** Unit policy tests cover measured overlaps, disjoint replays,
+Spotify UTC end matching and independently observed sessions. Instrumented Room
+tests cover alias IDs within and across batches, literal backup fingerprints,
+conflict strategies, precise minute/second formats and the exact-duplicate
+repair. These tests must pass on Android before claiming shipping readiness.
 
 ## Troubleshooting
 
