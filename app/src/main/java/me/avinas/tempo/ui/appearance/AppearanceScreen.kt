@@ -3,8 +3,6 @@
 package me.avinas.tempo.ui.appearance
 
 import me.avinas.tempo.ui.effects.tempoAmbientBackdrop
-import me.avinas.tempo.ui.effects.tempoTiltSurface
-import me.avinas.tempo.ui.effects.tempoListMotion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.contentDescription
 
@@ -13,23 +11,12 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.*
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.shrinkVertically
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
 import me.avinas.tempo.ui.components.TempoCircularLoadingIndicator
 import me.avinas.tempo.ui.components.TempoLinearLoadingIndicator
@@ -38,23 +25,13 @@ import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.*
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.ui.text.input.KeyboardCapitalization
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import me.avinas.tempo.R
-import me.avinas.tempo.ui.components.connectedChoiceColumns
-import me.avinas.tempo.ui.components.shouldUseFilterChips
 import me.avinas.tempo.ui.components.ShareTheme
 import me.avinas.tempo.ui.components.shareThemeLabel
 import me.avinas.tempo.ui.stats.statsDurationLabel
@@ -63,8 +40,6 @@ import me.avinas.tempo.ui.stats.formatStatsDuration
 import me.avinas.tempo.ui.stats.statsSummaryLabel
 import me.avinas.tempo.ui.components.appearanceBackdropBrush
 import me.avinas.tempo.ui.components.GlassCard
-import me.avinas.tempo.ui.theme.AppFontFamily
-import me.avinas.tempo.ui.theme.DisplayFontFamily
 import me.avinas.tempo.ui.theme.LocalTempoPalette
 import me.avinas.tempo.ui.theme.TempoTheme
 
