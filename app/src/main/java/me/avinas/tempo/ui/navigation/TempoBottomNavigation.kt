@@ -263,6 +263,7 @@ internal fun CompactNowPlayingStrip() {
         label = "compactPlaybackColor",
     )
     val foreground = if (playing) scheme.onPrimaryContainer else scheme.onSurface
+    val supportingForeground = if (playing) scheme.onPrimaryContainer else scheme.onSurfaceVariant
     val stateLabel = when {
         !fresh -> stringResource(R.string.now_playing_last_detected)
         current.playing -> stringResource(R.string.now_playing_playing)
@@ -301,14 +302,14 @@ internal fun CompactNowPlayingStrip() {
                 )
                 Text(
                     text = current.artist,
-                    color = foreground.copy(alpha = 0.78f),
+                    color = supportingForeground,
                     style = MaterialTheme.typography.bodySmall,
                     maxLines = 1,
                     overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                 )
                 Text(
                     text = stateLabel,
-                    color = foreground.copy(alpha = 0.84f),
+                    color = supportingForeground,
                     style = MaterialTheme.typography.labelSmall,
                     maxLines = 1,
                 )
