@@ -795,6 +795,10 @@ class ImportExportManager @Inject constructor(
             val result = database.listeningEventDao().insertAllBatchedWithDedup(
                 chunk,
                 replaceExistingOnMatch = conflictStrategy == ImportConflictStrategy.REPLACE,
+                // Backups retain original live package sources, so inferred
+                // import-source checks alone cannot activate cross-track alias
+                // reconciliation after restoring into a different library.
+                forceAliasLookup = true,
             )
             inserted += result.inserted
             skipped += result.skipped
