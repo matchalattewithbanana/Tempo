@@ -75,26 +75,9 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        // Android already shows its platform splash while the first UI frame
-        // is prepared. Animate that existing surface out rather than blocking
-        // the first usable frame behind an invented startup timer.
-        // The duration is an app-specific exit decision, not an M3 token.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            splashScreen.setOnExitAnimationListener { splash ->
-                if (!android.animation.ValueAnimator.areAnimatorsEnabled()) {
-                    splash.remove()
-                } else {
-                    splash.iconView?.animate()
-                        ?.scaleX(1.08f)?.scaleY(1.08f)
-                        ?.setDuration(220L)?.start()
-                    splash.animate()
-                        .alpha(0f)
-                        .setDuration(220L)
-                        .withEndAction { splash.remove() }
-                        .start()
-                }
-            }
-        }
+        // Let Android remove its platform splash as soon as the app draws.
+        // Do not scale the icon or impose an additional exit animation: it
+        // delayed the first usable screen and could flash a mismatched surface.
 
         checkNavigationIntent(intent)
 
