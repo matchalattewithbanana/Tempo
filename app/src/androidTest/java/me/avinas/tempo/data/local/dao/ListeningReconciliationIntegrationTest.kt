@@ -448,4 +448,38 @@ class ListeningReconciliationIntegrationTest {
         assertTrue(dao.getEventsForTrack(id).any { it.timestamp == independent.timestamp })
     }
 
+    @Test fun titleOnlyAliasCannotBridgeTwoDifferentProviderRecordings() = runBlocking {
+        val knownA = trackId()
+        val anonymous = database.trackDao().insert(
+            Track(
+                title = "Same Song", artist = "Same Artist", album = null,
+                duration = 180_000L, albumArtUrl = null,
+                spotifyId = null, musicbrainzId = null,
+            )
+        )
+        val knownB = database.trackDao().insert(
+            Track(
+                title = "Same Song", artist = "Same Artist", album = null,
+                duration = 180_000L, albumArtUrl = null,
+                spotifyId = "another-real-recording", musicbrainzId = null,
+            )
+        )
+        val start = 1_700_101_000_000L
+        fun event(track: Long) = ListeningEvent(
+            track_id = track, timestamp = start,
+            endTimestamp = start + 180_000L,
+            playDuration = 180_000L, completionPercentage = 0,
+            source = "com.spotify.music.import.json",
+        )
+        val dao = database.listeningEventDao()
+        assertEquals(2, dao.insertAllBatchedWithDedup(
+            listOf(event(knownA), event(knownB))
+        ).inserted)
+        assertEquals(2, dao.getCount())
+        // A title-only row may be compatible with each individually, but
+        // can never make conflicting known IDs equivalent to one another.
+        assertEquals(1, dao.insertAllBatchedWithDedup(listOf(event(anonymous))).skipped)
+        assertEquals(2, dao.getCount())
+    }
+
 }
