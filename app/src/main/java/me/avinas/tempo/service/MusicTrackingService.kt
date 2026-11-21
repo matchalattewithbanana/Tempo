@@ -11,7 +11,6 @@ import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.graphics.Bitmap
-import android.graphics.drawable.Icon
 import android.media.MediaMetadata
 import android.media.session.MediaController
 import android.media.session.MediaSessionManager
@@ -3250,10 +3249,9 @@ class MusicTrackingService : NotificationListenerService() {
     /**
      * Classifies a MediaController session as playable music rather than video or UI noise.
      *
-     * This is NOT the tracking decision any more — [decideTracking] owns that. It is now only
-     * consulted for an unrecognized app, to decide whether the app is worth offering in the
-     * detected-apps inbox (a video player that exposes a stray MediaSession is not) and to apply
-     * the user's manual content exceptions and duration rules.
+     * This is not the package tracking decision — [TrackingRuntimePolicy.decidePackage] owns
+     * that. It is the media-shape classifier used after package policy, with runtime content
+     * policy applied before the remaining generic MediaSession heuristics.
      *
      * The distinction matters: this function used to be the *last* line of defence against
      * non-music, and a voice note satisfies every signal it looks for — a title, a creator, a
