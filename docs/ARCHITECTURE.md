@@ -76,10 +76,13 @@ podcast/audiobook filtering and duration policy from immutable Room/preference s
 immediate/periodic active-session autosave and the clean-shutdown acknowledgement boundary.
 `service/OfflineEventStore.kt` owns the separate SQLite queue for listening events that have not
 yet reached the main library.
-`service/LocalMediaMetadata.kt` is the normalization boundary for MediaSession and notification
-metadata. `service/LocalAlbumArtStore.kt` owns notification/media artwork extraction,
-downsampling, local file storage and the missing-track-art fallback; `PlaybackIdentityKey` is the
-single title+artist cache-key implementation shared with duration caching.
+`service/MediaSessionRegistry.kt` owns Android MediaSessionManager/listener/token/callback
+lifecycle and exposes controller lookups/snapshots without leaking its maps. `MediaSessionContentClassifier`
+owns the generic media-shape heuristics that run after package policy. `service/LocalMediaMetadata.kt`
+is the normalization boundary for MediaSession and notification metadata.
+`service/LocalAlbumArtStore.kt` owns notification/media artwork extraction, downsampling, local
+file storage and the missing-track-art fallback; `PlaybackIdentityKey` is the single title+artist
+cache-key implementation shared with duration caching.
 
 `MusicTrackingService` remains the Android adapter/orchestrator: it owns notification and
 MediaController callbacks, synchronization, active-session membership and foreground lifecycle.
