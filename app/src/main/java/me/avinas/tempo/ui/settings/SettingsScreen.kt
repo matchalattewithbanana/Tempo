@@ -1302,7 +1302,7 @@ fun SettingsScreen(
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                         SettingsOption(
                             title = "Check listening-history accuracy",
-                            subtitle = "Find older Spotify API records with unverified listening minutes. No automatic changes.",
+                            subtitle = "Scan for duplicate plays and inaccurate Spotify API estimates. Repairs require a backup.",
                             onClick = {
                                 historyBackupConfirmed = false
                                 showHistoryAuditDialog = true
@@ -1478,6 +1478,14 @@ fun SettingsScreen(
                                 "The optional repair preserves play records and removes only invented " +
                                 "listening durations and completion for this exact API source."
                         )
+                        Text(
+                            "Exact duplicate records: ${historyQuality.exactDuplicateCount}. " +
+                                "Only identical, fingerprinted events are eligible for safe removal; " +
+                                "uncertain overlaps and older unmarked plays are not deleted."
+                        )
+                        historyQuality.repairedDuplicatesCount?.let { removed ->
+                            Text("Removed $removed exact duplicate records. Listening statistics will refresh.")
+                        }
                         if (historyQuality.reconstructedCount > 0) {
                             Text(
                                 "Reconstructed plays are flagged for review, not automatically deleted."
@@ -1486,8 +1494,10 @@ fun SettingsScreen(
                         historyQuality.repairedCount?.let { repaired ->
                             Text("Corrected $repaired API records. Reopen statistics to see refreshed totals.")
                         }
-                        if (historyQuality.apiEstimatedCount > 0 &&
-                            historyQuality.repairedCount == null
+                        if ((historyQuality.apiEstimatedCount > 0 &&
+                                historyQuality.repairedCount == null) ||
+                            (historyQuality.exactDuplicateCount > 0 &&
+                                historyQuality.repairedDuplicatesCount == null)
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Checkbox(
@@ -1495,8 +1505,8 @@ fun SettingsScreen(
                                     onCheckedChange = { historyBackupConfirmed = it },
                                 )
                                 Text(
-                                    "I have exported a backup and accept that " +
-                                        "estimated minutes will be reset to unknown."
+                                    "I have exported a backup. I authorize correcting unverified " +
+                                        "API durations or removing exact duplicate records only when I select an action."
                                 )
                             }
                         }
@@ -1504,20 +1514,37 @@ fun SettingsScreen(
                 }
             },
             confirmButton = {
-                if (historyQuality.apiEstimatedCount > 0 &&
-                    historyQuality.repairedCount == null &&
-                    historyQuality.error == null
-                ) {
-                    TextButton(
-                        enabled = historyBackupConfirmed && !historyQuality.isLoading,
-                        onClick = {
-                            historyBackupConfirmed = false
-                            viewModel.repairHistoryAfterBackupConfirmation()
-                        },
-                    ) { Text("Correct API estimates") }
-                } else {
-                    TextButton(onClick = { showHistoryAuditDialog = false }) {
-                        Text("Close")
+                Column(horizontalAlignment = Alignment.End) {
+                    if (historyQuality.apiEstimatedCount > 0 &&
+                        historyQuality.repairedCount == null &&
+                        historyQuality.error == null
+                    ) {
+                        TextButton(
+                            enabled = historyBackupConfirmed && !historyQuality.isLoading,
+                            onClick = {
+                                historyBackupConfirmed = false
+                                viewModel.repairHistoryAfterBackupConfirmation()
+                            },
+                        ) { Text("Correct API estimates") }
+                    }
+                    if (historyQuality.exactDuplicateCount > 0 &&
+                        historyQuality.repairedDuplicatesCount == null &&
+                        historyQuality.error == null
+                    ) {
+                        TextButton(
+                            enabled = historyBackupConfirmed && !historyQuality.isLoading,
+                            onClick = {
+                                historyBackupConfirmed = false
+                                viewModel.repairExactDuplicatesAfterBackupConfirmation()
+                            },
+                        ) { Text("Remove exact duplicates") }
+                    }
+                    if (historyQuality.apiEstimatedCount == 0 &&
+                        historyQuality.exactDuplicateCount == 0
+                    ) {
+                        TextButton(onClick = { showHistoryAuditDialog = false }) {
+                            Text("Close")
+                        }
                     }
                 }
             },
