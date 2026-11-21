@@ -124,6 +124,14 @@ Each batch uses three protections:
 - The result distinguishes genuinely **new plays**, **existing plays
   replaced**, and **incoming duplicates skipped**. The event reconciliation
   always queries the active database; it is not just a file-level check.
+- Large ZIP restores decode listening events and Last.fm archive rows once into a private,
+  disposable SQLite staging database. The main Room restore transaction streams those typed rows
+  through the same reconciliation path; it does not reparse an unbounded JSON history while
+  holding the Room write transaction.
+- Room-backed library state commits atomically. Profile identity, Appearance Studio and cache
+  scheduling use separate persistence systems and therefore run as an explicit post-commit phase.
+  If one of those secondary stores fails after the library commits, Tempo reports a successful
+  library restore with a warning instead of falsely reporting that the committed import failed.
 
 **Existing databases:** Re-importing a file prevents new duplicate accumulation,
 but cannot prove that every older, differently sourced event was redundant.
