@@ -24,7 +24,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 import me.avinas.tempo.R
-import me.avinas.tempo.ui.theme.LocalTempoAppearance
 
 /**
  * Collapsed expressive navigation rail for expanded window layouts.
@@ -39,7 +38,6 @@ internal fun TempoMainNavigationRail(
     modifier: Modifier = Modifier,
 ) {
     val haptic = LocalHapticFeedback.current
-    val showLabels = LocalTempoAppearance.current.showNavigationLabels
     data class Destination(
         val route: String,
         val selectedIcon: ImageVector,
@@ -72,12 +70,16 @@ internal fun TempoMainNavigationRail(
                 icon = {
                     Icon(
                         imageVector = if (selected) destination.selectedIcon else destination.unselectedIcon,
-                        contentDescription = if (showLabels) null else destination.label,
+                        contentDescription = null,
                     )
                 },
-                label = if (showLabels) {
-                    { Text(destination.label, style = MaterialTheme.typography.labelMedium) }
-                } else null,
+                label = {
+                    Text(
+                        destination.label,
+                        style = MaterialTheme.typography.labelMedium,
+                        maxLines = 2,
+                    )
+                },
             )
         }
     }
