@@ -790,6 +790,7 @@ fun ProfileScreen(
                                             tierAccent = tierAccent,
                                             compact = compact,
                                             hideStreaks = hideStreaks,
+                                            onBadgesClick = { tabOverride = 1 },
                                         )
                                     }
 
@@ -1301,6 +1302,11 @@ private fun HeroAvatar(
 // Summary Stats Block
 // ──────────────────────────────────────────────────────────────
 
+/**
+ * A listener's progress should be something worth returning to, not three
+ * numbers compressed into one black panel. Music progress gets an adaptive,
+ * colorful 2×2 bento and a direct entrance to the badge collection.
+ */
 @Composable
 private fun MasterStatMasthead(
     userLevel: UserLevel,
@@ -1313,107 +1319,144 @@ private fun MasterStatMasthead(
     tierAccent: Color,
     compact: Boolean,
     hideStreaks: Boolean = false,
+    onBadgesClick: () -> Unit,
 ) {
-    val appearancePalette = LocalTempoPalette.current
-
-    val suffix =
-        when {
-            streakAtRisk -> if (currentStreak == 1) "day  ·  ends in $timeRemaining" else "days  ·  ends in $timeRemaining"
-            currentStreak == 1 -> "day in motion"
-            else -> "days in motion"
-        }
-    val accentTint = if (streakAtRisk) TempoErrorSoft else tierAccent
-
-    GlassCard(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(22.dp),
-        variant = GlassCardVariant.Obsidian,
-        borderColor = if (streakAtRisk) TempoErrorSoft.copy(alpha = 0.35f) else appearancePalette.border.copy(alpha = 0.45f),
-        borderWidth = 0.8.dp,
-        contentPadding = PaddingValues(0.dp),
-    ) {
-        Column(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = if (compact) 16.dp else 20.dp, vertical = 20.dp),
-        ) {
-            // Hero metric. The streak is the only thing this card wants to lead with, so when
-            // streaks are hidden the card opens straight on XP and badges instead of a placeholder.
-            if (!hideStreaks) {
-                MastheadHeroMetric(
-                    label = "Listening rhythm",
-                    value = "$currentStreak",
-                    suffix = suffix,
-                    accentTint = accentTint,
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-                Box(
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .height(0.8.dp)
-                            .background(appearancePalette.border.copy(alpha = 0.45f)),
-                )
-                Spacer(modifier = Modifier.height(14.dp))
-            }
-
-            // Secondary metrics row with vertical hairline dividers
-            Row(
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .height(IntrinsicSize.Min),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
+    val streakValue = androidx.compose.ui.res.pluralStringResource(
+        R.plurals.profile_bento_streak_day,
+        currentStreak.coerceAtLeast(0),
+        currentStreak.coerceAtLeast(0),
+    )
+    val bestStreakValue = androidx.compose.ui.res.pluralStringResource(
+        R.plurals.profile_bento_streak_day,
+        userLevel.longestStreak.coerceAtLeast(0),
+        userLevel.longestStreak.coerceAtLeast(0),
+    )
+    val badgeSwatch = me.avinas.tempo.ui.components.tempoTileSwatch(
+        me.avinas.tempo.ui.components.TempoTileTone.SKY
+    )
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val singleColumn = maxWidth < 360.dp || LocalDensity.current.fontScale >= 1.3f
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            val tiles: List<@Composable (Modifier) -> Unit> = buildList {
                 if (!hideStreaks) {
-                    MastheadSecondaryStat(
-                        label = "Best streak",
-                        value = "${userLevel.longestStreak}d",
-                        subtext = "Personal record",
-                        modifier = Modifier.weight(1f),
-                    )
-
-                    Box(
-                        modifier =
-                            Modifier
-                                .fillMaxHeight()
-                                .width(0.8.dp)
-                                .background(appearancePalette.border.copy(alpha = 0.45f)),
+                    add { tile ->
+                        me.avinas.tempo.ui.components.TempoMetricTile(
+                            modifier = tile,
+                            icon = Icons.Rounded.LocalFireDepartment,
+                            value = streakValue,
+                            label = stringResource(R.string.profile_bento_current_streak),
+                            tone = me.avinas.tempo.ui.components.TempoTileTone.ROSE,
+                            supportingText = if (streakAtRisk) stringResource(R.string.profile_bento_streak_warning) else null,
+                        )
+                    }
+                    add { tile ->
+                        me.avinas.tempo.ui.components.TempoMetricTile(
+                            modifier = tile,
+                            icon = Icons.Rounded.Whatshot,
+                            value = bestStreakValue,
+                            label = stringResource(R.string.profile_bento_best_streak),
+                            tone = me.avinas.tempo.ui.components.TempoTileTone.AQUA,
+                        )
+                    }
+                }
+                add { tile ->
+                    me.avinas.tempo.ui.components.TempoMetricTile(
+                        modifier = tile,
+                        icon = Icons.Rounded.Bolt,
+                        value = String.format(Locale.getDefault(), "%,d", userLevel.totalXp),
+                        label = stringResource(R.string.profile_bento_total_xp),
+                        tone = me.avinas.tempo.ui.components.TempoTileTone.AMBER,
                     )
                 }
-
-                MastheadSecondaryStat(
-                    label = "Total XP",
-                    value = String.format(Locale.getDefault(), "%,d", userLevel.totalXp),
-                    subtext = "Rank: Level ${userLevel.currentLevel}",
-                    modifier =
-                        Modifier
-                            .weight(1f)
-                            // The inset separates this stat from the divider before it; with no
-                            // streak column ahead of it there is nothing to separate from.
-                            .padding(start = if (hideStreaks) 0.dp else if (compact) 10.dp else 16.dp),
-                )
-
-                Box(
-                    modifier =
-                        Modifier
-                            .fillMaxHeight()
-                            .width(0.8.dp)
-                            .background(appearancePalette.border.copy(alpha = 0.45f)),
-                )
-
-                MastheadSecondaryStat(
-                    label = "Badges",
-                    value = "$earnedCount / $totalCount",
-                    subtext = if (totalStars > 0) "$totalStars stars" else "Unlocked",
-                    modifier =
-                        Modifier
-                            .weight(1f)
-                            .padding(start = if (compact) 10.dp else 16.dp),
-                    valueColor = if (earnedCount > 0) TempoWarning else appearancePalette.onSurface,
-                )
+                add { tile ->
+                    me.avinas.tempo.ui.components.TempoMetricTile(
+                        modifier = tile,
+                        icon = Icons.Rounded.EmojiEvents,
+                        value = userLevel.currentLevel.toString(),
+                        label = stringResource(R.string.profile_bento_level),
+                        tone = me.avinas.tempo.ui.components.TempoTileTone.LILAC,
+                    )
+                }
+            }
+            if (singleColumn) {
+                tiles.forEach { tile -> tile(Modifier.fillMaxWidth()) }
+            } else {
+                tiles.chunked(2).forEach { pair ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        pair.forEach { tile -> tile(Modifier.weight(1f)) }
+                    }
+                }
+            }
+            Surface(
+                onClick = onBadgesClick,
+                modifier = Modifier.fillMaxWidth().heightIn(min = 164.dp),
+                shape = MaterialTheme.shapes.extraExtraLarge,
+                color = badgeSwatch.container,
+                contentColor = badgeSwatch.foreground,
+            ) {
+                Column(
+                    Modifier.fillMaxWidth().padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            Text(
+                                text = stringResource(R.string.profile_bento_badge_collection),
+                                style = MaterialTheme.typography.headlineSmallEmphasized,
+                                color = badgeSwatch.foreground,
+                            )
+                            Text(
+                                text = stringResource(
+                                    R.string.profile_bento_badge_progress,
+                                    earnedCount, totalCount,
+                                ),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = badgeSwatch.foreground.copy(alpha = 0.82f),
+                            )
+                        }
+                        Surface(
+                            modifier = Modifier.size(48.dp),
+                            shape = MaterialTheme.shapes.extraLarge,
+                            color = badgeSwatch.iconContainer,
+                            contentColor = badgeSwatch.foreground,
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(Icons.Default.ChevronRight, contentDescription = null)
+                            }
+                        }
+                    }
+                    LinearProgressIndicator(
+                        progress = {
+                            if (totalCount <= 0) 0f
+                            else (earnedCount.toFloat() / totalCount).coerceIn(0f, 1f)
+                        },
+                        modifier = Modifier.fillMaxWidth().height(6.dp),
+                        color = badgeSwatch.foreground,
+                        trackColor = badgeSwatch.foreground.copy(alpha = 0.15f),
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        repeat(3) { index ->
+                            Surface(
+                                shape = MaterialShapes.Cookie6Sided.toShape(),
+                                color = badgeSwatch.iconContainer,
+                                contentColor = badgeSwatch.foreground,
+                                modifier = Modifier.size(42.dp),
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        if (index < earnedCount) Icons.Rounded.MilitaryTech
+                                        else Icons.Rounded.LockOutline,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(22.dp),
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
