@@ -1301,34 +1301,34 @@ fun HistoryListItem(
     val haptics = LocalHapticFeedback.current
 
     Box {
-        GlassCard(
+        Surface(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp)
                 .combinedClickable(
-                    onClick = { 
+                    onClick = {
                         walkthroughController.dismiss()
                         haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                        onClick() 
+                        onClick()
                     },
-                    onLongClick = { 
+                    onLongClick = {
                         walkthroughController.dismiss()
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        showMenu = true 
-                    }
+                        showMenu = true
+                    },
                 ),
-            shape = RoundedCornerShape(16.dp),
-            contentPadding = PaddingValues(12.dp),
-            variant = GlassCardVariant.LowProminence
+            shape = MaterialTheme.shapes.large,
+            color = MaterialTheme.colorScheme.surfaceContainerLow,
+            contentColor = MaterialTheme.colorScheme.onSurface,
         ) {
             Row(
-                verticalAlignment = Alignment.CenterVertically
+                modifier = Modifier.fillMaxWidth().padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Box(
                     modifier = Modifier
                         .size(52.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(10.dp)),
+                        .clip(MaterialTheme.shapes.medium),
                     contentAlignment = Alignment.Center
                 ) {
                     if (!me.avinas.tempo.ui.theme.LocalTempoAppearance.current.showHistoryArtwork || item.album_art_url.isNullOrBlank()) {
@@ -1402,34 +1402,6 @@ fun HistoryListItem(
                             modifier = Modifier.weight(1f, fill = false)
                         )
                         
-                        // Inline Badge Text
-                        if (item.content_type != "MUSIC") {
-                            val palette = LocalTempoPalette.current
-                            val candidate = when (item.content_type) {
-                                "PODCAST" -> TempoCyan
-                                "AUDIOBOOK" -> GoldenAmber
-                                else -> palette.mutedText
-                            }
-                            val badgeColor = remember(palette, candidate) {
-                                AppearancePaletteResolver.readableAccent(palette, candidate, palette.surfaceSunken)
-                            }
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(4.dp))
-                                    .background(badgeColor.copy(alpha = 0.14f))
-                                    .border(0.8.dp, badgeColor.copy(alpha = 0.35f), RoundedCornerShape(4.dp))
-                                    .padding(horizontal = 5.dp, vertical = 1.dp)
-                            ) {
-                                Text(
-                                    text = item.content_type.take(1),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontSize = MaterialTheme.typography.labelSmall.fontSize,
-                                    color = badgeColor,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                        }
-                        
                         // Desktop source tag
                         if (item.source.startsWith("desktop:")) {
                             val palette = LocalTempoPalette.current
@@ -1477,24 +1449,18 @@ fun HistoryListItem(
                         fontWeight = FontWeight.Medium
                     )
                     
-                    Box(
-                        modifier = Modifier
-                            .size(28.dp)
-                            .clip(CircleShape)
-                            .premiumClickable(
-                                onClick = {
-                                    haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                    onDeleteClick()
-                                },
-                                pressedScale = 0.88f
-                            ),
-                        contentAlignment = Alignment.Center
+                    IconButton(
+                        onClick = {
+                            haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            onDeleteClick()
+                        },
+                        modifier = Modifier.size(48.dp),
                     ) {
                         Icon(
                             imageVector = TempoIcons.Trash,
                             contentDescription = stringResource(R.string.history_delete_button),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f),
-                            modifier = Modifier.size(16.dp)
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(18.dp),
                         )
                     }
                 }
