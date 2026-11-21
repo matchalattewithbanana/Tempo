@@ -975,6 +975,14 @@ private fun ProfileRetryMessage(onRetry: () -> Unit, retryEnabled: Boolean) {
     }
 }
 
+// These are layout decisions for Tempo, not official M3 breakpoint tokens.
+// Keep narrow and accessibility typography behavior directly testable.
+internal fun shouldStackProfileIdentity(compact: Boolean, fontScale: Float): Boolean =
+    (compact && fontScale >= 1.3f) || fontScale >= 1.8f
+
+internal fun shouldStackProfileMetrics(widthDp: Float, fontScale: Float): Boolean =
+    widthDp < 320f || fontScale >= 1.3f
+
 // ──────────────────────────────────────────────────────────────
 // Hero Profile Section
 // ──────────────────────────────────────────────────────────────
@@ -997,7 +1005,7 @@ private fun HeroProfileSection(
     val swatch = me.avinas.tempo.ui.components.tempoTileSwatch(
         me.avinas.tempo.ui.components.TempoTileTone.AQUA
     )
-    val stackIdentity = compact && LocalDensity.current.fontScale >= 1.4f
+    val stackIdentity = shouldStackProfileIdentity(compact, LocalDensity.current.fontScale)
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.extraExtraLarge,
@@ -1376,7 +1384,7 @@ private fun MasterStatMasthead(
         ),
     )
     BoxWithConstraints(Modifier.fillMaxWidth()) {
-        val singleColumn = maxWidth < 320.dp || LocalDensity.current.fontScale >= 1.3f
+        val singleColumn = shouldStackProfileMetrics(maxWidth.value, LocalDensity.current.fontScale)
         if (singleColumn) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 metrics.forEach { metric ->
