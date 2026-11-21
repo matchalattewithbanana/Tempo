@@ -1406,53 +1406,40 @@ private fun StreakRiskBanner(
     streakDurationMinutes: Long,
     timeRemaining: String,
 ) {
-    val appearancePalette = LocalTempoPalette.current
-    val riskColor =
-        when {
-            streakDurationMinutes > 360 -> TempoErrorSoft
-            streakDurationMinutes > 180 -> TempoError
-            else -> TempoErrorDeep
-        }
-    GlassCard(
+    // A status warning needs a legible paired color, not an always-dark glass
+    // card with accent-colored text that can disappear in light or OLED themes.
+    val scheme = MaterialTheme.colorScheme
+    Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp),
-        variant = GlassCardVariant.Obsidian,
-        borderColor = riskColor.copy(alpha = 0.40f),
-        borderWidth = 0.8.dp,
-        contentPadding = PaddingValues(16.dp),
+        shape = MaterialTheme.shapes.large,
+        color = scheme.errorContainer,
+        contentColor = scheme.onErrorContainer,
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Box(
-                modifier =
-                    Modifier
-                        .size(42.dp)
-                        .clip(CircleShape)
-                        .background(riskColor.copy(alpha = 0.14f))
-                        .border(0.8.dp, riskColor.copy(alpha = 0.32f), CircleShape),
-                contentAlignment = Alignment.Center,
+            Icon(
+                imageVector = Icons.Rounded.LocalFireDepartment,
+                contentDescription = null,
+                tint = scheme.onErrorContainer,
+                modifier = Modifier.size(24.dp),
+            )
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
-                Icon(
-                    imageVector = Icons.Rounded.LocalFireDepartment,
-                    contentDescription = null,
-                    tint = riskColor,
-                    modifier = Modifier.size(22.dp),
-                )
-            }
-            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
                     text = "Streak at risk",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = appearancePalette.onSurface,
+                    color = scheme.onErrorContainer,
                 )
                 Text(
                     text = "Play a track in the next $timeRemaining to keep your streak alive.",
                     style = MaterialTheme.typography.bodySmall,
-                    color = appearancePalette.mutedText,
+                    color = scheme.onErrorContainer,
                 )
             }
         }
