@@ -57,6 +57,17 @@ The **Custom palette maker** extends the existing primary custom accent with opt
 
 No new Android permissions, background workers, networking, analytics, or album-art refreshes are added by the effect engine. It has not been compiled or benchmarked on a device.
 
+## Additional skill-guided source pass — 21 November 2026
+
+Since the original migration checklist, the following source refinements were made on `main` (all `[skip ci]`):
+
+- Replaced the baseline phone navigation with equal-weight expressive `ShortNavigationBar`, preserving user icon-only preference and floating toolbar accessibility.
+- Converted Profile/badge, preview and level-up transitions to the application's `MotionScheme`; removed multiple persistent animation loops and deferred stat/chart reveals across Home, Profile, Song Details and Insight Feed.
+- Switched Settings and Backup & Restore to keyed lazy groups with readable centered wide layouts; kept dialogs outside scrolling groups.
+- Fixed custom tertiary and inverse color pairings, responsive tile contrast, artist fan-tier thematic colors and localized snackbar dismissal semantics, with contrast regression test sources.
+
+**Validation remains pending.** The changes have not passed Android Gradle compilation or device tests. The source roadmap explicitly tracks remaining accessibility, design, functionality and performance acceptance gates; do not imply shipping readiness based solely on the edits.
+
 ## Compatibility and performance guardrails
 
 1. No direct datastore or database reads in the composables added by this migration.
