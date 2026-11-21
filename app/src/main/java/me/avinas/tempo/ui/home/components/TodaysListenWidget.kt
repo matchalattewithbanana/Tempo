@@ -292,18 +292,8 @@ private fun CompactDayCadenceEqualizer(
     modifier: Modifier = Modifier
 ) {
     val currentHour = remember { LocalTime.now().hour }
-    val isReducedMotion = rememberReducedMotion()
-
-    val animProgress = remember { Animatable(if (isReducedMotion) 1f else 0f) }
-    LaunchedEffect(hourlyDistribution) {
-        if (!isReducedMotion) {
-            animProgress.snapTo(0f)
-            animProgress.animateTo(
-                targetValue = 1f,
-                animationSpec = tween(durationMillis = 550, easing = FastOutSlowInEasing)
-            )
-        }
-    }
+    // Hourly bars reflect persisted listening data immediately; no redraw-heavy
+    // stagger or half-second replay each time the dashboard refreshes.
 
     val maxPlays = remember(hourlyDistribution) {
         hourlyDistribution.maxOfOrNull { it.playCount }?.coerceAtLeast(1) ?: 1
@@ -342,7 +332,7 @@ private fun CompactDayCadenceEqualizer(
                 val isPeak = playCount > 0 && playCount == maxPlays
 
                 val normalizedHeight = if (playCount > 0) {
-                    ((playCount.toFloat() / maxPlays) * animProgress.value).coerceIn(0.15f, 1f)
+                    (playCount.toFloat() / maxPlays).coerceIn(0.15f, 1f)
                 } else {
                     0.08f
                 }
