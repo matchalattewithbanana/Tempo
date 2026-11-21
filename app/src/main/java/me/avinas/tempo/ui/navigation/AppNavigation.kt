@@ -94,7 +94,15 @@ fun AppNavigation(
     val currentRoute = navBackStackEntry?.destination?.route
     val currentDestination = navBackStackEntry?.destination
     var bottomBarHeightPx by remember { mutableIntStateOf(0) }
-    val bottomBarHeightDp = with(LocalDensity.current) { bottomBarHeightPx.toDp() }
+    var railWidthPx by remember { mutableIntStateOf(0) }
+    var wideNowPlayingHeightPx by remember { mutableIntStateOf(0) }
+    val density = LocalDensity.current
+    val bottomBarHeightDp = with(density) { bottomBarHeightPx.toDp() }
+    // The 96dp initial inset is Tempo's pre-measure fallback, not an M3 rail token.
+    val measuredRailWidthDp = with(density) {
+        if (railWidthPx > 0) railWidthPx.toDp() else 96.dp
+    }
+    val wideNowPlayingHeightDp = with(density) { wideNowPlayingHeightPx.toDp() }
 
     androidx.compose.runtime.LaunchedEffect(navigationTrigger) {
         val widgetPeriod = me.avinas.tempo.widget.utils.WidgetNavigation.periodFor(navigationTrigger)
@@ -148,7 +156,10 @@ fun AppNavigation(
                     navController = navController,
                     startDestination = Screen.Home.route,
                     modifier = Modifier.fillMaxSize()
-                        .then(if (useWideRail) Modifier.padding(start = 96.dp) else Modifier)
+                        .then(if (useWideRail) Modifier.padding(
+                            start = measuredRailWidthDp,
+                            bottom = wideNowPlayingHeightDp,
+                        ) else Modifier)
                         // Reserve the measured bar (including gesture insets
                         // and optional now-playing strip) instead of allowing
                         // it to cover the last rows in Home/Stats/History.
@@ -570,14 +581,16 @@ fun AppNavigation(
                             onNavigateToHome = goHome,
                             onNavigateToStats = goStats,
                             onNavigateToHistory = goHistory,
-                            modifier = Modifier.align(Alignment.CenterStart).fillMaxHeight(),
+                            modifier = Modifier.align(Alignment.CenterStart).fillMaxHeight()
+                                .onSizeChanged { railWidthPx = it.width },
                         )
                         // Bottom-bar mode previously owned this strip. Preserve it
                         // on wide screens without placing it underneath the rail.
                         Box(
                             modifier = Modifier.align(Alignment.BottomCenter)
                                 .fillMaxWidth()
-                                .padding(start = 96.dp),
+                                .padding(start = measuredRailWidthDp)
+                                .onSizeChanged { wideNowPlayingHeightPx = it.height },
                         ) {
                             CompactNowPlayingStrip()
                         }
