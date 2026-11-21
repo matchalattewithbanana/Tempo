@@ -256,7 +256,7 @@ private fun IdleContent(
                     colors =
                         ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = Color.White,
+                            contentColor = MaterialTheme.colorScheme.onPrimary,
                         ),
                     modifier = Modifier.fillMaxWidth(),
                 ) {
@@ -411,7 +411,7 @@ private fun CompletedContent(
                 colors =
                     ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = Color.White,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
                     ),
                 modifier = Modifier.fillMaxWidth(),
             ) {
@@ -475,7 +475,7 @@ private fun ErrorContent(
                     colors =
                         ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = Color.White,
+                            contentColor = MaterialTheme.colorScheme.onPrimary,
                         ),
                     modifier = Modifier.weight(1f),
                 ) {
