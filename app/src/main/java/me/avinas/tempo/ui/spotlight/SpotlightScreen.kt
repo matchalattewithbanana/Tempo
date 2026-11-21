@@ -128,7 +128,8 @@ fun SpotlightScreen(
         }
     }
 
-    DeepOceanBackground {
+    // Root AppNavigation already renders the selected Appearance backdrop.
+    Box(Modifier.fillMaxSize()) {
         Box(modifier = Modifier.fillMaxSize()) {
             Scaffold(
                 containerColor = Color.Transparent,
@@ -171,8 +172,11 @@ fun SpotlightScreen(
                             item(key = "story_hero") {
                                 AnimatedVisibility(
                                     visible = true,
-                                    enter = fadeIn(animationSpec = tween(400)) +
-                                            slideInVertically(animationSpec = tween(400), initialOffsetY = { 20 })
+                                    enter = fadeIn(animationSpec = MaterialTheme.motionScheme.fastEffectsSpec<Float>()) +
+                                            slideInVertically(
+                                                animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec<androidx.compose.ui.unit.IntOffset>(),
+                                                initialOffsetY = { 20 },
+                                            )
                                 ) {
                                     SpotlightStoryHeroCard(
                                         onClick = {
@@ -196,8 +200,11 @@ fun SpotlightScreen(
                             ) { card ->
                                 AnimatedVisibility(
                                     visible = true,
-                                    enter = fadeIn(animationSpec = tween(400)) +
-                                            slideInVertically(animationSpec = tween(400), initialOffsetY = { 40 })
+                                    enter = fadeIn(animationSpec = MaterialTheme.motionScheme.fastEffectsSpec<Float>()) +
+                                            slideInVertically(
+                                                animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec<androidx.compose.ui.unit.IntOffset>(),
+                                                initialOffsetY = { 40 },
+                                            )
                                 ) {
                                     when (card) {
                                         is SpotlightCardData.CosmicClock -> DashboardCosmicClockCard(
@@ -264,8 +271,8 @@ fun SpotlightScreen(
             }
             AnimatedVisibility(
                 visible = showStory,
-                enter = fadeIn(animationSpec = tween(300)),
-                exit = fadeOut(animationSpec = tween(250))
+                enter = fadeIn(animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()),
+                exit = fadeOut(animationSpec = MaterialTheme.motionScheme.fastEffectsSpec<Float>())
             ) {
                 if (uiState.storyLoading) {
                     Box(
