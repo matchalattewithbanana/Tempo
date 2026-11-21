@@ -150,12 +150,12 @@ fun StatsScreen(
     var searchOpen by rememberSaveable { mutableStateOf(uiState.searchQuery.isNotBlank()) }
     val searchFocusRequester = remember { FocusRequester() }
     val keyboard = LocalSoftwareKeyboardController.current
-    val reducedMotion = rememberReducedMotion()
-    LaunchedEffect(searchOpen, reducedMotion) {
+    // Wait only for the search field to enter composition. The previous fixed
+    // 280ms delay made every search feel unresponsive and did not scale with
+    // reduced motion, UI load or keyboard animation duration.
+    LaunchedEffect(searchOpen) {
         if (searchOpen) {
-            // Reveal first, type later: focusing immediately makes the keyboard animation
-            // fight the drawer motion and reads as a jolt. Stagger until the reveal settles.
-            if (!reducedMotion) delay(280)
+            androidx.compose.runtime.withFrameNanos { }
             searchFocusRequester.requestFocus()
             keyboard?.show()
         }
