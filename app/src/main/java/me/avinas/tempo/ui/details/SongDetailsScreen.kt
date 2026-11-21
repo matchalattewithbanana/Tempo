@@ -2864,7 +2864,6 @@ fun formatReleaseDate(dateString: String?): String? {
 }
 
 /**
- * Keeps artwork-derived accents usable/**
  * Keeps artwork-derived accents usable on dark glass: tames neon saturation
  * and lifts near-black swatches into a readable accent band. Grays keep their
  * hue (coercing saturation on a gray would fabricate a red tint).
