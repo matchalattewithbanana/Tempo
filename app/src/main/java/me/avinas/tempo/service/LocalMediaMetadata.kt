@@ -1,7 +1,9 @@
 package me.avinas.tempo.service
 
+import android.app.Notification
 import android.graphics.Bitmap
 import android.media.MediaMetadata
+import android.os.Bundle
 
 /**
  * Data class holding all metadata extracted from local MediaSession.
@@ -323,6 +325,136 @@ data class LocalMediaMetadata(
             }
         }
 
+        private val YEAR_PATTERN = Regex(".*\\(\\d{4}\\).*")
+        private val REMASTER_PATTERN = Regex(".*\\d{4}.*remaster.*")
+
+        private fun looksLikeAlbum(text: String): Boolean {
+            val lower = text.lowercase()
+            return lower.contains("album") ||
+                lower.contains("soundtrack") ||
+                lower.contains("ost") ||
+                lower.contains("compilation") ||
+                lower.contains("collection") ||
+                lower.contains("vol.") ||
+                lower.contains("volume") ||
+                lower.matches(YEAR_PATTERN) ||
+                lower.matches(REMASTER_PATTERN)
+        }
+
+        /**
+         * Filters obvious video-description strings that some players expose as DISPLAY_SUBTITLE.
+         */
+        private fun isLikelyArtistName(text: String): Boolean {
+            if (text.length > 60) return false
+            val lower = text.lowercase()
+
+            val qualityPatterns = listOf("1080p", "720p", "480p", "4k", "hd video", "full hd")
+            if (qualityPatterns.any { lower.contains("($it") || lower.contains("[$it") }) return false
+
+            val videoPatterns =
+                listOf(
+                    "official video",
+                    "official audio",
+                    "official music video",
+                    "lyric video",
+                    "lyrics video",
+                    "music video",
+                    "full video",
+                    "visualizer",
+                    "full album",
+                    "audio only",
+                )
+            if (videoPatterns.any(lower::contains)) return false
+
+            val descriptionSuffixes =
+                listOf(
+                    "(official)",
+                    "(audio)",
+                    "(video)",
+                    "(lyrics)",
+                    "(visualizer)",
+                    "(official video)",
+                    "(official audio)",
+                    "(lyric video)",
+                    "(theme song)",
+                    "(full video)",
+                    "(music video)",
+                    "(trailer)",
+                )
+            if (descriptionSuffixes.any(lower::endsWith)) return false
+            if (lower.contains("anthem)") || lower.contains("theme)")) return false
+            if (text.length > 50 && lower.contains(" - ") && lower.contains("(")) return false
+            return true
+        }
+
+        /**
+         * Normalizes the text-only fields of a media notification.
+         *
+         * Artwork is intentionally not read here: notification bitmaps are decoded lazily by the
+         * tracking service only when a new session actually needs them.
+         */
+        fun fromNotificationExtras(
+            extras: Bundle,
+            sourcePackage: String? = null,
+        ): LocalMediaMetadata? {
+            val rawTitle =
+                extras.getCharSequence(Notification.EXTRA_TITLE)
+                    ?.toString()
+                    ?.trim()
+                    ?.takeIf(String::isNotBlank)
+                    ?: return null
+
+            val titleArtist = extractArtistFromTitle(rawTitle)
+            val artist =
+                sequenceOf(
+                    extras.getCharSequence(Notification.EXTRA_TEXT)?.toString(),
+                    extras.getCharSequence(Notification.EXTRA_SUB_TEXT)
+                        ?.toString()
+                        ?.takeUnless(::looksLikeAlbum),
+                    extras.getCharSequence(Notification.EXTRA_INFO_TEXT)?.toString(),
+                )
+                    .filterNotNull()
+                    .map(String::trim)
+                    .firstOrNull { it.isNotBlank() && !isPlaceholderArtist(it) }
+                    ?: extras.getCharSequence(Notification.EXTRA_BIG_TEXT)
+                        ?.toString()
+                        ?.lineSequence()
+                        ?.map(String::trim)
+                        ?.filter(String::isNotBlank)
+                        ?.toList()
+                        ?.takeIf { it.size >= 2 && it[0] == rawTitle }
+                        ?.get(1)
+                        ?.takeUnless(::isPlaceholderArtist)
+                    ?: titleArtist
+                    ?: "Unknown Artist"
+
+            val title =
+                if (titleArtist != null && artist.equals(titleArtist, ignoreCase = true)) {
+                    TITLE_ARTIST_PATTERNS.firstNotNullOfOrNull { pattern ->
+                        pattern.find(rawTitle)?.groupValues?.getOrNull(1)?.trim()?.takeIf(String::isNotBlank)
+                    } ?: rawTitle
+                } else {
+                    rawTitle
+                }
+
+            val album =
+                extras.getCharSequence(Notification.EXTRA_SUB_TEXT)
+                    ?.toString()
+                    ?.trim()
+                    ?.takeIf { it.isNotBlank() && !it.equals(artist, ignoreCase = true) }
+                    ?: extras.getCharSequence(Notification.EXTRA_INFO_TEXT)
+                        ?.toString()
+                        ?.trim()
+                        ?.takeIf(String::isNotBlank)
+
+            return LocalMediaMetadata(
+                title = title,
+                artist = artist,
+                album = album,
+                sourcePackage = sourcePackage,
+            )
+        }
+
         /**
          * Extract all available metadata from Android MediaMetadata.
          */
@@ -338,7 +470,8 @@ data class LocalMediaMetadata(
                 metadata.getString(MediaMetadata.METADATA_KEY_ARTIST),
                 metadata.getString(MediaMetadata.METADATA_KEY_ALBUM_ARTIST),
                 metadata.getString(MediaMetadata.METADATA_KEY_AUTHOR),
-                metadata.getString(MediaMetadata.METADATA_KEY_DISPLAY_SUBTITLE),
+                metadata.getString(MediaMetadata.METADATA_KEY_DISPLAY_SUBTITLE)
+                    ?.takeIf(::isLikelyArtistName),
                 metadata.getString(MediaMetadata.METADATA_KEY_WRITER),
                 metadata.getString(MediaMetadata.METADATA_KEY_COMPOSER)
             )
