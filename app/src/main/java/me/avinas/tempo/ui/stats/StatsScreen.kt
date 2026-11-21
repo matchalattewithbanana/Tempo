@@ -3,8 +3,6 @@
 package me.avinas.tempo.ui.stats
 
 import me.avinas.tempo.ui.effects.tempoAmbientBackdrop
-import me.avinas.tempo.ui.effects.tempoTiltSurface
-import me.avinas.tempo.ui.effects.tempoListMotion
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -20,7 +18,6 @@ import me.avinas.tempo.ui.theme.TextSecondary
 import me.avinas.tempo.ui.theme.LocalTempoAppearance
 import me.avinas.tempo.ui.theme.LocalTempoPalette
 import me.avinas.tempo.ui.theme.innerShadow
-import me.avinas.tempo.ui.theme.premiumClickable
 import me.avinas.tempo.ui.theme.rememberReducedMotion
 import me.avinas.tempo.ui.components.TempoDropdownMenu
 import me.avinas.tempo.ui.components.TempoDropdownMenuItem
@@ -107,7 +104,6 @@ import me.avinas.tempo.data.stats.TopAlbum
 import me.avinas.tempo.data.stats.TopArtist
 import me.avinas.tempo.data.stats.TopTrack
 import me.avinas.tempo.data.stats.StatItem
-import me.avinas.tempo.ui.components.GlassCard
 import me.avinas.tempo.ui.components.TimePeriodSelector
 import me.avinas.tempo.ui.theme.TempoSecondary
 import androidx.compose.ui.res.stringResource
@@ -398,7 +394,7 @@ fun StatsScreen(
                         }
                     ) { index, item ->
                         val rank = if (isSearching) (itemRank(item) ?: (index + 1)) else (index + if (firstItem == null) 1 else 2) // Search shows global rank
-                        Box(Modifier.tempoListMotion(index)) {
+                        Box {
                             GlassStatItem(
                                 rank = rank,
                                 item = item,
