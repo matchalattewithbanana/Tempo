@@ -83,203 +83,61 @@ fun GlassCard(
     fillMaxWidth: Boolean = true,
     content: @Composable () -> Unit,
 ) {
-    val palette = LocalTempoPalette.current
+    val scheme = MaterialTheme.colorScheme
     val appearance = LocalTempoAppearance.current
-    val policy = LocalAppearanceRuntimePolicy.current
     val direction = LocalLayoutDirection.current
-    val effectivePadding = if (appearance.density == AppearanceDensity.COMPACT && contentPadding == PaddingValues(16.dp)) PaddingValues(
-        start = contentPadding.calculateStartPadding(direction) * 0.75f,
-        top = contentPadding.calculateTopPadding() * 0.75f,
-        end = contentPadding.calculateEndPadding(direction) * 0.75f,
-        bottom = contentPadding.calculateBottomPadding() * 0.75f,
-    ) else contentPadding
-    // App-wide M3 migration: all unaccented High/LowProminence cards are native
-    // tonal surfaces, rather than screen-specific gradients or drawn borders.
-    // Explicit artwork backgrounds, custom accents and the deliberately styled
-    // Obsidian/QuietGlass variants retain their original visual treatment.
-    // Most Home, Stats, History, Profile, detail and Settings cards share this path.
-    if ((variant == GlassCardVariant.LowProminence || variant == GlassCardVariant.HighProminence) &&
-        backgroundColor == GlassFrostMedium &&
-        accentColor == null &&
-        borderColor == null &&
-        borderWidth == null &&
-        shadowElevation == 0.dp
-    ) {
-        Surface(
-            modifier = modifier,
-            shape = shape,
-            color = when (variant) {
-                GlassCardVariant.HighProminence -> MaterialTheme.colorScheme.surfaceContainerHigh
-                else -> MaterialTheme.colorScheme.surfaceContainerLow
-            },
-            contentColor = MaterialTheme.colorScheme.onSurface,
-        ) {
-            Box(
-                modifier = Modifier
-                    .then(if (fillMaxWidth) Modifier.fillMaxWidth() else Modifier)
-                    .padding(effectivePadding),
-                contentAlignment = contentAlignment,
-            ) {
-                content()
-            }
-        }
-        return
-    }
-
-    val customPalette = palette != AppearancePaletteResolver.forPreset(AppearancePreset.ABYSS)
-    val accent = accentColor ?: palette.accent
-
-    val surface =
-        remember(backgroundColor, accentColor, accentStrength, variant, palette, policy.solidSurfaces) {
-            when {
-                // Solid finish removes translucent layers but preserves explicit opaque designs.
-                policy.solidSurfaces && backgroundColor.alpha < 1f -> palette.surface
-                // Explicit surface wins; accent then only tints the border.
-                backgroundColor != GlassFrostMedium -> backgroundColor
-
-                customPalette && variant == GlassCardVariant.Obsidian -> palette.surfaceSunken
-                customPalette && variant == GlassCardVariant.QuietGlass -> palette.surface
-                customPalette && variant == GlassCardVariant.TintedSolid ->
-                    lerp(palette.surface, accent, 0.12f)
-                customPalette -> palette.elevatedSurface
-
-                variant == GlassCardVariant.Obsidian -> TempoDarkSurfaceSunken
-
-                variant == GlassCardVariant.QuietGlass ->
-                    lerp(TempoDarkSurfaceElevated, accent, 0.05f).copy(alpha = 0.88f)
-
-                variant == GlassCardVariant.TintedSolid ->
-                    lerp(TempoDarkSurface, accent, 0.12f)
-
-                accentColor != null -> accentColor.copy(alpha = accentStrength)
-
-                variant == GlassCardVariant.HighProminence -> GlassFrostMedium
-
-                else -> GlassFrostSoft
-            }
-        }
-
-    val isTinted = accentColor != null || backgroundColor != GlassFrostMedium
-
-    val borderBrush =
-        remember(variant, borderColor, accentColor, isTinted, palette) {
-            when {
-                borderColor != null -> {
-                    null
-                }
-
-                customPalette -> Brush.verticalGradient(
-                    colors = listOf(
-                        palette.border.copy(alpha = 0.65f),
-                        palette.border.copy(alpha = 0.28f),
-                    ),
-                )
-
-                variant == GlassCardVariant.Obsidian -> {
-                    Brush.verticalGradient(
-                        colors = listOf(GlassBorderMedium, GlassBorderSoft),
-                    )
-                }
-
-                variant == GlassCardVariant.QuietGlass -> {
-                    Brush.verticalGradient(
-                        colors = listOf(accent.copy(alpha = 0.14f), accent.copy(alpha = 0.04f)),
-                    )
-                }
-
-                variant == GlassCardVariant.TintedSolid -> {
-                    Brush.verticalGradient(
-                        colors = listOf(accent.copy(alpha = 0.30f), accent.copy(alpha = 0.10f)),
-                    )
-                }
-
-                accentColor != null -> {
-                    Brush.verticalGradient(
-                        colors = listOf(accentColor.copy(alpha = 0.20f), accentColor.copy(alpha = 0.06f)),
-                    )
-                }
-
-                isTinted && variant == GlassCardVariant.HighProminence -> {
-                    Brush.verticalGradient(
-                        colors = listOf(GlassBorderMedium, GlassBorderSoft),
-                    )
-                }
-
-                isTinted -> {
-                    Brush.verticalGradient(
-                        colors = listOf(GlassBorderSoft, GlassBorderSoft),
-                    )
-                }
-
-                variant == GlassCardVariant.HighProminence -> {
-                    Brush.verticalGradient(
-                        colors = listOf(Color(0x14E8EEEC), Color(0x08E8EEEC)),
-                    )
-                }
-
-                else -> {
-                    Brush.verticalGradient(
-                        colors = listOf(Color(0x0DE8EEEC), Color(0x0DE8EEEC)),
-                    )
-                }
-            }
-        }
-
-    val borderStroke =
-        remember(variant, borderColor, borderWidth, borderBrush) {
-            val width = borderWidth ?: (if (variant == GlassCardVariant.HighProminence) 1.dp else 0.5.dp)
-            if (borderColor != null) {
-                BorderStroke(width, borderColor)
-            } else {
-                BorderStroke(width, borderBrush!!)
-            }
-        }
-
-    val bgBrush =
-        remember(surface, variant, accentColor, palette, policy.solidSurfaces) {
-            val bottom = when {
-                policy.solidSurfaces -> surface
-                customPalette -> palette.surfaceSunken
-                variant == GlassCardVariant.QuietGlass -> TempoDarkSurfaceSunken.copy(alpha = 0.92f)
-                variant == GlassCardVariant.TintedSolid -> lerp(TempoDarkSurfaceSunken, accent, 0.07f)
-                variant == GlassCardVariant.Obsidian -> Color(0xFF060808)
-                else -> GlassTintTeal.copy(alpha = 0.32f)
-            }
-            Brush.verticalGradient(
-                colors = listOf(surface, bottom),
+    val effectivePadding =
+        if (appearance.density == AppearanceDensity.COMPACT && contentPadding == PaddingValues(16.dp)) {
+            PaddingValues(
+                start = contentPadding.calculateStartPadding(direction) * 0.75f,
+                top = contentPadding.calculateTopPadding() * 0.75f,
+                end = contentPadding.calculateEndPadding(direction) * 0.75f,
+                bottom = contentPadding.calculateBottomPadding() * 0.75f,
             )
+        } else {
+            contentPadding
         }
 
-    val showsSheen = variant == GlassCardVariant.HighProminence ||
-        variant == GlassCardVariant.Obsidian ||
-        variant == GlassCardVariant.TintedSolid
+    // Compatibility surface: old callers retain their contract while routine
+    // app content resolves to stable Material tonal surfaces.
+    val accent = accentColor ?: scheme.primary
+    val color = when {
+        backgroundColor != GlassFrostMedium -> backgroundColor
+        variant == GlassCardVariant.Obsidian -> scheme.surfaceContainerLowest
+        variant == GlassCardVariant.TintedSolid ->
+            lerp(scheme.surfaceContainerHigh, accent, accentStrength.coerceIn(0.08f, 0.18f))
+        variant == GlassCardVariant.HighProminence -> scheme.surfaceContainerHigh
+        variant == GlassCardVariant.LowProminence || variant == GlassCardVariant.QuietGlass ->
+            scheme.surfaceContainerLow
+        else -> scheme.surfaceContainer
+    }
+    val border = when {
+        borderColor != null -> BorderStroke(borderWidth ?: 1.dp, borderColor)
+        borderWidth != null -> BorderStroke(borderWidth, scheme.outline)
+        else -> null
+    }
+    val surfaceModifier =
+        if (shadowElevation > 0.dp) {
+            modifier.shadow(
+                elevation = shadowElevation,
+                shape = shape,
+                ambientColor = Color.Transparent,
+                spotColor = shadowSpotColor,
+            )
+        } else modifier
 
-    Box(
-        modifier =
-            modifier
-                .shadow(elevation = if (policy.solidSurfaces) 0.dp else shadowElevation, shape = shape, ambientColor = Color.Transparent, spotColor = shadowSpotColor)
-                .clip(shape)
-                .background(bgBrush, shape)
-                .drawBehind {
-                    // Top sheen drawn in the same pass — no nested layout node
-                    if (showsSheen && !policy.solidSurfaces) {
-                        drawRect(
-                            brush = Brush.horizontalGradient(
-                                colors = listOf(Color.Transparent, GlassHighlightTop, Color.Transparent),
-                            ),
-                            topLeft = Offset.Zero,
-                            size = Size(size.width, 1.dp.toPx()),
-                        )
-                    }
-                }
-                .border(borderStroke, shape = shape),
-        contentAlignment = contentAlignment,
+    Surface(
+        modifier = surfaceModifier,
+        shape = shape,
+        color = color,
+        contentColor = scheme.onSurface,
+        border = border,
     ) {
         Box(
-            modifier =
-                Modifier
-                    .then(if (fillMaxWidth) Modifier.fillMaxWidth() else Modifier)
-                    .padding(effectivePadding),
+            modifier = Modifier
+                .then(if (fillMaxWidth) Modifier.fillMaxWidth() else Modifier)
+                .padding(effectivePadding),
+            contentAlignment = contentAlignment,
         ) {
             content()
         }

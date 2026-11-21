@@ -14,7 +14,6 @@ import me.avinas.tempo.ui.components.SnapshotShareDialog
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.animation.core.*
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -44,7 +43,8 @@ import me.avinas.tempo.data.local.entities.DailyChallenge
 import me.avinas.tempo.ui.components.ArtAtmosphereLayer
 import me.avinas.tempo.ui.components.BadgeShareCard
 import me.avinas.tempo.ui.components.LiveNowPlayingCard
-import me.avinas.tempo.ui.components.FrostedIconButton
+import me.avinas.tempo.ui.components.TempoWidthClass
+import me.avinas.tempo.ui.components.tempoAdaptiveLayout
 import me.avinas.tempo.ui.components.MilestoneShareCard
 import me.avinas.tempo.ui.components.SharePreviewDialog
 import me.avinas.tempo.ui.theme.*
@@ -115,26 +115,22 @@ fun ProfileScreen(
 
     Box(Modifier.fillMaxSize().tempoAmbientBackdrop()) {
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+            val adaptiveLayout = remember(maxWidth.value) { tempoAdaptiveLayout(maxWidth.value) }
             val compact = maxWidth < 380.dp
-            val expanded = maxWidth >= 600.dp
-            val sidePadding =
-                if (compact) {
-                    16.dp
-                } else if (expanded) {
-                    24.dp
-                } else {
-                    20.dp
-                }
+            val expanded = adaptiveLayout.widthClass != TempoWidthClass.COMPACT
+            val sidePadding = adaptiveLayout.contentMarginDp.dp
             val contentModifier =
                 Modifier
                     .fillMaxWidth()
                     .then(if (expanded) Modifier.widthIn(max = ProfileMaxContentWidth) else Modifier)
                     .padding(horizontal = sidePadding)
             val badgeColumns =
-                when {
-                    maxWidth >= 840.dp -> 4
-                    expanded -> 3
-                    else -> 2
+                when (adaptiveLayout.widthClass) {
+                    TempoWidthClass.COMPACT -> 2
+                    TempoWidthClass.MEDIUM -> 3
+                    TempoWidthClass.EXPANDED,
+                    TempoWidthClass.LARGE,
+                    TempoWidthClass.EXTRA_LARGE -> 4
                 }
             val tabs = if (compact) listOf("Quests", "Badges") else listOf("Challenges", "Badges")
             val heroTopClearance = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + 64.dp
@@ -259,50 +255,50 @@ fun ProfileScreen(
                     }
                 }
 
-                // Top Bar Navigation (matching SongDetails frosted action spec)
-                Row(
-                    modifier =
-                        Modifier
-                            .align(Alignment.TopCenter)
-                            .fillMaxWidth()
-                            .then(if (expanded) Modifier.widthIn(max = ProfileMaxContentWidth) else Modifier)
-                            // Opaque scrim keeps the status/nav actions readable
-                            // when the scrolling hero passes underneath them.
-                            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.98f))
-                            .statusBarsPadding()
-                            .padding(horizontal = sidePadding, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    FrostedIconButton(
-                        icon = Icons.AutoMirrored.Rounded.ArrowBack,
-                        contentDescription = stringResource(R.string.settings_back),
-                        onClick = onBack,
-                    )
-                    Box(modifier = Modifier.weight(1f).padding(horizontal = 12.dp), contentAlignment = Alignment.Center) {
-                        CollapsingProfileTitle(
-                            visible = heroScrolledPast,
-                            userName = uiState.userName,
-                            level = uiState.userLevel.currentLevel,
-                            title = uiState.userTitle,
-                        )
-                    }
-                    if (uiState.levelLoaded) {
-                        FrostedIconButton(
-                            icon = Icons.Default.Share,
-                            contentDescription = stringResource(R.string.share_profile),
-                            onClick = {
+                TopAppBar(
+                    modifier = Modifier.align(Alignment.TopCenter).fillMaxWidth(),
+                    title = {
+                        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                            CollapsingProfileTitle(
+                                visible = heroScrolledPast,
+                                userName = uiState.userName,
+                                level = uiState.userLevel.currentLevel,
+                                title = uiState.userTitle,
+                            )
+                        }
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Icon(
+                                Icons.AutoMirrored.Rounded.ArrowBack,
+                                contentDescription = stringResource(R.string.settings_back),
+                            )
+                        }
+                    },
+                    actions = {
+                        if (uiState.levelLoaded) {
+                            IconButton(onClick = {
                                 includeIdentity = false
                                 showProfileShare = true
-                            },
-                        )
-                    }
-                    FrostedIconButton(
-                        icon = Icons.Rounded.Settings,
-                        contentDescription = stringResource(R.string.settings_title),
-                        onClick = onNavigateToSettings,
-                    )
-                }
+                            }) {
+                                Icon(
+                                    Icons.Default.Share,
+                                    contentDescription = stringResource(R.string.share_profile),
+                                )
+                            }
+                        }
+                        IconButton(onClick = onNavigateToSettings) {
+                            Icon(
+                                Icons.Rounded.Settings,
+                                contentDescription = stringResource(R.string.settings_title),
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                    ),
+                )
             }
 
             if (!showProfileShare && shareChallenge == null && selectedBadge == null &&
