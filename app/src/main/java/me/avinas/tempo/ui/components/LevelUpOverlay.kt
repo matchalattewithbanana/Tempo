@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -36,16 +37,18 @@ fun LevelUpOverlay(
     title: String,
     onDismiss: () -> Unit
 ) {
-    // Entry animation  
+    // One finite hero celebration. The shared motion scheme snaps immediately
+    // when the user or system requests reduced motion.
     val scale = remember { Animatable(0f) }
     val textAlpha = remember { Animatable(0f) }
-    
-    LaunchedEffect(Unit) {
-        scale.animateTo(
-            targetValue = 1f,
-            animationSpec = spring(dampingRatio = 0.6f, stiffness = 300f)
-        )
-        textAlpha.animateTo(1f, animationSpec = tween(400))
+    val confettiProgress = remember { Animatable(0f) }
+    val spatialSpec = MaterialTheme.motionScheme.defaultSpatialSpec<Float>()
+    val effectsSpec = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
+    val confettiSpec = MaterialTheme.motionScheme.slowSpatialSpec<Float>()
+    LaunchedEffect(newLevel) {
+        launch { scale.animateTo(1f, spatialSpec) }
+        launch { textAlpha.animateTo(1f, effectsSpec) }
+        launch { confettiProgress.animateTo(1f, confettiSpec) }
     }
     
     // Confetti particles
@@ -65,16 +68,6 @@ fun LevelUpOverlay(
         }
     }
     
-    val infiniteTransition = me.avinas.tempo.ui.theme.rememberMotionAwareInfiniteTransition(label = "confetti")
-    val confettiProgress by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(3000, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "confettiProgress"
-    )
     
     Box(
         modifier = Modifier
@@ -89,7 +82,7 @@ fun LevelUpOverlay(
         // Confetti canvas
         Canvas(modifier = Modifier.fillMaxSize()) {
             particles.forEach { p ->
-                val y = (p.startY + confettiProgress * p.speed * 2f) % 1.2f
+                val y = (p.startY + confettiProgress.value.coerceIn(0f, 1f) * p.speed * 2f) % 1.2f
                 drawCircle(
                     color = p.color.copy(alpha = if (y > 0.9f) 1f - (y - 0.9f) / 0.3f else 0.8f),
                     radius = p.size,
@@ -104,13 +97,8 @@ fun LevelUpOverlay(
                 .scale(scale.value)
                 .padding(32.dp)
                 .background(
-                    brush = Brush.verticalGradient(
-                        listOf(
-                            Color(0xFF1E1B4B).copy(alpha = 0.95f),
-                            Color(0xFF0F172A).copy(alpha = 0.95f)
-                        )
-                    ),
-                    shape = RoundedCornerShape(24.dp)
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    shape = MaterialTheme.shapes.extraExtraLarge,
                 )
                 .padding(32.dp),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -118,7 +106,7 @@ fun LevelUpOverlay(
             Icon(
                 imageVector = Icons.Default.EmojiEvents,
                 contentDescription = null,
-                tint = Color(0xFFF59E0B),
+                tint = MaterialTheme.colorScheme.tertiary,
                 modifier = Modifier.size(64.dp)
             )
             
@@ -128,7 +116,7 @@ fun LevelUpOverlay(
                 text = stringResource(R.string.level_up_title),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Black,
-                color = Color(0xFFF59E0B),
+                color = MaterialTheme.colorScheme.tertiary,
                 letterSpacing = 4.sp,
                 modifier = Modifier.alpha(textAlpha.value)
             )
@@ -139,7 +127,7 @@ fun LevelUpOverlay(
                 text = stringResource(R.string.level_up_new_level, newLevel),
                 style = MaterialTheme.typography.displaySmall,
                 fontWeight = FontWeight.Black,
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.alpha(textAlpha.value)
             )
             
@@ -163,7 +151,7 @@ fun LevelUpOverlay(
                     text = stringResource(R.string.level_up_awesome),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
         }
