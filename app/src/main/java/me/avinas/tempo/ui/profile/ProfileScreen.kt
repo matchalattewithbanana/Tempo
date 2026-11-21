@@ -149,77 +149,6 @@ internal fun getLevelTierAccent(level: Int): Color =
     }
 
 // ── Category & difficulty identity — data colormaps, not chrome tokens ──
-// Challenge titles generated before the custom icon set landed carry a leading emoji.
-// Persisted rows survive until the next daily refresh, so drop it at render time rather
-// than showing the emoji next to its replacement icon for the rest of the day.
-private val LeadingEmoji = Regex("^[^\\p{L}\\p{N}]+")
-
-private fun String.withoutLeadingEmoji(): String = replace(LeadingEmoji, "")
-
-/**
- * Custom icon for a challenge, keyed on [DailyChallenge.challengeId] rather than category.
- *
- * The five categories collapse eight distinct challenge types — VOLUME covers both
- * song-count and minute-count, DISCOVERY covers artists and genres — and each type has its
- * own icon. Ids are stable and persisted, so they survive daily title regeneration.
- */
-private fun getChallengeIcon(challenge: DailyChallenge): Int {
-    val id = challenge.challengeId
-    return when {
-        id.startsWith("volume_songs") -> {
-            R.drawable.ic_challenge_songs
-        }
-
-        id.startsWith("volume_mins") -> {
-            R.drawable.ic_challenge_minutes
-        }
-
-        id.startsWith("variety_artists") -> {
-            R.drawable.ic_challenge_variety
-        }
-
-        id.startsWith("discovery_artists") -> {
-            R.drawable.ic_challenge_discovery_artists
-        }
-
-        id.startsWith("discovery_genres") -> {
-            R.drawable.ic_challenge_discovery_genres
-        }
-
-        id.startsWith("explore_artist") -> {
-            R.drawable.ic_challenge_explore_artist
-        }
-
-        id.startsWith("explore_genre") -> {
-            R.drawable.ic_challenge_explore_genre
-        }
-
-        id.startsWith("time_early_bird") -> {
-            R.drawable.ic_challenge_early_bird
-        }
-
-        // Unrecognised id (e.g. a type added by a newer version) — fall back on category,
-        // matching the previous category-keyed behaviour.
-        else -> {
-            when (challenge.category) {
-                "TIME" -> R.drawable.ic_challenge_early_bird
-                "VARIETY" -> R.drawable.ic_challenge_variety
-                "DISCOVERY" -> R.drawable.ic_challenge_discovery_genres
-                "EXPLORATION" -> R.drawable.ic_challenge_explore_artist
-                else -> R.drawable.ic_challenge_songs
-            }
-        }
-    }
-}
-
-private fun getDifficultyColor(difficulty: String): Color =
-    when (difficulty) {
-        "EASY" -> TempoSuccessDeep
-        "MEDIUM" -> TempoWarning
-        "HARD" -> TempoError
-        else -> Color.Gray
-    }
-
 // ──────────────────────────────────────────────────────────────
 // Editorial Section Catalog Kicker & Section Header
 // ──────────────────────────────────────────────────────────────
@@ -261,7 +190,7 @@ internal fun SectionCatalogKicker(
 }
 
 @Composable
-private fun EditorialSectionHeader(
+internal fun EditorialSectionHeader(
     sectionNumber: String,
     title: String,
     subtitle: String,
@@ -390,7 +319,7 @@ internal fun MastheadSecondaryStat(
 // ──────────────────────────────────────────────────────────────
 
 @Composable
-private fun ProgressTrack(
+internal fun ProgressTrack(
     progress: Float,
     modifier: Modifier = Modifier,
     color: Color = LocalTempoPalette.current.accent,
@@ -414,7 +343,7 @@ private fun ProgressTrack(
 }
 
 @Composable
-private fun XpChip(xp: Int) {
+internal fun XpChip(xp: Int) {
     val chipSurface = TempoWarning.copy(alpha = 0.12f).compositeOver(LocalTempoPalette.current.surface)
     val chipText = profileTextColor(TempoWarning, chipSurface)
     Row(
@@ -444,7 +373,7 @@ private fun XpChip(xp: Int) {
 }
 
 @Composable
-private fun StarsChip(
+internal fun StarsChip(
     total: Int,
     max: Int,
 ) {
@@ -1454,302 +1383,6 @@ private fun TabSwitcher(
                             overflow = TextOverflow.Ellipsis)
                     },
                 )
-            }
-        }
-    }
-}
-
-// ──────────────────────────────────────────────────────────────
-// Daily Challenges (Quests) Section
-// ──────────────────────────────────────────────────────────────
-
-private fun LazyListScope.challengesSection(
-    challenges: List<DailyChallenge>,
-    totalXpAvailable: Int,
-    contentModifier: Modifier,
-    onShareChallenge: (DailyChallenge) -> Unit,
-) {
-    val completedCount = challenges.count { it.isCompleted }
-    item(key = "challenges_header") {
-        val resetLabel =
-            remember {
-                val midnight =
-                    LocalDate
-                        .now()
-                        .plusDays(1)
-                        .atStartOfDay(ZoneId.systemDefault())
-                        .toInstant()
-                        .toEpochMilli()
-                val diffMs = midnight - System.currentTimeMillis()
-                val h = (diffMs / (1000 * 60 * 60)).toInt()
-                val m = ((diffMs % (1000 * 60 * 60)) / (1000 * 60)).toInt()
-                if (h > 0) "resets in ${h}h ${m}m" else "resets in ${m}m"
-            }
-        Column(modifier = contentModifier) {
-            Spacer(modifier = Modifier.height(24.dp))
-            EditorialSectionHeader(
-                sectionNumber = "01",
-                title = "Daily quests",
-                subtitle = "$completedCount of ${challenges.size} complete · $resetLabel",
-                trailing = { XpChip(xp = totalXpAvailable) },
-            )
-            Spacer(modifier = Modifier.height(14.dp))
-            ProgressTrack(
-                progress = if (challenges.isEmpty()) 0f else completedCount.toFloat() / challenges.size,
-                modifier = Modifier.fillMaxWidth(),
-                color = LocalTempoPalette.current.accent,
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-        }
-    }
-    itemsIndexed(challenges, key = { _, c -> "challenge_${c.id}" }) { index, challenge ->
-        Column(modifier = contentModifier.tempoListMotion(index)) {
-            ChallengeCard(challenge = challenge)
-            if (challenge.isCompleted) {
-                TextButton(onClick = { onShareChallenge(challenge) }, modifier = Modifier.align(Alignment.End)) {
-                    Text(stringResource(R.string.share_challenge))
-                }
-            }
-            Spacer(modifier = Modifier.height(12.dp))
-        }
-    }
-}
-
-@Composable
-private fun EmptyChallengesState(modifier: Modifier = Modifier) {
-    val appearancePalette = LocalTempoPalette.current
-    GlassCard(
-        modifier = modifier,
-        variant = GlassCardVariant.Obsidian,
-        shape = me.avinas.tempo.ui.components.appearanceCardShape(),
-        borderColor = appearancePalette.border.copy(alpha = 0.45f),
-        borderWidth = 0.8.dp,
-        contentPadding = PaddingValues(28.dp),
-    ) {
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            TempoEmblem(
-                icon = Icons.Rounded.Schedule,
-                size = 76.dp,
-                style = TempoEmblemStyle.MEMORY,
-            )
-            Text(
-                text = "Nothing queued yet",
-                style = MaterialTheme.typography.titleLargeEmphasized,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-            Text(
-                text = "Pull to refresh or continue listening — new daily quests will appear here.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-            )
-        }
-    }
-}
-
-@Composable
-private fun ChallengePercentText(
-    progress: Float,
-    accent: Color,
-) {
-    Text(
-        text = "${(progress * 100).toInt()}%",
-        style = MaterialTheme.typography.labelMedium,
-        fontWeight = FontWeight.Bold,
-        color = profileTextColor(accent),
-    )
-}
-
-@Composable
-private fun ChallengeCard(challenge: DailyChallenge) {
-    val appearancePalette = LocalTempoPalette.current
-    val isCompleted = challenge.isCompleted
-    val accent = if (isCompleted) TempoSuccessDeep else getDifficultyColor(challenge.difficulty)
-    val difficultySurface = accent.copy(alpha = 0.12f).compositeOver(appearancePalette.surfaceSunken)
-    val rewardSurface = (if (isCompleted) TempoSuccessDeep.copy(alpha = 0.12f) else TempoWarning.copy(alpha = 0.10f))
-        .compositeOver(appearancePalette.surfaceSunken)
-    val animatedProgress by animateFloatAsState(
-        targetValue = challenge.progressFraction,
-        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
-        label = "challengeProgress",
-    )
-
-    GlassCard(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        variant = GlassCardVariant.Obsidian,
-        borderColor = if (isCompleted) TempoSuccessDeep.copy(alpha = 0.25f) else appearancePalette.border.copy(alpha = 0.45f),
-        borderWidth = 0.8.dp,
-        contentPadding = PaddingValues(18.dp),
-    ) {
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
-        ) {
-            // Top metadata row: Difficulty tag, category label, and XP reward pill
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    Box(
-                        modifier =
-                            Modifier
-                                .clip(RoundedCornerShape(6.dp))
-                                .background(difficultySurface)
-                                .border(0.8.dp, accent.copy(alpha = 0.30f), RoundedCornerShape(6.dp))
-                                .padding(horizontal = 7.dp, vertical = 3.dp),
-                    ) {
-                        Text(
-                            text = challenge.difficulty.uppercase(Locale.getDefault()),
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = profileTextColor(accent, difficultySurface),
-                            letterSpacing = 0.8.sp,
-                            fontSize = MaterialTheme.typography.labelSmall.fontSize,
-                        )
-                    }
-                    Text(
-                        text = "·",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = appearancePalette.mutedText,
-                    )
-                    Text(
-                        text = challenge.category.replace("_", " ").uppercase(Locale.getDefault()),
-                        style = KickerSmall,
-                        fontWeight = FontWeight.Medium,
-                        color = appearancePalette.mutedText,
-                        letterSpacing = 0.8.sp,
-                        fontSize = MaterialTheme.typography.labelSmall.fontSize,
-                    )
-                }
-
-                Row(
-                    modifier =
-                        Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(rewardSurface)
-                            .border(
-                                0.8.dp,
-                                if (isCompleted) TempoSuccessDeep.copy(alpha = 0.30f) else TempoWarning.copy(alpha = 0.25f),
-                                RoundedCornerShape(8.dp),
-                            ).padding(horizontal = 8.dp, vertical = 3.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.AutoAwesome,
-                        contentDescription = null,
-                        tint = profileIndicatorColor(if (isCompleted) TempoSuccessDeep else TempoWarning, rewardSurface),
-                        modifier = Modifier.size(11.dp),
-                    )
-                    Text(
-                        text = "+${challenge.xpReward} XP",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = profileTextColor(if (isCompleted) TempoSuccessDeep else TempoWarning, rewardSurface),
-                        letterSpacing = 0.4.sp,
-                    )
-                }
-            }
-
-            // Core content row: Sunken Icon + Title & Description
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(14.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Box(
-                    modifier =
-                        Modifier
-                            .size(44.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(appearancePalette.surfaceSunken)
-                            .border(0.8.dp, accent.copy(alpha = if (isCompleted) 0.40f else 0.20f), RoundedCornerShape(12.dp)),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(
-                        painter = painterResource(getChallengeIcon(challenge)),
-                        contentDescription = null,
-                        tint = accent,
-                        modifier = Modifier.size(20.dp),
-                    )
-                }
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(3.dp),
-                ) {
-                    Text(
-                        text = challenge.title.withoutLeadingEmoji(),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = appearancePalette.onSurface,
-                    )
-                    Text(
-                        text = challenge.description,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = appearancePalette.mutedText,
-                        lineHeight = 18.sp,
-                    )
-                }
-            }
-
-            // Hairline Progress bar
-            ProgressTrack(
-                progress = animatedProgress,
-                modifier = Modifier.fillMaxWidth(),
-                color = accent,
-                height = 5.dp,
-            )
-
-            // Bottom row: numeric progress & status/action
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = "${challenge.currentProgress} / ${challenge.targetValue}",
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = if (isCompleted) profileTextColor(TempoSuccessDeep) else appearancePalette.mutedText,
-                )
-
-                if (isCompleted) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(5.dp),
-                        modifier =
-                            Modifier
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(TempoSuccessDeep.copy(alpha = 0.12f))
-                                .border(0.8.dp, TempoSuccessDeep.copy(alpha = 0.25f), RoundedCornerShape(8.dp))
-                                .padding(horizontal = 9.dp, vertical = 4.dp),
-                    ) {
-                        Icon(
-                            imageVector = Icons.Rounded.CheckCircle,
-                            contentDescription = null,
-                            tint = TempoSuccessDeep,
-                            modifier = Modifier.size(13.dp),
-                        )
-                        Text(
-                            text = "Completed",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = profileTextColor(TempoSuccessDeep),
-                        )
-                    }
-                } else {
-                    ChallengePercentText(progress = animatedProgress, accent = accent)
-                }
             }
         }
     }
