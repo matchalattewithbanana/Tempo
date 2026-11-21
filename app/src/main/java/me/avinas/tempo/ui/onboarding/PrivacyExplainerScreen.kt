@@ -91,7 +91,7 @@ fun PrivacyExplainerScreen(
                 ) {
                     Text(
                         text = stringResource(R.string.welcome_skip),
-                        color = Color.White.copy(alpha = 0.6f),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.labelLarge
                     )
                 }
@@ -152,7 +152,7 @@ fun PrivacyExplainerScreen(
                     style = if (isSmallScreen()) MaterialTheme.typography.headlineSmall else MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center,
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontSize = adaptiveTextUnitByCategory(30.sp, 26.sp, 22.sp)
                 )
 
@@ -162,7 +162,7 @@ fun PrivacyExplainerScreen(
                     text = stringResource(R.string.privacy_subtitle),
                     style = MaterialTheme.typography.bodyLarge,
                     textAlign = TextAlign.Center,
-                    color = Color.White.copy(alpha = 0.7f),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = adaptiveTextUnitByCategory(17.sp, 15.sp, 13.sp)
                 )
 
@@ -316,13 +316,13 @@ private fun PrivacyPoint(
                     text = title,
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontSize = adaptiveTextUnitByCategory(17.sp, 15.sp, 14.sp)
                 )
                 Text(
                     text = description,
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color.White.copy(alpha = 0.6f),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = adaptiveTextUnitByCategory(14.sp, 12.sp, 11.sp),
                     lineHeight = adaptiveTextUnitByCategory(20.sp, 17.sp, 15.sp)
                 )
