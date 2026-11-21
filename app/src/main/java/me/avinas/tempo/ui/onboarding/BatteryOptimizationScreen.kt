@@ -114,7 +114,7 @@ fun BatteryOptimizationScreen(
                 ) {
                     Text(
                         text = stringResource(R.string.battery_skip),
-                        color = Color.White.copy(alpha = 0.6f),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.labelLarge,
                     )
                 }
@@ -137,7 +137,7 @@ fun BatteryOptimizationScreen(
                             style = if (isSmallScreen()) MaterialTheme.typography.titleLarge else MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Center,
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.onSurface,
                             fontSize = adaptiveTextUnitByCategory(24.sp, 22.sp, 20.sp),
                             lineHeight = adaptiveTextUnitByCategory(32.sp, 28.sp, 26.sp),
                             modifier = Modifier.fillMaxWidth(),
@@ -149,7 +149,7 @@ fun BatteryOptimizationScreen(
                             text = stringResource(R.string.battery_description),
                             style = MaterialTheme.typography.bodyLarge,
                             textAlign = TextAlign.Center,
-                            color = Color.White.copy(alpha = 0.7f),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             lineHeight = adaptiveTextUnitByCategory(24.sp, 22.sp, 20.sp),
                             fontSize = adaptiveTextUnitByCategory(16.sp, 15.sp, 14.sp),
                             modifier = Modifier.fillMaxWidth(),
