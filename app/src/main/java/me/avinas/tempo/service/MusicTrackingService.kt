@@ -1363,7 +1363,7 @@ class MusicTrackingService : NotificationListenerService() {
         }
         TrackingServiceHeartbeat.markListenerDisconnected(this)
         observedMediaNotificationKeys.clear()
-        mediaSessions.release()
+        if (::mediaSessions.isInitialized) mediaSessions.release()
         // Without a connected listener we cannot know whether the player is still
         // playing; stop the monotonic clocks rather than counting an unobserved gap.
         playbackStates.values.forEach { it.pause() }
@@ -3288,9 +3288,9 @@ class MusicTrackingService : NotificationListenerService() {
             isListenerConnected = false
         }
 
-        // Release both the manager observer and per-token callbacks. Previously the
-        // manager observer was never unregistered, leaking destroyed service instances.
-        mediaSessions.release()
+        // Release both the manager observer and per-token callbacks. onDestroy can run after
+        // an early onCreate failure, before the registry was assigned.
+        if (::mediaSessions.isInitialized) mediaSessions.release()
         observedMediaNotificationKeys.clear()
 
         // Freeze active sessions before tearing down callback scopes. A recovery snapshot is
