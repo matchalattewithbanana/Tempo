@@ -359,7 +359,7 @@ class SpotifyJsonImportService @Inject constructor(
     ): FlushResult {
         return try {
             val result = listeningEventDao.insertAllBatchedWithDedup(pendingEvents)
-            FlushResult(result.inserted, result.skipped)
+            FlushResult(result.newlyAdded, result.skipped)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -370,7 +370,7 @@ class SpotifyJsonImportService @Inject constructor(
                 coroutineContext.ensureActive()
                 try {
                     val result = listeningEventDao.insertAllBatchedWithDedup(listOf(event))
-                    inserted += result.inserted
+                    inserted += result.newlyAdded
                     skipped += result.skipped
                 } catch (cancelled: CancellationException) {
                     throw cancelled
