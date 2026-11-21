@@ -1,8 +1,6 @@
 package me.avinas.tempo.ui.settings
 
 import me.avinas.tempo.ui.effects.tempoAmbientBackdrop
-import me.avinas.tempo.ui.effects.tempoTiltSurface
-import me.avinas.tempo.ui.effects.tempoListMotion
 import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Intent
