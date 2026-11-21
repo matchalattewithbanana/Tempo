@@ -1832,6 +1832,14 @@
     <string name="appearance_insights">Insights</string>
     <string name="appearance_transfer_failed">Could not transfer this appearance file. Check the file and try again.</string>
     <string name="now_playing_last_detected">Last detected</string>
+    <string name="now_playing_heading">Now Playing</string>
+    <string name="now_playing_idle">Waiting for music</string>
+    <string name="now_playing_playing">Playing</string>
+    <string name="now_playing_paused">Paused</string>
+    <string name="now_playing_empty">Nothing playing on this device</string>
+    <string name="now_playing_empty_help">Start playing music with tracking active to see it here.</string>
+    <string name="now_playing_stale_help">Waiting for the player to send another update.</string>
+    <string name="now_playing_cover_description">Cover art for %1$s</string>
     <string name="spotify_secure_storage_unavailable">Secure Spotify storage is unavailable. Unlock your device and try again. Your encrypted data has been preserved.</string>
     <string name="home_trend_show_values">Show trend values</string>
     <string name="home_trend_hide_values">Hide trend values</string>
