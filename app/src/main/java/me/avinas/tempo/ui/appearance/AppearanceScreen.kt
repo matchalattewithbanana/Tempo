@@ -439,9 +439,6 @@ fun AppearanceScreen(
                 SettingToggle(R.string.appearance_instant_navigation, draft.instantNavigation, !busy) {
                     draft = draft.copy(instantNavigation = it)
                 }
-                SettingToggle(R.string.appearance_navigation_labels, draft.showNavigationLabels, !busy) {
-                    draft = draft.copy(showNavigationLabels = it)
-                }
                 SettingToggle(R.string.appearance_adaptive, draft.adaptiveEffects, !busy) { draft = draft.copy(adaptiveEffects = it) }
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 Text(stringResource(R.string.appearance_effects_opt_in_heading),
