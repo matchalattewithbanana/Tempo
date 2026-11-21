@@ -8,50 +8,32 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 
-import me.avinas.tempo.ui.theme.TempoDarkBackground
-import me.avinas.tempo.ui.theme.TempoDarkSurfaceSunken
-import me.avinas.tempo.ui.theme.TempoAccentBright
 import me.avinas.tempo.ui.theme.TextOnAccent
 import me.avinas.tempo.ui.theme.GoldDark
-import me.avinas.tempo.ui.theme.TextPrimary
-import me.avinas.tempo.ui.theme.TextSecondary
 import me.avinas.tempo.ui.theme.LocalTempoAppearance
 import me.avinas.tempo.ui.theme.LocalTempoPalette
-import me.avinas.tempo.ui.theme.innerShadow
 import me.avinas.tempo.ui.theme.rememberReducedMotion
 import me.avinas.tempo.ui.components.TempoDropdownMenu
 import me.avinas.tempo.ui.components.TempoDropdownMenuItem
-import me.avinas.tempo.ui.components.TempoIcons
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import androidx.compose.ui.graphics.Brush
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.platform.LocalFocusManager
@@ -59,13 +41,11 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.TrendingDown
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.rounded.Album
 import androidx.compose.material.icons.rounded.MusicNote
-import androidx.compose.material.icons.rounded.Bolt
 import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Schedule
@@ -85,7 +65,6 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -93,10 +72,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import me.avinas.tempo.ui.components.CachedAsyncImage
-import me.avinas.tempo.ui.components.MusicNotePlaceholder
 import me.avinas.tempo.data.repository.SortBy
 import me.avinas.tempo.data.stats.CombinedBasicStats
 import me.avinas.tempo.data.stats.TimeRange
@@ -105,7 +82,6 @@ import me.avinas.tempo.data.stats.TopArtist
 import me.avinas.tempo.data.stats.TopTrack
 import me.avinas.tempo.data.stats.StatItem
 import me.avinas.tempo.ui.components.TimePeriodSelector
-import me.avinas.tempo.ui.theme.TempoSecondary
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -395,7 +371,7 @@ fun StatsScreen(
                     ) { index, item ->
                         val rank = if (isSearching) (itemRank(item) ?: (index + 1)) else (index + if (firstItem == null) 1 else 2) // Search shows global rank
                         Box {
-                            GlassStatItem(
+                            RankedStatItem(
                                 rank = rank,
                                 item = item,
                                 onClick = onStatItemClick,
@@ -617,7 +593,7 @@ fun HeroStatItem(item: StatItem, onNavigate: () -> Unit) {
 }
 
 @Composable
-fun GlassStatItem(rank: Int, item: StatItem, onClick: (StatItem) -> Unit) {
+fun RankedStatItem(rank: Int, item: StatItem, onClick: (StatItem) -> Unit) {
     val title = when (item) {
         is TopTrack -> item.title
         is TopArtist -> item.artist
