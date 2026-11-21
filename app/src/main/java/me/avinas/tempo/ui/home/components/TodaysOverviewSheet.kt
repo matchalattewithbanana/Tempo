@@ -2,10 +2,8 @@ package me.avinas.tempo.ui.home.components
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.snap
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -92,6 +90,8 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.roundToInt
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 
 @Composable
 private fun todayMutedText(): Color {
@@ -110,7 +110,7 @@ private val RankBronze = Color(0xFFCD8B5A)
  * the sheet has settled.
  */
 @Composable
-private fun EntranceReveal(index: Int, content: @Composable () -> Unit) {
+private fun EntranceReveal(@Suppress("UNUSED_PARAMETER") index: Int, content: @Composable () -> Unit) {
     // Avoid holding back real content for hundreds of milliseconds by default.
     // Optional list entrances are already gated for motion, battery and thermal state.
     if (!LocalAppearanceRuntimePolicy.current.allowListEntranceMotion) {
@@ -118,26 +118,10 @@ private fun EntranceReveal(index: Int, content: @Composable () -> Unit) {
         return
     }
     val appear = remember { Animatable(0f) }
-
-    LaunchedEffect(Unit) {
-        kotlinx.coroutines.delay(startDelayMs(index))
-        appear.animateTo(
-            targetValue = 1f,
-            animationSpec = tween(durationMillis = 380, easing = FastOutSlowInEasing)
-        )
-    }
-
-    Box(
-        modifier = Modifier.graphicsLayer {
-            alpha = appear.value
-            translationY = (1f - appear.value) * 26f
-        }
-    ) {
-        content()
-    }
+    val effectSpec = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
+    LaunchedEffect(Unit) { appear.animateTo(1f, effectSpec) }
+    Box(modifier = Modifier.graphicsLayer { alpha = appear.value }) { content() }
 }
-
-private fun startDelayMs(index: Int): Long = (50L + index * 45L).coerceAtMost(320L)
 
 /**
  * Fullscreen daily listening summary overlay.
@@ -158,7 +142,10 @@ fun TodaysOverviewOverlay(
     modifier: Modifier = Modifier
 ) {
     val progress = remember { Animatable(0f) }
+    val opacity = remember { Animatable(0f) }
     val reduceMotion = LocalAppearanceRuntimePolicy.current.reduceMotion
+    val spatialSpec = MaterialTheme.motionScheme.defaultSpatialSpec<Float>()
+    val effectsSpec = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
     var isClosing by remember { mutableStateOf(false) }
     var showShareDialog by remember { mutableStateOf(false) }
 
@@ -188,23 +175,33 @@ fun TodaysOverviewOverlay(
     }
     val headerScrimAlpha by animateFloatAsState(
         targetValue = if (showCollapsedTitle) 1f else 0f,
-        animationSpec = if (reduceMotion) snap() else tween(200),
+        animationSpec = if (reduceMotion) snap() else effectsSpec,
         label = "overviewHeaderScrim"
     )
 
     LaunchedEffect(reduceMotion) {
-        if (reduceMotion) progress.snapTo(1f) else progress.animateTo(
-            targetValue = 1f,
-            animationSpec = tween(durationMillis = 360, easing = FastOutSlowInEasing),
-        )
+        if (reduceMotion) {
+            progress.snapTo(1f)
+            opacity.snapTo(1f)
+        } else {
+            coroutineScope {
+                launch { progress.animateTo(1f, spatialSpec) }
+                launch { opacity.animateTo(1f, effectsSpec) }
+            }
+        }
     }
 
     LaunchedEffect(isClosing, reduceMotion) {
         if (isClosing) {
-            if (reduceMotion) progress.snapTo(0f) else progress.animateTo(
-                targetValue = 0f,
-                animationSpec = tween(durationMillis = 240, easing = FastOutSlowInEasing),
-            )
+            if (reduceMotion) {
+                progress.snapTo(0f)
+                opacity.snapTo(0f)
+            } else {
+                coroutineScope {
+                    launch { progress.animateTo(0f, spatialSpec) }
+                    launch { opacity.animateTo(0f, effectsSpec) }
+                }
+            }
             onDismiss()
         }
     }
@@ -221,7 +218,7 @@ fun TodaysOverviewOverlay(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .graphicsLayer { alpha = progress.value }
+                    .graphicsLayer { alpha = opacity.value }
                     .background(LocalTempoPalette.current.background.copy(alpha = 0.94f))
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
@@ -235,7 +232,7 @@ fun TodaysOverviewOverlay(
                     .fillMaxSize()
                     .graphicsLayer {
                         translationY = (1f - progress.value) * size.height
-                        alpha = progress.value
+                        alpha = opacity.value
                     }
                     .background(LocalTempoPalette.current.background)
             ) {
@@ -436,8 +433,12 @@ private fun TodaysTopBarNavigation(
 
         AnimatedVisibility(
             visible = showCollapsedTitle,
-            enter = fadeIn(tween(180)) + slideInVertically(tween(180)) { -10 },
-            exit = fadeOut(tween(140)) + slideOutVertically(tween(140)) { -10 },
+            enter = fadeIn(effectsSpec) + slideInVertically(
+                animationSpec = MaterialTheme.motionScheme.fastSpatialSpec<androidx.compose.ui.unit.IntOffset>()
+            ) { -10 },
+            exit = fadeOut(effectsSpec) + slideOutVertically(
+                animationSpec = MaterialTheme.motionScheme.fastSpatialSpec<androidx.compose.ui.unit.IntOffset>()
+            ) { -10 },
             modifier = Modifier
                 .weight(1f)
                 .padding(horizontal = 12.dp)
