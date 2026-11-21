@@ -2047,117 +2047,67 @@ class RoomStatsRepository @Inject constructor(
     override suspend fun getArtistDetailsByName(artistName: String): ArtistDetails? {
         val key = "artist_details_name_$artistName"
         return getCached(key) {
-            // Resolve alias first if it exists
-            val normalizedName = me.avinas.tempo.data.local.entities.Artist.normalizeName(artistName)
+            val normalizedName = Artist.normalizeName(artistName)
             val alias = artistAliasDao.findAlias(normalizedName)
-            val targetArtist = if (alias != null) {
-                artistDao.getArtistById(alias.targetArtistId)
-            } else {
-                artistDao.getArtistByNormalizedName(normalizedName)
-                    ?: artistDao.getArtistByName(artistName)
-            }
-            
+            val targetArtist =
+                if (alias != null) {
+                    artistDao.getArtistById(alias.targetArtistId)
+                } else {
+                    artistDao.getArtistByNormalizedName(normalizedName)
+                        ?: artistDao.getArtistByName(artistName)
+                }
+
             if (targetArtist != null) {
                 buildStoredArtistDetails(targetArtist)
             } else {
-                    Log.w(TAG, "getArtistDetailsByName: No image found for artist '${targetArtist.name}'")
-                }
-                
-                // Create artist with resolved image URL
-                val artistWithImage = if (imageUrl != targetArtist.imageUrl) {
-                    targetArtist.copy(imageUrl = imageUrl)
-                } else {
-                    targetArtist
-                }
-                
-                // Country from artist table or enriched metadata
-                val country = artistWithImage.country ?: statsDao.getArtistCountry(artistWithImage.name)
-                
-                // Use genres from artist entity or extract from enriched metadata
-                val topGenres = if (artistWithImage.genres.isNotEmpty()) {
-                    artistWithImage.genres.take(5)
-                } else {
-                    emptyList()
-                }
-                
-                // Calculate mood summary from tags/genres
-                val moodSummary = TagBasedMoodAnalyzer.getMoodSummary(
-                    tags = artistWithImage.genres,
-                    genres = topGenres
-                )
-                
-                ArtistDetails(
-                    artist = artistWithImage,
-                    listenersCount = null,
-                    personalPlayCount = playCount,
-                    personalTotalTimeMs = totalTime,
-                    firstDiscovery = firstDiscovery,
-                    topSongs = topSongs,
-                    country = country,
-                    uniqueAlbumsPlayed = uniqueAlbums,
-                    uniqueTracksPlayed = uniqueTracks,
-                    moodSummary = moodSummary,
-                    topGenres = topGenres,
-                    firstListenedDate = listeningDates?.first_listened,
-                    lastListenedDate = listeningDates?.last_listened,
-                    peakListeningHour = peakHour,
-                    topAlbums = topAlbums
-                )
-            } else {
-                // Artist not in database - use partial match queries to find tracks
-                // This handles parsed individual artists from multi-artist entries
-                val playCount = statsDao.getArtistPlayCountByPartialMatch(artistName)
-                
-                // If no plays found, this artist doesn't exist in listening history
-                if (playCount == 0) return@getCached null
-                
-                val totalTime = statsDao.getArtistTotalTimeByPartialMatch(artistName)
-                val topSongs = statsDao.getTopTracksForArtistPartialMatch(artistName, 10)
-                val firstDiscovery = statsDao.getArtistFirstListenPartialMatch(artistName)
-                
-                // Extended data using partial match
-                val uniqueAlbums = statsDao.getArtistUniqueAlbumsPlayedPartialMatch(artistName)
-                val uniqueTracks = statsDao.getArtistUniqueTracksPlayedPartialMatch(artistName)
-                val listeningDates = statsDao.getArtistListeningDatesPartialMatch(artistName)
-                val peakHour = statsDao.getArtistPeakListeningHourPartialMatch(artistName)
-                val country = statsDao.getArtistCountry(artistName) // Already uses partial match
-                val topAlbums = statsDao.getTopAlbumsForArtistPartialMatch(artistName, 5)
-                
-                // Get image URL with fallback strategy
-                val imageUrl = getArtistImageUrlWithFallback(artistName)
-                
-                // Create a synthetic Artist entity for artists not in the database
-                val syntheticArtist = Artist(
-                    id = 0, // Synthetic ID (not persisted)
-                    name = artistName,
-                    imageUrl = imageUrl,
-                    genres = emptyList(),
-                    musicbrainzId = null,
-                    spotifyId = null
-                )
-                
-                ArtistDetails(
-                    artist = syntheticArtist,
-                    listenersCount = null,
-                    personalPlayCount = playCount,
-                    personalTotalTimeMs = totalTime,
-                    firstDiscovery = firstDiscovery,
-                    topSongs = topSongs,
-                    country = country,
-                    uniqueAlbumsPlayed = uniqueAlbums,
-                    uniqueTracksPlayed = uniqueTracks,
-                    moodSummary = null,
-                    topGenres = emptyList(),
-                    firstListenedDate = listeningDates?.first_listened,
-                    lastListenedDate = listeningDates?.last_listened,
-                    peakListeningHour = peakHour,
-                    topAlbums = topAlbums
-                )
+                buildPartialArtistDetails(artistName)
             }
         }
     }
-    
 
+    /**
+     * Builds details for an artist name that appears in listening history but has no canonical
+     * artists-table row yet. Partial-match queries are intentionally isolated here; once identity
+     * resolves to an [Artist], callers use [buildStoredArtistDetails] instead.
+     */
+    private suspend fun buildPartialArtistDetails(artistName: String): ArtistDetails? {
+        val playCount = statsDao.getArtistPlayCountByPartialMatch(artistName)
+        if (playCount == 0) return null
+
+        val totalTime = statsDao.getArtistTotalTimeByPartialMatch(artistName)
+        val topSongs = statsDao.getTopTracksForArtistPartialMatch(artistName, 10)
+        val firstDiscovery = statsDao.getArtistFirstListenPartialMatch(artistName)
+        val uniqueAlbums = statsDao.getArtistUniqueAlbumsPlayedPartialMatch(artistName)
+        val uniqueTracks = statsDao.getArtistUniqueTracksPlayedPartialMatch(artistName)
+        val listeningDates = statsDao.getArtistListeningDatesPartialMatch(artistName)
+        val peakHour = statsDao.getArtistPeakListeningHourPartialMatch(artistName)
+        val country = statsDao.getArtistCountry(artistName)
+        val topAlbums = statsDao.getTopAlbumsForArtistPartialMatch(artistName, 5)
+        val imageUrl = getArtistImageUrlWithFallback(artistName)
+
+        return ArtistDetails(
+            artist =
+                Artist(
+                    id = 0,
+                    name = artistName,
+                    imageUrl = imageUrl,
+                ),
+            listenersCount = null,
+            personalPlayCount = playCount,
+            personalTotalTimeMs = totalTime,
+            firstDiscovery = firstDiscovery,
+            topSongs = topSongs,
+            country = country,
+            uniqueAlbumsPlayed = uniqueAlbums,
+            uniqueTracksPlayed = uniqueTracks,
+            moodSummary = null,
+            topGenres = emptyList(),
+            firstListenedDate = listeningDates?.first_listened,
+            lastListenedDate = listeningDates?.last_listened,
+            peakListeningHour = peakHour,
+            topAlbums = topAlbums,
+        )
+    }
 
     override suspend fun getAlbumDetails(albumId: Long): AlbumDetails {
         val key = "album_details_$albumId"
