@@ -561,9 +561,11 @@ class SettingsViewModel
                     val dao = database.listeningEventDao()
                     val api = withContext(Dispatchers.IO) { dao.countUnverifiableSpotifyApiPlays() }
                     val reconstructed = withContext(Dispatchers.IO) { dao.countReconstructedHistoryPlays() }
+                    val exactDuplicates = withContext(Dispatchers.IO) { dao.countExactFingerprintDuplicates() }
                     _historyQuality.value = HistoryQualityUiState(
                         apiEstimatedCount = api,
                         reconstructedCount = reconstructed,
+                        exactDuplicateCount = exactDuplicates,
                     )
                 } catch (e: kotlinx.coroutines.CancellationException) {
                     throw e
@@ -593,6 +595,7 @@ class SettingsViewModel
                     _historyQuality.value = HistoryQualityUiState(
                         apiEstimatedCount = 0,
                         reconstructedCount = reconstructed,
+                        exactDuplicateCount = database.listeningEventDao().countExactFingerprintDuplicates(),
                         repairedCount = updated,
                     )
                 } catch (e: kotlinx.coroutines.CancellationException) {
@@ -604,6 +607,35 @@ class SettingsViewModel
                 }
             }
         }
+        /** Delete only proven, same-fingerprint duplicate event rows after the
+         * user has exported a backup and explicitly requested this operation.
+         * Older rows without fingerprints are intentionally left untouched.
+         */
+        fun repairExactDuplicatesAfterBackupConfirmation() {
+            viewModelScope.launch {
+                _historyQuality.value = _historyQuality.value.copy(isLoading = true)
+                try {
+                    val removed = withContext(Dispatchers.IO) {
+                        database.listeningEventDao().deleteExactFingerprintDuplicates()
+                    }
+                    statsRepository.invalidateCache()
+                    refreshCoordinator.notifyNewTrackRecorded()
+                    val dao = database.listeningEventDao()
+                    _historyQuality.value = HistoryQualityUiState(
+                        apiEstimatedCount = withContext(Dispatchers.IO) { dao.countUnverifiableSpotifyApiPlays() },
+                        reconstructedCount = withContext(Dispatchers.IO) { dao.countReconstructedHistoryPlays() },
+                        exactDuplicateCount = 0,
+                        repairedDuplicatesCount = removed,
+                    )
+                } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                    throw cancelled
+                } catch (e: Exception) {
+                    _historyQuality.value = _historyQuality.value.copy(
+                        isLoading = false, error = e.message ?: "Unable to repair duplicate history"
+                    )
+                }
+            }
+        }
     }
 
 @Immutable
@@ -611,7 +643,9 @@ data class HistoryQualityUiState(
     val isLoading: Boolean = false,
     val apiEstimatedCount: Int = 0,
     val reconstructedCount: Int = 0,
+    val exactDuplicateCount: Int = 0,
     val repairedCount: Int? = null,
+    val repairedDuplicatesCount: Int? = null,
     val error: String? = null,
 )
 
