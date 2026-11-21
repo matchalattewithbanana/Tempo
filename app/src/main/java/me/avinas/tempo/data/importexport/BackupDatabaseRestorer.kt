@@ -2,8 +2,6 @@ package me.avinas.tempo.data.importexport
 
 import android.util.Log
 import androidx.room.withTransaction
-import com.squareup.moshi.Moshi
-import java.io.File
 import me.avinas.tempo.data.local.AppDatabase
 import me.avinas.tempo.data.local.ArchiveTimestampCodec
 import me.avinas.tempo.data.local.ReconciliationTrackScope
@@ -24,7 +22,6 @@ import me.avinas.tempo.data.local.entities.Track
  */
 internal class BackupDatabaseRestorer(
     private val database: AppDatabase,
-    private val moshi: Moshi,
     private val onProgress: (ImportExportProgress) -> Unit,
 ) {
     data class Result(
@@ -42,8 +39,7 @@ internal class BackupDatabaseRestorer(
     suspend fun restore(
         data: TempoExportData,
         pathMapping: Map<String, String>,
-        stagedEventsFile: File,
-        stagedArchiveFile: File,
+        stagingStore: RestoreStagingStore,
         conflictStrategy: ImportConflictStrategy,
         artworkStaging: RestoreArtworkStaging,
     ): Result = database.withTransaction {
@@ -71,7 +67,7 @@ internal class BackupDatabaseRestorer(
 
         onProgress(ImportExportProgress("Importing listening history...", 65, 100))
         val events = replayStagedEvents(
-            stagedFile = stagedEventsFile,
+            stagingStore = stagingStore,
             trackIdMap = tracks.ids,
             conflictStrategy = conflictStrategy,
         )
@@ -88,7 +84,7 @@ internal class BackupDatabaseRestorer(
         restorePreferencesAndGamification(data, conflictStrategy)
         restoreAliasesAndContentMarks(data, artists.ids, tracks.ids, conflictStrategy)
 
-        val archiveStats = replayStagedArchive(stagedArchiveFile, conflictStrategy)
+        val archiveStats = replayStagedArchive(stagingStore, conflictStrategy)
         Log.i(
             TAG,
             "Imported scrobble archive: ${archiveStats.first} new, " +
@@ -441,15 +437,10 @@ internal class BackupDatabaseRestorer(
     }
 
     private suspend fun replayStagedEvents(
-        stagedFile: File,
+        stagingStore: RestoreStagingStore,
         trackIdMap: Map<Long, Long>,
         conflictStrategy: ImportConflictStrategy,
     ): ListeningEventDao.InsertResult {
-        if (!stagedFile.exists() || stagedFile.length() == 0L) {
-            return ListeningEventDao.InsertResult(0, 0)
-        }
-
-        val adapter = moshi.adapter(ListeningEvent::class.java)
         var inserted = 0
         var skipped = 0
         var replaced = 0
@@ -470,37 +461,25 @@ internal class BackupDatabaseRestorer(
             chunk = ArrayList(EVENT_IMPORT_CHUNK)
         }
 
-        stagedFile.bufferedReader().useLines { lines ->
-            for (line in lines) {
-                if (line.isBlank()) continue
-                val event = try {
-                    adapter.fromJson(line)
-                } catch (error: Exception) {
-                    Log.w(TAG, "Skipping malformed staged listening event", error)
-                    null
-                } ?: continue
-                val trackId = trackIdMap[event.track_id] ?: continue
-                chunk.add(
-                    event.copy(
-                        id = 0,
-                        track_id = trackId,
-                        contentFingerprint = null,
-                    ),
-                )
-                if (chunk.size >= EVENT_IMPORT_CHUNK) flush()
-            }
+        stagingStore.forEachEvent { event ->
+            val trackId = trackIdMap[event.track_id] ?: return@forEachEvent
+            chunk.add(
+                event.copy(
+                    id = 0,
+                    track_id = trackId,
+                    contentFingerprint = null,
+                ),
+            )
+            if (chunk.size >= EVENT_IMPORT_CHUNK) flush()
         }
         flush()
         return ListeningEventDao.InsertResult(inserted, skipped, replaced, updated)
     }
 
     private suspend fun replayStagedArchive(
-        stagedFile: File,
+        stagingStore: RestoreStagingStore,
         conflictStrategy: ImportConflictStrategy,
     ): Pair<Int, Int> {
-        if (!stagedFile.exists() || stagedFile.length() == 0L) return 0 to 0
-
-        val adapter = moshi.adapter(ScrobbleArchive::class.java)
         var newRows = 0
         var mergedOrSkipped = 0
         var chunk = ArrayList<ScrobbleArchive>(ARCHIVE_IMPORT_CHUNK)
@@ -529,18 +508,9 @@ internal class BackupDatabaseRestorer(
             chunk = ArrayList(ARCHIVE_IMPORT_CHUNK)
         }
 
-        stagedFile.bufferedReader().useLines { lines ->
-            for (line in lines) {
-                if (line.isBlank()) continue
-                val row = try {
-                    adapter.fromJson(line)
-                } catch (error: Exception) {
-                    Log.w(TAG, "Skipping malformed staged scrobble archive row", error)
-                    null
-                } ?: continue
-                chunk.add(row)
-                if (chunk.size >= ARCHIVE_IMPORT_CHUNK) flush()
-            }
+        stagingStore.forEachArchiveRow { row ->
+            chunk.add(row)
+            if (chunk.size >= ARCHIVE_IMPORT_CHUNK) flush()
         }
         flush()
         return newRows to mergedOrSkipped
