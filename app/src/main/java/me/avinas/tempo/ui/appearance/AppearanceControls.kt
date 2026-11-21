@@ -296,96 +296,139 @@ internal fun AppearancePresetCard(
         AppearancePreset.LAGOON -> stringResource(R.string.appearance_lagoon_desc)
         AppearancePreset.LILAC -> stringResource(R.string.appearance_lilac_desc)
     }
-    Column(
+    val scheme = MaterialTheme.colorScheme
+    Surface(
+        onClick = onClick,
+        enabled = enabled,
         modifier = modifier
-            .clip(shape)
-            .background(
-                if (selected) MaterialTheme.colorScheme.surfaceContainerHigh
-                else MaterialTheme.colorScheme.surfaceContainerLow
-            )
-            .border(
-                BorderStroke(if (selected) 2.dp else 1.dp,
-                    if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant),
-                shape,
-            )
-            .clickable(enabled = enabled, onClick = onClick)
             .semantics(mergeDescendants = true) {
                 role = Role.RadioButton
                 this.selected = selected
-            }
-            .padding(7.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+            },
+        shape = shape,
+        color = if (selected) scheme.secondaryContainer else scheme.surfaceContainerLow,
+        contentColor = if (selected) scheme.onSecondaryContainer else scheme.onSurface,
     ) {
-        // A real miniature of the theme: canvas, raised card, typography,
-        // progress accent and surface swatches, including the selected light tone.
-        Box(
-            modifier = Modifier.fillMaxWidth().height(148.dp)
-                .clip(previewInnerShape)
-                .background(Brush.verticalGradient(listOf(palette.topBackground, palette.background))),
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(8.dp),
+            verticalArrangement = Arrangement.spacedBy(7.dp),
         ) {
-            Column(
-                modifier = Modifier.fillMaxSize().padding(8.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
+            // Compact real-theme miniature. Preset browsing stays visual without
+            // turning expansion into a full-screen wall of oversized cards.
+            Box(
+                modifier = Modifier.fillMaxWidth().height(104.dp)
+                    .clip(previewInnerShape)
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(palette.topBackground, palette.background),
+                        ),
+                    ),
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-                    // A tiny Material-shaped album tile makes the saved
-                    // palette preview feel like a real music screen.
-                    Box(Modifier.size(30.dp)
-                        .clip(MaterialShapes.Cookie9Sided.toShape())
-                        .background(palette.accent), contentAlignment = Alignment.Center) {
-                        Text("♫", color = palette.onAccent, style = MaterialTheme.typography.titleLarge)
-                    }
-                    Text(stringResource(R.string.appearance_preview_song),
-                        color = palette.onSurface, style = MaterialTheme.typography.labelSmall,
-                        maxLines = 1, overflow = TextOverflow.Ellipsis)
-                }
                 Column(
-                    modifier = Modifier.fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(palette.surface).padding(7.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.fillMaxSize().padding(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
-                    Text(stringResource(R.string.stats_period_listening_time),
-                        color = palette.mutedText, style = MaterialTheme.typography.labelSmall,
-                        maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Text("9h 49m", color = palette.onSurface,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold)
-                    Box(Modifier.fillMaxWidth().height(4.dp)
-                        .clip(RoundedCornerShape(4.dp)).background(palette.elevatedSurface)) {
-                        Box(Modifier.fillMaxWidth(0.68f).height(4.dp)
-                            .background(palette.accent))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(7.dp),
+                    ) {
+                        Box(
+                            Modifier.size(28.dp)
+                                .clip(MaterialShapes.Cookie9Sided.toShape())
+                                .background(palette.accent),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                "♫",
+                                color = palette.onAccent,
+                                style = MaterialTheme.typography.titleMedium,
+                            )
+                        }
+                        Text(
+                            stringResource(R.string.appearance_preview_song),
+                            color = palette.onSurface,
+                            style = MaterialTheme.typography.labelSmall,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                    Column(
+                        modifier = Modifier.fillMaxWidth()
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(palette.surface)
+                            .padding(horizontal = 7.dp, vertical = 6.dp),
+                        verticalArrangement = Arrangement.spacedBy(3.dp),
+                    ) {
+                        Text(
+                            stringResource(R.string.stats_period_listening_time),
+                            color = palette.mutedText,
+                            style = MaterialTheme.typography.labelSmall,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                        ) {
+                            Text(
+                                "9h 49m",
+                                color = palette.onSurface,
+                                style = MaterialTheme.typography.titleSmallEmphasized,
+                            )
+                            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                listOf(palette.accent, palette.surfaceSunken, palette.onSurface)
+                                    .forEach { swatch ->
+                                        Box(
+                                            Modifier.size(11.dp)
+                                                .clip(RoundedCornerShape(4.dp))
+                                                .background(swatch),
+                                        )
+                                    }
+                            }
+                        }
                     }
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(5.dp),
-                    verticalAlignment = Alignment.CenterVertically) {
-                    listOf(palette.accent, palette.elevatedSurface,
-                        palette.surfaceSunken, palette.onSurface).forEach { swatch ->
-                        Box(Modifier.size(13.dp).clip(RoundedCornerShape(5.dp))
-                            .background(swatch)
-                            .border(0.5.dp, palette.border.copy(alpha = 0.7f),
-                                RoundedCornerShape(5.dp)))
+                if (selected || active) {
+                    Surface(
+                        modifier = Modifier.align(Alignment.TopEnd).padding(7.dp).size(24.dp),
+                        shape = MaterialTheme.shapes.full,
+                        color = if (selected) palette.accent else scheme.surfaceContainerHighest,
+                        contentColor = if (selected) palette.onAccent else scheme.onSurface,
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                Icons.Default.Check,
+                                contentDescription = null,
+                                modifier = Modifier.size(15.dp),
+                            )
+                        }
                     }
                 }
             }
-            if (active) {
-                Box(
-                    modifier = Modifier.align(Alignment.TopEnd).padding(8.dp)
-                        .size(22.dp).clip(RoundedCornerShape(30.dp))
-                        .background(palette.accent),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(Icons.Default.Check, contentDescription = null,
-                        modifier = Modifier.size(15.dp), tint = palette.onAccent)
-                }
-            }
+            Text(
+                label,
+                color = if (selected) scheme.onSecondaryContainer else scheme.onSurface,
+                style = if (selected) {
+                    MaterialTheme.typography.titleSmallEmphasized
+                } else {
+                    MaterialTheme.typography.titleSmall
+                },
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                description,
+                color = if (selected) {
+                    scheme.onSecondaryContainer
+                } else {
+                    scheme.onSurfaceVariant
+                },
+                style = MaterialTheme.typography.bodySmall,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
         }
-        Text(label, color = MaterialTheme.colorScheme.onSurface,
-            style = if (selected) MaterialTheme.typography.titleSmallEmphasized
-                else MaterialTheme.typography.titleSmall)
-        Text(description, color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.bodySmall)
     }
 }
  
