@@ -1137,20 +1137,6 @@ private fun ProfileIdentityText(
 }
 
 @Composable
-private fun ProgressPercentLabel(
-    progress: Float,
-    tierAccent: Color,
-) {
-    val percent = (progress * 100).roundToInt()
-    Text(
-        text = "$percent%",
-        style = KickerSmall,
-        color = profileTextColor(tierAccent),
-        fontWeight = FontWeight.Bold,
-    )
-}
-
-@Composable
 private fun InnerAvatarCircle(
     innerSize: Dp,
     tierAccent: Color,
@@ -1306,7 +1292,6 @@ private data class ProfileMetricSpec(
     val value: String,
     val label: String,
     val icon: androidx.compose.ui.graphics.vector.ImageVector,
-    val tone: me.avinas.tempo.ui.components.TempoTileTone,
     val supportingText: String? = null,
 )
 
@@ -1355,11 +1340,7 @@ private fun ProfileProgressTile(spec: ProfileMetricSpec, modifier: Modifier) {
     }
 }
 
-/**
- * A listener's progress should be something worth returning to, not three
- * numbers compressed into one black panel. Music progress gets an adaptive,
- * colorful 2×2 bento and a direct entrance to the badge collection.
- */
+/** A compact listening streak overview; XP and levels live in the identity hero. */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun MasterStatMasthead(
@@ -1384,14 +1365,14 @@ private fun MasterStatMasthead(
             value = streakValue,
             label = stringResource(R.string.profile_bento_current_streak),
             icon = Icons.Rounded.LocalFireDepartment,
-            tone = me.avinas.tempo.ui.components.TempoTileTone.ROSE,
+
             supportingText = if (streakAtRisk) stringResource(R.string.profile_bento_streak_warning) else null,
         ),
         ProfileMetricSpec(
             value = bestStreakValue,
             label = stringResource(R.string.profile_bento_best_streak),
             icon = Icons.Rounded.Whatshot,
-            tone = me.avinas.tempo.ui.components.TempoTileTone.AQUA,
+
         ),
     )
     BoxWithConstraints(Modifier.fillMaxWidth()) {
