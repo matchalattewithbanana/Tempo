@@ -138,10 +138,11 @@ interface ListeningEventDao {
      */
     @Query(
         """
-        SELECT candidate.id FROM tracks AS candidate
-        INNER JOIN tracks AS anchor ON anchor.id = :trackId
-        WHERE candidate.title = anchor.title COLLATE NOCASE
-          AND candidate.artist = anchor.artist COLLATE NOCASE
+        SELECT anchor.id AS anchorId, candidate.id AS candidateId
+        FROM tracks AS anchor
+        INNER JOIN tracks AS candidate
+            ON candidate.title = anchor.title AND candidate.artist = anchor.artist
+        WHERE anchor.id IN (:trackIds)
           AND (candidate.album IS NULL OR anchor.album IS NULL
                OR TRIM(candidate.album) = '' OR TRIM(anchor.album) = ''
                OR candidate.album = anchor.album COLLATE NOCASE)
@@ -153,7 +154,7 @@ interface ListeningEventDao {
                OR candidate.musicbrainz_id = anchor.musicbrainz_id)
         """,
     )
-    suspend fun getEquivalentTrackIds(trackId: Long): List<Long>
+    suspend fun getEquivalentTrackIdsForBatch(trackIds: List<Long>): List<EquivalentTrackIdRef>
 
     /**
      * Layer 2: fetch a lightweight view of existing events for one track within a
@@ -258,9 +259,14 @@ interface ListeningEventDao {
         val importedBatch = layer1Survivors.any { it.source.contains("import") }
         val equivalentByTrackId = HashMap<Long, List<Long>>()
         if (importedBatch) {
-            for (trackId in layer1Survivors.map { it.track_id }.distinct()) {
-                equivalentByTrackId[trackId] =
-                    getEquivalentTrackIds(trackId).ifEmpty { listOf(trackId) }
+            // One indexed metadata lookup per 800 tracks, NOT one DB query
+            // per imported event. Large historical restores stay bounded.
+            for (ids in layer1Survivors.map { it.track_id }.distinct().chunked(800)) {
+                val byAnchor = getEquivalentTrackIdsForBatch(ids)
+                    .groupBy({ it.anchorId }, { it.candidateId })
+                for (trackId in ids) {
+                    equivalentByTrackId[trackId] = byAnchor[trackId].orEmpty().ifEmpty { listOf(trackId) }
+                }
             }
         }
         val grouped = layer1Survivors.groupBy { event ->
@@ -420,6 +426,8 @@ interface ListeningEventDao {
      * Lightweight view of an existing event used for cross-source reconciliation.
      * Field names match the underlying column names so Room can map them directly.
      */
+    data class EquivalentTrackIdRef(val anchorId: Long, val candidateId: Long)
+
     data class ExistingEventRef(
         val id: Long,
         val track_id: Long,
