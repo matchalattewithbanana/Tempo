@@ -259,6 +259,12 @@ class MusicTrackingService : NotificationListenerService() {
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
+    private enum class SessionAction {
+        UPDATE,
+        NEW,
+        IGNORE,
+    }
+
     // MediaSession management
     private var mediaSessionManager: MediaSessionManager? = null
     private var activeSessionsChangedListener: MediaSessionManager.OnActiveSessionsChangedListener? = null
@@ -1590,12 +1596,12 @@ class MusicTrackingService : NotificationListenerService() {
             return
         }
 
-        // Album art is extracted lazily, inside the "NEW" branch below, for two reasons:
+        // Album art is extracted lazily, inside the new-session branch below, for two reasons:
         //   * `extras.getParcelable(EXTRA_LARGE_ICON)` unparcels the notification's big picture
         //     into a heap Bitmap. On the notification callback (main) thread that is the largest
         //     allocation in this path, and it used to happen before the branch even though the
         //     bitmap is only needed when a session is actually created.
-        //   * the "UPDATE" branch never uses it, so art for an already-known track was being
+        //   * the update branch never uses it, so art for an already-known track was being
         //     decoded and thrown away on every notification.
         // The Notification is a plain Parcelable and is safe to read off the main thread.
 
@@ -1642,13 +1648,13 @@ class MusicTrackingService : NotificationListenerService() {
                 val isSameTrack = isSameTrackInfo && !isReplayDetected
 
                 when {
-                    isSameTrack -> Pair("UPDATE", existing)
-                    else -> Pair("NEW", existing) // existing may be non-null (different track) or null
+                    isSameTrack -> SessionAction.UPDATE to existing
+                    else -> SessionAction.NEW to existing // existing may be non-null (different track) or null
                 }
             }
 
         when (sessionAction) {
-            "UPDATE" -> {
+            SessionAction.UPDATE -> {
                 // Same track - update artist if we now have a better one
                 val session = existingSession!!
                 if (me.avinas.tempo.utils.ArtistParser
@@ -1700,7 +1706,7 @@ class MusicTrackingService : NotificationListenerService() {
                 return
             }
 
-            "NEW" -> {
+            SessionAction.NEW -> {
                 // Check if this is likely an advertisement - skip tracking ads
                 if (artist.isNotBlank() &&
                     !me.avinas.tempo.utils.ArtistParser
@@ -3013,7 +3019,7 @@ class MusicTrackingService : NotificationListenerService() {
 
         // CRITICAL: Use synchronized block to prevent race condition when
         // notification and MediaSession callbacks fire simultaneously for the same track.
-        val (sessionAction, session, isSameTrack) =
+        val (sessionAction, session) =
             synchronized(sessionOperationLock) {
                 val existing = playbackStates[packageName]
 
@@ -3091,14 +3097,14 @@ class MusicTrackingService : NotificationListenerService() {
                 val isSameTrackResult = isSameTrackInfo && !isReplayDetected
 
                 when {
-                    isSameTrackResult -> Triple("UPDATE", existing, true)
-                    isPlaying -> Triple("NEW", existing, false)
-                    else -> Triple("IGNORE", existing, false)
+                    isSameTrackResult -> SessionAction.UPDATE to existing
+                    isPlaying -> SessionAction.NEW to existing
+                    else -> SessionAction.IGNORE to existing
                 }
             }
 
         when (sessionAction) {
-            "UPDATE" -> {
+            SessionAction.UPDATE -> {
                 // Same track - update play state and potentially update artist
                 val currentSession = session!!
 
@@ -3229,7 +3235,7 @@ class MusicTrackingService : NotificationListenerService() {
                 }
             }
 
-            "NEW" -> {
+            SessionAction.NEW -> {
                 // Detach previous session before saving so subsequent callbacks cannot re-save it.
                 session?.let {
                     playbackStates.remove(packageName, it)
@@ -3326,7 +3332,7 @@ class MusicTrackingService : NotificationListenerService() {
                 }
             }
 
-            "IGNORE" -> {
+            SessionAction.IGNORE -> {
                 // Not playing and not same track - nothing to do
             }
         }
