@@ -344,7 +344,7 @@ class MusicoletImportService
                 batch.clear()
                 try {
                     val insert = listeningEventDao.insertAllBatchedWithDedup(pending)
-                    eventsCreated += insert.inserted
+                    eventsCreated += insert.newlyAdded
                     duplicatesSkipped += insert.skipped
                 } catch (e: Exception) {
                     // One poisoned batch must not lose the rest of the import; the DAO's
