@@ -88,6 +88,7 @@ fun HowItWorksScreen(
 
     // Staggered arrival, played ONCE: rise + fade per step. Old
     // animateFloatAsState(target=1f) started at 1 so no stagger ever played.
+    val entryEffectsSpec = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
     val step1 = remember { Animatable(if (reducedMotion) 1f else 0f) }
     val step2 = remember { Animatable(if (reducedMotion) 1f else 0f) }
     val step3 = remember { Animatable(if (reducedMotion) 1f else 0f) }
@@ -95,9 +96,10 @@ fun HowItWorksScreen(
         if (reducedMotion) {
             step1.snapTo(1f); step2.snapTo(1f); step3.snapTo(1f)
         } else {
-            launch { step1.animateTo(1f, tween(500, delayMillis = 200, easing = FastOutSlowInEasing)) }
-            launch { step2.animateTo(1f, tween(500, delayMillis = 450, easing = FastOutSlowInEasing)) }
-            launch { step3.animateTo(1f, tween(500, delayMillis = 700, easing = FastOutSlowInEasing)) }
+            // No forced multi-step stagger before the instructions are usable.
+            launch { step1.animateTo(1f, entryEffectsSpec) }
+            launch { step2.animateTo(1f, entryEffectsSpec) }
+            launch { step3.animateTo(1f, entryEffectsSpec) }
         }
     }
     val step1Alpha = step1.value
@@ -133,7 +135,7 @@ fun HowItWorksScreen(
                 ) {
                     Text(
                         text = stringResource(R.string.welcome_skip),
-                        color = Color.White.copy(alpha = 0.6f),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.labelLarge
                     )
                 }
@@ -163,7 +165,7 @@ fun HowItWorksScreen(
                     style = if (isSmall) MaterialTheme.typography.headlineSmall else MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center,
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontSize = adaptiveTextUnitByCategory(30.sp, 26.sp, 22.sp)
                 )
 
@@ -173,7 +175,7 @@ fun HowItWorksScreen(
                     text = stringResource(R.string.how_it_works_subtitle),
                     style = MaterialTheme.typography.bodyLarge,
                     textAlign = TextAlign.Center,
-                    color = Color.White.copy(alpha = 0.7f),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = adaptiveTextUnitByCategory(17.sp, 15.sp, 13.sp)
                 )
 
@@ -189,7 +191,6 @@ fun HowItWorksScreen(
                     FlowStep(
                         modifier = Modifier.graphicsLayer {
                             alpha = step1Alpha
-                            translationY = (1f - step1Alpha) * 24f
                         },
                         kind = ClayKind.Music,
                         iconColor = ClayTokens.Marigold, // marigold flower — joy/music
@@ -204,7 +205,6 @@ fun HowItWorksScreen(
                     FlowStep(
                         modifier = Modifier.graphicsLayer {
                             alpha = step2Alpha
-                            translationY = (1f - step2Alpha) * 24f
                         },
                         kind = ClayKind.NotifCard,
                         iconColor = ClayTokens.Sky, // the notification itself, carrying a note
@@ -219,7 +219,6 @@ fun HowItWorksScreen(
                     FlowStep(
                         modifier = Modifier.graphicsLayer {
                             alpha = step3Alpha
-                            translationY = (1f - step3Alpha) * 24f
                         },
                         kind = ClayKind.Chart,
                         iconColor = TempoPrimary,
@@ -291,14 +290,14 @@ private fun FlowStep(
                     text = title,
                     style = if (isSmallScreen()) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontSize = adaptiveTextUnitByCategory(20.sp, 18.sp, 16.sp)
                 )
                 Spacer(modifier = Modifier.height(adaptiveSizeByCategory(4.dp, 2.dp, 0.dp)))
                 Text(
                     text = subtitle,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color.White.copy(alpha = 0.7f),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = adaptiveTextUnitByCategory(15.sp, 13.sp, 12.sp),
                     maxLines = 1
                 )
@@ -328,7 +327,7 @@ private fun FlowConnector(
             
             // Draw animated dashed line
             drawLine(
-                color = Color.White.copy(alpha = 0.4f),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 start = Offset(size.width / 2, 0f),
                 end = Offset(size.width / 2, size.height),
                 strokeWidth = 2.dp.toPx(),
@@ -343,7 +342,7 @@ private fun FlowConnector(
         Icon(
             imageVector = Icons.Default.KeyboardArrowDown,
             contentDescription = null,
-            tint = Color.White.copy(alpha = 0.7f),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier
                 .size(18.dp)
                 .scale(1f + 0.06f * kotlin.math.sin(p * 2f * kotlin.math.PI).toFloat())
@@ -371,7 +370,7 @@ private fun InfoBadge(
             text = text,
             style = MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.Medium,
-            color = Color.White.copy(alpha = 0.8f),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontSize = adaptiveTextUnitByCategory(13.sp, 11.sp, 10.sp)
         )
     }
