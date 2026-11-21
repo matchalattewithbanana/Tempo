@@ -1010,6 +1010,7 @@ private fun ProfileRetryMessage(onRetry: () -> Unit, retryEnabled: Boolean) {
 // Hero Profile Section
 // ──────────────────────────────────────────────────────────────
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun HeroProfileSection(
     userLevel: UserLevel,
@@ -1025,11 +1026,32 @@ private fun HeroProfileSection(
         animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
         label = "levelProgress",
     )
-    Column(
+    val passportSwatch = me.avinas.tempo.ui.components.tempoTileSwatch(
+        me.avinas.tempo.ui.components.TempoTileTone.AQUA
+    )
+    Surface(
         modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally,
+        shape = MaterialTheme.shapes.extraExtraLarge,
+        color = passportSwatch.container,
+        contentColor = passportSwatch.foreground,
     ) {
-        Row(
+        Box(Modifier.fillMaxWidth().clip(MaterialTheme.shapes.extraExtraLarge)) {
+            Box(
+                Modifier.align(Alignment.TopEnd).offset(x = 56.dp, y = (-30).dp)
+                    .size(200.dp)
+                    .background(passportSwatch.foreground.copy(alpha = 0.05f), MaterialShapes.Clover4Leaf.toShape()),
+            )
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(18.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(
+                    text = stringResource(R.string.profile_bento_passport),
+                    style = MaterialTheme.typography.labelLargeEmphasized,
+                    color = passportSwatch.foreground.copy(alpha = 0.8f),
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 14.dp),
+                )
+                Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(if (compact) 14.dp else 18.dp),
@@ -1050,11 +1072,8 @@ private fun HeroProfileSection(
                 // User Name in Display Font
                 Text(
                     text = userName,
-                    style =
-                        (if (compact) MaterialTheme.typography.titleLarge else MaterialTheme.typography.headlineMedium).copy(
-                            fontFamily = DisplayFontFamily,
-                            letterSpacing = (-0.5).sp,
-                        ),
+                    style = if (compact) MaterialTheme.typography.titleLargeEmphasized
+                        else MaterialTheme.typography.headlineMediumEmphasized,
                     fontWeight = FontWeight.Bold,
                     color = appearancePalette.onSurface,
                     maxLines = 1,
@@ -1083,16 +1102,14 @@ private fun HeroProfileSection(
         Spacer(modifier = Modifier.height(18.dp))
 
         // Level Progress Card
-        GlassCard(
+        Surface(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(20.dp),
-            variant = GlassCardVariant.Obsidian,
-            borderColor = appearancePalette.border.copy(alpha = 0.45f),
-            borderWidth = 0.8.dp,
-            contentPadding = PaddingValues(16.dp),
+            shape = MaterialTheme.shapes.large,
+            color = MaterialTheme.colorScheme.surfaceContainerLow,
+            contentColor = MaterialTheme.colorScheme.onSurface,
         ) {
             Column(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 Row(
@@ -1131,6 +1148,8 @@ private fun HeroProfileSection(
                         color = appearancePalette.mutedText,
                     )
                 }
+            }
+        }
             }
         }
     }
