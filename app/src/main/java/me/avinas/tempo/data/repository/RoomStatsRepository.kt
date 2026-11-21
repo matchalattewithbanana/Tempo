@@ -1989,105 +1989,59 @@ class RoomStatsRepository @Inject constructor(
     override suspend fun getArtistDetails(artistId: Long): ArtistDetails {
         val key = "artist_details_$artistId"
         return getCached(key) {
-            val artist = artistDao.getArtistById(artistId) ?: throw NoSuchElementException("Artist not found")
-            
-            Log.d(TAG, "getArtistDetails: Loading artist ID=$artistId, name='${artist.name}', " +
-                "existing imageUrl=${artist.imageUrl?.take(80) ?: "null"}")
-            
-            // Get artist image URL with fallback strategy
-            // Priority:
-            // 1. artist.imageUrl (directly assigned, most reliable)
-            // 2. Verified enriched_metadata (Spotify artist ID must match this artist)
-            // 3. Direct API search by artist name (iTunes/Spotify) — always correct
-            val fromArtistTable = artist.imageUrl?.takeIf { it.isNotBlank() }
-            val fromVerifiedEnriched = if (fromArtistTable == null) {
-                // Only use enriched_metadata if we can verify the image belongs to this artist
-                statsDao.getArtistImageByArtistId(artistId)?.also {
-                    Log.d(TAG, "getArtistDetails: Found verified image via track_artists join: ${it.take(80)}")
-                }
-            } else null
-            val fromDirectSearch = if (fromArtistTable == null && fromVerifiedEnriched == null) {
-                // Search APIs directly for this specific artist — avoids the problem
-                // where enriched_metadata stores a different artist's image
-                getArtistImageUrlWithFallback(artist.name)?.also {
-                    Log.d(TAG, "getArtistDetails: Found image via direct search: ${it.take(80)}")
-                }
-            } else null
-            
-            val imageUrl = fromArtistTable ?: fromVerifiedEnriched ?: fromDirectSearch
-            
-            if (imageUrl == null) {
-                Log.w(TAG, "getArtistDetails: No image found for artist '${artist.name}' (ID=$artistId)")
-            } else {
-                Log.d(TAG, "getArtistDetails: Resolved image for '${artist.name}': ${imageUrl.take(80)}")
-                // Update artist table with found image for future lookups
-                if (artist.imageUrl.isNullOrBlank()) {
-                    try {
-                        artistDao.updateImageUrl(artistId, imageUrl)
-                        Log.d(TAG, "getArtistDetails: Persisted image URL to artists table for ID=$artistId")
-                    } catch (e: Exception) {
-                        Log.w(TAG, "getArtistDetails: Failed to persist image URL", e)
-                    }
-                }
-            }
-            
-            // Create artist with resolved image URL
-            val artistWithImage = if (imageUrl != artist.imageUrl) {
-                artist.copy(imageUrl = imageUrl)
-            } else {
-                artist
-            }
-            
-            // Use ID-based queries for proper relational lookups
-            val playCount = statsDao.getArtistPlayCountById(artistId)
-            val totalTime = statsDao.getArtistTotalTimeById(artistId)
-            val topSongs = statsDao.getTopTracksForArtistById(artistId, 10)
-            val firstDiscovery = statsDao.getArtistFirstListenById(artistId)
-            
-            // Extended data using ID-based queries
-            val uniqueAlbums = statsDao.getArtistUniqueAlbumsPlayedById(artistId)
-            val uniqueTracks = statsDao.getArtistUniqueTracksPlayedById(artistId)
-            val listeningDates = statsDao.getArtistListeningDatesById(artistId)
-            val peakHour = statsDao.getArtistPeakListeningHourById(artistId)
-            val topAlbums = statsDao.getTopAlbumsForArtistById(artistId, 5)
-            
-            // Country from artist table or enriched metadata
-            val country = artistWithImage.country ?: statsDao.getArtistCountry(artistWithImage.name)
-            
-            // Use genres from artist entity or extract from enriched metadata
-            val topGenres = if (artistWithImage.genres.isNotEmpty()) {
-                artistWithImage.genres.take(5)
-            } else {
-                emptyList()
-            }
-            
-            // Calculate mood summary from tags/genres
-            val moodSummary = TagBasedMoodAnalyzer.getMoodSummary(
-                tags = artistWithImage.genres, // Using genres as tags for now
-                genres = topGenres
-            )
-            
-            // Global listeners count would come from MusicBrainz/Spotify, placeholder for now
-            val listenersCount: Long? = null
-
-            ArtistDetails(
-                artist = artistWithImage,
-                listenersCount = listenersCount,
-                personalPlayCount = playCount,
-                personalTotalTimeMs = totalTime,
-                firstDiscovery = firstDiscovery,
-                topSongs = topSongs,
-                country = country,
-                uniqueAlbumsPlayed = uniqueAlbums,
-                uniqueTracksPlayed = uniqueTracks,
-                moodSummary = moodSummary,
-                topGenres = topGenres,
-                firstListenedDate = listeningDates?.first_listened,
-                lastListenedDate = listeningDates?.last_listened,
-                peakListeningHour = peakHour,
-                topAlbums = topAlbums
-            )
+            val artist =
+                artistDao.getArtistById(artistId)
+                    ?: throw NoSuchElementException("Artist not found")
+            buildStoredArtistDetails(artist)
         }
+    }
+
+    /**
+     * Builds the canonical detail model for an artist row.
+     *
+     * Image precedence, persistence, relational stats and mood derivation used to be repeated
+     * independently by ID and name lookups. Keeping them here makes those entry points differ
+     * only in identity resolution.
+     */
+    private suspend fun buildStoredArtistDetails(artist: Artist): ArtistDetails {
+        val imageUrl = getArtistImageUrlWithFallback(artist.name)
+        val artistWithImage =
+            if (imageUrl != artist.imageUrl) artist.copy(imageUrl = imageUrl) else artist
+
+        val playCount = statsDao.getArtistPlayCountById(artist.id)
+        val totalTime = statsDao.getArtistTotalTimeById(artist.id)
+        val topSongs = statsDao.getTopTracksForArtistById(artist.id, 10)
+        val firstDiscovery = statsDao.getArtistFirstListenById(artist.id)
+        val uniqueAlbums = statsDao.getArtistUniqueAlbumsPlayedById(artist.id)
+        val uniqueTracks = statsDao.getArtistUniqueTracksPlayedById(artist.id)
+        val listeningDates = statsDao.getArtistListeningDatesById(artist.id)
+        val peakHour = statsDao.getArtistPeakListeningHourById(artist.id)
+        val topAlbums = statsDao.getTopAlbumsForArtistById(artist.id, 5)
+        val country = artistWithImage.country ?: statsDao.getArtistCountry(artistWithImage.name)
+        val topGenres = artistWithImage.genres.take(5)
+        val moodSummary =
+            TagBasedMoodAnalyzer.getMoodSummary(
+                tags = artistWithImage.genres,
+                genres = topGenres,
+            )
+
+        return ArtistDetails(
+            artist = artistWithImage,
+            listenersCount = null,
+            personalPlayCount = playCount,
+            personalTotalTimeMs = totalTime,
+            firstDiscovery = firstDiscovery,
+            topSongs = topSongs,
+            country = country,
+            uniqueAlbumsPlayed = uniqueAlbums,
+            uniqueTracksPlayed = uniqueTracks,
+            moodSummary = moodSummary,
+            topGenres = topGenres,
+            firstListenedDate = listeningDates?.first_listened,
+            lastListenedDate = listeningDates?.last_listened,
+            peakListeningHour = peakHour,
+            topAlbums = topAlbums,
+        )
     }
 
     override suspend fun getArtistDetailsByName(artistName: String): ArtistDetails? {
@@ -2104,44 +2058,8 @@ class RoomStatsRepository @Inject constructor(
             }
             
             if (targetArtist != null) {
-                // Artist found in database - use ID-based queries for proper relational lookups
-                Log.d(TAG, "getArtistDetailsByName: Found artist '${targetArtist.name}' (ID=${targetArtist.id}), " +
-                    "existing imageUrl=${targetArtist.imageUrl?.take(80) ?: "null"}")
-                
-                val playCount = statsDao.getArtistPlayCountById(targetArtist.id)
-                val totalTime = statsDao.getArtistTotalTimeById(targetArtist.id)
-                val topSongs = statsDao.getTopTracksForArtistById(targetArtist.id, 10)
-                val firstDiscovery = statsDao.getArtistFirstListenById(targetArtist.id)
-                
-                // Extended data using ID-based queries
-                val uniqueAlbums = statsDao.getArtistUniqueAlbumsPlayedById(targetArtist.id)
-                val uniqueTracks = statsDao.getArtistUniqueTracksPlayedById(targetArtist.id)
-                val listeningDates = statsDao.getArtistListeningDatesById(targetArtist.id)
-                val peakHour = statsDao.getArtistPeakListeningHourById(targetArtist.id)
-                val topAlbums = statsDao.getTopAlbumsForArtistById(targetArtist.id, 5)
-                
-                // Get artist image URL with fallback strategy
-                // Priority: artist table → verified enriched_metadata → direct API search
-                val imageUrl = targetArtist.imageUrl?.takeIf { it.isNotBlank() }
-                    ?: statsDao.getArtistImageByArtistId(targetArtist.id)?.also {
-                        Log.d(TAG, "getArtistDetailsByName: Found verified image via track_artists join")
-                    }
-                    ?: getArtistImageUrlWithFallback(targetArtist.name)?.also {
-                        Log.d(TAG, "getArtistDetailsByName: Found image via direct search")
-                    }
-                
-                if (imageUrl != null) {
-                    Log.d(TAG, "getArtistDetailsByName: Resolved image: ${imageUrl.take(80)}")
-                    // Update artist table with found image for future lookups
-                    if (targetArtist.imageUrl.isNullOrBlank()) {
-                        try {
-                            artistDao.updateImageUrl(targetArtist.id, imageUrl)
-                            Log.d(TAG, "getArtistDetailsByName: Persisted image URL to artists table")
-                        } catch (e: Exception) {
-                            Log.w(TAG, "getArtistDetailsByName: Failed to persist image URL", e)
-                        }
-                    }
-                } else {
+                buildStoredArtistDetails(targetArtist)
+            } else {
                     Log.w(TAG, "getArtistDetailsByName: No image found for artist '${targetArtist.name}'")
                 }
                 
