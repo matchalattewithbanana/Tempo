@@ -1285,54 +1285,29 @@ private fun Long.formatNumber(): String {
 
 @Composable
 fun HistorySectionHeader(title: String, isLastFmSection: Boolean = false) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.background.copy(alpha = 0.95f))
-            .padding(horizontal = 16.dp, vertical = 6.dp)
+    val scheme = MaterialTheme.colorScheme
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = scheme.surface,
+        contentColor = scheme.onSurface,
     ) {
         Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-            modifier = Modifier.fillMaxWidth()
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(
-                        if (isLastFmSection) GoldDark.copy(alpha = 0.14f)
-                        else MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
-                    )
-                    .border(
-                        0.8.dp,
-                        if (isLastFmSection) GoldDark.copy(alpha = 0.35f)
-                        else MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
-                        RoundedCornerShape(8.dp)
-                    )
-                    .padding(horizontal = 10.dp, vertical = 4.dp)
-            ) {
-                Text(
-                    text = title.uppercase(Locale.getDefault()),
-                    style = KickerSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = if (isLastFmSection) GoldLight else MaterialTheme.colorScheme.primary,
-                    letterSpacing = 1.2.sp
-                )
-            }
-
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .height(0.8.dp)
-                    .background(
-                        Brush.horizontalGradient(
-                            listOf(
-                                if (isLastFmSection) GoldDark.copy(alpha = 0.3f)
-                                else GlassBorderMedium,
-                                Color.Transparent
-                            )
-                        )
-                    )
+            Surface(
+                modifier = Modifier.size(width = 4.dp, height = 18.dp),
+                shape = CircleShape,
+                color = if (isLastFmSection) scheme.secondary else scheme.primary,
+                content = {},
+            )
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleSmallEmphasized,
+                color = scheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
         }
     }
