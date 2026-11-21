@@ -27,6 +27,14 @@ Build a distinctive, quick, delightful music journal with consistent Material 3 
 
 Phases are **sequential by dependency, not calendar commitments**. Work within a phase may be delivered in smaller reviewable commits. Future preview releases should be scoped to verified changes rather than assuming the entire roadmap is complete.
 
+## App-wide Orion reference integration — 21 November 2026
+
+**Authoritative cross-app plan:** [Orion source comparison and Tempo implementation contract](ORION_M3_EXPRESSIVE_MIGRATION.md). Tracking epic: [#94](https://github.com/matchalattewithbanana/Tempo/issues/94). This extends the original roadmap to Home, Stats, History, all detail pages, Profile, Settings, Appearance, imports, backup/restore, share, Spotlight, widgets and the browser extension. It uses original Tempo-owned implementations, not GPL source copied from Orion.
+
+**First additional source changes:** native low-prominence Material surfaces across shared `GlassCard`, adaptive theme-tonal Home Week/Discovery/Habits, live now-playing surface, immediate shared stat cards with optional motion, Native Material ranked Stats rows, compact Appearance Studio and Supported Apps top bars, and removal of duplicate Settings detail backdrops. Font-responsive weekly digest policy has a pure unit test. Previous screenshot corrections are separately documented below.
+
+**Not yet ready for shipping:** no Gradle compile, screenshot review, emulator instrumentation or frame metrics have been performed; not all screen-specific legacy overrides are converted. Keep epic and screenshot regression issue open.
+
 ## Screenshot-driven corrective pass — started 21 November 2026
 
 User feedback from the Settings and Daily Listening screenshots exposed a design-system split: large custom GlassCard diagnostics and oversized category tiles competed with Material 3 Expressive controls, Settings search disappeared on scroll, and a three-column daily metric rendered an ellipsized duration with its caption.
