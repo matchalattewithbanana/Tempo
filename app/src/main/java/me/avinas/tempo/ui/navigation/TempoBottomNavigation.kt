@@ -84,9 +84,6 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 
-import androidx.compose.material3.ShortNavigationBar
-import androidx.compose.material3.ShortNavigationBarItem
-import androidx.compose.material3.ShortNavigationBarArrangement
 import androidx.compose.material3.Surface
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.toShape
@@ -97,10 +94,11 @@ import androidx.compose.material3.FilledIconToggleButton
 import androidx.compose.material3.IconButtonDefaults
 
 /**
- * M3 Expressive short navigation: one accessible destination component handles
- * selection, motion, large-font sizing, TalkBack, and Material ripple feedback.
- * The compact now-playing strip remains independent so tracking never waits on
- * an animation or navigation transition.
+ * Stable Material navigation for the three top-level destinations.
+ *
+ * Destination labels stay visible as required by the Material navigation
+ * contract. The compact now-playing strip remains independent so tracking
+ * never waits on navigation or animation state.
  */
 @Composable
 fun TempoBottomNavigation(
@@ -112,7 +110,6 @@ fun TempoBottomNavigation(
 ) {
     val haptics = LocalHapticFeedback.current
     val appearance = LocalTempoAppearance.current
-    val showLabels = appearance.showNavigationLabels
     val floating = appearance.navigationStyle == AppearanceNavigationStyle.FLOATING
     val scheme = MaterialTheme.colorScheme
     val destinations = listOf(
@@ -165,13 +162,16 @@ fun TempoBottomNavigation(
                                 Icon(
                                     imageVector = if (selected) destination.second.first
                                         else destination.second.second,
-                                    contentDescription = if (showLabels) null else destination.third,
+                                    contentDescription = null,
                                 )
                             },
-                            label = if (showLabels) {
-                                { Text(destination.third, maxLines = 1) }
-                            } else null,
-                            alwaysShowLabel = showLabels,
+                            label = {
+                                Text(
+                                    text = destination.third,
+                                    maxLines = 2,
+                                )
+                            },
+                            alwaysShowLabel = true,
                             colors = androidx.compose.material3.NavigationBarItemDefaults.colors(
                                 selectedIconColor = scheme.onSecondaryContainer,
                                 selectedTextColor = scheme.onSurface,
