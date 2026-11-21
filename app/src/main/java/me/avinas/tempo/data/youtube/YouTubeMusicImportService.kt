@@ -283,6 +283,7 @@ class YouTubeMusicImportService
                 var nonMusicSkippedTotal = 0
                 var tracksImported = 0
                 var eventsCreated = 0
+                var eventsReconciled = 0
                 var duplicatesSkipped = 0
                 var tracksRepaired = 0
                 var suppressedErrorCount = 0
@@ -314,6 +315,7 @@ class YouTubeMusicImportService
                     try {
                         val insertResult = listeningEventDao.insertAllBatchedWithDedup(batch)
                         eventsCreated += insertResult.newlyAdded
+                        eventsReconciled += insertResult.replaced
                         duplicatesSkipped += insertResult.skipped
                         Log.i(
                             TAG,
@@ -328,6 +330,7 @@ class YouTubeMusicImportService
                                 // Spotify/YouTube/Last.fm plays and inflate totals.
                                 val result = listeningEventDao.insertAllBatchedWithDedup(listOf(event))
                                 eventsCreated += result.newlyAdded
+                                eventsReconciled += result.replaced
                                 duplicatesSkipped += result.skipped
                             } catch (e2: Exception) {
                                 Log.e(TAG, "Failed to insert event for track ${event.track_id}", e2)
@@ -497,7 +500,7 @@ class YouTubeMusicImportService
                 // this is normally a no-op.
                 flushPendingEvents()
 
-                if (eventsCreated > 0 || tracksRepaired > 0) {
+                if (eventsCreated > 0 || eventsReconciled > 0 || tracksRepaired > 0) {
                     statsRepository.invalidateCache()
                 }
 
