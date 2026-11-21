@@ -58,6 +58,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import me.avinas.tempo.R
 import me.avinas.tempo.ui.components.connectedChoiceColumns
+import me.avinas.tempo.ui.components.shouldUseFilterChips
 import me.avinas.tempo.ui.components.ShareTheme
 import me.avinas.tempo.ui.components.shareThemeLabel
 import me.avinas.tempo.ui.stats.statsDurationLabel
@@ -726,7 +727,7 @@ private fun <T> ChoiceRow(
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        if (options.size > 5) {
+        if (shouldUseFilterChips(options.size)) {
             FlowRow(
                 modifier = Modifier.fillMaxWidth().selectableGroup(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
