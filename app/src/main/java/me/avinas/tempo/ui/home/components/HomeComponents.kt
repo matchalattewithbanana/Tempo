@@ -650,6 +650,10 @@ fun SpotlightStoryCard(
     }
 }
 
+/**
+ * An adaptive, tonal four-part listening digest. Content stays readable in
+ * Light, Dark and OLED: no hardcoded white-on-translucent text.
+ */
 @Composable
 fun WeekInReviewGrid(
     topArtistName: String?,
@@ -658,180 +662,131 @@ fun WeekInReviewGrid(
     topTrackImage: String?,
     totalHours: String,
     newDiscoveries: Int,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
-    Column(modifier = modifier) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
         Text(
             text = stringResource(R.string.home_week_review),
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold,
+            style = MaterialTheme.typography.titleLargeEmphasized,
             color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.padding(bottom = 16.dp, start = 4.dp)
+            modifier = Modifier.padding(horizontal = 4.dp),
         )
-        
-        // Grid layout using Rows and Columns
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // Top Artist
-            GlassCard(
-                modifier = Modifier.weight(1f),
-                backgroundColor = me.avinas.tempo.ui.theme.NeonRed.copy(alpha = 0.12f), // Restored x-factor
-                variant = me.avinas.tempo.ui.components.GlassCardVariant.LowProminence
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    CachedAsyncImage(
+        BoxWithConstraints(Modifier.fillMaxWidth()) {
+            val twoColumns = maxWidth >= 360.dp
+            val tiles: List<@Composable (Modifier) -> Unit> = listOf(
+                { tile ->
+                    WeekDigestTile(
+                        label = stringResource(R.string.home_week_review),
+                        value = topArtistName ?: "—",
+                        modifier = tile,
+                        accent = MaterialTheme.colorScheme.tertiaryContainer,
+                        accentContent = MaterialTheme.colorScheme.onTertiaryContainer,
                         imageUrl = topArtistImage,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .aspectRatio(1f)
-                            .clip(CircleShape)
-                            .background(Color.White.copy(alpha = 0.05f)),
-                        contentScale = ContentScale.Crop
+                        icon = Icons.Rounded.Person,
                     )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        text = me.avinas.tempo.utils.TempoCopyEngine.getTopArtistCopy(topArtistName),
-                        style = MaterialTheme.typography.bodySmall, // Smaller for longer text
-                        color = me.avinas.tempo.ui.theme.NeonRed,
-                        maxLines = 1
+                },
+                { tile ->
+                    WeekDigestTile(
+                        label = stringResource(R.string.home_listen_time),
+                        value = totalHours,
+                        modifier = tile,
+                        accent = MaterialTheme.colorScheme.primaryContainer,
+                        accentContent = MaterialTheme.colorScheme.onPrimaryContainer,
+                        icon = Icons.Default.Timer,
                     )
-                    Text(
-                        text = topArtistName ?: "-",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
-                        maxLines = 1
-                    )
-                }
-            }
-            
-            // Top Track
-            GlassCard(
-                modifier = Modifier.weight(1f),
-                backgroundColor = me.avinas.tempo.ui.theme.ElectricBlue.copy(alpha = 0.12f), // Restored x-factor
-                variant = me.avinas.tempo.ui.components.GlassCardVariant.LowProminence
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    CachedAsyncImage(
+                },
+                { tile ->
+                    WeekDigestTile(
+                        label = stringResource(R.string.home_week_review),
+                        value = topTrackName ?: "—",
+                        modifier = tile,
+                        accent = MaterialTheme.colorScheme.secondaryContainer,
+                        accentContent = MaterialTheme.colorScheme.onSecondaryContainer,
                         imageUrl = topTrackImage,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .aspectRatio(1f)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(Color.White.copy(alpha = 0.05f)),
-                        contentScale = ContentScale.Crop
+                        icon = Icons.Rounded.MusicNote,
                     )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        text = me.avinas.tempo.utils.TempoCopyEngine.getTopTrackCopy(topTrackName),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = me.avinas.tempo.ui.theme.ElectricBlue,
-                        maxLines = 1
+                },
+                { tile ->
+                    WeekDigestTile(
+                        label = stringResource(R.string.home_new_finds),
+                        value = newDiscoveries.toString(),
+                        modifier = tile,
+                        accent = MaterialTheme.colorScheme.tertiaryContainer,
+                        accentContent = MaterialTheme.colorScheme.onTertiaryContainer,
+                        icon = Icons.Default.Explore,
                     )
-                    Text(
-                        text = topTrackName ?: "-",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
-                        maxLines = 1
-                    )
+                },
+            )
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                if (twoColumns) {
+                    tiles.chunked(2).forEach { pair ->
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            pair.forEach { tile -> tile(Modifier.weight(1f)) }
+                        }
+                    }
+                } else {
+                    tiles.forEach { tile -> tile(Modifier.fillMaxWidth()) }
                 }
             }
         }
-        
-        Spacer(modifier = Modifier.height(16.dp))
-        
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+    }
+}
+
+@Composable
+private fun WeekDigestTile(
+    label: String,
+    value: String,
+    modifier: Modifier,
+    accent: Color,
+    accentContent: Color,
+    icon: ImageVector,
+    imageUrl: String? = null,
+) {
+    Surface(
+        modifier = modifier.heightIn(min = 142.dp),
+        shape = MaterialTheme.shapes.extraLarge,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        contentColor = MaterialTheme.colorScheme.onSurface,
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            // Total Hours
-            GlassCard(
-                modifier = Modifier.weight(1f),
-                backgroundColor = me.avinas.tempo.ui.theme.GoldenAmber.copy(alpha = 0.1f),
-                variant = me.avinas.tempo.ui.components.GlassCardVariant.LowProminence
+            Surface(
+                shape = MaterialShapes.Cookie6Sided.toShape(),
+                color = accent,
+                contentColor = accentContent,
+                modifier = Modifier.size(48.dp),
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(56.dp)
-                            .clip(CircleShape)
-                            .background(me.avinas.tempo.ui.theme.GoldenAmber.copy(alpha = 0.2f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Timer,
+                Box(contentAlignment = Alignment.Center) {
+                    if (!imageUrl.isNullOrBlank()) {
+                        CachedAsyncImage(
+                            imageUrl = imageUrl,
                             contentDescription = null,
-                            tint = me.avinas.tempo.ui.theme.GoldenAmber,
-                            modifier = Modifier.size(32.dp)
+                            modifier = Modifier.fillMaxSize().clip(MaterialShapes.Cookie6Sided.toShape()),
+                            contentScale = ContentScale.Crop,
                         )
+                    } else {
+                        Icon(icon, contentDescription = null, modifier = Modifier.size(24.dp))
                     }
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        text = stringResource(R.string.home_listen_time),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = me.avinas.tempo.ui.theme.GoldenAmber
-                    )
-                    Text(
-                        text = totalHours,
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
                 }
             }
-            
-            // Discoveries
-            GlassCard(
-                modifier = Modifier.weight(1f),
-                backgroundColor = InsightDanceability.copy(alpha = 0.1f),
-                variant = me.avinas.tempo.ui.components.GlassCardVariant.LowProminence
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(56.dp)
-                            .clip(CircleShape)
-                            .background(InsightDanceability.copy(alpha = 0.2f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Explore,
-                            contentDescription = null,
-                            tint = InsightDanceability,
-                            modifier = Modifier.size(32.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        text = stringResource(R.string.home_new_finds),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = InsightDanceability
-                    )
-                    Text(
-                        text = "$newDiscoveries",
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                }
-            }
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 2,
+            )
+            Text(
+                text = value,
+                style = MaterialTheme.typography.titleMediumEmphasized,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 2,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+            )
         }
     }
 }
@@ -895,13 +850,14 @@ fun DiscoveryCard(
     color: Color,
     backgroundColor: Color
 ) {
-    GlassCard(
-        modifier = Modifier.width(200.dp),
-        backgroundColor = backgroundColor,
-        variant = me.avinas.tempo.ui.components.GlassCardVariant.LowProminence
+    Surface(
+        modifier = Modifier.width(208.dp),
+        shape = MaterialTheme.shapes.extraLarge,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        contentColor = MaterialTheme.colorScheme.onSurface,
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth().padding(16.dp)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -928,12 +884,12 @@ fun DiscoveryCard(
                 text = title,
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Medium,
-                color = Color.White
+                color = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.bodySmall,
-                color = Color.White.copy(alpha = 0.7f)
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -957,14 +913,14 @@ fun HabitInsights(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             insights.forEach { insight ->
-                GlassCard(
+                Surface(
                     modifier = Modifier.fillMaxWidth(),
-                    backgroundColor = insight.gradient.first().copy(alpha = 0.2f),
-                    variant = me.avinas.tempo.ui.components.GlassCardVariant.LowProminence
+                    shape = MaterialTheme.shapes.extraLarge,
+                    color = MaterialTheme.colorScheme.surfaceContainerLow,
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth().padding(14.dp)
                     ) {
                         Box(
                             modifier = Modifier
@@ -982,17 +938,17 @@ fun HabitInsights(
                         
                         Spacer(modifier = Modifier.width(16.dp))
                         
-                        Column {
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = insight.title,
                                 style = MaterialTheme.typography.bodyLarge,
                                 fontWeight = FontWeight.Medium,
-                                color = Color.White
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
                                 text = insight.subtitle,
                                 style = MaterialTheme.typography.bodySmall,
-                                color = Color.White.copy(alpha = 0.7f)
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
