@@ -268,7 +268,7 @@ fun SupportedAppsScreen(
                                         "Allow one if it is a music source you want in your " +
                                         "journal, or block it so Tempo stops offering it.",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.padding(horizontal = 8.dp)
                                 )
                             }
@@ -360,7 +360,7 @@ fun SupportedAppsScreen(
                                     text = "Not tracked. Allow an app to start journaling its " +
                                         "playback, or block it to keep it out of the way.",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.padding(horizontal = 8.dp)
                                 )
                             }
@@ -412,7 +412,7 @@ fun SupportedAppsScreen(
                                         "never music — so Tempo does not track them and cannot " +
                                         "be asked to.",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.padding(horizontal = 8.dp)
                                 )
                             }
@@ -451,7 +451,7 @@ fun SupportedAppsScreen(
                                     Text(
                                         text = if (uiState.isScanningInstalledApps) stringResource(R.string.ui_loading) else "No apps found",
                                         style = MaterialTheme.typography.bodyLarge,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f)
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                             }
@@ -462,7 +462,7 @@ fun SupportedAppsScreen(
                             Text(
                                 text = stringResource(R.string.tracking_rules_help),
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier
                                     .padding(horizontal = 8.dp)
                             )
@@ -598,7 +598,7 @@ private fun TrackingRulesCard(
                         text = "Off by default. Tempo tracks only apps it knows are music " +
                             "players, and lists anything else for review.",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 Switch(
@@ -607,7 +607,7 @@ private fun TrackingRulesCard(
                     colors = SwitchDefaults.colors(
                         checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
                         checkedTrackColor = MaterialTheme.colorScheme.primary,
-                        uncheckedThumbColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f),
+                        uncheckedThumbColor = MaterialTheme.colorScheme.onSurfaceVariant,
                         uncheckedTrackColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                         checkedBorderColor = Color.Transparent,
                         uncheckedBorderColor = Color.Transparent
@@ -648,7 +648,7 @@ private fun TrackingRuleRow(
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f)
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -692,7 +692,7 @@ private fun AppPreferenceItem(
                 Text(
                     text = app.packageName,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -752,7 +752,7 @@ private fun AppPreferenceItem(
                 colors = SwitchDefaults.colors(
                     checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
                     checkedTrackColor = MaterialTheme.colorScheme.primary,
-                    uncheckedThumbColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f),
+                    uncheckedThumbColor = MaterialTheme.colorScheme.onSurfaceVariant,
                     uncheckedTrackColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                     checkedBorderColor = Color.Transparent,
                     uncheckedBorderColor = Color.Transparent
@@ -794,7 +794,7 @@ private fun BlockedAppItem(
                     text = app.displayName,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -883,7 +883,7 @@ private fun DetectedAppItem(
 
             TextButton(
                 onClick = onBlock,
-                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f))
+                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurfaceVariant)
             ) {
                 Text("Block")
             }
@@ -943,7 +943,7 @@ private fun AllowableAppItem(
 
             TextButton(
                 onClick = onBlock,
-                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f))
+                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurfaceVariant)
             ) {
                 Text("Block")
             }
@@ -989,7 +989,7 @@ private fun NeverTrackedAppItem(
                     text = app.displayName,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -1005,7 +1005,7 @@ private fun NeverTrackedAppItem(
             Text(
                 text = "Never tracked",
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f)
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
 
@@ -1050,7 +1050,7 @@ fun AppIcon(packageName: String, modifier: Modifier = Modifier) {
             Icon(
                 imageVector = Icons.Default.Android,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(4.dp)
             )
         }
@@ -1145,7 +1145,7 @@ private fun DefaultMaxDurationDialog(
                     Text(
                         stringResource(R.string.tracking_default_twenty_minutes),
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -1268,7 +1268,7 @@ private fun DurationModeRow(
             Text(
                 subtitle,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f)
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -1343,7 +1343,7 @@ private fun ContentOverridesDialog(
             Text(
                 stringResource(R.string.tracking_content_exceptions_description),
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f)
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -1467,7 +1467,7 @@ private fun ContentOverrideItem(
             Icon(
                 Icons.Default.Delete,
                 contentDescription = stringResource(R.string.tracking_delete_rule),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f)
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -1527,7 +1527,7 @@ private fun AddAppDialog(
                         placeholder = {
                             Text(
                                 "Search installed apps...",
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 style = MaterialTheme.typography.bodyMedium
                             )
                         },
@@ -1585,7 +1585,7 @@ private fun AddAppDialog(
                                 Text(
                                     text = packageName,
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
                                 )
@@ -1624,7 +1624,7 @@ private fun AddAppDialog(
                                 Text(
                                     "No apps found",
                                     style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f)
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
@@ -1638,7 +1638,7 @@ private fun AddAppDialog(
                     horizontalArrangement = Arrangement.End
                 ) {
                     TextButton(onClick = onDismiss) {
-                        Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f))
+                        Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }
