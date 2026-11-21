@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+
 package me.avinas.tempo.ui.home.components
 
 import androidx.compose.animation.core.*
@@ -432,7 +434,7 @@ fun InsightFeed(
 
         Crossfade(
             targetState = selectedInsight,
-            animationSpec = tween(450, easing = FastOutSlowInEasing),
+            animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>(),
             label = "deck_transition"
         ) { insight ->
             if (insight != null) {
@@ -662,20 +664,14 @@ private fun MoodVisualizer(valence: Float, energy: Float, color: Color) {
     ) {
         // 16 soundwave bars with amplitude and speed tied to energy level
         val barCount = 16
-        val infiniteTransition = me.avinas.tempo.ui.theme.rememberMotionAwareInfiniteTransition(label = "mood_soundwave")
-        val baseSpeed = (1200 - (safeEnergy * 600)).toInt().coerceAtLeast(350)
-        val animations = (0 until barCount).map { index ->
-            val factor = kotlin.math.sin(index * Math.PI / (barCount - 1)).toFloat().coerceAtLeast(0.25f)
-            val duration = (baseSpeed + (index * 45) % 300).coerceAtLeast(200)
-            infiniteTransition.animateFloat(
-                initialValue = 0.15f * factor,
-                targetValue = (0.35f + safeEnergy * 0.65f) * factor,
-                animationSpec = infiniteRepeatable(
-                    animation = tween(duration, easing = FastOutSlowInEasing),
-                    repeatMode = RepeatMode.Reverse
-                ),
-                label = "mood_bar_$index"
-            )
+        // This visual describes a recorded mood, not live playback.
+        // Data-shaped static heights avoid sixteen perpetual animations.
+        val barHeights = remember(safeEnergy) {
+            List(barCount) { index ->
+                val factor = kotlin.math.sin(index * Math.PI / (barCount - 1))
+                    .toFloat().coerceAtLeast(0.25f)
+                ((0.35f + safeEnergy * 0.65f) * factor).coerceIn(0.1f, 1f)
+            }
         }
 
         Row(
@@ -688,13 +684,13 @@ private fun MoodVisualizer(valence: Float, energy: Float, color: Color) {
             horizontalArrangement = Arrangement.spacedBy(3.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            animations.forEach { anim ->
+            barHeights.forEach { height ->
                 Box(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxHeight()
                         .graphicsLayer {
-                            scaleY = anim.value.coerceIn(0.1f, 1f)
+                            scaleY = height.coerceIn(0.1f, 1f)
                             transformOrigin = TransformOrigin(0.5f, 0.5f)
                         }
                         .background(
@@ -1068,18 +1064,12 @@ private fun BingeVisualizer(
 
         // Live Rhythmic Playback Wave
         val barCount = 18
-        val infiniteTransition = me.avinas.tempo.ui.theme.rememberMotionAwareInfiniteTransition(label = "binge_playback")
-        val animations = (0 until barCount).map { index ->
-            val duration = 400 + (index * 55) % 360
-            infiniteTransition.animateFloat(
-                initialValue = 0.12f,
-                targetValue = 0.95f,
-                animationSpec = infiniteRepeatable(
-                    animation = tween(duration, easing = FastOutSlowInEasing),
-                    repeatMode = RepeatMode.Reverse
-                ),
-                label = "bar_$index"
-            )
+        // Decorative history illustration: stable rhythm instead of
+        // one live animation state per bar.
+        val barHeights = remember {
+            List(barCount) { index ->
+                (0.16f + ((index * 43 + 11) % 76) / 100f).coerceIn(0.12f, 0.95f)
+            }
         }
 
         Row(
@@ -1092,13 +1082,13 @@ private fun BingeVisualizer(
             horizontalArrangement = Arrangement.spacedBy(2.5.dp),
             verticalAlignment = Alignment.Bottom
         ) {
-            animations.forEach { anim ->
+            barHeights.forEach { height ->
                 Box(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxHeight()
                         .graphicsLayer {
-                            scaleY = anim.value
+                            scaleY = height
                             transformOrigin = TransformOrigin(0.5f, 1f)
                         }
                         .background(
@@ -1339,16 +1329,9 @@ private fun DiscoveryVisualizer(newArtistsCount: Int, trends: List<DiscoveryTren
             }
         } else {
             // Discovery Intake Constellation Fallback (Guaranteed never blank for 0 or 1 data point)
-            val infiniteTransition = me.avinas.tempo.ui.theme.rememberMotionAwareInfiniteTransition(label = "discovery_radar")
-            val orbitAngle by infiniteTransition.animateFloat(
-                initialValue = 0f,
-                targetValue = 360f,
-                animationSpec = infiniteRepeatable(
-                    animation = tween(8000, easing = LinearEasing),
-                    repeatMode = RepeatMode.Restart
-                ),
-                label = "orbit"
-            )
+            // A static constellation means "little data so far"; it does not
+            // falsely suggest an active radar scan.
+            val orbitAngle = 0f
 
             Box(
                 modifier = Modifier
@@ -1557,18 +1540,7 @@ private fun TempoBPMVisualizer(bpm: Float, color: Color) {
 private fun StreakVisualizer(days: Int) {
     val appearancePalette = LocalTempoPalette.current
     val safeDays = days.coerceAtLeast(1)
-    val infiniteTransition = me.avinas.tempo.ui.theme.rememberMotionAwareInfiniteTransition(label = "flame")
-    val flameScale by infiniteTransition.animateFloat(
-        initialValue = 0.94f,
-        targetValue = 1.06f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(650, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "flameScale"
-    )
-
-    val fireColor1 = InsightStreak
+        val fireColor1 = InsightStreak
     val fireColor2 = InsightEnergy
     val fireColor3 = TempoWarningBright
 
@@ -1581,11 +1553,7 @@ private fun StreakVisualizer(days: Int) {
     ) {
         Canvas(
             modifier = Modifier
-                .size(46.dp)
-                .graphicsLayer {
-                    scaleX = flameScale
-                    scaleY = flameScale
-                }
+                 .size(46.dp)
         ) {
             val w = size.width
             val h = size.height
@@ -1973,18 +1941,10 @@ private fun EngagementVisualizer(value: Float, color: Color) {
 private fun FallbackVisualizer(color: Color) {
     val appearancePalette = LocalTempoPalette.current
     val barCount = 14
-    val infiniteTransition = me.avinas.tempo.ui.theme.rememberMotionAwareInfiniteTransition(label = "ambient_wave")
-    val animations = (0 until barCount).map { index ->
-        val duration = 600 + (index * 60) % 400
-        infiniteTransition.animateFloat(
-            initialValue = 0.2f,
-            targetValue = 0.85f,
-            animationSpec = infiniteRepeatable(
-                animation = tween(duration, easing = FastOutSlowInEasing),
-                repeatMode = RepeatMode.Reverse
-            ),
-            label = "amb_$index"
-        )
+    val barHeights = remember {
+        List(barCount) { index ->
+            (0.2f + ((index * 29 + 17) % 63) / 100f).coerceIn(0.2f, 0.85f)
+        }
     }
 
     Row(
@@ -1997,13 +1957,13 @@ private fun FallbackVisualizer(color: Color) {
         horizontalArrangement = Arrangement.spacedBy(3.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        animations.forEach { anim ->
+        barHeights.forEach { height ->
             Box(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
                     .graphicsLayer {
-                        scaleY = anim.value
+                        scaleY = height
                         transformOrigin = TransformOrigin(0.5f, 0.5f)
                     }
                     .background(
