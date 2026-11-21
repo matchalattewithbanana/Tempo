@@ -118,27 +118,27 @@ fun SettingsScreen(
     val resources = LocalResources.current
     val lifecycleOwner = LocalLifecycleOwner.current
     // Settings home is intentionally a small category navigator.
-    var settingsCategory by rememberSaveable { mutableStateOf("overview") }
+    var settingsSection by rememberSaveable { mutableStateOf<SettingsSection?>(null) }
     var settingsSearch by rememberSaveable { mutableStateOf("") }
-    val settingsScrollState = key(settingsCategory) { rememberLazyListState() }
+    val settingsScrollState = key(settingsSection) { rememberLazyListState() }
     LaunchedEffect(settingsSearch) {
         // Search results and the unfiltered navigator both start at the top.
         settingsScrollState.scrollToItem(0)
     }
     val clearOrClose = {
         when {
-            settingsCategory != "overview" -> settingsCategory = "overview"
+            settingsSection != null -> settingsSection = null
             settingsSearch.isNotEmpty() -> settingsSearch = ""
             else -> onNavigateBack()
         }
     }
-    BackHandler(enabled = settingsCategory != "overview" || settingsSearch.isNotEmpty(), onBack = clearOrClose)
+    BackHandler(enabled = settingsSection != null || settingsSearch.isNotEmpty(), onBack = clearOrClose)
     val scope = rememberCoroutineScope()
     var notificationListenerGranted by remember { mutableStateOf(false) }
     var trackingHeartbeat by remember { mutableStateOf<TrackingServiceHeartbeat.Snapshot?>(null) }
     var trackingStatusCheckedAt by remember { mutableLongStateOf(System.currentTimeMillis()) }
-    LaunchedEffect(settingsCategory, lifecycleOwner) {
-        if (settingsCategory == "tracking") {
+    LaunchedEffect(settingsSection, lifecycleOwner) {
+        if (settingsSection == SettingsSection.TRACKING) {
             lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
                 while (true) {
                     val (granted, heartbeat) = withContext(Dispatchers.IO) {
@@ -216,10 +216,10 @@ fun SettingsScreen(
     var batteryLevel by remember { mutableIntStateOf(100) }
     val isBatteryCritical = batteryLevel <= BatteryUtils.CRITICAL_BATTERY_LEVEL
     val isLowBattery = batteryLevel <= BatteryUtils.LOW_BATTERY_LEVEL
-    LaunchedEffect(settingsCategory, lifecycleOwner) {
-        if (settingsCategory == "tracking" || settingsCategory == "connections") {
+    LaunchedEffect(settingsSection, lifecycleOwner) {
+        if (settingsSection == SettingsSection.TRACKING || settingsSection == SettingsSection.CONNECTIONS) {
             lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-                if (settingsCategory == "tracking" && isXiaomiDevice) {
+                if (settingsSection == SettingsSection.TRACKING && isXiaomiDevice) {
                     launch {
                         autostartState = withContext(Dispatchers.IO) {
                             OemBackgroundHelper.getAutostartState(context)
@@ -315,14 +315,8 @@ fun SettingsScreen(
                 title = {
                     Text(
                         style = MaterialTheme.typography.titleLargeEmphasized,
-                        text = when (settingsCategory) {
-                            "general" -> stringResource(R.string.settings_category_general)
-                            "tracking" -> stringResource(R.string.settings_category_tracking)
-                            "connections" -> stringResource(R.string.settings_category_connections)
-                            "data" -> stringResource(R.string.settings_category_data)
-                            "about" -> stringResource(R.string.settings_category_about)
-                            else -> stringResource(R.string.settings_title)
-                        },
+                        text = settingsSection?.let { stringResource(it.titleRes) }
+                            ?: stringResource(R.string.settings_title),
                         color = MaterialTheme.colorScheme.onSurface,
                     )
                 },
@@ -347,7 +341,7 @@ fun SettingsScreen(
     ) { padding ->
         Box(Modifier.fillMaxSize().tempoAmbientBackdrop()) {
             Column(Modifier.fillMaxSize().padding(padding)) {
-                if (settingsCategory == "overview") {
+                if (settingsSection == null) {
                     Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
                     OutlinedTextField(
                         value = settingsSearch,
@@ -378,49 +372,7 @@ fun SettingsScreen(
                     modifier = Modifier.widthIn(max = 960.dp).fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 8.dp),
                 ) {
-                if (settingsCategory != "overview") {
-                    item(key = "category-hero") {
-                    val hero = when (settingsCategory) {
-                        "general" -> Triple(
-                            R.string.settings_category_general,
-                            R.string.settings_category_general_desc,
-                            Icons.Rounded.Palette,
-                        )
-                        "tracking" -> Triple(
-                            R.string.settings_category_tracking,
-                            R.string.settings_category_tracking_desc,
-                            Icons.Rounded.GraphicEq,
-                        )
-                        "connections" -> Triple(
-                            R.string.settings_category_connections,
-                            R.string.settings_category_connections_desc,
-                            Icons.Rounded.Link,
-                        )
-                        "data" -> Triple(
-                            R.string.settings_category_data,
-                            R.string.settings_category_data_desc,
-                            Icons.Rounded.Storage,
-                        )
-                        else -> Triple(
-                            R.string.settings_category_about,
-                            R.string.settings_category_about_desc,
-                            Icons.Rounded.Info,
-                        )
-                    }
-                    me.avinas.tempo.ui.components.TempoSettingsCategoryHero(
-                        title = stringResource(hero.first),
-                        subtitle = stringResource(hero.second),
-                        icon = hero.third,
-                        style = when (settingsCategory) {
-                            "general", "about" -> TempoEmblemStyle.DISCOVERY
-                            "tracking" -> TempoEmblemStyle.PULSE
-                            else -> TempoEmblemStyle.MEMORY
-                        },
-                    )
-                    Spacer(Modifier.height(12.dp))
-                    }
-                }
-                if (settingsCategory == "overview") {
+                if (settingsSection == null) {
                     item(key = "overview") {
                     if (settingsSearch.isNotBlank()) {
                         val tokens = settingsSearch.trim().split(Regex("\\s+"))
@@ -450,69 +402,48 @@ fun SettingsScreen(
                         directResults.forEach { (title, subtitle, open) ->
                             SettingsOption(title = title, subtitle = subtitle, onClick = open)
                         }
-                        val categories = listOf(
-                            Triple("general", stringResource(R.string.settings_category_general), stringResource(R.string.settings_search_general_terms)),
-                            Triple("tracking", stringResource(R.string.settings_category_tracking), stringResource(R.string.settings_search_tracking_terms)),
-                            Triple("connections", stringResource(R.string.settings_category_connections), stringResource(R.string.settings_search_connections_terms)),
-                            Triple("data", stringResource(R.string.settings_category_data), stringResource(R.string.settings_search_data_terms)),
-                            Triple("about", stringResource(R.string.settings_category_about), stringResource(R.string.settings_search_about_terms)),
-                        ).filter { (_, title, terms) ->
+                        val categories = SettingsSection.browseOrder.map { section ->
+                            Triple(
+                                section,
+                                stringResource(section.titleRes),
+                                stringResource(section.searchTermsRes),
+                            )
+                        }.filter { (_, title, terms) ->
                             tokens.all { title.contains(it, true) || terms.contains(it, true) }
                         }
-                        if (categories.isEmpty() && directResults.isEmpty()) Text(stringResource(R.string.settings_search_empty))
-                        categories.forEach { (category, title, terms) ->
-                            SettingsOption(title = title, subtitle = terms, onClick = { settingsCategory = category })
+                        if (categories.isEmpty() && directResults.isEmpty()) {
+                            Text(stringResource(R.string.settings_search_empty))
+                        }
+                        categories.forEach { (section, title, terms) ->
+                            SettingsOption(
+                                title = title,
+                                subtitle = terms,
+                                onClick = { settingsSection = section },
+                            )
                         }
                     } else {
                     SettingsSectionHeader(stringResource(R.string.settings_category_browse))
+                    val appearanceDestination = onNavigateToAppearance?.let { open ->
+                        me.avinas.tempo.ui.components.TempoSettingsDestination(
+                            title = stringResource(R.string.appearance_title),
+                            subtitle = stringResource(R.string.appearance_settings_summary),
+                            icon = Icons.Rounded.Palette,
+                            onClick = open,
+                            featured = true,
+                            tone = me.avinas.tempo.ui.components.TempoTileTone.ROSE,
+                        )
+                    }
+                    val sectionDestinations = SettingsSection.browseOrder.map { section ->
+                        me.avinas.tempo.ui.components.TempoSettingsDestination(
+                            title = stringResource(section.titleRes),
+                            subtitle = stringResource(section.descriptionRes),
+                            icon = section.icon,
+                            tone = section.tone,
+                            onClick = { settingsSection = section },
+                        )
+                    }
                     me.avinas.tempo.ui.components.TempoSettingsBento(
-                        destinations = listOfNotNull(
-                            me.avinas.tempo.ui.components.TempoSettingsDestination(
-                                title = stringResource(R.string.settings_category_tracking),
-                                subtitle = stringResource(R.string.settings_category_tracking_desc),
-                                icon = Icons.Rounded.GraphicEq,
-                                tone = me.avinas.tempo.ui.components.TempoTileTone.AQUA,
-                                onClick = { settingsCategory = "tracking" },
-                            ),
-                            onNavigateToAppearance?.let { open ->
-                                me.avinas.tempo.ui.components.TempoSettingsDestination(
-                                    title = stringResource(R.string.appearance_title),
-                                    subtitle = stringResource(R.string.appearance_settings_summary),
-                                    icon = Icons.Rounded.Palette,
-                                    onClick = open,
-                                    featured = true,
-                                    tone = me.avinas.tempo.ui.components.TempoTileTone.ROSE,
-                                )
-                            },
-                            me.avinas.tempo.ui.components.TempoSettingsDestination(
-                                title = stringResource(R.string.settings_category_general),
-                                subtitle = stringResource(R.string.settings_category_general_desc),
-                                icon = Icons.Rounded.Settings,
-                                tone = me.avinas.tempo.ui.components.TempoTileTone.LILAC,
-                                onClick = { settingsCategory = "general" },
-                            ),
-                            me.avinas.tempo.ui.components.TempoSettingsDestination(
-                                title = stringResource(R.string.settings_category_connections),
-                                subtitle = stringResource(R.string.settings_category_connections_desc),
-                                icon = Icons.Rounded.Link,
-                                tone = me.avinas.tempo.ui.components.TempoTileTone.SKY,
-                                onClick = { settingsCategory = "connections" },
-                            ),
-                            me.avinas.tempo.ui.components.TempoSettingsDestination(
-                                title = stringResource(R.string.settings_category_data),
-                                subtitle = stringResource(R.string.settings_category_data_desc),
-                                icon = Icons.Rounded.Storage,
-                                tone = me.avinas.tempo.ui.components.TempoTileTone.AMBER,
-                                onClick = { settingsCategory = "data" },
-                            ),
-                            me.avinas.tempo.ui.components.TempoSettingsDestination(
-                                title = stringResource(R.string.settings_category_about),
-                                subtitle = stringResource(R.string.settings_category_about_desc),
-                                icon = Icons.Rounded.Info,
-                                tone = me.avinas.tempo.ui.components.TempoTileTone.ROSE,
-                                onClick = { settingsCategory = "about" },
-                            ),
-                        ),
+                        destinations = listOfNotNull(appearanceDestination) + sectionDestinations,
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     // Each action has one home. Search is the cross-category
@@ -521,7 +452,7 @@ fun SettingsScreen(
                     }
                 }
 
-                if (settingsCategory == "general") {
+                if (settingsSection == SettingsSection.GENERAL) {
                     item(key = "general-profile") {
                 // Profile Section
                 SettingsSectionHeader(stringResource(R.string.settings_profile))
@@ -721,7 +652,7 @@ fun SettingsScreen(
                         Spacer(Modifier.height(16.dp))
                     }
                 } // General
-                if (settingsCategory == "tracking") {
+                if (settingsSection == SettingsSection.TRACKING) {
                     item(key = "tracking-source") {
                 val trackingHealth = trackingHeartbeat?.let { heartbeat ->
                     evaluateTrackingHealth(
@@ -858,7 +789,7 @@ fun SettingsScreen(
 
                     }
                 } // Tracking
-                if (settingsCategory == "connections") {
+                if (settingsSection == SettingsSection.CONNECTIONS) {
                     item(key = "connections-services") {
                 // Account connections and automatic sync controls
                 SettingsSectionHeader(stringResource(R.string.settings_connected_accounts))
@@ -1030,7 +961,7 @@ fun SettingsScreen(
 
                     }
                 } // Connections
-                if (settingsCategory == "data") {
+                if (settingsSection == SettingsSection.DATA) {
                     item(key = "data-backups") {
                         SettingsSectionHeader(stringResource(R.string.settings_data_backup_section))
                         val backupStatus = if (!backupOverview.isGoogleDriveEnabled) {
@@ -1177,7 +1108,7 @@ fun SettingsScreen(
                         Spacer(Modifier.height(24.dp))
                     }
                 } // Library and data
-                if (settingsCategory == "about") {
+                if (settingsSection == SettingsSection.ABOUT) {
                     item(key = "about-credits") {
                 TempoAboutCredits(modifier = Modifier.fillMaxWidth())
                 Spacer(modifier = Modifier.height(24.dp))
