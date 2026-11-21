@@ -558,35 +558,31 @@ fun HeroStatItem(item: StatItem, onNavigate: () -> Unit) {
     val rankColor = remember(palette) { AppearancePaletteResolver.readableAccent(palette, GoldDark, palette.surfaceSunken) }
     val scheme = MaterialTheme.colorScheme
 
-    GlassCard(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-            .tempoTiltSurface()
-            .premiumClickable(onClick = onNavigate),
-        backgroundColor = rankColor.copy(alpha = 0.12f), // Reduced from 0.25f for better blend
-        contentPadding = PaddingValues(16.dp) // Reduced from 24.dp
+    Surface(
+        onClick = onNavigate,
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+        shape = MaterialTheme.shapes.extraLarge,
+        color = scheme.surfaceContainerHigh,
+        contentColor = scheme.onSurface,
     ) {
         Row(
-            verticalAlignment = Alignment.CenterVertically
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             if (LocalTempoAppearance.current.showStatsArtwork) {
                 // Big Image
                 Box(contentAlignment = Alignment.Center) {
-                    // Glow Layer
-                    Box(modifier = Modifier.size(90.dp).clip(CircleShape).background(rankColor.copy(alpha = 0.22f))) // Reduced glow size
-
-                    // Image Layer
+                    // Artwork is the visual anchor; avoid a second glow layer.
                     if (imageUrl != null) {
                         CachedAsyncImage(
                             imageUrl = imageUrl,
                             contentDescription = null,
-                            modifier = Modifier.size(80.dp).clip(CircleShape),
+                            modifier = Modifier.size(80.dp).clip(MaterialTheme.shapes.large),
                             contentScale = ContentScale.Crop,
                             targetSizeDp = 80 // Downsample for faster decode & less memory
                         )
                     } else {
-                         Box(modifier = Modifier.size(80.dp).clip(CircleShape).background(scheme.surfaceContainerHigh), contentAlignment = Alignment.Center) {
+                         Box(modifier = Modifier.size(80.dp).clip(MaterialTheme.shapes.large).background(scheme.surfaceContainerHighest), contentAlignment = Alignment.Center) {
                              Text(title.firstOrNull()?.toString() ?: "?", style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.onSurface)
                          }
                     }
