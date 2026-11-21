@@ -19,25 +19,16 @@ import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import me.avinas.tempo.data.reset.AppResetState
-import androidx.core.app.NotificationManagerCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.launch
 import me.avinas.tempo.R
-import me.avinas.tempo.service.SpotifyBroadcastPresence
-import me.avinas.tempo.service.TrackingServiceHeartbeat
 import me.avinas.tempo.data.importexport.ImportExportResult
 import me.avinas.tempo.data.local.entities.AlbumArtSource
 import me.avinas.tempo.ui.components.TempoSnackbar
 import me.avinas.tempo.ui.theme.*
-import me.avinas.tempo.utils.BatteryUtils
-import me.avinas.tempo.utils.OemBackgroundHelper
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,6 +40,7 @@ fun SettingsScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val historyQuality by viewModel.historyQuality.collectAsStateWithLifecycle()
     val backupOverview by viewModel.backupOverview.collectAsStateWithLifecycle()
+    val runtimeStatus by viewModel.runtimeStatus.collectAsStateWithLifecycle()
     var activeDialog by rememberSaveable { mutableStateOf<SettingsDialog?>(null) }
     val context = LocalContext.current
     val resources = LocalResources.current
@@ -69,39 +61,9 @@ fun SettingsScreen(
         }
     }
     BackHandler(enabled = settingsSection != null || settingsSearch.isNotEmpty(), onBack = clearOrClose)
-    var notificationListenerGranted by remember { mutableStateOf(false) }
-    var trackingHeartbeat by remember { mutableStateOf<TrackingServiceHeartbeat.Snapshot?>(null) }
-    var trackingStatusCheckedAt by remember { mutableLongStateOf(System.currentTimeMillis()) }
-    LaunchedEffect(settingsSection, lifecycleOwner) {
-        if (settingsSection == SettingsSection.TRACKING) {
-            lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-                while (true) {
-                    val (granted, heartbeat) = withContext(Dispatchers.IO) {
-                        NotificationManagerCompat.getEnabledListenerPackages(context)
-                            .contains(context.packageName) to TrackingServiceHeartbeat.snapshot(context)
-                    }
-                    notificationListenerGranted = granted
-                    trackingHeartbeat = heartbeat
-                    trackingStatusCheckedAt = System.currentTimeMillis()
-                    delay(30_000L)
-                }
-            }
-        }
-    }
-    var spotifyBroadcastEnabled by remember { mutableStateOf(SpotifyBroadcastPresence.enabled(context)) }
-    var spotifyConnected by remember { mutableStateOf(false) }
-    var spotifyClientId by remember { mutableStateOf("") }
-    var spotifyAccountLoaded by remember { mutableStateOf(false) }
-    LaunchedEffect(lifecycleOwner, viewModel) {
+    LaunchedEffect(settingsSection, lifecycleOwner, viewModel) {
         lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-            val (connected, id) = viewModel.spotifyAccountInfo()
-            val newlyConnected = spotifyAccountLoaded && connected && !spotifyConnected
-            if (!spotifyAccountLoaded || !connected) spotifyClientId = id
-            spotifyConnected = connected
-            spotifyAccountLoaded = true
-            if (newlyConnected && uiState.spotifyApiOnlyMode) {
-                me.avinas.tempo.worker.SpotifyPollingWorker.syncNow(context)
-            }
+            viewModel.observeRuntimeStatus(settingsSection)
         }
     }
     val versionName = me.avinas.tempo.BuildConfig.VERSION_NAME
@@ -115,55 +77,6 @@ fun SettingsScreen(
     val conflictDialogUri by viewModel.showConflictDialog.collectAsStateWithLifecycle()
     val profileImageMessage by viewModel.profileImageMessage.collectAsStateWithLifecycle()
     val analyticsIdResetMessage = stringResource(R.string.settings_analytics_reset_id_done)
-
-    // OEM detection for Background Protection
-    val isXiaomiDevice = remember { OemBackgroundHelper.isXiaomiDevice() }
-    var autostartState by remember { mutableStateOf(OemBackgroundHelper.AutostartState.UNKNOWN) }
-
-    val coverSourceOptions: List<Pair<AlbumArtSource?, String>> = listOf(
-        null to stringResource(R.string.settings_cover_source_automatic),
-        AlbumArtSource.MUSICBRAINZ to "MusicBrainz",
-        AlbumArtSource.ITUNES to "Apple Music / iTunes",
-        AlbumArtSource.DEEZER to "Deezer",
-    )
-    val selectedCoverSourceName =
-        coverSourceOptions.firstOrNull { it.first == uiState.preferredCoverSource }?.second
-            ?: stringResource(R.string.settings_cover_source_automatic)
-    val currentLocale = AppCompatDelegate.getApplicationLocales().get(0)?.language ?: "en"
-    val languages =
-        listOf(
-            "en" to stringResource(R.string.settings_language_english),
-            "fr" to stringResource(R.string.settings_language_french),
-            "de" to stringResource(R.string.settings_language_german),
-            "hu" to stringResource(R.string.settings_language_hungarian),
-            "pt" to stringResource(R.string.settings_language_portuguese),
-            "ru" to stringResource(R.string.settings_language_russian),
-        )
-    val currentLanguageSubtitle =
-        languages.firstOrNull { it.first == currentLocale }?.second
-            ?: stringResource(R.string.settings_language_english)
-
-    // These readings are only used by the tracking and connections categories.
-    var batteryLevel by remember { mutableIntStateOf(100) }
-    val isBatteryCritical = batteryLevel <= BatteryUtils.CRITICAL_BATTERY_LEVEL
-    val isLowBattery = batteryLevel <= BatteryUtils.LOW_BATTERY_LEVEL
-    LaunchedEffect(settingsSection, lifecycleOwner) {
-        if (settingsSection == SettingsSection.TRACKING || settingsSection == SettingsSection.CONNECTIONS) {
-            lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-                if (settingsSection == SettingsSection.TRACKING && isXiaomiDevice) {
-                    launch {
-                        autostartState = withContext(Dispatchers.IO) {
-                            OemBackgroundHelper.getAutostartState(context)
-                        }
-                    }
-                }
-                while (true) {
-                    batteryLevel = withContext(Dispatchers.IO) { BatteryUtils.getBatteryLevel(context) }
-                    delay(30_000L)
-                }
-            }
-        }
-    }
 
     val profileImageLauncher =
         rememberLauncherForActivityResult(
@@ -279,12 +192,12 @@ fun SettingsScreen(
                             state = settingsScrollState,
                             uiState = uiState,
                             viewModel = viewModel,
-                            notificationListenerGranted = notificationListenerGranted,
-                            trackingHeartbeat = trackingHeartbeat,
-                            trackingStatusCheckedAt = trackingStatusCheckedAt,
-                            batteryLevel = batteryLevel,
-                            isXiaomiDevice = isXiaomiDevice,
-                            autostartState = autostartState,
+                            notificationListenerGranted = runtimeStatus.notificationListenerGranted,
+                            trackingHeartbeat = runtimeStatus.trackingHeartbeat,
+                            trackingStatusCheckedAt = runtimeStatus.trackingStatusCheckedAt,
+                            batteryLevel = runtimeStatus.batteryLevel,
+                            isXiaomiDevice = runtimeStatus.isXiaomiDevice,
+                            autostartState = runtimeStatus.autostartState,
                             onNavigate = onNavigate,
                             modifier = Modifier.weight(1f),
                         )
@@ -292,16 +205,16 @@ fun SettingsScreen(
                             state = settingsScrollState,
                             uiState = uiState,
                             viewModel = viewModel,
-                            spotifyConnected = spotifyConnected,
-                            spotifyAccountLoaded = spotifyAccountLoaded,
-                            spotifyClientId = spotifyClientId,
-                            onSpotifyClientIdChange = { spotifyClientId = it },
-                            onSpotifyConnectedChange = { spotifyConnected = it },
-                            spotifyBroadcastEnabled = spotifyBroadcastEnabled,
-                            onSpotifyBroadcastEnabledChange = { spotifyBroadcastEnabled = it },
-                            batteryLevel = batteryLevel,
-                            isBatteryCritical = isBatteryCritical,
-                            isLowBattery = isLowBattery,
+                            spotifyConnected = runtimeStatus.spotifyConnected,
+                            spotifyAccountLoaded = runtimeStatus.spotifyAccountLoaded,
+                            spotifyClientId = runtimeStatus.spotifyClientId,
+                            onSpotifyClientIdChange = viewModel::updateSpotifyClientIdDraft,
+                            onSpotifyConnectedChange = viewModel::updateSpotifyConnectionUi,
+                            spotifyBroadcastEnabled = runtimeStatus.spotifyBroadcastEnabled,
+                            onSpotifyBroadcastEnabledChange = viewModel::updateSpotifyBroadcastUi,
+                            batteryLevel = runtimeStatus.batteryLevel,
+                            isBatteryCritical = runtimeStatus.isBatteryCritical,
+                            isLowBattery = runtimeStatus.isLowBattery,
                             onNavigate = onNavigate,
                             modifier = Modifier.weight(1f),
                         )
