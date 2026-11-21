@@ -2,6 +2,9 @@ package me.avinas.tempo.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,6 +13,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material.icons.rounded.MusicNote
@@ -88,6 +95,7 @@ fun LiveNowPlayingCard(
     val isRecent = presence != null && ageMs < 15 * 60_000L
 
     val scheme = MaterialTheme.colorScheme
+    val iconEffects = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
     val activePlayback = isRecent && presence?.playing == true && ageMs <= 2 * 60_000L
     val surface by animateColorAsState(
         targetValue = if (activePlayback) scheme.primaryContainer else scheme.surfaceContainerLow,
@@ -129,15 +137,28 @@ fun LiveNowPlayingCard(
                     contentColor = foreground,
                 ) {
                     Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = when {
-                                activePlayback -> Icons.Rounded.GraphicEq
-                                isRecent && !stale -> Icons.Rounded.PauseCircle
-                                else -> Icons.Rounded.MusicNote
+                        AnimatedContent(
+                            targetState = when {
+                                activePlayback -> 0
+                                isRecent && !stale -> 1
+                                else -> 2
                             },
-                            contentDescription = null,
-                            modifier = Modifier.size(23.dp),
-                        )
+                            transitionSpec = {
+                                fadeIn(animationSpec = iconEffects) togetherWith
+                                    fadeOut(animationSpec = iconEffects)
+                            },
+                            label = "nowPlayingStateIcon",
+                        ) { playbackState ->
+                            Icon(
+                                imageVector = when (playbackState) {
+                                    0 -> Icons.Rounded.GraphicEq
+                                    1 -> Icons.Rounded.PauseCircle
+                                    else -> Icons.Rounded.MusicNote
+                                },
+                                contentDescription = null,
+                                modifier = Modifier.size(23.dp),
+                            )
+                        }
                     }
                 }
                 Column(modifier = Modifier.weight(1f)) {
@@ -152,6 +173,9 @@ fun LiveNowPlayingCard(
                         color = foreground.copy(alpha = 0.80f),
                     )
                 }
+                // Artwork-accent selection still affects the tiny ornamental
+                // dot, without compromising the semantic text contrast.
+                Box(Modifier.size(7.dp).background(accent, CircleShape))
             }
             if (!isRecent || presence == null) {
                 Text(
@@ -189,7 +213,7 @@ fun LiveNowPlayingCard(
                             contentDescription = stringResource(R.string.now_playing_cover_description, presence.title),
                             placeholderEmoji = "♫",
                             targetSizePx = 256,
-                            modifier = Modifier.clip(MaterialTheme.shapes.large),
+                            modifier = Modifier.fillMaxSize().clip(MaterialTheme.shapes.large),
                         )
                     }
                     Column(
