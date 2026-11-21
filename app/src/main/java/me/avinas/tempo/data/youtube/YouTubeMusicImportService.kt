@@ -313,7 +313,7 @@ class YouTubeMusicImportService
                     pendingEvents.clear()
                     try {
                         val insertResult = listeningEventDao.insertAllBatchedWithDedup(batch)
-                        eventsCreated += insertResult.inserted
+                        eventsCreated += insertResult.newlyAdded
                         duplicatesSkipped += insertResult.skipped
                         Log.i(
                             TAG,
@@ -327,7 +327,7 @@ class YouTubeMusicImportService
                                 // bulk failure: raw insert() can silently duplicate
                                 // Spotify/YouTube/Last.fm plays and inflate totals.
                                 val result = listeningEventDao.insertAllBatchedWithDedup(listOf(event))
-                                eventsCreated += result.inserted
+                                eventsCreated += result.newlyAdded
                                 duplicatesSkipped += result.skipped
                             } catch (e2: Exception) {
                                 Log.e(TAG, "Failed to insert event for track ${event.track_id}", e2)
