@@ -10,12 +10,16 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
@@ -241,6 +245,23 @@ internal fun HomeSectionOrderRow(
     onMoveUp: () -> Unit,
     onMoveDown: () -> Unit,
 ) {
+    val density = LocalDensity.current
+    var dragDistance by remember(sectionName) { mutableFloatStateOf(0f) }
+    val dragThresholdPx = with(density) { 40.dp.toPx() }
+    val dragState = rememberDraggableState { delta ->
+        dragDistance += delta
+        when {
+            dragDistance <= -dragThresholdPx && canMoveUp -> {
+                onMoveUp()
+                dragDistance = 0f
+            }
+            dragDistance >= dragThresholdPx && canMoveDown -> {
+                onMoveDown()
+                dragDistance = 0f
+            }
+        }
+    }
+
     Row(
         modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -265,6 +286,20 @@ internal fun HomeSectionOrderRow(
                 color = MaterialTheme.colorScheme.onSurface,
             )
         }
+        Icon(
+            Icons.Default.DragHandle,
+            contentDescription = null,
+            modifier = Modifier
+                .size(48.dp)
+                .draggable(
+                    state = dragState,
+                    orientation = Orientation.Vertical,
+                    enabled = enabled && (canMoveUp || canMoveDown),
+                    onDragStopped = { dragDistance = 0f },
+                )
+                .padding(12.dp),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
         IconButton(onClick = onMoveUp, enabled = enabled && canMoveUp) {
             Icon(Icons.Default.KeyboardArrowUp, contentDescription = "$moveUpLabel: $sectionName")
         }
