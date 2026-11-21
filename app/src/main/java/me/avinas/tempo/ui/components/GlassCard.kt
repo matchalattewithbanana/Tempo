@@ -98,7 +98,7 @@ fun GlassCard(
     // Explicit artwork backgrounds, custom accents and the deliberately styled
     // Obsidian/QuietGlass variants retain their original visual treatment.
     // Most Home, Stats, History, Profile, detail and Settings cards share this path.
-    if (variant in setOf(GlassCardVariant.LowProminence, GlassCardVariant.HighProminence) &&
+    if ((variant == GlassCardVariant.LowProminence || variant == GlassCardVariant.HighProminence) &&
         backgroundColor == GlassFrostMedium &&
         accentColor == null &&
         borderColor == null &&
