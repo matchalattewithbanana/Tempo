@@ -48,9 +48,10 @@ object AppearanceTypography {
             headlineLargeEmphasized = base.headlineLargeEmphasized.copy(fontFamily = headingFont),
             headlineMediumEmphasized = base.headlineMediumEmphasized.copy(fontFamily = headingFont),
             headlineSmallEmphasized = base.headlineSmallEmphasized.copy(fontFamily = headingFont),
+            // M3 brand fonts belong to display, headline and title-large.
+            // Title-medium/small (including emphasized) retain the plain
+            // readable typeface so selection never swaps fonts mid-layout.
             titleLargeEmphasized = base.titleLargeEmphasized.copy(fontFamily = headingFont),
-            titleMediumEmphasized = base.titleMediumEmphasized.copy(fontFamily = headingFont),
-            titleSmallEmphasized = base.titleSmallEmphasized.copy(fontFamily = headingFont),
         )
     }
 }
