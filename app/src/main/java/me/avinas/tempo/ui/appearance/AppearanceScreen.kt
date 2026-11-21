@@ -833,11 +833,12 @@ private fun AppearancePresetCard(
     // Fast spatial morph when the draft chooses a palette; the theme's
     // instant motion scheme makes this snap for reduced-motion settings.
     val corner by androidx.compose.animation.core.animateDpAsState(
-        targetValue = if (selected) 30.dp else 20.dp,
+        targetValue = if (selected) 28.dp else 20.dp,
         animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
         label = "preset_selected_corner",
     )
     val shape = RoundedCornerShape(corner)
+    val previewInnerShape = RoundedCornerShape(corner - 7.dp)
     val label = when (preset) {
         AppearancePreset.ABYSS -> stringResource(R.string.appearance_abyss)
         AppearancePreset.OBSIDIAN_GOLD -> stringResource(R.string.appearance_gold)
@@ -887,7 +888,7 @@ private fun AppearancePresetCard(
             )
             .border(
                 BorderStroke(if (selected) 2.dp else 1.dp,
-                    if (selected) palette.accent else MaterialTheme.colorScheme.outlineVariant),
+                    if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant),
                 shape,
             )
             .clickable(enabled = enabled, onClick = onClick)
@@ -902,7 +903,7 @@ private fun AppearancePresetCard(
         // progress accent and surface swatches, including the selected light tone.
         Box(
             modifier = Modifier.fillMaxWidth().height(170.dp)
-                .clip(RoundedCornerShape(16.dp))
+                .clip(previewInnerShape)
                 .background(Brush.verticalGradient(listOf(palette.topBackground, palette.background))),
         ) {
             Column(
@@ -964,7 +965,8 @@ private fun AppearancePresetCard(
             }
         }
         Text(label, color = MaterialTheme.colorScheme.onSurface,
-            style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+            style = if (selected) MaterialTheme.typography.titleSmallEmphasized
+                else MaterialTheme.typography.titleSmall)
         Text(description, color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodySmall)
     }
@@ -977,7 +979,7 @@ private fun FontStyleCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val shape = RoundedCornerShape(18.dp)
+    val shape = MaterialTheme.shapes.large
     val scheme = MaterialTheme.colorScheme
     val label = when (style) {
         AppearanceFontStyle.TEMPO -> stringResource(R.string.appearance_font_tempo)
@@ -1014,7 +1016,8 @@ private fun FontStyleCard(
             maxLines = 1)
         Column(modifier = Modifier.weight(1f)) {
             Text(label, color = scheme.onSurface,
-                style = MaterialTheme.typography.labelMedium)
+                style = if (selected) MaterialTheme.typography.labelMediumEmphasized
+                    else MaterialTheme.typography.labelMedium)
             if (selected) Text(
                 stringResource(R.string.appearance_font_selected),
                 color = scheme.primary,
