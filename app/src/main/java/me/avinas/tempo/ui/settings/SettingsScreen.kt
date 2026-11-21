@@ -1005,57 +1005,30 @@ fun SettingsScreen(
                 SettingsSectionHeader(stringResource(R.string.desktop_link_section_header))
                 TempoSettingsGroup {
                     Column {
-                        // Battery status warning if critical or low
-                        if (isBatteryCritical) {
-                            Box(
-                                modifier =
-                                    Modifier
-                                        .fillMaxWidth()
-                                        .background(TempoErrorDeep.copy(alpha = 0.25f))
-                                        .padding(12.dp),
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.settings_desktop_battery_critical, batteryLevel),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = TempoErrorSoft,
-                                    modifier = Modifier.fillMaxWidth(),
-                                )
-                            }
-                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                        } else if (isLowBattery) {
-                            Box(
-                                modifier =
-                                    Modifier
-                                        .fillMaxWidth()
-                                        .background(TempoWarningDeep.copy(alpha = 0.2f))
-                                        .padding(12.dp),
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.settings_desktop_battery_low, batteryLevel),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = TempoWarningBright,
-                                    modifier = Modifier.fillMaxWidth(),
-                                )
-                            }
-                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                        } else {
-                            Box(
-                                modifier =
-                                    Modifier
-                                        .fillMaxWidth()
-                                        .background(TempoSuccessDeep.copy(alpha = 0.15f))
-                                        .padding(12.dp),
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.settings_desktop_battery_healthy, batteryLevel),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = TempoSuccessBright,
-                                    modifier = Modifier.fillMaxWidth(),
-                                )
-                            }
-                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                        val scheme = MaterialTheme.colorScheme
+                        val (statusContainer, statusForeground) = when {
+                            isBatteryCritical -> scheme.errorContainer to scheme.onErrorContainer
+                            isLowBattery -> scheme.tertiaryContainer to scheme.onTertiaryContainer
+                            else -> scheme.secondaryContainer to scheme.onSecondaryContainer
                         }
-
+                        val statusText = when {
+                            isBatteryCritical -> R.string.settings_desktop_battery_critical
+                            isLowBattery -> R.string.settings_desktop_battery_low
+                            else -> R.string.settings_desktop_battery_healthy
+                        }
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            color = statusContainer,
+                            contentColor = statusForeground,
+                        ) {
+                            Text(
+                                text = stringResource(statusText, batteryLevel),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = statusForeground,
+                                modifier = Modifier.fillMaxWidth().padding(12.dp),
+                            )
+                        }
+                        HorizontalDivider(color = scheme.outlineVariant)
                         SettingsOption(
                             title = stringResource(R.string.desktop_link_settings_title),
                             subtitle = stringResource(R.string.desktop_link_settings_subtitle),
