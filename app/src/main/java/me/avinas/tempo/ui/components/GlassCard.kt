@@ -287,9 +287,9 @@ fun GlassCard(
 }
 
 /**
- * Shared frosted-glass circular icon button for top bars — the single spec
- * every screen floating over artwork/scrolling content must use:
- * 40dp circle, GlassFrostMedium fill, 0.8dp GlassBorderSoft border, 18dp icon.
+ * Accessible Material icon button shared by all app bars and artwork overlays.
+ * The outer click target is 48dp; custom container colors remain opt-in for
+ * artwork overlay controls. Material ripple/focus/semantics come from Surface.
  */
 @Composable
 fun FrostedIconButton(
@@ -301,28 +301,28 @@ fun FrostedIconButton(
     containerColor: Color = GlassFrostMedium,
     borderColor: Color = GlassBorderSoft,
 ) {
-    val palette = LocalTempoPalette.current
-    // Theme-aware defaults keep icon controls readable over pale glass.
-    // Explicit caller colors are preserved for artwork overlays.
-    val effectiveContainer = if (!palette.isDark && containerColor == GlassFrostMedium)
-        palette.elevatedSurface else containerColor
-    val effectiveBorder = if (!palette.isDark && borderColor == GlassBorderSoft)
-        palette.border.copy(alpha = 0.75f) else borderColor
-    Box(
-        modifier = modifier
-            .size(40.dp)
-            .clip(CircleShape)
-            .background(effectiveContainer)
-            .border(0.8.dp, effectiveBorder, CircleShape)
-            .premiumClickable(onClick = onClick),
-        contentAlignment = Alignment.Center,
+    val scheme = MaterialTheme.colorScheme
+    val materialSurface = containerColor == GlassFrostMedium
+    val color = if (materialSurface) scheme.surfaceContainerHigh else containerColor
+    val foreground = if (materialSurface && iconTint == LocalTempoPalette.current.onSurface)
+        scheme.onSurface else iconTint
+    Surface(
+        onClick = onClick,
+        modifier = modifier.size(48.dp),
+        shape = CircleShape,
+        color = color,
+        contentColor = foreground,
+        border = if (borderColor == GlassBorderSoft) null
+            else BorderStroke(1.dp, borderColor),
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = contentDescription,
-            tint = iconTint,
-            modifier = Modifier.size(18.dp),
-        )
+        Box(contentAlignment = Alignment.Center) {
+            Icon(
+                imageVector = icon,
+                contentDescription = contentDescription,
+                tint = foreground,
+                modifier = Modifier.size(22.dp),
+            )
+        }
     }
 }
 
@@ -344,22 +344,22 @@ fun SectionCatalogKicker(
     ) {
         Text(
             text = number,
-            style = KickerSmall,
+            style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.Bold,
-            color = palette.onSurface,
+            color = MaterialTheme.colorScheme.onSurface,
         )
         Box(
             modifier = Modifier
                 .width(10.dp)
                 .height(0.8.dp)
-                .background(GlassBorderMedium),
+                .background(MaterialTheme.colorScheme.outlineVariant),
         )
         Text(
             text = label.uppercase(Locale.getDefault()),
-            style = KickerSmall,
-            color = palette.mutedText,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             letterSpacing = 1.2.sp,
-            maxLines = 1,
+            maxLines = 2,
             overflow = TextOverflow.Ellipsis,
         )
     }
@@ -383,9 +383,9 @@ fun TelemetryMiniCell(
     ) {
         Text(
             text = label.uppercase(Locale.getDefault()),
-            style = KickerSmall,
-            color = palette.mutedText,
-            maxLines = 1,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 2,
             overflow = TextOverflow.Ellipsis,
         )
         Spacer(modifier = Modifier.height(3.dp))
@@ -396,7 +396,7 @@ fun TelemetryMiniCell(
                 fontWeight = FontWeight.Bold,
             ),
             color = valueColor,
-            maxLines = 1,
+            maxLines = 2,
             overflow = TextOverflow.Ellipsis,
         )
     }
