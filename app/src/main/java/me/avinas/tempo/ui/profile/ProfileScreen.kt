@@ -387,7 +387,7 @@ internal fun MastheadSecondaryStat(
             style = KickerSmall,
             color = appearancePalette.mutedText,
             letterSpacing = 1.2.sp,
-            fontSize = 10.sp,
+            fontSize = MaterialTheme.typography.labelSmall.fontSize,
         )
         Text(
             text = value,
@@ -1284,7 +1284,7 @@ private fun HeroAvatar(
                 fontWeight = FontWeight.Bold,
                 color = profileTextColor(tierAccent),
                 letterSpacing = 0.8.sp,
-                fontSize = 10.sp,
+                fontSize = MaterialTheme.typography.labelSmall.fontSize,
             )
         }
     }
@@ -1716,7 +1716,7 @@ private fun ChallengeCard(challenge: DailyChallenge) {
                             fontWeight = FontWeight.Bold,
                             color = profileTextColor(accent, difficultySurface),
                             letterSpacing = 0.8.sp,
-                            fontSize = 10.sp,
+                            fontSize = MaterialTheme.typography.labelSmall.fontSize,
                         )
                     }
                     Text(
@@ -1730,7 +1730,7 @@ private fun ChallengeCard(challenge: DailyChallenge) {
                         fontWeight = FontWeight.Medium,
                         color = appearancePalette.mutedText,
                         letterSpacing = 0.8.sp,
-                        fontSize = 10.sp,
+                        fontSize = MaterialTheme.typography.labelSmall.fontSize,
                     )
                 }
 
@@ -2056,7 +2056,7 @@ private fun SpotlightBadgeCard(
                         fontWeight = FontWeight.Bold,
                         color = profileTextColor(accent),
                         letterSpacing = 1.2.sp,
-                        fontSize = 10.sp,
+                        fontSize = MaterialTheme.typography.labelSmall.fontSize,
                     )
                 }
                 Text(
@@ -2194,7 +2194,7 @@ private fun BadgeCard(
                 fontWeight = FontWeight.Bold,
                 color = profileTextColor(if (isEarned) rarityColor else appearancePalette.mutedText),
                 letterSpacing = 1.sp,
-                fontSize = 10.sp,
+                fontSize = MaterialTheme.typography.labelSmall.fontSize,
             )
             if (isEarned) {
                 if (isBeginner) {
@@ -2204,7 +2204,7 @@ private fun BadgeCard(
                         fontWeight = FontWeight.Bold,
                         color = profileTextColor(intrinsicColor),
                         letterSpacing = 1.sp,
-                        fontSize = 10.sp,
+                        fontSize = MaterialTheme.typography.labelSmall.fontSize,
                     )
                 } else {
                     Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) {
@@ -2230,7 +2230,7 @@ private fun BadgeCard(
                             fontWeight = FontWeight.Bold,
                             color = profileTextColor(TempoWarningBright),
                             letterSpacing = 1.sp,
-                            fontSize = 10.sp,
+                            fontSize = MaterialTheme.typography.labelSmall.fontSize,
                         )
                     } else {
                         ProgressTrack(
