@@ -12,8 +12,6 @@ import me.avinas.tempo.data.local.AppDatabase
 import me.avinas.tempo.data.local.dao.isLocalBackupArtwork
 import me.avinas.tempo.data.local.entities.*
 import me.avinas.tempo.data.profile.ProfileIdentityManager
-import me.avinas.tempo.utils.ImageUrlHostAllowlist
-import me.avinas.tempo.worker.PostRestoreCacheWorker
 import java.io.*
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.zip.ZipEntry
@@ -31,8 +29,8 @@ class ImportExportManager @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val database: AppDatabase,
     private val profileIdentityManager: ProfileIdentityManager,
-    private val statsRepository: me.avinas.tempo.data.repository.StatsRepository,
     private val appearanceRepository: me.avinas.tempo.ui.appearance.AppearancePreferencesRepository,
+    private val postRestoreCoordinator: PostRestoreCoordinator,
 ) {
     companion object {
         private const val TAG = "ImportExportManager"
@@ -252,62 +250,14 @@ class ImportExportManager @Inject constructor(
             )
 
             
-            // The Room transaction is already committed here. Profile identity and
-            // Appearance Studio live in separate stores and therefore cannot participate in
-            // that transaction. Treat failures as explicit partial-restore warnings rather than
-            // reporting the entire import as failed after committed library data is visible.
-            val postRestoreWarnings = mutableListOf<String>()
+            val postRestore =
+                postRestoreCoordinator.complete(
+                    data = data,
+                    pathMapping = pathMapping,
+                    conflictStrategy = conflictStrategy,
+                    onProgress = { _progress.value = it },
+                )
 
-            if (conflictStrategy == ImportConflictStrategy.REPLACE) {
-                try {
-                    data.userName?.takeIf { it.isNotBlank() }?.let { name ->
-                        profileIdentityManager.updateUserName(name)
-                        Log.i(TAG, "Restored user name: $name")
-                    }
-                    val restoredProfileImagePath = resolveRestoredProfileImagePath(
-                        exportedProfileImagePath = data.userProfileImagePath,
-                        pathMapping = pathMapping,
-                    )
-                    profileIdentityManager.restoreProfileImagePath(restoredProfileImagePath)
-                    Log.i(TAG, "Restored profile image path present=${!restoredProfileImagePath.isNullOrBlank()}")
-                } catch (cancelled: CancellationException) {
-                    throw cancelled
-                } catch (failure: Exception) {
-                    Log.w(TAG, "Library restored but profile identity could not be restored", failure)
-                    postRestoreWarnings += "Profile identity could not be restored"
-                }
-            }
-
-            val restoredAppearance = try {
-                data.appearance?.let {
-                    appearanceRepository.restoreBackup(it, replace = conflictStrategy == ImportConflictStrategy.REPLACE)
-                } ?: false
-            } catch (cancelled: CancellationException) {
-                throw cancelled
-            } catch (failure: Exception) {
-                Log.w(TAG, "Library restored but appearance settings could not be written", failure)
-                postRestoreWarnings += "Appearance settings could not be restored"
-                false
-            }
-
-            // Schedule pre-caching of hotlinked images. The list comes from the
-            // restored backup file and is therefore untrusted input: a crafted
-            // backup must not be able to make Tempo bulk-fetch arbitrary
-            // attacker-chosen URLs in the background (covert beacon). Only known
-            // music-art CDN hosts are pre-cached; per-image UI loading is unaffected.
-            val cacheableHotlinks = ImageUrlHostAllowlist.filterAllowed(data.hotlinkedUrls)
-            val droppedHotlinkCount = data.hotlinkedUrls.size - cacheableHotlinks.size
-            if (droppedHotlinkCount > 0) {
-                Log.w(TAG, "Dropped $droppedHotlinkCount non-allowlisted hotlinked URLs from the restored backup")
-            }
-            if (cacheableHotlinks.isNotEmpty()) {
-                _progress.value = ImportExportProgress("Scheduling image cache...", 95, 100)
-                PostRestoreCacheWorker.schedule(context, cacheableHotlinks)
-            }
-            
-            // Invalidate stats cache to force UI refresh (fixes "New User" state persisting)
-            statsRepository.invalidateCache()
-            
             _progress.value = ImportExportProgress("Import complete!", 100, 100)
             
             ImportExportResult.Success(
@@ -318,8 +268,8 @@ class ImportExportManager @Inject constructor(
                 eventsReplaced = databaseRestore.events.replaced,
                 eventsSkipped = databaseRestore.events.skipped,
                 imagesCount = extractedImages.size,
-                appearanceStatus = if (restoredAppearance) BackupAppearanceStatus.RESTORED else BackupAppearanceStatus.UNCHANGED,
-                warnings = postRestoreWarnings.toList(),
+                appearanceStatus = postRestore.appearanceStatus,
+                warnings = postRestore.warnings,
             )
         } catch (e: CancellationException) {
             throw e
