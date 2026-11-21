@@ -21,7 +21,7 @@ import me.avinas.tempo.worker.PostRestoreCacheWorker
  * derived only from allow-listed URLs.
  */
 @Singleton
-internal class PostRestoreCoordinator @Inject constructor(
+class PostRestoreCoordinator @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val profileIdentityManager: ProfileIdentityManager,
     private val appearanceRepository: AppearancePreferencesRepository,
