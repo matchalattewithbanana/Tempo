@@ -1239,16 +1239,15 @@ fun ArchiveHistoryListItem(item: ArchiveHistoryItem) {
                         .align(Alignment.BottomEnd)
                         .offset(x = 4.dp, y = 4.dp)
                         .clip(RoundedCornerShape(6.dp))
-                        .background(GoldDark)
+                        .background(MaterialTheme.colorScheme.secondaryContainer)
                         .padding(horizontal = 5.dp, vertical = 1.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = "${item.playCount}x",
                         style = MaterialTheme.typography.labelSmall,
-                        fontSize = 9.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimary
+                        color = MaterialTheme.colorScheme.onSecondaryContainer
                     )
                 }
             }
@@ -1497,7 +1496,7 @@ fun HistoryListItem(
                                 Text(
                                     text = item.content_type.take(1),
                                     style = MaterialTheme.typography.labelSmall,
-                                    fontSize = 9.sp,
+                                    fontSize = MaterialTheme.typography.labelSmall.fontSize,
                                     color = badgeColor,
                                     fontWeight = FontWeight.Bold
                                 )
@@ -1520,7 +1519,7 @@ fun HistoryListItem(
                                 Text(
                                     text = "DESK",
                                     style = MaterialTheme.typography.labelSmall,
-                                    fontSize = 9.sp,
+                                    fontSize = MaterialTheme.typography.labelSmall.fontSize,
                                     color = badgeColor,
                                     fontWeight = FontWeight.Bold
                                 )
