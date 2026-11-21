@@ -339,13 +339,15 @@ fun TempoDialogTextField(
     supportingText: String? = null,
     maxLines: Int = 1
 ) {
-    val appearancePalette = LocalTempoPalette.current
+    val scheme = MaterialTheme.colorScheme
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
         modifier = modifier.fillMaxWidth(),
         label = label?.let { { Text(it, style = MaterialTheme.typography.bodyMedium) } },
-        placeholder = placeholder?.let { { Text(it, style = MaterialTheme.typography.bodyMedium, color = appearancePalette.mutedText) } },
+        placeholder = placeholder?.let {
+            { Text(it, style = MaterialTheme.typography.bodyMedium, color = scheme.onSurfaceVariant) }
+        },
         singleLine = singleLine,
         maxLines = maxLines,
         isError = isError,
@@ -354,23 +356,23 @@ fun TempoDialogTextField(
                 Text(
                     text = it,
                     style = MaterialTheme.typography.bodySmall,
-                    color = if (isError) TempoError else appearancePalette.mutedText
+                    color = if (isError) scheme.error else scheme.onSurfaceVariant,
                 )
             }
         },
-        shape = RoundedCornerShape(12.dp),
+        shape = MaterialTheme.shapes.large,
         colors = OutlinedTextFieldDefaults.colors(
-            focusedTextColor = appearancePalette.onSurface,
-            unfocusedTextColor = appearancePalette.onSurface,
-            focusedBorderColor = appearancePalette.accent,
-            unfocusedBorderColor = appearancePalette.border.copy(alpha = 0.45f),
-            focusedLabelColor = appearancePalette.accent,
-            unfocusedLabelColor = appearancePalette.mutedText,
-            cursorColor = appearancePalette.accent,
-            focusedContainerColor = appearancePalette.surfaceSunken,
-            unfocusedContainerColor = appearancePalette.surfaceSunken,
-            errorBorderColor = TempoError,
-            errorContainerColor = appearancePalette.surfaceSunken
-        )
+            focusedTextColor = scheme.onSurface,
+            unfocusedTextColor = scheme.onSurface,
+            focusedBorderColor = scheme.primary,
+            unfocusedBorderColor = scheme.outline,
+            focusedLabelColor = scheme.primary,
+            unfocusedLabelColor = scheme.onSurfaceVariant,
+            cursorColor = scheme.primary,
+            focusedContainerColor = scheme.surface,
+            unfocusedContainerColor = scheme.surface,
+            errorBorderColor = scheme.error,
+            errorContainerColor = scheme.surface,
+        ),
     )
 }
