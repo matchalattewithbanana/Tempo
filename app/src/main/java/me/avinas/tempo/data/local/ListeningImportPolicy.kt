@@ -75,11 +75,21 @@ internal object ListeningImportPolicy {
                 first.sessionId != second.sessionId
             ) return null
             if (first.source == SPOTIFY_EXPORT && first.endTimestamp != null &&
-                second.endTimestamp != null && first.endTimestamp == second.endTimestamp &&
-                // Some overlapping exports represent one play with a shifted start.
-                // Do not merge distinct durations from a batched offline upload.
-                distance(first.duration, second.duration) <= maxOf(20_000L, minOf(first.duration, second.duration) / 5L)
-            ) return 0L
+                second.endTimestamp != null && first.duration > 0L && second.duration > 0L
+            ) {
+                // Spotify's older StreamingHistory uses minute-precision UTC
+                // endTime; extended endsong uses seconds. Identical audio can
+                // therefore have end anchors up to 59s apart even though
+                // ms_played matches. Require near-identical measured durations
+                // AND significant real-time overlap to protect fast replays.
+                val endDistance = distance(first.endTimestamp, second.endTimestamp)
+                val overlap = minOf(first.endTimestamp, second.endTimestamp) -
+                    maxOf(first.timestamp, second.timestamp)
+                val shorter = minOf(first.duration, second.duration)
+                if (endDistance <= 60_000L && distance(first.duration, second.duration) <= 2_000L &&
+                    overlap >= MEASURED_OVERLAP_MIN_MS && overlap >= shorter / 2L
+                ) return endDistance
+            }
             if (first.source == YOUTUBE_EXPORT && (first.duration == 0L || second.duration == 0L)) {
                 // Older imports shifted timestamp back by a guessed duration. The Takeout
                 // timestamp in endTimestamp still identifies the original activity.
