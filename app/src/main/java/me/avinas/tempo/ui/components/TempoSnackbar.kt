@@ -63,8 +63,8 @@ fun TempoSnackbar(
     val colors = MaterialTheme.colorScheme
     Snackbar(
         modifier = modifier
-            .fillMaxWidth()
             .widthIn(max = 560.dp)
+            .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),
         containerColor = colors.inverseSurface,
         contentColor = colors.inverseOnSurface,
