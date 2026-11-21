@@ -235,14 +235,12 @@ interface ListeningEventDao {
             if (fp != null && !seenFp.add(fp)) {
                 skipped++
             } else if (fp != null && fp in existingFps) {
-                if (replaceExistingOnMatch) {
-                    val old = existingRows[fp]
-                    if (old != null && old.source == e.source) {
-                        val candidate = e.copy(id = old.id)
-                        if (candidate != old) toUpdate.add(candidate)
-                    }
+                val old = if (replaceExistingOnMatch) existingRows[fp] else null
+                if (old != null && old.source == e.source && e.copy(id = old.id) != old) {
+                    toUpdate.add(e.copy(id = old.id))
+                } else {
+                    skipped++
                 }
-                skipped++
             } else {
                 layer1Survivors.add(e)
             }
@@ -333,7 +331,7 @@ interface ListeningEventDao {
             }
 
         return InsertResult(inserted = inserted, skipped = skipped,
-            replaced = toDelete.size + toUpdate.size)
+            replaced = toDelete.size + toUpdate.size, updated = toUpdate.size)
     }
 
     private data class Slot(val play: ListeningImportPolicy.Play, val existingId: Long? = null)
@@ -384,11 +382,15 @@ interface ListeningEventDao {
      *                   (cross-source reconciliation). Always 0 for same-source imports.
      */
     data class InsertResult(
+        // Physical insert count: includes a row that replaced a previous play.
         val inserted: Int,
         val skipped: Int,
         val replaced: Int = 0,
+        // Exact-fingerprint metadata updates are counted in replaced, not inserted.
+        val updated: Int = 0,
     ) {
         val total: Int get() = inserted + skipped
+        val newlyAdded: Int get() = (inserted - replaced + updated).coerceAtLeast(0)
     }
 
     /**
