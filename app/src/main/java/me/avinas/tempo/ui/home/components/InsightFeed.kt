@@ -1397,27 +1397,8 @@ private fun DiscoveryVisualizer(newArtistsCount: Int, trends: List<DiscoveryTren
 private fun TempoBPMVisualizer(bpm: Float, color: Color) {
     val appearancePalette = LocalTempoPalette.current
     val safeBpm = bpm.coerceIn(40f, 240f)
-    val cycleMs = (60_000 / safeBpm).toInt().coerceIn(250, 1500)
-    val infiniteTransition = me.avinas.tempo.ui.theme.rememberMotionAwareInfiniteTransition(label = "metronome")
-    val ringPulse by infiniteTransition.animateFloat(
-        initialValue = 0.85f,
-        targetValue = 1.35f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(cycleMs / 2, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "ringPulse"
-    )
-    val ringAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.6f,
-        targetValue = 0.05f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(cycleMs / 2, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "ringAlpha"
-    )
-
+    // BPM is a recorded attribute, not a running timer. A static metronome
+    // mark avoids two continuous animation timelines in the insight feed.
     val tempoTag = remember(safeBpm) {
         when {
             safeBpm >= 140 -> "FAST // PRESTO"
@@ -1439,16 +1420,11 @@ private fun TempoBPMVisualizer(bpm: Float, color: Color) {
             modifier = Modifier.size(52.dp),
             contentAlignment = Alignment.Center
         ) {
-            // Expanding sonic ripple
+            // Fixed outer ring. Only actual live playback should need periodic updates.
             Box(
                 modifier = Modifier
                     .size(42.dp)
-                    .graphicsLayer {
-                        scaleX = ringPulse
-                        scaleY = ringPulse
-                        this.alpha = ringAlpha
-                    }
-                    .background(color, CircleShape)
+                    .background(color.copy(alpha = 0.18f), CircleShape)
             )
             // Center vinyl pip
             Box(
@@ -1462,7 +1438,7 @@ private fun TempoBPMVisualizer(bpm: Float, color: Color) {
                 Box(
                     modifier = Modifier
                         .size(6.dp)
-                        .background(Color.White, CircleShape)
+                        .background(MaterialTheme.colorScheme.onSurface, CircleShape)
                 )
             }
         }
@@ -1701,13 +1677,8 @@ private fun GenreVisualizer(genre: String, color: Color) {
 private fun FeatureGaugeVisualizer(value: Float, color: Color, label: String) {
     val appearancePalette = LocalTempoPalette.current
     val safeValue = value.coerceIn(0f, 1f)
-    val animValue = remember { Animatable(0f) }
-    LaunchedEffect(safeValue) {
-        animValue.animateTo(
-            targetValue = safeValue,
-            animationSpec = tween(900, easing = FastOutSlowInEasing)
-        )
-    }
+    // Present accurate stat levels on the first frame; no artificial reveal delay.
+    val displayedValue = safeValue
 
     val percentage = (safeValue * 100).toInt()
     val levelDescription = when {
@@ -1762,7 +1733,7 @@ private fun FeatureGaugeVisualizer(value: Float, color: Color, label: String) {
         ) {
             Box(
                 modifier = Modifier
-                    .fillMaxWidth(animValue.value)
+                    .fillMaxWidth(displayedValue)
                     .fillMaxHeight()
                     .background(
                         Brush.horizontalGradient(
@@ -1794,13 +1765,7 @@ private fun EngagementVisualizer(value: Float, color: Color) {
     val isSkipRate = value < 0f
     val absValue = kotlin.math.abs(value).coerceIn(0f, 1f)
     val percentage = (absValue * 100).toInt()
-    val animValue = remember { Animatable(0f) }
-    LaunchedEffect(value) {
-        animValue.animateTo(
-            targetValue = absValue,
-            animationSpec = tween(1100, easing = FastOutSlowInEasing)
-        )
-    }
+    val displayedValue = absValue
 
     val archetypeTitle = if (isSkipRate) "CURATOR MODE" else "COMPLETIONIST"
     val archetypeSub = if (isSkipRate) "Skip Rate Focus" else "Track Completion"
@@ -1838,7 +1803,7 @@ private fun EngagementVisualizer(value: Float, color: Color) {
                 )
 
                 // Animated Sweep Arc
-                val sweep = animValue.value * 360f
+                val sweep = displayedValue * 360f
                 drawArc(
                     brush = Brush.sweepGradient(
                         colors = listOf(color.copy(alpha = 0.45f), color, color)
@@ -1852,7 +1817,7 @@ private fun EngagementVisualizer(value: Float, color: Color) {
                 )
 
                 // Glowing Tip Pip at the end of the arc
-                if (animValue.value > 0.02f) {
+                if (displayedValue > 0.02f) {
                     val endAngleDeg = -90f + sweep
                     val endAngleRad = Math.toRadians(endAngleDeg.toDouble())
                     val tipX = (cx + radius * kotlin.math.cos(endAngleRad)).toFloat()
