@@ -24,6 +24,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.window.PopupProperties
 import me.avinas.tempo.ui.theme.*
 
@@ -52,11 +54,11 @@ fun TempoDropdownMenu(
         onDismissRequest = onDismissRequest,
         offset = offset,
         properties = properties,
-        shape = TempoMenuTokens.Shape,
+        shape = MaterialTheme.shapes.extraLarge,
         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         tonalElevation = 0.dp,
-        shadowElevation = TempoMenuTokens.ShadowElevation,
-        border = BorderStroke(TempoMenuTokens.BorderWidth, MaterialTheme.colorScheme.outlineVariant),
+        shadowElevation = 0.dp,
+        border = null,
         modifier = modifier
             .widthIn(min = TempoMenuTokens.MinWidth)
             .padding(vertical = 4.dp),
@@ -82,23 +84,23 @@ fun TempoDropdownMenuItem(
 ) {
     val primaryColor = when {
         !enabled -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f)
-        isDestructive -> TempoError
+        isDestructive -> MaterialTheme.colorScheme.error
         isSelected -> MaterialTheme.colorScheme.primary
         else -> MaterialTheme.colorScheme.onSurface
     }
 
     val iconColor = when {
         !enabled -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f)
-        isDestructive -> TempoError
+        isDestructive -> MaterialTheme.colorScheme.error
         leadingIconTint != null -> leadingIconTint
         isSelected -> MaterialTheme.colorScheme.primary
         else -> MaterialTheme.colorScheme.onSurfaceVariant
     }
 
     val iconBgColor = when {
-        isDestructive -> TempoError.copy(alpha = 0.08f)
-        isSelected -> MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
-        else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.04f)
+        isDestructive -> MaterialTheme.colorScheme.errorContainer
+        isSelected -> MaterialTheme.colorScheme.secondaryContainer
+        else -> MaterialTheme.colorScheme.surfaceContainerHighest
     }
 
     DropdownMenuItem(
@@ -108,8 +110,8 @@ fun TempoDropdownMenuItem(
             ) {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                    style = if (isSelected) MaterialTheme.typography.bodyMediumEmphasized
+                        else MaterialTheme.typography.bodyMedium,
                     color = primaryColor
                 )
                 if (subtitle != null) {
@@ -117,7 +119,7 @@ fun TempoDropdownMenuItem(
                     Text(
                         text = subtitle,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -131,11 +133,7 @@ fun TempoDropdownMenuItem(
                         .size(32.dp)
                         .clip(RoundedCornerShape(8.dp))
                         .background(iconBgColor)
-                        .border(
-                            0.5.dp,
-                            if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.18f) else MaterialTheme.colorScheme.outlineVariant,
-                            RoundedCornerShape(8.dp)
-                        ),
+,
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -154,14 +152,14 @@ fun TempoDropdownMenuItem(
                         modifier = Modifier
                             .size(20.dp)
                             .clip(RoundedCornerShape(6.dp))
-                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)),
+                            .background(MaterialTheme.colorScheme.secondaryContainer),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = TempoIcons.Check,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(13.dp)
+                            tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                            modifier = Modifier.size(16.dp)
                         )
                     }
                 }
@@ -169,7 +167,7 @@ fun TempoDropdownMenuItem(
                     Text(
                         text = trailingText,
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -177,13 +175,13 @@ fun TempoDropdownMenuItem(
         colors = MenuDefaults.itemColors(
             textColor = primaryColor,
             leadingIconColor = iconColor,
-            trailingIconColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f),
+            trailingIconColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
             disabledTextColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f),
             disabledLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f),
             disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f)
         ),
         contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
-        modifier = modifier
+        modifier = modifier.semantics { selected = isSelected }
     )
 }
 
@@ -194,7 +192,7 @@ fun TempoDropdownMenuItem(
 fun TempoMenuKicker(
     text: String,
     modifier: Modifier = Modifier,
-    color: Color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f)
+    color: Color = MaterialTheme.colorScheme.onSurfaceVariant
 ) {
     Text(
         text = text.uppercase(),
