@@ -45,11 +45,11 @@ fun TempoDialogSurface(
     // Dialog already lives in a modal window; drawing a second 28dp shadow
     // and several gradient overlays wastes work and looks muddy in light mode.
     androidx.compose.material3.Surface(
-        modifier = modifier.safeDrawingPadding().fillMaxWidth(),
+        modifier = modifier.fillMaxWidth().widthIn(max = 560.dp),
         shape = MaterialTheme.shapes.extraLarge,
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
         contentColor = MaterialTheme.colorScheme.onSurface,
-        tonalElevation = 2.dp,
+        tonalElevation = 0.dp,
     ) {
         Column(
             modifier = Modifier
@@ -106,9 +106,8 @@ fun TempoDialogTitle(
     val appearancePalette = LocalTempoPalette.current
     Text(
         text = text,
-        style = MaterialTheme.typography.titleLarge,
-        fontWeight = FontWeight.SemiBold,
-        color = appearancePalette.onSurface,
+        style = MaterialTheme.typography.titleLargeEmphasized,
+        color = MaterialTheme.colorScheme.onSurface,
         textAlign = TextAlign.Center,
         modifier = modifier
     )
@@ -121,7 +120,7 @@ fun TempoDialogTitle(
 fun TempoDialogBody(
     text: String,
     modifier: Modifier = Modifier,
-    color: Color = LocalTempoPalette.current.mutedText
+    color: Color = MaterialTheme.colorScheme.onSurfaceVariant
 ) {
     Text(
         text = text,
@@ -143,8 +142,8 @@ fun TempoDialogPrimaryButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     icon: ImageVector? = null,
-    containerColor: Color = LocalTempoPalette.current.accent,
-    contentColor: Color = LocalTempoPalette.current.onAccent
+    containerColor: Color = MaterialTheme.colorScheme.primary,
+    contentColor: Color = MaterialTheme.colorScheme.onPrimary
 ) {
     Button(
         onClick = onClick,
@@ -215,8 +214,8 @@ fun TempoDialogButtonRow(
     modifier: Modifier = Modifier,
     primaryEnabled: Boolean = true,
     secondaryEnabled: Boolean = true,
-    primaryColor: Color = LocalTempoPalette.current.accent,
-    primaryContentColor: Color = LocalTempoPalette.current.onAccent
+    primaryColor: Color = MaterialTheme.colorScheme.primary,
+    primaryContentColor: Color = MaterialTheme.colorScheme.onPrimary
 ) {
     val appearancePalette = LocalTempoPalette.current
     Row(
@@ -279,8 +278,8 @@ fun TempoDialogDangerButton(
         modifier = modifier,
         enabled = enabled,
         icon = icon,
-        containerColor = TempoError,
-        contentColor = Color.White
+        containerColor = MaterialTheme.colorScheme.error,
+        contentColor = MaterialTheme.colorScheme.onError
     )
 }
 
