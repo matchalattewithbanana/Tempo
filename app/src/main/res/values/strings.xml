@@ -239,6 +239,7 @@
 
     <!-- Empty state -->
     <string name="empty_tracking_active">Music Tracking Active</string>
+    <string name="empty_waiting_for_listening">Waiting for listening activity</string>
     <string name="empty_quiet_week">Quiet week so far</string>
     <string name="empty_quiet_week_msg">We\'re listening, but haven\'t seen any plays yet. Start streaming to see your weekly pulse.</string>
     <string name="empty_fresh_month">Fresh month, fresh start</string>
