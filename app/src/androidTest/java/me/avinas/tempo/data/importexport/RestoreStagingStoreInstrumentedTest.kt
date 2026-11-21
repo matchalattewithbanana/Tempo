@@ -83,16 +83,24 @@ class RestoreStagingStoreInstrumentedTest {
         }
 
         val events = mutableListOf<ListeningEvent>()
-        store.forEachEvent(events::add)
+        store.forEachEvent { events.add(it) }
         assertEquals(1, events.size)
         assertEquals(event.copy(id = 0, contentFingerprint = null), events.single())
 
         val archives = mutableListOf<ScrobbleArchive>()
-        store.forEachArchiveRow(archives::add)
+        store.forEachArchiveRow { archives.add(it) }
         assertEquals(1, archives.size)
         val restored = archives.single()
         assertEquals(archive.copy(id = 0), restored)
         assertNull(restored.albumName)
+        assertEquals(archive.musicbrainzId, restored.musicbrainzId)
+        assertEquals(archive.firstScrobble, restored.firstScrobble)
+        assertEquals(archive.lastScrobble, restored.lastScrobble)
+        assertEquals(archive.albumArtUrl, restored.albumArtUrl)
+        assertEquals(archive.wasLoved, restored.wasLoved)
+        assertEquals(archive.importId, restored.importId)
+        assertEquals(archive.createdAt, restored.createdAt)
+        assertEquals(archive.updatedAt, restored.updatedAt)
         assertArrayEquals(blob, restored.timestampsBlob)
     }
 
