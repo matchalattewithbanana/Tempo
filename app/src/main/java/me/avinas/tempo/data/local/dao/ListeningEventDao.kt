@@ -88,6 +88,39 @@ interface ListeningEventDao {
     @Update
     suspend fun updateExistingForRestore(events: List<ListeningEvent>): Int
 
+    /** On-demand, read-only audit: exact hashes that occur more than once.
+     * Legacy NULL fingerprints deliberately do not count as proven duplicates.
+     */
+    @Query(
+        """
+        SELECT COALESCE(SUM(occurrences - 1), 0) FROM (
+            SELECT COUNT(*) AS occurrences
+            FROM listening_events
+            WHERE content_fingerprint IS NOT NULL
+            GROUP BY content_fingerprint
+            HAVING COUNT(*) > 1
+        )
+        """,
+    )
+    suspend fun countExactFingerprintDuplicates(): Int
+
+    /** Only call after explicit backed-up user confirmation. Exact repeated
+     * fingerprints represent the same source, track, time and session; retain
+     * the oldest primary key and never touch un-fingerprinted legacy rows.
+     */
+    @Query(
+        """
+        DELETE FROM listening_events
+        WHERE content_fingerprint IS NOT NULL
+          AND id NOT IN (
+              SELECT MIN(id) FROM listening_events
+              WHERE content_fingerprint IS NOT NULL
+              GROUP BY content_fingerprint
+          )
+        """,
+    )
+    suspend fun deleteExactFingerprintDuplicates(): Int
+
     /**
      * Check if an event already exists for this track within the tolerance window.
      * Used for deduplication during imports.
