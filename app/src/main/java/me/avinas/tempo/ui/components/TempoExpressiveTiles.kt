@@ -19,6 +19,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import me.avinas.tempo.ui.theme.LocalTempoPalette
+import me.avinas.tempo.ui.theme.LocalTempoAppearance
+import me.avinas.tempo.ui.appearance.AppearanceDensity
 
 /**
  * Tempo's own music-first tonal tiles, not a copied visual asset from another app.
@@ -73,9 +75,11 @@ fun TempoMetricTile(
     onClick: (() -> Unit)? = null,
 ) {
     val swatch = tempoTileSwatch(tone)
+    val dense = LocalTempoAppearance.current.density == AppearanceDensity.COMPACT
+    val tileHeight = if (dense) (minimumHeight - 20.dp).coerceAtLeast(108.dp) else minimumHeight
     Surface(
         modifier = modifier
-            .heightIn(min = minimumHeight)
+            .heightIn(min = tileHeight)
             .then(if (onClick != null) Modifier.clickable(role = Role.Button, onClick = onClick) else Modifier),
         shape = MaterialTheme.shapes.extraLarge,
         color = swatch.container,
@@ -89,11 +93,11 @@ fun TempoMetricTile(
                     .background(swatch.foreground.copy(alpha = 0.055f), swatch.shape),
             )
             Column(
-                Modifier.fillMaxWidth().padding(16.dp),
+                Modifier.fillMaxWidth().padding(if (dense) 12.dp else 16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 Surface(
-                    modifier = Modifier.size(42.dp),
+                    modifier = Modifier.size(if (dense) 38.dp else 42.dp),
                     shape = swatch.shape,
                     color = swatch.iconContainer,
                     contentColor = swatch.foreground,
