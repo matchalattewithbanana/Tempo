@@ -15,7 +15,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.WideNavigationRail
 import androidx.compose.material3.WideNavigationRailItem
+import androidx.compose.material3.WideNavigationRailValue
+import androidx.compose.material3.rememberWideNavigationRailState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -39,6 +42,14 @@ internal fun TempoMainNavigationRail(
     modifier: Modifier = Modifier,
 ) {
     val haptic = LocalHapticFeedback.current
+    val railState = rememberWideNavigationRailState(
+        initialValue = if (expanded) WideNavigationRailValue.Expanded
+            else WideNavigationRailValue.Collapsed,
+    )
+    LaunchedEffect(expanded, railState) {
+        if (expanded) railState.expand() else railState.collapse()
+    }
+
     data class Destination(
         val route: String,
         val selectedIcon: ImageVector,
@@ -54,7 +65,10 @@ internal fun TempoMainNavigationRail(
         Destination(Screen.History.route, Icons.Rounded.History, Icons.Outlined.History,
             stringResource(R.string.nav_history), onNavigateToHistory),
     )
-    WideNavigationRail(modifier = modifier.fillMaxHeight()) {
+    WideNavigationRail(
+        state = railState,
+        modifier = modifier.fillMaxHeight(),
+    ) {
         destinations.forEach { destination ->
             val selected = currentDestination?.hierarchy?.any {
                 it.route == destination.route

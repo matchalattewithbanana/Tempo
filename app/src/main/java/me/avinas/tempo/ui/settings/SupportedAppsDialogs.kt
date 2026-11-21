@@ -78,8 +78,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.sync.Semaphore
-import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import me.avinas.tempo.R
 import me.avinas.tempo.data.InstalledApp
@@ -104,14 +102,6 @@ import me.avinas.tempo.ui.theme.TextPrimary
 import me.avinas.tempo.ui.theme.TextQuaternary
 import me.avinas.tempo.ui.theme.TextSecondary
 import me.avinas.tempo.ui.theme.TextTertiary
-
-/**
- * Semaphore that limits the number of concurrent PackageManager icon loads.
- * PackageManager.getApplicationIcon() internally acquires locks on AssetManager/ResourcesImpl.
- * Without this limit, loading many icons in parallel causes severe lock contention which
- * can starve the main thread and trigger an ANR (Input dispatching timed out).
- */
-private val iconLoadingSemaphore = Semaphore(permits = 4)
 
 @Composable
 internal fun MinimumPlayDurationDialog(
