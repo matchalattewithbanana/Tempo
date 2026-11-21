@@ -115,7 +115,7 @@ fun PermissionScreen(
                 ) {
                     Text(
                         text = stringResource(R.string.perm_do_later),
-                        color = Color.White.copy(alpha = 0.6f),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.labelLarge
                     )
                 }
@@ -139,7 +139,7 @@ fun PermissionScreen(
                             style = if (isSmallScreen()) MaterialTheme.typography.titleLarge else MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Center,
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.onSurface,
                             fontSize = adaptiveTextUnitByCategory(24.sp, 22.sp, 20.sp),
                             lineHeight = adaptiveTextUnitByCategory(32.sp, 28.sp, 26.sp),
                             modifier = Modifier.fillMaxWidth(),
@@ -151,7 +151,7 @@ fun PermissionScreen(
                             text = stringResource(R.string.perm_how_tempo_sees),
                             style = MaterialTheme.typography.bodyLarge,
                             textAlign = TextAlign.Center,
-                            color = Color.White.copy(alpha = 0.7f),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             lineHeight = adaptiveTextUnitByCategory(24.sp, 22.sp, 20.sp),
                             fontSize = adaptiveTextUnitByCategory(16.sp, 15.sp, 14.sp),
                             modifier = Modifier.fillMaxWidth(),
@@ -189,7 +189,7 @@ fun PermissionScreen(
                                 accent = Color(0xFF22C55E),
                                 title = stringResource(R.string.perm_music_only),
                                 body = stringResource(R.string.perm_music_apps),
-                                bodyColor = Color.White.copy(alpha = 0.9f),
+                                bodyColor = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                             PermissionFactCard(
                                 modifier = Modifier.weight(1f).fillMaxHeight(),
@@ -197,7 +197,7 @@ fun PermissionScreen(
                                 accent = Color(0xFFEF4444),
                                 title = stringResource(R.string.perm_private_data),
                                 body = stringResource(R.string.perm_we_ignore),
-                                bodyColor = Color.White.copy(alpha = 0.6f),
+                                bodyColor = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
                         Spacer(modifier = Modifier.height(16.dp))
@@ -212,7 +212,7 @@ fun PermissionScreen(
                             Icon(
                                 imageVector = Icons.Default.Lock,
                                 contentDescription = null,
-                                tint = Color.White.copy(alpha = 0.6f),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.size(14.dp),
                             )
                             Spacer(modifier = Modifier.width(6.dp))
@@ -220,7 +220,7 @@ fun PermissionScreen(
                                 text = stringResource(R.string.perm_runs_efficient),
                                 textAlign = TextAlign.Center,
                                 fontSize = 12.sp,
-                                color = Color.Gray,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
                         Spacer(modifier = Modifier.height(16.dp))
