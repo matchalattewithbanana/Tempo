@@ -4,10 +4,10 @@ import androidx.room.*
 import kotlinx.coroutines.flow.Flow
 import me.avinas.tempo.data.local.EventFingerprint
 import me.avinas.tempo.data.local.ListeningImportPolicy
+import me.avinas.tempo.data.local.ListeningEventReconciliation
 import me.avinas.tempo.data.local.ReconciliationTrackScope
 import me.avinas.tempo.data.local.SourceAuthority
 import me.avinas.tempo.data.local.entities.ListeningEvent
-import java.util.TreeMap
 
 @Dao
 interface ListeningEventDao {
@@ -316,23 +316,26 @@ interface ListeningEventDao {
             val equivalentTrackIds = trackEvents.flatMap { event ->
                 equivalentByTrackId[event.track_id] ?: listOf(event.track_id)
             }.distinct()
-            val candidates = TreeMap<Long, MutableList<Slot>>()
-            fun addSlot(slot: Slot) {
-                candidates.getOrPut(slot.play.timestamp) { mutableListOf() }.add(slot)
-            }
-            for (window in reconciliationWindows(trackEvents)) {
+            val candidates =
+                ListeningEventReconciliation.Candidates(equivalentByTrackId)
+            for (window in ListeningEventReconciliation.windows(trackEvents)) {
                 // SQLite's bind-variable limit applies even when many old
                 // track rows normalize to the same artist/title identity.
                 for (ids in equivalentTrackIds.chunked(800)) {
                     for (existing in getEventsForReconciliation(ids, window.first, window.last)) {
-                        addSlot(Slot(
-                            ListeningImportPolicy.Play(
-                                existing.timestamp, existing.end_timestamp, existing.playDuration,
-                                existing.source, existing.session_id,
+                        candidates.add(
+                            ListeningEventReconciliation.Slot(
+                                play = ListeningImportPolicy.Play(
+                                    existing.timestamp,
+                                    existing.end_timestamp,
+                                    existing.playDuration,
+                                    existing.source,
+                                    existing.session_id,
+                                ),
+                                existingId = existing.id,
+                                trackId = existing.track_id,
                             ),
-                            existing.id,
-                            existing.track_id,
-                        ))
+                        )
                     }
                 }
             }
@@ -342,50 +345,30 @@ interface ListeningEventDao {
                     .thenBy { it.second.timestamp })
 
             for ((event, play) in incoming) {
-                val range = reconciliationRange(play.timestamp, play.source)
-                val nearby = candidates.subMap(range.first, true, range.last, true)
-                var closest: Slot? = null
-                var shortest = Long.MAX_VALUE
-                for (slots in nearby.values) {
-                    for (slot in slots) {
-                        // Aliasing is NOT transitive. A title-only track may
-                        // match Spotify IDs A and B, while A and B conflict.
-                        // Require direct identity compatibility before treating
-                        // an adjacent play as the same real listening event.
-                        if (slot.trackId !in (equivalentByTrackId[event.track_id]
-                                ?: listOf(event.track_id))) continue
-                        val distance = ListeningImportPolicy.matchDistance(slot.play, play) ?: continue
-                        val previous = closest
-                        if (previous == null || distance < shortest ||
-                            (distance == shortest && slot.play.authority > previous.play.authority) ||
-                            (distance == shortest && slot.play.authority == previous.play.authority &&
-                                (slot.existingId ?: Long.MAX_VALUE) < (previous.existingId ?: Long.MAX_VALUE))
-                        ) {
-                            closest = slot
-                            shortest = distance
-                        }
-                    }
-                }
-
-                val conflict = closest
-                val existingId = conflict?.existingId
+                val conflict = candidates.closest(event.track_id, play)
                 if (conflict != null) {
                     // REPLACE is meaningful for matching plays recorded by the
                     // same source; never overwrite a higher-authority live event.
-                    val canReplace = existingId != null && (
-                        play.authority > conflict.play.authority ||
-                            (replaceExistingOnMatch && play.authority == conflict.play.authority &&
-                                play.source == conflict.play.source)
+                    if (
+                        !ListeningEventReconciliation.shouldReplace(
+                            conflict = conflict,
+                            incoming = play,
+                            replaceExistingOnMatch = replaceExistingOnMatch,
                         )
-                    if (!canReplace) {
+                    ) {
                         skipped++
                         continue
                     }
-                    toDelete.add(existingId)
-                    candidates[conflict.play.timestamp]?.remove(conflict)
+                    toDelete.add(requireNotNull(conflict.existingId))
+                    candidates.remove(conflict)
                 }
                 toInsert.add(event)
-                addSlot(Slot(play, trackId = event.track_id))
+                candidates.add(
+                    ListeningEventReconciliation.Slot(
+                        play = play,
+                        trackId = event.track_id,
+                    ),
+                )
             }
         }
 
@@ -404,35 +387,6 @@ interface ListeningEventDao {
 
         return InsertResult(inserted = inserted, skipped = skipped,
             replaced = toDelete.size + toUpdate.size, updated = toUpdate.size)
-    }
-
-    private data class Slot(
-        val play: ListeningImportPolicy.Play,
-        val existingId: Long? = null,
-        val trackId: Long,
-    )
-
-    private fun reconciliationRange(timestamp: Long, source: String): LongRange {
-        val padding = ListeningImportPolicy.searchPadding(source)
-        return (timestamp.coerceAtLeast(Long.MIN_VALUE + padding) - padding)..
-            (timestamp.coerceAtMost(Long.MAX_VALUE - padding) + padding)
-    }
-
-    /**
-     * Read separate indexed slices for sparse imports instead of fetching all history
-     * between the first and last event when a batch spans months or years.
-     */
-    private fun reconciliationWindows(events: List<ListeningEvent>): List<LongRange> {
-        val windows = ArrayList<LongRange>()
-        for (range in events.map { reconciliationRange(it.timestamp, it.source) }.sortedBy { it.first }) {
-            val previous = windows.lastOrNull()
-            if (previous != null && range.first <= previous.last.coerceAtMost(Long.MAX_VALUE - QUERY_JOIN_GAP_MS) + QUERY_JOIN_GAP_MS) {
-                windows[windows.lastIndex] = previous.first..maxOf(previous.last, range.last)
-            } else {
-                windows.add(range)
-            }
-        }
-        return windows
     }
 
     /**
