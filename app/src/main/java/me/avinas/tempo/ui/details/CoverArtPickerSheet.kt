@@ -59,21 +59,12 @@ import me.avinas.tempo.data.enrichment.CoverArtLookupStatus
 import me.avinas.tempo.data.enrichment.CoverArtPickerService
 import me.avinas.tempo.data.enrichment.CoverArtProvider
 import me.avinas.tempo.ui.components.AlbumArtImage
-import me.avinas.tempo.ui.theme.GlassBorderMedium
-import me.avinas.tempo.ui.theme.GlassBorderSoft
-import me.avinas.tempo.ui.theme.GlassFrostSoft
-import me.avinas.tempo.ui.theme.TempoDarkSurface
-import me.avinas.tempo.ui.theme.TempoDarkSurfaceSunken
-import me.avinas.tempo.ui.theme.TempoPrimary
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
-import me.avinas.tempo.ui.theme.TextPrimary
-import me.avinas.tempo.ui.theme.TextSecondary
-import me.avinas.tempo.ui.theme.TextTertiary
 
 internal fun reconcileCoverPickerSelection(
     selectedProvider: CoverArtProvider?,
@@ -153,13 +144,13 @@ internal fun CoverArtPickerSheet(
                     text = stringResource(R.string.details_change_cover_title),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
-                    color = TextPrimary,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
                     text = stringResource(R.string.details_change_cover_body),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = TextSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
 
                 Spacer(modifier = Modifier.height(14.dp))
@@ -171,7 +162,7 @@ internal fun CoverArtPickerSheet(
                     },
                     enabled = coverChangeEnabled,
                     modifier = Modifier.fillMaxWidth(),
-                    border = BorderStroke(1.dp, GlassBorderMedium),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.PhotoLibrary,
@@ -184,7 +175,7 @@ internal fun CoverArtPickerSheet(
                 Text(
                     text = stringResource(R.string.details_cover_from_gallery_hint),
                     style = MaterialTheme.typography.labelSmall,
-                    color = TextTertiary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = 6.dp),
                 )
 
@@ -194,7 +185,7 @@ internal fun CoverArtPickerSheet(
                         text = stringResource(R.string.details_cover_manual),
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.SemiBold,
-                        color = TempoPrimary,
+                        color = MaterialTheme.colorScheme.primary,
                     )
                 }
 
@@ -217,7 +208,7 @@ internal fun CoverArtPickerSheet(
                             modifier = Modifier
                                 .size(previewSize)
                                 .clip(RoundedCornerShape(18.dp))
-                                .border(1.dp, GlassBorderMedium, RoundedCornerShape(18.dp)),
+                                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(18.dp)),
                         )
                         if (isPreviewImageError) {
                             Spacer(modifier = Modifier.height(6.dp))
@@ -232,7 +223,7 @@ internal fun CoverArtPickerSheet(
                             text = providerLabel(candidate.provider),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
-                            color = TextPrimary,
+                            color = MaterialTheme.colorScheme.onSurface,
                         )
                         val subtitle = candidate.albumTitle?.takeIf { it.isNotBlank() }
                             ?: if (candidate.provider == CoverArtProvider.CURRENT) {
@@ -242,7 +233,7 @@ internal fun CoverArtPickerSheet(
                             Text(
                                 text = it,
                                 style = MaterialTheme.typography.bodySmall,
-                                color = TextSecondary,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
                             )
@@ -338,13 +329,13 @@ internal fun CoverArtPickerSheet(
 
             if (state.isManualCover) {
                 Spacer(modifier = Modifier.height(12.dp))
-                HorizontalDivider(color = GlassBorderSoft)
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedButton(
                     onClick = onResetAutomatic,
                     enabled = coverChangeEnabled,
                     modifier = Modifier.fillMaxWidth(),
-                    border = BorderStroke(1.dp, GlassBorderMedium),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                 ) {
                     if (state.isResettingCover) {
                         CircularProgressIndicator(
@@ -358,7 +349,7 @@ internal fun CoverArtPickerSheet(
                 Text(
                     text = stringResource(R.string.details_cover_restore_auto_hint),
                     style = MaterialTheme.typography.labelSmall,
-                    color = TextTertiary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = 6.dp),
                 )
             }
@@ -377,7 +368,7 @@ private fun CoverProviderCard(
     modifier: Modifier = Modifier,
 ) {
     val shape = RoundedCornerShape(16.dp)
-    val borderColor = if (selected) TempoPrimary else GlassBorderSoft
+    val borderColor = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
     val providerName = providerLabel(provider)
     val statusDescription = when {
         status == CoverArtLookupStatus.LOADING -> stringResource(R.string.details_cover_searching)
@@ -398,7 +389,7 @@ private fun CoverProviderCard(
     Column(
         modifier = modifier
             .clip(shape)
-            .background(if (selected) GlassFrostSoft else TempoDarkSurfaceSunken)
+            .background(if (selected) MaterialTheme.colorScheme.surfaceContainerHigh else MaterialTheme.colorScheme.surfaceContainerLow)
             .border(if (selected) 1.5.dp else 0.8.dp, borderColor, shape)
             .semantics {
                 role = Role.RadioButton
@@ -421,7 +412,7 @@ private fun CoverProviderCard(
                 .fillMaxWidth()
                 .aspectRatio(1f)
                 .clip(RoundedCornerShape(12.dp))
-                .background(GlassFrostSoft),
+                .background(MaterialTheme.colorScheme.surfaceContainerHigh),
             contentAlignment = Alignment.Center,
         ) {
             when {
@@ -436,7 +427,7 @@ private fun CoverProviderCard(
                         Icon(
                             imageVector = Icons.Rounded.CheckCircle,
                             contentDescription = null,
-                            tint = TempoPrimary,
+                            tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier
                                 .align(Alignment.TopEnd)
                                 .padding(8.dp)
@@ -448,14 +439,14 @@ private fun CoverProviderCard(
                     CircularProgressIndicator(
                         modifier = Modifier.size(24.dp),
                         strokeWidth = 2.dp,
-                        color = TempoPrimary,
+                        color = MaterialTheme.colorScheme.primary,
                     )
                 }
                 status == CoverArtLookupStatus.UNAVAILABLE -> {
                     Text(
                         text = stringResource(R.string.details_cover_unavailable),
                         style = MaterialTheme.typography.labelSmall,
-                        color = TextTertiary,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
                 status == CoverArtLookupStatus.ERROR -> {
@@ -474,7 +465,7 @@ private fun CoverProviderCard(
                             Icon(
                                 imageVector = Icons.Rounded.Refresh,
                                 contentDescription = stringResource(R.string.details_cover_retry_source),
-                                tint = TempoPrimary,
+                                tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(16.dp),
                             )
                         }
@@ -484,7 +475,7 @@ private fun CoverProviderCard(
                     Text(
                         text = stringResource(R.string.details_cover_not_found),
                         style = MaterialTheme.typography.labelSmall,
-                        color = TextTertiary,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
@@ -494,7 +485,7 @@ private fun CoverProviderCard(
             text = providerLabel(provider),
             style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.SemiBold,
-            color = if (candidate != null) TextPrimary else TextTertiary,
+            color = if (candidate != null) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = 1,
         )
         Text(
@@ -511,7 +502,7 @@ private fun CoverProviderCard(
                 else -> ""
             },
             style = MaterialTheme.typography.labelSmall,
-            color = if (status == CoverArtLookupStatus.ERROR && onRetry != null) TempoPrimary else TextSecondary,
+            color = if (status == CoverArtLookupStatus.ERROR && onRetry != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
