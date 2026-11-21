@@ -110,11 +110,16 @@ data class LocalMediaMetadata(
             }
         }
         
-        // YouTube Music ad detection
+        // YouTube Music ad detection. Notification-only observations often do not expose
+        // duration/artwork, so provider branding in the artist field is also authoritative.
         if (sourcePackage == "com.google.android.apps.youtube.music") {
-            // YTM ads typically have no album art and very short duration
-            if (albumArtBitmap == null && albumArtUri == null && 
-                durationMs != null && durationMs < 30_000) {
+            if (lowerArtist == "youtube" || lowerArtist.contains("youtube music")) {
+                return true
+            }
+            // MediaSession observations can additionally identify the common short/no-art shape.
+            if (albumArtBitmap == null && albumArtUri == null &&
+                durationMs != null && durationMs < 30_000
+            ) {
                 return true
             }
         }
