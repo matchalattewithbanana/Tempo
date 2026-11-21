@@ -86,8 +86,8 @@ enum class SettingsDestination(
     ),
     YOUR_DATA(
         owner = SettingsSection.DATA,
-        titleRes = R.string.settings_data_diagnostics,
-        subtitleRes = R.string.settings_data_diagnostics_desc,
+        titleRes = R.string.settings_your_data,
+        subtitleRes = R.string.settings_search_data_terms,
     ),
     ENRICHMENT_REPORT(
         owner = SettingsSection.DATA,
