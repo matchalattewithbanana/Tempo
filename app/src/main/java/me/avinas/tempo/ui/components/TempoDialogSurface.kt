@@ -106,7 +106,7 @@ fun TempoDialogTitle(
     val appearancePalette = LocalTempoPalette.current
     Text(
         text = text,
-        style = MaterialTheme.typography.titleLargeEmphasized,
+        style = MaterialTheme.typography.headlineSmallEmphasized,
         color = MaterialTheme.colorScheme.onSurface,
         textAlign = TextAlign.Center,
         modifier = modifier
@@ -127,7 +127,6 @@ fun TempoDialogBody(
         style = MaterialTheme.typography.bodyMedium,
         color = color,
         textAlign = TextAlign.Center,
-        lineHeight = MaterialTheme.typography.bodyMedium.fontSize * 1.5,
         modifier = modifier
     )
 }
@@ -233,11 +232,12 @@ fun TempoDialogButtonRow(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                TempoDialogRowSecondary(secondaryText, onSecondary, secondaryEnabled, Modifier.fillMaxWidth())
+                // In stacked M3 dialogs, confirmation sits above dismissal.
                 TempoDialogRowPrimary(
                     primaryText, onPrimary, primaryEnabled,
                     primaryColor, primaryContentColor, Modifier.fillMaxWidth(),
                 )
+                TempoDialogRowSecondary(secondaryText, onSecondary, secondaryEnabled, Modifier.fillMaxWidth())
             }
         } else {
             Row(
