@@ -18,6 +18,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import me.avinas.tempo.ui.theme.rememberReducedMotion
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -250,6 +254,7 @@ internal fun CompactNowPlayingStrip() {
     }
     val preferredArtwork = current.albumArtUri ?: choice?.localUrl
     val scheme = MaterialTheme.colorScheme
+    val iconEffects = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
     val fresh = checkedAtMs - current.updatedAtMs <= 2 * 60_000L
     val playing = current.playing && fresh
     val color by animateColorAsState(
@@ -315,15 +320,28 @@ internal fun CompactNowPlayingStrip() {
                 contentColor = foreground,
             ) {
                 Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = when {
-                            playing -> Icons.Rounded.GraphicEq
-                            fresh -> Icons.Rounded.PauseCircle
-                            else -> Icons.Rounded.MusicNote
+                    AnimatedContent(
+                        targetState = when {
+                            playing -> 0
+                            fresh -> 1
+                            else -> 2
                         },
-                        contentDescription = null,
-                        modifier = Modifier.size(24.dp),
-                    )
+                        transitionSpec = {
+                            fadeIn(animationSpec = iconEffects) togetherWith
+                                fadeOut(animationSpec = iconEffects)
+                        },
+                        label = "compactPlaybackIcon",
+                    ) { status ->
+                        Icon(
+                            imageVector = when (status) {
+                                0 -> Icons.Rounded.GraphicEq
+                                1 -> Icons.Rounded.PauseCircle
+                                else -> Icons.Rounded.MusicNote
+                            },
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp),
+                        )
+                    }
                 }
             }
         }
