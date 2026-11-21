@@ -578,19 +578,9 @@ fun SettingsScreen(
                                 ),
                                 onClick = { settingsCategory = "tracking" },
                             )
-                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                            SettingsOption(
-                                title = stringResource(R.string.settings_health_last_signal),
-                                subtitle = trackingHealth?.lastPlayerSignalAgeMs?.let {
-                                    val minutes = it / 60_000L
-                                    if (minutes < 1L) stringResource(R.string.settings_health_just_now)
-                                    else stringResource(R.string.settings_health_minutes_ago, minutes)
-                                } ?: stringResource(if (trackingHealth == null) R.string.ui_loading else R.string.settings_health_no_signal),
-                                onClick = {
-                                    if (onNavigateToYourData != null) onNavigateToYourData()
-                                    else settingsCategory = "tracking"
-                                },
-                            )
+                            // The detailed last-player signal belongs in
+                            // Music Tracking diagnostics. The overview should
+                            // answer only whether access is granted/connected.
                         }
                     }
                     Spacer(modifier = Modifier.height(20.dp))
@@ -620,8 +610,7 @@ fun SettingsScreen(
                             }
                         SettingsOption(
                             title = stringResource(R.string.settings_backup_restore),
-                            subtitle = listOfNotNull(stringResource(latestStatus), latestSuccess)
-                                .joinToString(" · "),
+                            subtitle = latestSuccess ?: stringResource(latestStatus),
                             onClick = { onNavigateToBackup?.invoke() },
                         )
                     }
