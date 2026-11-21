@@ -111,117 +111,78 @@ fun TempoBottomNavigation(
     modifier: Modifier = Modifier,
 ) {
     val haptics = LocalHapticFeedback.current
-    val showLabels = LocalTempoAppearance.current.showNavigationLabels
+    val appearance = LocalTempoAppearance.current
+    val showLabels = appearance.showNavigationLabels
+    val floating = appearance.navigationStyle == AppearanceNavigationStyle.FLOATING
+    val scheme = MaterialTheme.colorScheme
     val destinations = listOf(
         Triple(Screen.Home.route, Icons.Rounded.Home to Icons.Outlined.Home, stringResource(R.string.nav_home)),
         Triple(Screen.Stats.route, Icons.Rounded.Leaderboard to Icons.Outlined.Leaderboard, stringResource(R.string.nav_stats)),
         Triple(Screen.History.route, Icons.Rounded.History to Icons.Outlined.History, stringResource(R.string.nav_history)),
     )
     val actions = listOf(onNavigateToHome, onNavigateToStats, onNavigateToHistory)
+
+    // A stable three-slot Material navigation bar avoids the experimental Short
+    // Navigation Bar's disappearing sibling items on compact devices. No slot
+    // depends on the selected destination's measured width or animation state.
     Column(modifier = modifier.fillMaxWidth()) {
         CompactNowPlayingStrip()
-        if (LocalTempoAppearance.current.navigationStyle == AppearanceNavigationStyle.FLOATING) {
-            Box(
-                modifier = Modifier.fillMaxWidth().navigationBarsPadding()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                contentAlignment = Alignment.Center,
+        Box(
+            modifier = Modifier.fillMaxWidth().navigationBarsPadding()
+                .padding(
+                    horizontal = if (floating) 16.dp else 0.dp,
+                    vertical = if (floating) 8.dp else 0.dp,
+                ),
+            contentAlignment = Alignment.Center,
+        ) {
+            Surface(
+                modifier = if (floating) Modifier.widthIn(max = 460.dp).fillMaxWidth()
+                    else Modifier.fillMaxWidth(),
+                shape = if (floating) MaterialTheme.shapes.extraExtraLarge
+                    else MaterialTheme.shapes.extraSmall,
+                color = if (floating) scheme.surfaceContainerHigh else scheme.surfaceContainer,
             ) {
-                HorizontalFloatingToolbar(
-                    expanded = true,
-                    colors = FloatingToolbarDefaults.standardFloatingToolbarColors(
-                        toolbarContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    ),
+                androidx.compose.material3.NavigationBar(
+                    modifier = Modifier.fillMaxWidth(),
+                    containerColor = androidx.compose.ui.graphics.Color.Transparent,
+                    contentColor = scheme.onSurface,
+                    windowInsets = WindowInsets(0, 0, 0, 0),
+                    tonalElevation = 0.dp,
                 ) {
                     destinations.forEachIndexed { index, destination ->
                         val selected = currentDestination?.hierarchy?.any {
                             it.route == destination.first
                         } == true
-                        FilledIconToggleButton(
-                            checked = selected,
-                            onCheckedChange = {
+                        androidx.compose.material3.NavigationBarItem(
+                            selected = selected,
+                            onClick = {
                                 if (!selected) {
                                     haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                     actions[index]()
                                 }
                             },
-                            modifier = Modifier
-                                .size(
-                                    width = if (showLabels) 80.dp else 56.dp,
-                                    height = 62.dp,
-                                )
-                                // A navigation destination should announce selection,
-                                // not merely "toggle on" like a settings switch.
-                                .semantics {
-                                    role = Role.Tab
-                                    this.selected = selected
-                                },
-                            shapes = IconButtonDefaults.toggleableShapes(),
-                            colors = IconButtonDefaults.filledIconToggleButtonColors(
-                                containerColor = androidx.compose.ui.graphics.Color.Transparent,
-                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                checkedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-                                checkedContentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                            ),
-                        ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(2.dp),
-                            ) {
+                            icon = {
                                 Icon(
                                     imageVector = if (selected) destination.second.first
                                         else destination.second.second,
                                     contentDescription = if (showLabels) null else destination.third,
-                                    modifier = Modifier.size(23.dp),
                                 )
-                                if (showLabels) Text(
-                                    destination.third,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    maxLines = 1,
-                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                                )
-                            }
-                        }
+                            },
+                            label = if (showLabels) {
+                                { Text(destination.third, maxLines = 1) }
+                            } else null,
+                            alwaysShowLabel = showLabels,
+                            colors = androidx.compose.material3.NavigationBarItemDefaults.colors(
+                                selectedIconColor = scheme.onSecondaryContainer,
+                                selectedTextColor = scheme.onSurface,
+                                indicatorColor = scheme.secondaryContainer,
+                                unselectedIconColor = scheme.onSurfaceVariant,
+                                unselectedTextColor = scheme.onSurfaceVariant,
+                            ),
+                        )
                     }
                 }
             }
-        } else {
-        // Native M3 Expressive short bar with equally weighted destinations.
-        // EqualWeight prevents a selected destination from taking over the bar;
-        // AppNavigation measures the entire bar plus system insets before laying
-        // out the content, so the final history row is not obscured.
-        ShortNavigationBar(
-            modifier = Modifier.fillMaxWidth(),
-            arrangement = ShortNavigationBarArrangement.EqualWeight,
-            containerColor = MaterialTheme.colorScheme.surfaceContainer,
-            contentColor = MaterialTheme.colorScheme.onSurface,
-        ) {
-            destinations.forEachIndexed { index, destination ->
-                val selected = currentDestination?.hierarchy?.any {
-                    it.route == destination.first
-                } == true
-                ShortNavigationBarItem(
-                    selected = selected,
-                    onClick = {
-                        if (!selected) {
-                            haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                            actions[index]()
-                        }
-                    },
-                    icon = {
-                        Icon(
-                            imageVector = if (selected) destination.second.first
-                                else destination.second.second,
-                            contentDescription = if (showLabels) null else destination.third,
-                        )
-                    },
-                    // Labels remain visible by default. The opt-in icon-only
-                    // personalization mode retains accessibility descriptions.
-                    label = if (showLabels) {
-                        { Text(destination.third, maxLines = 1) }
-                    } else null,
-                )
-            }
-        }
         }
     }
 }
