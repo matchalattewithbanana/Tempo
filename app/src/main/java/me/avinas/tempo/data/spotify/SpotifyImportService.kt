@@ -220,6 +220,7 @@ class SpotifyImportService @Inject constructor(
             // Process each play history item
             var tracksImported = 0
             var eventsCreated = 0
+            var eventsReconciled = 0
             var duplicatesSkipped = 0
             val errors = mutableListOf<String>()
             if (incomplete) {
@@ -236,6 +237,7 @@ class SpotifyImportService @Inject constructor(
                 try {
                     val result = listeningEventDao.insertAllBatchedWithDedup(pending)
                     eventsCreated += result.newlyAdded
+                    eventsReconciled += result.replaced
                     duplicatesSkipped += result.skipped
                 } catch (e: CancellationException) {
                     throw e
@@ -284,12 +286,12 @@ class SpotifyImportService @Inject constructor(
             // local MusicTrackingManager). Drop the long-lived aggregate caches
             // once per sync, after all inserts, so Home/History/Stats show the
             // new plays immediately instead of serving stale five-minute totals.
-            if (eventsCreated > 0) {
+            if (eventsCreated > 0 || eventsReconciled > 0) {
                 statsRepository.invalidateCache()
                 refreshCoordinator.notifyNewTrackRecorded()
             }
 
-            Log.i(TAG, "Import complete: $tracksImported new tracks, $eventsCreated events, $duplicatesSkipped duplicates")
+            Log.i(TAG, "Import complete: $tracksImported new tracks, $eventsCreated new plays, $eventsReconciled upgraded plays, $duplicatesSkipped duplicates")
             
             ImportResult(
                 tracksImported = tracksImported,
