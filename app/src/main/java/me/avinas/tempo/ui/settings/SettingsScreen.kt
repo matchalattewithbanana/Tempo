@@ -76,8 +76,7 @@ fun SettingsScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val historyQuality by viewModel.historyQuality.collectAsStateWithLifecycle()
     val backupOverview by viewModel.backupOverview.collectAsStateWithLifecycle()
-    var showHistoryAuditDialog by remember { mutableStateOf(false) }
-    var historyBackupConfirmed by remember { mutableStateOf(false) }
+    var activeDialog by rememberSaveable { mutableStateOf<SettingsDialog?>(null) }
     val context = LocalContext.current
     val resources = LocalResources.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -133,7 +132,6 @@ fun SettingsScreen(
         }
     }
     val versionName = me.avinas.tempo.BuildConfig.VERSION_NAME
-    var showClearDataDialog by rememberSaveable { mutableStateOf(false) }
     val resetState by viewModel.resetState.collectAsStateWithLifecycle()
     val resetInProgress = resetState == AppResetState.Requesting || resetState == AppResetState.Requested
     val snackbarHostState = remember { SnackbarHostState() }
@@ -149,9 +147,6 @@ fun SettingsScreen(
     val isXiaomiDevice = remember { OemBackgroundHelper.isXiaomiDevice() }
     var autostartState by remember { mutableStateOf(OemBackgroundHelper.AutostartState.UNKNOWN) }
 
-    // Language selector state
-    var showLanguageDialog by remember { mutableStateOf(false) }
-    var showCoverSourceDialog by remember { mutableStateOf(false) }
     val coverSourceOptions: List<Pair<AlbumArtSource?, String>> = listOf(
         null to stringResource(R.string.settings_cover_source_automatic),
         AlbumArtSource.MUSICBRAINZ to "MusicBrainz",
@@ -197,31 +192,11 @@ fun SettingsScreen(
         }
     }
 
-    // File picker for import (ZIP)
-    val importLauncher =
-        rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.OpenDocument(),
-        ) { uri: Uri? ->
-            uri?.let {
-                viewModel.startImport(it)
-            }
-        }
-
     val profileImageLauncher =
         rememberLauncherForActivityResult(
             contract = ActivityResultContracts.GetContent(),
         ) { uri: Uri? ->
             uri?.let(viewModel::updateProfileImage)
-        }
-
-    // File creator for export (ZIP)
-    val exportLauncher =
-        rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.CreateDocument("application/zip"),
-        ) { uri: Uri? ->
-            uri?.let {
-                viewModel.exportData(it)
-            }
         }
 
     // Show result snackbar
@@ -262,14 +237,10 @@ fun SettingsScreen(
 
     LaunchedEffect(resetState) {
         if (resetState == AppResetState.Failed) {
-            showClearDataDialog = false
+            if (activeDialog == SettingsDialog.CLEAR_DATA) activeDialog = null
             snackbarHostState.showSnackbar(resources.getString(R.string.settings_clear_data_failed))
         }
     }
-
-    // Name Dialog State
-    var showNameDialog by remember { mutableStateOf(false) }
-    var tempName by remember { mutableStateOf("") }
 
     Scaffold(
         containerColor = Color.Transparent,
@@ -320,12 +291,9 @@ fun SettingsScreen(
                             uiState = uiState,
                             viewModel = viewModel,
                             currentLanguageSubtitle = currentLanguageSubtitle,
-                            onEditName = {
-                                tempName = uiState.userName
-                                showNameDialog = true
-                            },
+                            onEditName = { activeDialog = SettingsDialog.EDIT_NAME },
                             onPickProfileImage = { profileImageLauncher.launch("image/*") },
-                            onSelectLanguage = { showLanguageDialog = true },
+                            onSelectLanguage = { activeDialog = SettingsDialog.LANGUAGE },
                             modifier = Modifier.weight(1f),
                         )
                         SettingsSection.TRACKING -> TrackingSettingsSection(
@@ -366,12 +334,11 @@ fun SettingsScreen(
                             selectedCoverSourceName = selectedCoverSourceName,
                             onNavigate = onNavigate,
                             onOpenHistoryAudit = {
-                                historyBackupConfirmed = false
-                                showHistoryAuditDialog = true
+                                activeDialog = SettingsDialog.HISTORY_AUDIT
                                 viewModel.scanHistoryQuality()
                             },
-                            onSelectCoverSource = { showCoverSourceDialog = true },
-                            onClearData = { showClearDataDialog = true },
+                            onSelectCoverSource = { activeDialog = SettingsDialog.COVER_SOURCE },
+                            onClearData = { activeDialog = SettingsDialog.CLEAR_DATA },
                             modifier = Modifier.weight(1f),
                         )
                         SettingsSection.ABOUT -> AboutSettingsSection(
@@ -387,361 +354,18 @@ fun SettingsScreen(
         }
     }
 
-    // Keep recovery/repair dialogs mounted independent of lazy list visibility.
-    if (showHistoryAuditDialog) {
-        AlertDialog(
-            onDismissRequest = { showHistoryAuditDialog = false },
-            title = { Text("Listening-history accuracy") },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    if (historyQuality.isLoading) {
-                        CircularProgressIndicator()
-                        Text("Checking stored listening events…")
-                    } else if (historyQuality.error != null) {
-                        Text(historyQuality.error ?: "An unknown error occurred")
-                    } else {
-                        Text(
-                            "Old Spotify API estimates: ${historyQuality.apiEstimatedCount} plays. " +
-                                "Reconstructed history: ${historyQuality.reconstructedCount} plays."
-                        )
-                        Text(
-                            "The Spotify recently-played API never supplied listening seconds. " +
-                                "The optional repair preserves play records and removes only invented " +
-                                "listening durations and completion for this exact API source."
-                        )
-                        Text(
-                            "Exact duplicate records: ${historyQuality.exactDuplicateCount}. " +
-                                "Only identical, fingerprinted events are eligible for safe removal; " +
-                                "uncertain overlaps and older unmarked plays are not deleted."
-                        )
-                        historyQuality.repairedDuplicatesCount?.let { removed ->
-                            Text("Removed $removed exact duplicate records. Listening statistics will refresh.")
-                        }
-                        if (historyQuality.reconstructedCount > 0) {
-                            Text(
-                                "Reconstructed plays are flagged for review, not automatically deleted."
-                            )
-                        }
-                        historyQuality.repairedCount?.let { repaired ->
-                            Text("Corrected $repaired API records. Reopen statistics to see refreshed totals.")
-                        }
-                        if ((historyQuality.apiEstimatedCount > 0 &&
-                                historyQuality.repairedCount == null) ||
-                            (historyQuality.exactDuplicateCount > 0 &&
-                                historyQuality.repairedDuplicatesCount == null)
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Checkbox(
-                                    checked = historyBackupConfirmed,
-                                    onCheckedChange = { historyBackupConfirmed = it },
-                                )
-                                Text(
-                                    "I have exported a backup. I authorize correcting unverified " +
-                                        "API durations or removing exact duplicate records only when I select an action."
-                                )
-                            }
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                Column(horizontalAlignment = Alignment.End) {
-                    if (historyQuality.apiEstimatedCount > 0 &&
-                        historyQuality.repairedCount == null &&
-                        historyQuality.error == null
-                    ) {
-                        TextButton(
-                            enabled = historyBackupConfirmed && !historyQuality.isLoading,
-                            onClick = {
-                                historyBackupConfirmed = false
-                                viewModel.repairHistoryAfterBackupConfirmation()
-                            },
-                        ) { Text("Correct API estimates") }
-                    }
-                    if (historyQuality.exactDuplicateCount > 0 &&
-                        historyQuality.repairedDuplicatesCount == null &&
-                        historyQuality.error == null
-                    ) {
-                        TextButton(
-                            enabled = historyBackupConfirmed && !historyQuality.isLoading,
-                            onClick = {
-                                historyBackupConfirmed = false
-                                viewModel.repairExactDuplicatesAfterBackupConfirmation()
-                            },
-                        ) { Text("Remove exact duplicates") }
-                    }
-                    if (historyQuality.apiEstimatedCount == 0 &&
-                        historyQuality.exactDuplicateCount == 0
-                    ) {
-                        TextButton(onClick = { showHistoryAuditDialog = false }) {
-                            Text("Close")
-                        }
-                    }
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showHistoryAuditDialog = false }) {
-                    Text("Cancel")
-                }
-            },
-        )
-    }
+    SettingsDialogs(
+        activeDialog = activeDialog,
+        onDismissLocalDialog = { activeDialog = null },
+        uiState = uiState,
+        historyQuality = historyQuality,
+        languages = languages,
+        currentLocale = currentLocale,
+        coverSourceOptions = coverSourceOptions,
+        importExportProgress = importExportProgress,
+        conflictDialogUri = conflictDialogUri,
+        resetInProgress = resetInProgress,
+        viewModel = viewModel,
+    )
 
-    // Name Edit Dialog
-    if (showNameDialog) {
-        Dialog(onDismissRequest = { showNameDialog = false }) {
-            TempoDialogSurface {
-                TempoDialogIcon(
-                    icon = TempoIcons.Edit,
-                    tint = MaterialTheme.colorScheme.primary,
-                    size = 48,
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                TempoDialogTitle(text = stringResource(R.string.settings_update_name))
-                Spacer(modifier = Modifier.height(6.dp))
-                TempoDialogBody(text = stringResource(R.string.settings_name_dialog_body))
-                Spacer(modifier = Modifier.height(20.dp))
-                TempoDialogTextField(
-                    value = tempName,
-                    onValueChange = { tempName = it },
-                    label = stringResource(R.string.settings_display_name),
-                )
-                Spacer(modifier = Modifier.height(24.dp))
-                TempoDialogButtonRow(
-                    primaryText = stringResource(R.string.settings_save),
-                    onPrimary = {
-                        if (tempName.isNotBlank()) {
-                            viewModel.updateUserName(tempName.trim())
-                            showNameDialog = false
-                        }
-                    },
-                    secondaryText = stringResource(R.string.settings_cancel),
-                    onSecondary = { showNameDialog = false },
-                    primaryEnabled = tempName.isNotBlank(),
-                )
-            }
-        }
-    }
-
-    // Language Selector Dialog
-    if (showLanguageDialog) {
-        AlertDialog(
-            onDismissRequest = { showLanguageDialog = false },
-            containerColor = TempoSurfaceDialog,
-            shape = RoundedCornerShape(24.dp),
-            title = { Text(stringResource(R.string.settings_select_language), color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold) },
-            text = {
-                Column {
-                    languages.forEach { (langTag, langName) ->
-                        Row(
-                            modifier =
-                                Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .clickable {
-                                        val localeList = LocaleListCompat.forLanguageTags(langTag)
-                                        AppCompatDelegate.setApplicationLocales(localeList)
-                                        showLanguageDialog = false
-                                        (context as? Activity)?.recreate()
-                                    }.padding(vertical = 12.dp, horizontal = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            RadioButton(
-                                selected = currentLocale == langTag,
-                                onClick = {
-                                    val localeList = LocaleListCompat.forLanguageTags(langTag)
-                                    AppCompatDelegate.setApplicationLocales(localeList)
-                                    showLanguageDialog = false
-                                    (context as? Activity)?.recreate()
-                                },
-                                colors =
-                                    RadioButtonDefaults.colors(
-                                        selectedColor = MaterialTheme.colorScheme.primary,
-                                    ),
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text(
-                                text = langName,
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.onSurface,
-                            )
-                        }
-                    }
-                }
-            },
-            confirmButton = {},
-            dismissButton = {
-                TextButton(onClick = { showLanguageDialog = false }) {
-                    Text(stringResource(R.string.settings_cancel), color = TextTertiary)
-                }
-            },
-        )
-    }
-
-    // Preferred album artwork provider
-    if (showCoverSourceDialog) {
-        AlertDialog(
-            onDismissRequest = { showCoverSourceDialog = false },
-            containerColor = TempoSurfaceDialog,
-            shape = RoundedCornerShape(24.dp),
-            title = {
-                Text(
-                    stringResource(R.string.settings_cover_source_title),
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontWeight = FontWeight.SemiBold,
-                )
-            },
-            text = {
-                Column {
-                    Text(
-                        stringResource(R.string.settings_cover_source_description),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    coverSourceOptions.forEach { (source, name) ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(10.dp))
-                                .selectable(
-                                    selected = source == uiState.preferredCoverSource,
-                                    onClick = {
-                                        viewModel.setPreferredCoverSource(source)
-                                        showCoverSourceDialog = false
-                                    },
-                                    role = Role.RadioButton,
-                                )
-                                .padding(vertical = 10.dp, horizontal = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            RadioButton(
-                                selected = source == uiState.preferredCoverSource,
-                                onClick = null,
-                                colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary),
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text(name, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface)
-                        }
-                    }
-                }
-            },
-            confirmButton = {},
-            dismissButton = {
-                TextButton(onClick = { showCoverSourceDialog = false }) {
-                    Text(stringResource(R.string.settings_cancel), color = TextTertiary)
-                }
-            },
-        )
-    }
-
-    // Progress Dialog
-    importExportProgress?.let { progress ->
-        AlertDialog(
-            onDismissRequest = { /* Cannot dismiss while in progress */ },
-            containerColor = TempoSurfaceDialog,
-            shape = RoundedCornerShape(24.dp),
-            title = { Text(stringResource(R.string.settings_processing), color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold) },
-            text = {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Text(
-                        text = progress.phase,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center,
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    if (progress.isIndeterminate) {
-                        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary, strokeWidth = 2.dp)
-                    } else {
-                        LinearProgressIndicator(
-                            progress = { progress.percentage.coerceIn(0f, 1f) },
-                            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(4.dp)),
-                            color = MaterialTheme.colorScheme.primary,
-                            trackColor = GlassFrostSoft,
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "${progress.current}%",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = TextTertiary,
-                        )
-                    }
-                }
-            },
-            confirmButton = { },
-        )
-    }
-
-    // Conflict Resolution Dialog
-    conflictDialogUri?.let { uri ->
-        AlertDialog(
-            onDismissRequest = { viewModel.cancelImport() },
-            containerColor = TempoSurfaceDialog,
-            shape = RoundedCornerShape(24.dp),
-            title = { Text(stringResource(R.string.settings_import_options), color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold) },
-            text = {
-                Text(stringResource(R.string.settings_import_conflict_msg), color = MaterialTheme.colorScheme.onSurfaceVariant)
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = { viewModel.importData(uri, ImportConflictStrategy.REPLACE) },
-                ) {
-                    Text(stringResource(R.string.settings_replace_existing), color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
-                }
-            },
-            dismissButton = {
-                Row {
-                    TextButton(onClick = { viewModel.cancelImport() }) {
-                        Text(stringResource(R.string.settings_cancel), color = TextTertiary)
-                    }
-                    TextButton(
-                        onClick = { viewModel.importData(uri, ImportConflictStrategy.SKIP) },
-                    ) {
-                        Text(stringResource(R.string.settings_skip_duplicates), color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                }
-            },
-        )
-    }
-
-    if (showClearDataDialog) {
-        Dialog(
-            onDismissRequest = { if (!resetInProgress) showClearDataDialog = false },
-            properties = DialogProperties(
-                dismissOnBackPress = !resetInProgress,
-                dismissOnClickOutside = !resetInProgress
-            )
-        ) {
-            TempoDialogSurface {
-                TempoDialogIcon(
-                    icon = TempoIcons.Trash,
-                    tint = TempoError,
-                    size = 48,
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                TempoDialogTitle(text = stringResource(R.string.settings_clear_data_title))
-                Spacer(modifier = Modifier.height(8.dp))
-                TempoDialogBody(text = stringResource(R.string.settings_clear_data_msg))
-                Spacer(modifier = Modifier.height(24.dp))
-                TempoDialogDangerButton(
-                    text = stringResource(
-                        if (resetInProgress) R.string.settings_clear_data_requesting else R.string.settings_clear_everything
-                    ),
-                    enabled = !resetInProgress,
-                    onClick = { viewModel.clearAllData() },
-                    icon = TempoIcons.Trash,
-                )
-                Spacer(modifier = Modifier.height(6.dp))
-                TempoDialogSecondaryButton(
-                    text = stringResource(R.string.settings_cancel),
-                    enabled = !resetInProgress,
-                    onClick = { showClearDataDialog = false },
-                )
-            }
-        }
-    }
 }
