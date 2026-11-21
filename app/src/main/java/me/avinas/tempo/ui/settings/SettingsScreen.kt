@@ -641,7 +641,7 @@ fun SettingsScreen(
                 }
 
                 if (settingsCategory == "general") {
-                    item(key = "general") {
+                    item(key = "general-profile") {
                 // Profile Section
                 SettingsSectionHeader(stringResource(R.string.settings_profile))
                 GlassCard(
@@ -767,6 +767,8 @@ fun SettingsScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Appearance is a focused gallery instead of another long list of toggles.
+                    }
+                    item(key = "general-appearance") {
                 SettingsSectionHeader(stringResource(R.string.appearance_title))
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
@@ -792,6 +794,8 @@ fun SettingsScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 // Language Section
+                    }
+                    item(key = "general-language") {
                 SettingsSectionHeader(stringResource(R.string.settings_language))
                 GlassCard(
                     contentPadding = PaddingValues(0.dp),
@@ -807,6 +811,8 @@ fun SettingsScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 // Notifications
+                    }
+                    item(key = "general-notifications") {
                 SettingsSectionHeader(stringResource(R.string.settings_notifications))
                 GlassCard(
                     contentPadding = PaddingValues(0.dp),
@@ -850,7 +856,7 @@ fun SettingsScreen(
                     }
                 } // General
                 if (settingsCategory == "tracking") {
-                    item(key = "tracking") {
+                    item(key = "tracking-source") {
                 // Tracking
                 SettingsSectionHeader(stringResource(R.string.settings_music_tracking))
                 GlassCard(
@@ -929,6 +935,8 @@ fun SettingsScreen(
                 }
 
                 // Content Filtering
+                    }
+                    item(key = "tracking-filtering") {
                 SettingsSectionHeader(stringResource(R.string.settings_content_filtering))
                 GlassCard(
                     contentPadding = PaddingValues(0.dp),
@@ -954,6 +962,8 @@ fun SettingsScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 // Advanced Settings
+                    }
+                    item(key = "tracking-statistics") {
                 SettingsSectionHeader(stringResource(R.string.settings_advanced_stats))
                 GlassCard(
                     contentPadding = PaddingValues(0.dp),
@@ -988,7 +998,7 @@ fun SettingsScreen(
                     }
                 } // Tracking
                 if (settingsCategory == "connections") {
-                    item(key = "connections") {
+                    item(key = "connections-import") {
                 // Last.fm Import
                 SettingsSectionHeader(stringResource(R.string.settings_import_history))
                 GlassCard(
@@ -1172,6 +1182,8 @@ fun SettingsScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 // Desktop Sync
+                    }
+                    item(key = "connections-desktop") {
                 SettingsSectionHeader(stringResource(R.string.desktop_link_section_header))
                 GlassCard(
                     contentPadding = PaddingValues(0.dp),
@@ -1386,10 +1398,12 @@ fun SettingsScreen(
                     }
                 } // Library and data
                 if (settingsCategory == "about") {
-                    item(key = "about") {
+                    item(key = "about-credits") {
                 TempoAboutCredits(modifier = Modifier.fillMaxWidth())
                 Spacer(modifier = Modifier.height(24.dp))
                 // Community
+                    }
+                    item(key = "about-community") {
                 SettingsSectionHeader(stringResource(R.string.settings_community))
                 GlassCard(
                     contentPadding = PaddingValues(0.dp),
@@ -1445,6 +1459,8 @@ fun SettingsScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 // Privacy & About
+                    }
+                    item(key = "about-links") {
                 SettingsSectionHeader(stringResource(R.string.settings_about))
                 GlassCard(
                     contentPadding = PaddingValues(0.dp),
