@@ -1038,6 +1038,7 @@ private fun LastFmTierSelection(
     }
 }
 
+/** Native M3 choice surface for the Last.fm import depth. */
 @Composable
 private fun LastFmTierOption(
     name: String,
@@ -1046,64 +1047,56 @@ private fun LastFmTierOption(
     isRecommended: Boolean,
     onClick: () -> Unit,
 ) {
-    // ponytail: vector icon in a tinted disc, not emoji — emoji is the cheap
-    // tell. Haptic + press scale via premiumClickable idiom would need a
-    // wrapper; Button-like scale here is enough with haptic on tap.
     val haptic = LocalHapticFeedback.current
-    Row(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .background(
-                    color = if (isRecommended) Color(0xFF8B5CF6).copy(alpha = 0.15f) else Color.White.copy(alpha = 0.05f),
-                    shape = RoundedCornerShape(12.dp),
-                ).clickable(onClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                    onClick()
-                })
-                .padding(12.dp),
-        verticalAlignment = Alignment.CenterVertically,
+    val scheme = MaterialTheme.colorScheme
+    Surface(
+        onClick = {
+            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+            onClick()
+        },
+        shape = MaterialTheme.shapes.large,
+        color = if (isRecommended) scheme.tertiaryContainer else scheme.surfaceContainerLow,
+        contentColor = if (isRecommended) scheme.onTertiaryContainer else scheme.onSurface,
     ) {
-        Box(
-            modifier =
-                Modifier
-                    .size(32.dp)
-                    .background(Color(0xFF8B5CF6).copy(alpha = 0.2f), CircleShape),
-            contentAlignment = Alignment.Center,
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Icon(imageVector = icon, contentDescription = null, tint = Color(0xFF8B5CF6), modifier = Modifier.size(16.dp))
-        }
-
-        Spacer(modifier = Modifier.width(12.dp))
-
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = name,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-                fontWeight = FontWeight.SemiBold,
-            )
-            Text(
-                text = description,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-
-        if (isRecommended) {
-            Box(
-                modifier =
-                    Modifier
-                        .background(
-                            color = Color(0xFF8B5CF6).copy(alpha = 0.3f),
-                            shape = RoundedCornerShape(4.dp),
-                        ).padding(horizontal = 6.dp, vertical = 2.dp),
+            Surface(
+                modifier = Modifier.size(40.dp),
+                shape = MaterialTheme.shapes.medium,
+                color = if (isRecommended) scheme.tertiary else scheme.secondaryContainer,
+                contentColor = if (isRecommended) scheme.onTertiary else scheme.onSecondaryContainer,
             ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(imageVector = icon, contentDescription = null, modifier = Modifier.size(22.dp))
+                }
+            }
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "Recommended",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = Color(0xFF8B5CF6),
+                    text = name,
+                    style = MaterialTheme.typography.titleSmallEmphasized,
+                    color = if (isRecommended) scheme.onTertiaryContainer else scheme.onSurface,
                 )
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (isRecommended) scheme.onTertiaryContainer else scheme.onSurfaceVariant,
+                )
+            }
+            if (isRecommended) {
+                Surface(
+                    color = scheme.tertiary,
+                    contentColor = scheme.onTertiary,
+                    shape = MaterialTheme.shapes.large,
+                ) {
+                    Text(
+                        text = "Recommended",
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
+                    )
+                }
             }
         }
     }
