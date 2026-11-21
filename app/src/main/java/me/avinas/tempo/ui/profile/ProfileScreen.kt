@@ -989,138 +989,145 @@ private fun HeroProfileSection(
     tierAccent: Color,
     compact: Boolean = false,
 ) {
-    val appearancePalette = LocalTempoPalette.current
     val animatedProgress by animateFloatAsState(
-        targetValue = userLevel.levelProgress,
-        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
+        targetValue = userLevel.levelProgress.coerceIn(0f, 1f),
+        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
         label = "levelProgress",
     )
-    val passportSwatch = me.avinas.tempo.ui.components.tempoTileSwatch(
+    val swatch = me.avinas.tempo.ui.components.tempoTileSwatch(
         me.avinas.tempo.ui.components.TempoTileTone.AQUA
     )
+    val stackIdentity = compact && LocalDensity.current.fontScale >= 1.4f
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.extraExtraLarge,
-        color = passportSwatch.container,
-        contentColor = passportSwatch.foreground,
+        color = swatch.container,
+        contentColor = swatch.foreground,
     ) {
-        Box(Modifier.fillMaxWidth().clip(MaterialTheme.shapes.extraExtraLarge)) {
-            Box(
-                Modifier.align(Alignment.TopEnd).offset(x = 56.dp, y = (-30).dp)
-                    .size(200.dp)
-                    .background(passportSwatch.foreground.copy(alpha = 0.05f), MaterialShapes.Clover4Leaf.toShape()),
-            )
-            Column(
-                modifier = Modifier.fillMaxWidth().padding(18.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Text(
-                    text = stringResource(R.string.profile_bento_passport),
-                    style = MaterialTheme.typography.labelLargeEmphasized,
-                    color = passportSwatch.foreground.copy(alpha = 0.8f),
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 14.dp),
-                )
-                Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(if (compact) 14.dp else 18.dp),
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            HeroAvatar(
-                progress = animatedProgress,
-                level = userLevel.currentLevel,
-                userName = userName,
-                profileImagePath = profileImagePath,
-                tierAccent = tierAccent,
-                compact = compact,
-            )
-
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                // User Name in Display Font
-                Text(
-                    text = userName,
-                    style = if (compact) MaterialTheme.typography.titleLargeEmphasized
-                        else MaterialTheme.typography.headlineMediumEmphasized,
-                    fontWeight = FontWeight.Bold,
-                    color = appearancePalette.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-
-                // Editorial Subtitle Kicker
-                val levelKicker =
-                    if (userTitle.isNotBlank()) {
-                        "LEVEL ${userLevel.currentLevel}  ·  ${userTitle.uppercase(Locale.getDefault())}"
-                    } else {
-                        "LEVEL ${userLevel.currentLevel}"
+            // The profile identity is the only hero: avoid abstract background
+            // shapes, repeated level labels and a second nested progress card.
+            if (stackIdentity) {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    HeroAvatar(
+                        progress = animatedProgress,
+                        level = userLevel.currentLevel,
+                        userName = userName,
+                        profileImagePath = profileImagePath,
+                        tierAccent = tierAccent,
+                        compact = true,
+                    )
+                    ProfileIdentityText(
+                        name = userName,
+                        title = userTitle,
+                        level = userLevel.currentLevel,
+                        foreground = swatch.foreground,
+                        centered = true,
+                    )
+                }
+            } else {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(if (compact) 10.dp else 14.dp),
+                ) {
+                    HeroAvatar(
+                        progress = animatedProgress,
+                        level = userLevel.currentLevel,
+                        userName = userName,
+                        profileImagePath = profileImagePath,
+                        tierAccent = tierAccent,
+                        compact = compact,
+                    )
+                    Box(Modifier.weight(1f)) {
+                        ProfileIdentityText(
+                            name = userName,
+                            title = userTitle,
+                            level = userLevel.currentLevel,
+                            foreground = swatch.foreground,
+                        )
                     }
-                Text(
-                    text = levelKicker,
-                    style = KickerSmall,
-                    color = profileTextColor(tierAccent),
-                    letterSpacing = 1.2.sp,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                }
             }
-        }
-
-        Spacer(modifier = Modifier.height(18.dp))
-
-        // Level Progress Card
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            shape = MaterialTheme.shapes.large,
-            color = MaterialTheme.colorScheme.surfaceContainerLow,
-            contentColor = MaterialTheme.colorScheme.onSurface,
-        ) {
-            Column(
-                modifier = Modifier.fillMaxWidth().padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
+            // Progress is secondary information inside the hero, not another
+            // nested card competing for attention.
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = "LEVEL ${userLevel.currentLevel} PROGRESS",
-                        style = KickerSmall,
-                        color = appearancePalette.mutedText,
-                        letterSpacing = 1.1.sp,
-                    )
-                    ProgressPercentLabel(progress = animatedProgress, tierAccent = tierAccent)
-                }
-
-                ProgressTrack(
-                    progress = animatedProgress,
-                    modifier = Modifier.fillMaxWidth(),
-                    color = tierAccent,
-                    height = 6.dp,
+                Text(
+                    text = stringResource(R.string.profile_bento_total_xp),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = swatch.foreground,
                 )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = String.format(Locale.getDefault(), "%,d XP total", userLevel.totalXp),
-                        style = CaptionSmall,
-                        color = appearancePalette.mutedText,
-                    )
-                    Text(
-                        text = String.format(Locale.getDefault(), "%,d XP to next level", userLevel.xpRemaining),
-                        style = CaptionSmall,
-                        color = appearancePalette.mutedText,
-                    )
-                }
+                Text(
+                    text = String.format(Locale.getDefault(), "%,d", userLevel.totalXp),
+                    style = MaterialTheme.typography.labelLargeEmphasized,
+                    color = swatch.foreground,
+                )
+            }
+            ProgressTrack(
+                progress = animatedProgress,
+                modifier = Modifier.fillMaxWidth(),
+                color = swatch.foreground,
+                height = 6.dp,
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                ProgressPercentLabel(progress = animatedProgress, tierAccent = swatch.foreground)
+                Text(
+                    text = String.format(Locale.getDefault(), "%,d XP to next level", userLevel.xpRemaining),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = swatch.foreground,
+                    maxLines = 2,
+                    textAlign = TextAlign.End,
+                )
             }
         }
-            }
-        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun ProfileIdentityText(
+    name: String,
+    title: String,
+    level: Int,
+    foreground: Color,
+    centered: Boolean = false,
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+        horizontalAlignment = if (centered) Alignment.CenterHorizontally else Alignment.Start,
+    ) {
+        Text(
+            text = name,
+            style = MaterialTheme.typography.titleLargeEmphasized,
+            fontWeight = FontWeight.Bold,
+            color = foreground,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = if (centered) TextAlign.Center else TextAlign.Start,
+        )
+        Text(
+            text = if (title.isNotBlank()) "Level $level · $title" else "Level $level",
+            style = MaterialTheme.typography.labelMedium,
+            color = foreground,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = if (centered) TextAlign.Center else TextAlign.Start,
+        )
     }
 }
 
