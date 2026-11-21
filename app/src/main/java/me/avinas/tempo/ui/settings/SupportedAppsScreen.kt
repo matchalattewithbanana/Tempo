@@ -553,7 +553,7 @@ private fun TrackingRulesCard(
                 subtitle = formatDuration(minimumPlayDurationMs),
                 onClick = onMinimumPlayClick
             )
-            HorizontalDivider(color = Color.White.copy(alpha = 0.1f))
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             TrackingRuleRow(
                 icon = Icons.Default.Timer,
                 title = stringResource(R.string.tracking_default_max_duration),
@@ -561,7 +561,7 @@ private fun TrackingRulesCard(
                     ?: stringResource(R.string.tracking_no_limit),
                 onClick = onDefaultMaxClick
             )
-            HorizontalDivider(color = Color.White.copy(alpha = 0.1f))
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             TrackingRuleRow(
                 icon = Icons.Default.FilterAlt,
                 title = stringResource(R.string.tracking_content_exceptions),
@@ -572,7 +572,7 @@ private fun TrackingRulesCard(
                 },
                 onClick = onOverridesClick
             )
-            HorizontalDivider(color = Color.White.copy(alpha = 0.1f))
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             // Escape hatch for the default-deny model: users running a niche player they would
             // rather not allow one by one can opt back into the old permissive behaviour.
             Row(
