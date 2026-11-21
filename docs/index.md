@@ -36,9 +36,10 @@ Tempo stores its primary listening library in app-private Room/SQLite storage. O
 
 ### Releases and historical records
 
-- [Release catalog](releases/README.md)
+- [Release catalog](releases/index.md)
 - [Fork changelog](https://github.com/matchalattewithbanana/Tempo/blob/main/Changelog.md)
-- [Audit records](audits/)
+- [Audit records](audits/index.md)
+- [Engineering reference](reference/index.md)
 - [Archived upstream changelog](archive/UPSTREAM_CHANGELOG.md)
 
 Historical audits and plans describe the revision they were written for. They are useful engineering records, but a proposal or audit item is not evidence that a feature shipped.
