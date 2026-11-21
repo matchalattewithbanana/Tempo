@@ -315,7 +315,7 @@ private fun UsernameInputContent(
         Text(
             text = "We'll analyze your listening history and import recent scrobbles. Your data stays on your device.",
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
     }
@@ -455,7 +455,7 @@ private fun TierSelectionContent(
             Text(
                 text = "💡 All your history is saved! This just affects how fast your charts load.",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             )
@@ -888,7 +888,7 @@ private fun ConnectedContent(
                 Text(
                     text = "Connected as",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
                     text = username,
@@ -921,7 +921,7 @@ private fun ConnectedContent(
                             modifier = Modifier.weight(1f),
                         )
                         IconButton(onClick = onClearError, modifier = Modifier.size(24.dp)) {
-                            Icon(Icons.Default.Close, contentDescription = "Dismiss", tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f))
+                            Icon(Icons.Default.Close, contentDescription = "Dismiss", tint = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 }
@@ -942,7 +942,7 @@ private fun ConnectedContent(
                     Text(
                         text = "Sync pulls your latest scrobbles since the last import. It does not run in real time — use the button below to fetch recent plays immediately.",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     if (lastSyncResult != null) {
                         Spacer(modifier = Modifier.height(8.dp))
@@ -997,7 +997,7 @@ private fun ConnectedContent(
                     Text(
                         text = "Automatically check for new scrobbles in the background.",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     listOf("NONE" to "Off", "DAILY" to "Daily", "WEEKLY" to "Weekly").forEach { (value, label) ->
@@ -1069,7 +1069,7 @@ private fun StatItem(
         Text(
             text = label,
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }
@@ -1094,7 +1094,7 @@ private fun ResultRow(
             Text(
                 text = description,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
         Text(
