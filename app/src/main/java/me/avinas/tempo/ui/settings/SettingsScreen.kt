@@ -349,6 +349,7 @@ fun SettingsScreen(
         Box(Modifier.fillMaxSize().tempoAmbientBackdrop()) {
             Column(Modifier.fillMaxSize().padding(padding)) {
                 if (settingsCategory == "overview") {
+                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
                     OutlinedTextField(
                         value = settingsSearch,
                         onValueChange = { settingsSearch = it },
@@ -367,13 +368,15 @@ fun SettingsScreen(
                         keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
                             imeAction = androidx.compose.ui.text.input.ImeAction.Search,
                         ),
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
+                        modifier = Modifier.widthIn(max = 960.dp).fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 6.dp),
                     )
+                    }
                 }
+                Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
                 LazyColumn(
                     state = settingsScrollState,
-                    modifier = Modifier.weight(1f)
-                        .fillMaxWidth()
+                    modifier = Modifier.widthIn(max = 960.dp).fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 8.dp),
                 ) {
                 if (settingsCategory != "overview") {
@@ -1516,6 +1519,7 @@ fun SettingsScreen(
                 } // Community and About
                 item(key = "bottom-padding") {
                     Spacer(modifier = Modifier.height(32.dp))
+                }
                 }
                 }
             }
