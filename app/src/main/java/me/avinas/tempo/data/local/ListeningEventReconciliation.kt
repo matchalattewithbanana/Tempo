@@ -78,6 +78,71 @@ internal object ListeningEventReconciliation {
                 )
             )
 
+    data class Plan(
+        val toInsert: List<ListeningEvent>,
+        val toDelete: Set<Long>,
+        val skipped: Int,
+    )
+
+    /**
+     * Build the in-memory mutation plan after Room has loaded the bounded candidate rows.
+     * The DAO remains responsible only for fetching and committing; ordering, conflict
+     * selection and replacement semantics stay in this pure policy.
+     */
+    fun plan(
+        incomingEvents: List<ListeningEvent>,
+        existingSlots: List<Slot>,
+        equivalentByTrackId: Map<Long, List<Long>>,
+        replaceExistingOnMatch: Boolean,
+    ): Plan {
+        val candidates = Candidates(equivalentByTrackId)
+        existingSlots.forEach(candidates::add)
+
+        val toInsert = ArrayList<ListeningEvent>(incomingEvents.size)
+        val toDelete = linkedSetOf<Long>()
+        var skipped = 0
+        val incoming =
+            incomingEvents
+                .map { it to ListeningImportPolicy.Play(it) }
+                .sortedWith(
+                    compareByDescending<Pair<ListeningEvent, ListeningImportPolicy.Play>> {
+                        it.second.authority
+                    }.thenBy { it.second.timestamp },
+                )
+
+        for ((event, play) in incoming) {
+            val conflict = candidates.closest(event.track_id, play)
+            if (conflict != null) {
+                if (
+                    !shouldReplace(
+                        conflict = conflict,
+                        incoming = play,
+                        replaceExistingOnMatch = replaceExistingOnMatch,
+                    )
+                ) {
+                    skipped++
+                    continue
+                }
+                toDelete += requireNotNull(conflict.existingId)
+                candidates.remove(conflict)
+            }
+
+            toInsert += event
+            candidates.add(
+                Slot(
+                    play = play,
+                    trackId = event.track_id,
+                ),
+            )
+        }
+
+        return Plan(
+            toInsert = toInsert,
+            toDelete = toDelete,
+            skipped = skipped,
+        )
+    }
+
     fun windows(events: List<ListeningEvent>): List<LongRange> {
         val windows = ArrayList<LongRange>()
         for (range in events.map { searchRange(it.timestamp, it.source) }.sortedBy { it.first }) {
