@@ -6,6 +6,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.runBlocking
 import me.avinas.tempo.data.local.AppDatabase
+import me.avinas.tempo.data.local.EventFingerprint
 import me.avinas.tempo.data.local.entities.ListeningEvent
 import me.avinas.tempo.data.local.entities.Track
 import me.avinas.tempo.data.repository.RoomListeningRepository
@@ -417,6 +418,34 @@ class ListeningReconciliationIntegrationTest {
         assertEquals(1, dao.insertAllBatchedWithDedup(listOf(first)).inserted)
         assertEquals(1, dao.insertAllBatchedWithDedup(listOf(next)).inserted)
         assertEquals(2, dao.getCount())
+    }
+
+    @Test fun optInExactFingerprintRepairOnlyDeletesProvenDuplicates() = runBlocking {
+        val id = trackId()
+        val dao = database.listeningEventDao()
+        val event = ListeningEvent(
+            track_id = id, timestamp = 1_700_100_000_000L,
+            playDuration = 150_000, completionPercentage = 0,
+            endTimestamp = 1_700_100_150_000L,
+            source = "com.spotify.music.import.json",
+        )
+        val copy = event.copy(contentFingerprint = EventFingerprint.compute(event))
+        // Simulate the unguarded historical import code path that produced
+        // two DB rows with identical content before centralized dedup existed.
+        val oldId = dao.insert(copy)
+        dao.insert(copy.copy(wasSkipped = true))
+        val independent = copy.copy(
+            timestamp = event.timestamp + 220_000L,
+            endTimestamp = event.endTimestamp!! + 220_000L,
+            contentFingerprint = null,
+        )
+        dao.insert(independent)
+        assertEquals(1, dao.countExactFingerprintDuplicates())
+        assertEquals(1, dao.deleteExactFingerprintDuplicates())
+        assertEquals(0, dao.countExactFingerprintDuplicates())
+        assertEquals(2, dao.getCount())
+        assertTrue(dao.getEventsForTrack(id).any { it.id == oldId })
+        assertTrue(dao.getEventsForTrack(id).any { it.timestamp == independent.timestamp })
     }
 
 }
