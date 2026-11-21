@@ -57,7 +57,7 @@ internal fun GeneralSettingsSection(
     ) {
         item(key = "general-profile") {
             SettingsSectionHeader(stringResource(R.string.settings_profile))
-            TempoSettingsGroup(modifier = Modifier.clickable(onClick = onEditName)) {
+            TempoSettingsGroup {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -117,7 +117,12 @@ internal fun GeneralSettingsSection(
                         }
 
                         Spacer(modifier = Modifier.width(16.dp))
-                        Column(modifier = Modifier.weight(1f)) {
+                        Column(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clickable(onClick = onEditName)
+                                .padding(vertical = 8.dp),
+                        ) {
                             Text(
                                 text = uiState.userName,
                                 style = MaterialTheme.typography.titleLarge,
@@ -131,17 +136,12 @@ internal fun GeneralSettingsSection(
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
-                            Text(
-                                text = stringResource(R.string.settings_tap_photo_to_change),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
                         }
-                        if (uiState.profileImagePath.isNullOrBlank()) {
+                        IconButton(onClick = onEditName) {
                             Icon(
                                 imageVector = Icons.Default.Edit,
                                 contentDescription = stringResource(R.string.settings_update_name),
-                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
                     }
