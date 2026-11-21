@@ -13,4 +13,11 @@ class AdaptiveNavigationPolicyTest {
         assertTrue(shouldUseWideTempoRail(1200f, true))
         assertFalse(shouldUseWideTempoRail(1200f, false))
     }
+
+    @Test fun railExpandsAtMaterialExpandedBreakpoint() {
+        assertFalse(shouldExpandWideTempoRail(839.9f, true))
+        assertTrue(shouldExpandWideTempoRail(840f, true))
+        assertTrue(shouldExpandWideTempoRail(1600f, true))
+        assertFalse(shouldExpandWideTempoRail(1600f, false))
+    }
 }

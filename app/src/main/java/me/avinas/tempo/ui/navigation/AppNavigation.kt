@@ -54,11 +54,16 @@ import me.avinas.tempo.ui.settings.SupportedAppsScreen
 import me.avinas.tempo.ui.settings.YourDataScreen
 import me.avinas.tempo.ui.spotlight.SpotlightScreen
 import me.avinas.tempo.ui.theme.rememberReducedMotion
+import me.avinas.tempo.ui.components.TempoPrimaryNavigation
+import me.avinas.tempo.ui.components.tempoAdaptiveLayout
 
 /** Main destinations use an expressive rail only when expanded-width space
  * is available; detail routes continue to use their own full-screen layouts. */
 internal fun shouldUseWideTempoRail(widthDp: Float, primaryDestination: Boolean): Boolean =
-    primaryDestination && widthDp >= 600f
+    primaryDestination && tempoAdaptiveLayout(widthDp).primaryNavigation != TempoPrimaryNavigation.BOTTOM_BAR
+
+internal fun shouldExpandWideTempoRail(widthDp: Float, primaryDestination: Boolean): Boolean =
+    primaryDestination && tempoAdaptiveLayout(widthDp).primaryNavigation == TempoPrimaryNavigation.EXPANDED_RAIL
 
 private const val WidgetPeriodKey = "widgetStatsPeriod"
 
@@ -172,7 +177,9 @@ fun AppNavigation(
             BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
                 // On tablet/expanded widths, the rail frees vertical space
                 // and keeps Home, Stats, and History reachable at all times.
-                val useWideRail = shouldUseWideTempoRail(maxWidth.value, showBottomBar)
+                val adaptiveLayout = remember(maxWidth.value) { tempoAdaptiveLayout(maxWidth.value) }
+                val useWideRail = showBottomBar && adaptiveLayout.primaryNavigation != TempoPrimaryNavigation.BOTTOM_BAR
+                val expandWideRail = showBottomBar && adaptiveLayout.primaryNavigation == TempoPrimaryNavigation.EXPANDED_RAIL
                 NavHost(
                     navController = navController,
                     startDestination = Screen.Home.route,
@@ -580,6 +587,7 @@ fun AppNavigation(
                     if (useWideRail) {
                         TempoMainNavigationRail(
                             currentDestination = currentDestination,
+                            expanded = expandWideRail,
                             onNavigateToHome = goHome,
                             onNavigateToStats = goStats,
                             onNavigateToHistory = goHistory,

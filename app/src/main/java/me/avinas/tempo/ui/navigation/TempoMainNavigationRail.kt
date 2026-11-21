@@ -26,7 +26,7 @@ import androidx.navigation.NavDestination.Companion.hierarchy
 import me.avinas.tempo.R
 
 /**
- * Collapsed expressive navigation rail for expanded window layouts.
+ * Expressive navigation rail: collapsed at Material medium widths and expanded at 840dp+.
  * No separate route state: selection is derived directly from NavController.
  */
 @Composable
@@ -35,6 +35,7 @@ internal fun TempoMainNavigationRail(
     onNavigateToHome: () -> Unit,
     onNavigateToStats: () -> Unit,
     onNavigateToHistory: () -> Unit,
+    expanded: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     val haptic = LocalHapticFeedback.current
@@ -59,7 +60,7 @@ internal fun TempoMainNavigationRail(
                 it.route == destination.route
             } == true
             WideNavigationRailItem(
-                railExpanded = false,
+                railExpanded = expanded,
                 selected = selected,
                 onClick = {
                     if (!selected) {
@@ -76,7 +77,8 @@ internal fun TempoMainNavigationRail(
                 label = {
                     Text(
                         destination.label,
-                        style = MaterialTheme.typography.labelMedium,
+                        style = if (selected) MaterialTheme.typography.labelLargeEmphasized
+                            else MaterialTheme.typography.labelLarge,
                         maxLines = 2,
                     )
                 },

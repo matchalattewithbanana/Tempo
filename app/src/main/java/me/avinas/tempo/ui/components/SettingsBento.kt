@@ -29,7 +29,7 @@ data class TempoSettingsDestination(
 
 /** Compact phones and accessibility text scales always get full-width cards. */
 internal fun settingsBentoColumns(widthDp: Float, fontScale: Float): Int =
-    if (widthDp < 360f || fontScale >= 1.3f) 1 else 2
+    if (tempoAdaptiveLayout(widthDp).widthClass == TempoWidthClass.COMPACT || fontScale >= 1.3f) 1 else 2
 
 /**
  * Original staggered Material bento. A featured full-width tile is followed

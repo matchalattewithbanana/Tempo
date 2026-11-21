@@ -3,19 +3,19 @@ package me.avinas.tempo.ui.components
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
-/** Tempo's shipped staggered Settings mosaic must still respect narrow screens and scale. */
 class SettingsBentoLayoutTest {
-    @Test fun smallestPhonesUseFullWidthCards() {
+    @Test fun phonesUseFullWidthCards() {
         assertEquals(1, settingsBentoColumns(320f, 1f))
-        assertEquals(1, settingsBentoColumns(359.9f, 1f))
+        assertEquals(1, settingsBentoColumns(393f, 1f))
+        assertEquals(1, settingsBentoColumns(599.9f, 1f))
         assertEquals(1, settingsBentoColumns(393f, 1.3f))
     }
 
-    @Test fun normalPhoneAndTabletWidthsShowTwoColumnBento() {
-        assertEquals(2, settingsBentoColumns(360f, 1f))
-        assertEquals(2, settingsBentoColumns(393f, 1f))
+    @Test fun mediumAndExpandedWidthsCanUseTwoColumns() {
         assertEquals(2, settingsBentoColumns(600f, 1.2f))
+        assertEquals(2, settingsBentoColumns(839.9f, 1.2f))
         assertEquals(2, settingsBentoColumns(920f, 1.2f))
+        assertEquals(2, settingsBentoColumns(1200f, 1.2f))
     }
 
     @Test fun accessibilityFontScaleAvoidsNarrowHalfCards() {
