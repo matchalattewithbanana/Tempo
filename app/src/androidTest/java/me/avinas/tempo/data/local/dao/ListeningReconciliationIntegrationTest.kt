@@ -386,4 +386,37 @@ class ListeningReconciliationIntegrationTest {
         assertEquals(1, dao.getCount())
     }
 
+    @Test fun spotifyLegacyMinuteEndAndExtendedEndDescribeOneRealPlay() = runBlocking {
+        val id = trackId()
+        val dao = database.listeningEventDao()
+        val minuteEnd = 1_700_100_000_000L
+        val legacy = ListeningEvent(
+            track_id = id, timestamp = minuteEnd - 180_000L,
+            endTimestamp = minuteEnd, playDuration = 180_000L,
+            completionPercentage = 0, source = "com.spotify.music.import.json",
+        )
+        val extended = legacy.copy(
+            timestamp = minuteEnd + 41_000L - 180_000L,
+            endTimestamp = minuteEnd + 41_000L,
+        )
+        assertEquals(1, dao.insertAllBatchedWithDedup(listOf(legacy)).inserted)
+        assertEquals(1, dao.insertAllBatchedWithDedup(listOf(extended)).skipped)
+        assertEquals(1, dao.getCount())
+    }
+
+    @Test fun distinctShortSpotifyReplaysWithinOneMinuteStaySeparate() = runBlocking {
+        val id = trackId()
+        val dao = database.listeningEventDao()
+        val end = 1_700_100_000_000L
+        val first = ListeningEvent(
+            track_id = id, timestamp = end - 30_000L, endTimestamp = end,
+            playDuration = 30_000L, completionPercentage = 0,
+            source = "com.spotify.music.import.json",
+        )
+        val next = first.copy(timestamp = end, endTimestamp = end + 30_000L)
+        assertEquals(1, dao.insertAllBatchedWithDedup(listOf(first)).inserted)
+        assertEquals(1, dao.insertAllBatchedWithDedup(listOf(next)).inserted)
+        assertEquals(2, dao.getCount())
+    }
+
 }
