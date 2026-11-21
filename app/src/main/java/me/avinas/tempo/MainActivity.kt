@@ -11,8 +11,6 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.animation.*
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.tween
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -305,6 +303,8 @@ fun TempoApp(
     // ponytail: one drift language app-wide — 8% width (~30px) + fade, enter
     // slower than exit; full-width pager slide fought every screen's entrance.
     val reducedMotion = me.avinas.tempo.ui.theme.rememberReducedMotion()
+    val effectsSpec = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
+    val spatialSpec = MaterialTheme.motionScheme.defaultSpatialSpec<androidx.compose.ui.unit.IntOffset>()
 
     // Show Xiaomi guidance popup after onboarding completes for first-time Xiaomi users
     LaunchedEffect(uiState.isOnboardingCompleted, uiState.xiaomiGuidanceShown) {
@@ -317,16 +317,24 @@ fun TempoApp(
         AnimatedContent(
             targetState = currentStep,
             transitionSpec = {
-                if (reducedMotion) {
-                    fadeIn(animationSpec = tween(200)) togetherWith fadeOut(animationSpec = tween(180))
-                } else if (targetState == OnboardingStep.COMPLETED || initialState == OnboardingStep.COMPLETED) {
-                    fadeIn(animationSpec = tween(320, easing = FastOutSlowInEasing)) togetherWith fadeOut(animationSpec = tween(220, easing = FastOutSlowInEasing))
-                } else if (targetState.ordinal > initialState.ordinal) {
-                    (slideInHorizontally(animationSpec = tween(280, easing = FastOutSlowInEasing)) { (it * 0.08f).toInt() } + fadeIn(animationSpec = tween(280, easing = FastOutSlowInEasing))) togetherWith
-                        (slideOutHorizontally(animationSpec = tween(220, easing = FastOutSlowInEasing)) { -(it * 0.08f).toInt() } + fadeOut(animationSpec = tween(180)))
-                } else {
-                    (slideInHorizontally(animationSpec = tween(280, easing = FastOutSlowInEasing)) { -(it * 0.08f).toInt() } + fadeIn(animationSpec = tween(280, easing = FastOutSlowInEasing))) togetherWith
-                        (slideOutHorizontally(animationSpec = tween(220, easing = FastOutSlowInEasing)) { (it * 0.08f).toInt() } + fadeOut(animationSpec = tween(180)))
+                // The first usable Home frame must not be held behind a
+                // second splash or cross-fade. Onboarding pages remain
+                // spatially related and use the same Material physics.
+                when {
+                    reducedMotion ||
+                        targetState == OnboardingStep.COMPLETED ||
+                        initialState == OnboardingStep.COMPLETED ->
+                        EnterTransition.None togetherWith ExitTransition.None
+                    targetState.ordinal > initialState.ordinal ->
+                        (slideInHorizontally(animationSpec = spatialSpec) { it / 12 } +
+                            fadeIn(animationSpec = effectsSpec)) togetherWith
+                            (slideOutHorizontally(animationSpec = spatialSpec) { -it / 14 } +
+                                fadeOut(animationSpec = effectsSpec))
+                    else ->
+                        (slideInHorizontally(animationSpec = spatialSpec) { -it / 12 } +
+                            fadeIn(animationSpec = effectsSpec)) togetherWith
+                            (slideOutHorizontally(animationSpec = spatialSpec) { it / 14 } +
+                                fadeOut(animationSpec = effectsSpec))
                 }
             },
             label = "onboarding_step_transition"
