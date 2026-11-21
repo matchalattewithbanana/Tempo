@@ -492,47 +492,37 @@ fun HistoryFilterSheetContent(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Playback Kicker
         Text(
-            text = stringResource(R.string.history_playback).uppercase(Locale.getDefault()),
-            style = KickerSmall,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            letterSpacing = 1.sp
+            text = stringResource(R.string.history_playback),
+            style = MaterialTheme.typography.titleSmallEmphasized,
+            color = MaterialTheme.colorScheme.onSurface,
         )
         Spacer(modifier = Modifier.height(10.dp))
 
-        GlassCard(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
-                .clickable {
-                    haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                    showSkips = !showSkips
-                },
-            shape = RoundedCornerShape(16.dp),
-            backgroundColor = MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.7f),
-            variant = GlassCardVariant.LowProminence,
-            borderColor = GlassBorderSoft,
-            borderWidth = 0.8.dp,
-            contentPadding = PaddingValues(16.dp)
+        Surface(
+            onClick = {
+                haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                showSkips = !showSkips
+            },
+            modifier = Modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.large,
+            color = MaterialTheme.colorScheme.surfaceContainerLow,
+            contentColor = MaterialTheme.colorScheme.onSurface,
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = stringResource(R.string.history_show_skipped),
-                        color = MaterialTheme.colorScheme.onSurface,
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium,
                     )
-                    Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = "Include songs skipped during playback",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f),
-                        style = MaterialTheme.typography.bodySmall
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodySmall,
                     )
                 }
                 Switch(
@@ -541,12 +531,6 @@ fun HistoryFilterSheetContent(
                         haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                         showSkips = it
                     },
-                    colors = SwitchDefaults.colors(
-                        checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
-                        checkedTrackColor = MaterialTheme.colorScheme.primary,
-                        uncheckedThumbColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f),
-                        uncheckedTrackColor = MaterialTheme.colorScheme.surfaceContainerHigh
-                    )
                 )
             }
         }
