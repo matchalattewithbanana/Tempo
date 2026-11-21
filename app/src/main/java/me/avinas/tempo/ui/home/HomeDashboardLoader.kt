@@ -309,7 +309,7 @@ class HomeDashboardLoader @Inject constructor(
             audioFeatures = audioFeaturesDeferred.await(),
             insights = combinedInsights,
             userName =
-                profile.userName.takeIf(String::isNotBlank)
+                profile.userName.takeIf { it.isNotBlank() }
                     ?: tokenStorage.getUserDisplayName()?.split(" ")?.firstOrNull()
                     ?: "User",
             profileImagePath = profile.profileImagePath,
