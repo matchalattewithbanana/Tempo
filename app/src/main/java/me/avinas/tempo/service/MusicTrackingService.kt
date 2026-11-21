@@ -259,11 +259,15 @@ class MusicTrackingService : NotificationListenerService() {
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-    private enum class SessionAction {
-        UPDATE,
-        NEW,
-        IGNORE,
-    }
+    private fun PlaybackSession.transitionSnapshot() =
+        PlaybackTransitionPolicy.Existing(
+            title = title,
+            artist = artist,
+            listenedMs = calculateCurrentPlayDuration(),
+            positionProgressMs = accumulatedPositionMs,
+            lastKnownPositionMs = lastKnownPosition,
+            estimatedDurationMs = estimatedDurationMs,
+        )
 
     // MediaSession management
     private var mediaSessionManager: MediaSessionManager? = null
@@ -1611,50 +1615,24 @@ class MusicTrackingService : NotificationListenerService() {
         val (sessionAction, existingSession) =
             synchronized(sessionOperationLock) {
                 val existing = playbackStates[packageName]
-
-                // Check if this is the same track (handle artist updates from Unknown -> Real)
-                val isSameTrackInfo =
-                    existing != null && existing.title == title && (
-                        existing.artist == artist ||
-                            // If existing session has unknown artist but notification has real artist, update it
-                            (
-                                me.avinas.tempo.utils.ArtistParser
-                                    .isUnknownArtist(existing.artist) &&
-                                    !me.avinas.tempo.utils.ArtistParser
-                                        .isUnknownArtist(artist)
-                            )
+                val decision =
+                    PlaybackTransitionPolicy.fromNotification(
+                        existing = existing?.transitionSnapshot(),
+                        title = title,
+                        artist = artist,
                     )
-
-                // Detect replay based on accumulated play time exceeding estimated duration
-                val isReplayDetected =
-                    isSameTrackInfo &&
-                        run {
-                            val playedMs = existing!!.calculateCurrentPlayDuration()
-                            val estimatedDuration = existing.estimatedDurationMs
-                            val playedExceedsDuration =
-                                estimatedDuration != null &&
-                                    estimatedDuration > 0 &&
-                                    playedMs > estimatedDuration + 10_000L
-                            if (playedExceedsDuration) {
-                                Log.d(
-                                    TAG,
-                                    "Notification: Replay detected for '${existing.title}': " +
-                                        "played ${playedMs}ms exceeds estimated duration ${estimatedDuration}ms",
-                                )
-                            }
-                            playedExceedsDuration
-                        }
-
-                val isSameTrack = isSameTrackInfo && !isReplayDetected
-
-                when {
-                    isSameTrack -> SessionAction.UPDATE to existing
-                    else -> SessionAction.NEW to existing // existing may be non-null (different track) or null
+                if (decision.replayDetected && existing != null) {
+                    Log.d(
+                        TAG,
+                        "Notification replay detected for '${existing.title}' after " +
+                            "${existing.calculateCurrentPlayDuration()}ms",
+                    )
                 }
+                decision.action to existing
             }
 
         when (sessionAction) {
-            SessionAction.UPDATE -> {
+            PlaybackTransitionPolicy.Action.UPDATE -> {
                 // Same track - update artist if we now have a better one
                 val session = existingSession!!
                 if (me.avinas.tempo.utils.ArtistParser
@@ -1706,7 +1684,7 @@ class MusicTrackingService : NotificationListenerService() {
                 return
             }
 
-            SessionAction.NEW -> {
+            PlaybackTransitionPolicy.Action.NEW -> {
                 // Check if this is likely an advertisement - skip tracking ads
                 if (artist.isNotBlank() &&
                     !me.avinas.tempo.utils.ArtistParser
@@ -3022,89 +3000,31 @@ class MusicTrackingService : NotificationListenerService() {
         val (sessionAction, session) =
             synchronized(sessionOperationLock) {
                 val existing = playbackStates[packageName]
-
-                // Check if this is the same track (handle artist updates from Unknown -> Real)
-                val isSameTrackInfo =
-                    existing != null && existing.title == title && (
-                        existing.artist == artist ||
-                            // If existing session has unknown artist but new one has real artist, it's the same track
-                            (
-                                me.avinas.tempo.utils.ArtistParser
-                                    .isUnknownArtist(existing.artist) &&
-                                    !me.avinas.tempo.utils.ArtistParser
-                                        .isUnknownArtist(artist)
-                            ) ||
-                            // If new metadata has unknown artist but session has real artist, keep session's artist
-                            (
-                                !me.avinas.tempo.utils.ArtistParser
-                                    .isUnknownArtist(existing.artist) &&
-                                    me.avinas.tempo.utils.ArtistParser
-                                        .isUnknownArtist(artist)
-                            )
+                val decision =
+                    PlaybackTransitionPolicy.fromMediaSession(
+                        existing = existing?.transitionSnapshot(),
+                        title = title,
+                        artist = artist,
+                        isPlaying = isPlaying,
+                        currentPositionMs = currentPosition,
+                        reportedDurationMs = duration,
                     )
 
-                // Detect replay: same track info but position reset to near beginning
-                val isReplayDetected =
-                    isSameTrackInfo && isPlaying &&
-                        run {
-                            val lastPosition = existing!!.lastKnownPosition
-                            // Replay is a MEDIA POSITION reset, not a wall-clock
-                            // duration threshold (2x/0.5x must not distort it).
-                            val playedMs = existing.accumulatedPositionMs
-
-                            val positionResetThresholdMs = 5_000L
-                            val minPlayedForReplayMs = 30_000L
-
-                            val positionWentBack =
-                                lastPosition > positionResetThresholdMs &&
-                                    currentPosition < positionResetThresholdMs
-
-                            val estimatedDuration = existing.estimatedDurationMs ?: duration.takeIf { it > 0 }
-
-                            val minCompletionForReplay = 0.5f
-                            val completionPercent =
-                                if (estimatedDuration != null && estimatedDuration > 0) {
-                                    playedMs.toFloat() / estimatedDuration
-                                } else {
-                                    0f
-                                }
-                            val hasMinCompletion = completionPercent >= minCompletionForReplay
-
-                            val playedExceedsDuration =
-                                estimatedDuration != null &&
-                                    estimatedDuration > 0 &&
-                                    playedMs > estimatedDuration + 10_000L
-
-                            val isReplay =
-                                (positionWentBack && playedMs >= minPlayedForReplayMs && hasMinCompletion) ||
-                                    playedExceedsDuration
-
-                            if (isReplay) {
-                                Log.d(
-                                    TAG,
-                                    "Replay detected for '${existing.title}': " +
-                                        "position reset from ${lastPosition}ms to ${currentPosition}ms, " +
-                                        "played ${playedMs}ms (${(completionPercent * 100).toInt()}%), estimated duration ${estimatedDuration}ms",
-                                )
-                            }
-
-                            isReplay
-                        }
-
-                // Update last known position for replay detection
-                existing?.let { it.lastKnownPosition = currentPosition }
-
-                val isSameTrackResult = isSameTrackInfo && !isReplayDetected
-
-                when {
-                    isSameTrackResult -> SessionAction.UPDATE to existing
-                    isPlaying -> SessionAction.NEW to existing
-                    else -> SessionAction.IGNORE to existing
+                if (decision.replayDetected && existing != null) {
+                    Log.d(
+                        TAG,
+                        "Replay detected for '${existing.title}': position reset from " +
+                            "${existing.lastKnownPosition}ms to ${currentPosition}ms",
+                    )
                 }
+
+                // Position belongs to mutable session bookkeeping, not transition policy.
+                existing?.lastKnownPosition = currentPosition
+                decision.action to existing
             }
 
         when (sessionAction) {
-            SessionAction.UPDATE -> {
+            PlaybackTransitionPolicy.Action.UPDATE -> {
                 // Same track - update play state and potentially update artist
                 val currentSession = session!!
 
@@ -3235,7 +3155,7 @@ class MusicTrackingService : NotificationListenerService() {
                 }
             }
 
-            SessionAction.NEW -> {
+            PlaybackTransitionPolicy.Action.NEW -> {
                 // Detach previous session before saving so subsequent callbacks cannot re-save it.
                 session?.let {
                     playbackStates.remove(packageName, it)
@@ -3332,7 +3252,7 @@ class MusicTrackingService : NotificationListenerService() {
                 }
             }
 
-            SessionAction.IGNORE -> {
+            PlaybackTransitionPolicy.Action.IGNORE -> {
                 // Not playing and not same track - nothing to do
             }
         }
