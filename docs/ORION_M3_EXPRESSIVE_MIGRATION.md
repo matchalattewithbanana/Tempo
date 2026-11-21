@@ -42,6 +42,43 @@ The request is not just to add polygons or an expressive Settings hub. The same 
 
 A complete app-wide visual redesign is **not yet verified or signed off**. Keep [#94](https://github.com/matchalattewithbanana/Tempo/issues/94) open until this matrix and the remaining art-heavy surfaces are validated.
 
+## Follow-up — full skill-guided component and performance pass (21 November 2026)
+
+This pass read and applied the installed `m3-expressive` skill's `tokens.md`,
+`shape.md`, `motion.md`, `typography.md`, `color.md`, `layout.md`,
+`platforms.md`, and component guidance for buttons, navigation, inputs,
+containment, bars, menus and feedback. **Using the complete guidance does not
+mean showing every Material component in Tempo**: choose components by user
+intent, and avoid meaningless decorative density.
+
+| M3 rule | Tempo implementation | Important distinction |
+| --- | --- | --- |
+| 10-step corner system (0/4/8/12/16/20/28/32/48/full) | All SOFT/MODERATE/SHARP `AppearanceMaterialShapes` choices now map to published radius steps. Selected preset cards morph between 20 and 28dp and their preview uses nested optical roundness | M3 supplies the **steps**; Tempo chooses which step each customization preset maps to |
+| Connected groups for small single-choice sets; filter chips for more than five | Appearance controls now measure **actual pane width**, present selected check marks, use full-row switch semantics and switch six-option duration controls to filter chips | Tempo's 360dp/grouping heuristic remains a product layout choice, not a Material default |
+| Baseline and emphasized type roles are different *weights*, not unrelated font families | Selected headings and menu items opt into emphasized roles; alternate heading fonts no longer leak into `titleMedium/SmallEmphasized` and body controls | Font selection and brand typography remain customizable |
+| Purposeful motion, geometry→spatial and opacity→effects | Appearance accordion height uses spatial springs and opacity uses effects springs; insight card crossfade uses effects springs. Experimental Material APIs now have explicit opt-ins throughout affected routes | No rule mandates stagger animations; Tempo favors immediate content |
+| Limit expressive hero moments, especially on dense analytics | Eliminated 16+18+14 independent decorative wave animations plus continuous radar/flame loops in Home insights; static bars are drawn without 48 graphics layers. The selected BPM pulse remains the intentional rhythmic hero | A static data-shaped history visualization is not represented as live playback |
+| Inverse-surface snackbar and single action | `TempoSnackbar` now uses `inverseSurface/onSurface/inversePrimary`, omits status-icon decoration and keeps optional dismissal | Message classification remains for existing APIs, not for styling a second hero |
+| Tonal vertical menus with explicit selected state | Shared menus now use Material surface roles, emphasized selected title, checked indicator and selection semantics; extra border/shadow layers removed | Temporary action menus are not a replacement for always-visible toolbars |
+| One clearly high-emphasis destination | Settings bento keeps one colorful featured card; secondary destinations use calm tonal surfaces with colorful emblem icons | Color accents belong to informative hierarchy, not every card |
+| Adaptive navigation and persistent Now Playing | Expanded route now reserves **measured rail width** and Now Playing strip height rather than relying only on a fixed 96dp inset; supporting labels use paired Material text roles | The initial 96dp width is a Tempo pre-measure fallback, not an official rail token |
+| Semantic text pairs for secondary flows | Extension import button foregrounds use `onPrimary`; supported-app divider treatment uses `outlineVariant`; Settings search now has labeled clear action, search keyboard action and indexes more destinations | App-specific content and callbacks remain unchanged |
+| Dialogs stack confirmations over dismissals | Corrected confirmation order for narrow/high-font dialog layouts and switched title hierarchy to headline | The responsive breakpoint remains Tempo policy |
+
+**Changes are source-only** on `main`, committed with `[skip ci]`. Regression
+tests were added or updated for shape presets, responsive connected-choice
+selection, and readable typography roles. Source-level brace/delimiter and
+duplicate-import checks passed for modified high-risk files; **neither Gradle
+compile nor unit/instrumentation tests have run**. Do not release this work
+without the existing acceptance matrix.
+
+**Follow-up acceptance gates:** build validation, crash-free navigation
+and restore journeys, compact/expanded layouts, extreme system font sizes,
+TalkBack/focus behavior, Light/OLED/custom color screenshots, profiler traces,
+and pixel-accurate share/export regression tests. Specialist artwork and export
+surfaces should not be recolored mechanically. `m3-expressive` guidance
+is a design/implementation reference, not a repository compiler or test runner.
+
 ## Reference code inspected
 
 | Orion module | What it actually does | Original Tempo adaptation |
