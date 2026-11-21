@@ -55,9 +55,8 @@ internal fun AppearanceSection(
     )
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.large,
+        shape = MaterialTheme.shapes.extraLarge,
         color = container,
-        border = BorderStroke(1.dp, colors.outlineVariant.copy(alpha = 0.65f)),
     ) {
         Column {
             Row(
@@ -88,7 +87,7 @@ internal fun AppearanceSection(
                 ) + fadeOut(MaterialTheme.motionScheme.fastEffectsSpec()),
             ) {
                 Column {
-                    HorizontalDivider(color = colors.outlineVariant.copy(alpha = 0.6f))
+                    HorizontalDivider(color = colors.outlineVariant)
                     Column(
                         modifier = Modifier.fillMaxWidth().padding(18.dp),
                         verticalArrangement = Arrangement.spacedBy(14.dp),
