@@ -520,4 +520,34 @@ class ListeningReconciliationIntegrationTest {
         assertEquals(600_000L, dao.getEventsForTrack(id).sumOf { it.playDuration })
     }
 
+    @Test fun backupLiveRowsWithDifferentLocalTrackIdsAreNotDoubleCounted() = runBlocking {
+        val primary = trackId()
+        val duplicateTrack = database.trackDao().insert(
+            Track(
+                title = "Same Song", artist = "Same Artist", album = null,
+                duration = 180_000L, albumArtUrl = null,
+                spotifyId = "spotify-track-1", musicbrainzId = null,
+            )
+        )
+        val start = 1_700_401_000_000L
+        fun original(track: Long) = ListeningEvent(
+            track_id = track,
+            timestamp = start,
+            endTimestamp = start + 90_000L,
+            playDuration = 90_000L,
+            completionPercentage = 50,
+            source = "com.spotify.music",
+            sessionId = "original-device-session",
+        )
+        val dao = database.listeningEventDao()
+        assertEquals(1, dao.insertAllBatchedWithDedup(listOf(original(primary))).newlyAdded)
+        // Replayed backup source remains a live package name rather than
+        // "import", but its track identity differs from the active library.
+        assertEquals(0, dao.insertAllBatchedWithDedup(
+            listOf(original(duplicateTrack)), forceAliasLookup = true,
+        ).newlyAdded)
+        assertEquals(1, dao.getCount())
+        assertEquals(90_000L, dao.getEventsForTrack(primary).sumOf { it.playDuration })
+    }
+
 }
