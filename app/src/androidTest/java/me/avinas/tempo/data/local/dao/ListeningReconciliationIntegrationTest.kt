@@ -482,4 +482,42 @@ class ListeningReconciliationIntegrationTest {
         assertEquals(2, dao.getCount())
     }
 
+    @Test fun sequentialOverlappingTempoBackupsPreserveOnlyUniqueListeningTime() = runBlocking {
+        val id = trackId()
+        val dao = database.listeningEventDao()
+        val start = 1_700_300_000_000L
+        fun exported(index: Int) = ListeningEvent(
+            // Exported backup IDs and fingerprints must not be trusted after
+            // mapping the track to the active database.
+            id = 9_000L + index, track_id = id,
+            timestamp = start + index * 300_000L,
+            endTimestamp = start + index * 300_000L + 120_000L,
+            playDuration = 120_000L, completionPercentage = 0,
+            source = "com.spotify.music.import.json",
+            contentFingerprint = "unrelated-backup-$index",
+        )
+        val backupA = (0..2).map(::exported)
+        val backupB = (1..3).map(::exported)
+        val local = exported(4).copy(
+            id = 0L, source = "com.spotify.music",
+            sessionId = "separate-local-session", contentFingerprint = null,
+        )
+
+        assertEquals(1, dao.insertAllBatchedWithDedup(listOf(local)).newlyAdded)
+        assertEquals(3, dao.insertAllBatchedWithDedup(backupA).newlyAdded)
+        val second = dao.insertAllBatchedWithDedup(backupB)
+        assertEquals(1, second.newlyAdded)
+        assertEquals(2, second.skipped)
+        assertEquals(5, dao.getCount())
+        assertEquals(600_000L, dao.getEventsForTrack(id).sumOf { it.playDuration })
+
+        // Repeated imports and a different restore choice must remain idempotent.
+        assertEquals(0, dao.insertAllBatchedWithDedup(backupB).newlyAdded)
+        assertEquals(0, dao.insertAllBatchedWithDedup(
+            backupA, replaceExistingOnMatch = true,
+        ).newlyAdded)
+        assertEquals(5, dao.getCount())
+        assertEquals(600_000L, dao.getEventsForTrack(id).sumOf { it.playDuration })
+    }
+
 }
