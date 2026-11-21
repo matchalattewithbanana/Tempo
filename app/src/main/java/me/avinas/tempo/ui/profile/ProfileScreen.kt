@@ -817,6 +817,9 @@ fun ProfileScreen(
                             .align(Alignment.TopCenter)
                             .fillMaxWidth()
                             .then(if (expanded) Modifier.widthIn(max = ProfileMaxContentWidth) else Modifier)
+                            // Opaque scrim keeps the status/nav actions readable
+                            // when the scrolling hero passes underneath them.
+                            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.98f))
                             .statusBarsPadding()
                             .padding(horizontal = sidePadding, vertical = 8.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
