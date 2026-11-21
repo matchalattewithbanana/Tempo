@@ -29,7 +29,7 @@ class PostRestoreCoordinator @Inject constructor(
 ) {
     data class Outcome(
         val appearanceStatus: BackupAppearanceStatus,
-        val warnings: List<String>,
+        val warnings: List<BackupRestoreWarning>,
     )
 
     suspend fun complete(
@@ -53,7 +53,7 @@ class PostRestoreCoordinator @Inject constructor(
                 throw cancelled
             } catch (failure: Exception) {
                 Log.w(TAG, "Library restored but profile identity could not be restored", failure)
-                warnings += "Profile identity could not be restored"
+                warnings += BackupRestoreWarning.PROFILE_IDENTITY
             }
         }
 
@@ -69,7 +69,7 @@ class PostRestoreCoordinator @Inject constructor(
                 throw cancelled
             } catch (failure: Exception) {
                 Log.w(TAG, "Library restored but appearance settings could not be written", failure)
-                warnings += "Appearance settings could not be restored"
+                warnings += BackupRestoreWarning.APPEARANCE
                 false
             }
 
@@ -89,7 +89,7 @@ class PostRestoreCoordinator @Inject constructor(
                 throw cancelled
             } catch (failure: Exception) {
                 Log.w(TAG, "Library restored but image pre-cache could not be scheduled", failure)
-                warnings += "Image cache could not be scheduled"
+                warnings += BackupRestoreWarning.IMAGE_CACHE
             }
         }
 
