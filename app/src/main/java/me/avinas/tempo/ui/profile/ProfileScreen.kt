@@ -751,19 +751,12 @@ fun ProfileScreen(
                                         )
                                     }
 
-                                    if (appearance.showProfileProgress && uiState.levelLoaded && uiState.badgesLoaded) {
+                                    if (appearance.showProfileProgress && uiState.levelLoaded && !hideStreaks) {
                                         MasterStatMasthead(
                                             userLevel = uiState.userLevel,
-                                            earnedCount = uiState.earnedCount,
-                                            totalCount = uiState.totalCount,
-                                            totalStars = uiState.totalStars,
                                             currentStreak = streak.days,
                                             streakAtRisk = streakMinutes != null,
-                                            timeRemaining = streakTimeRemaining,
-                                            tierAccent = tierAccent,
-                                            compact = compact,
                                             hideStreaks = hideStreaks,
-                                            onBadgesClick = { tabOverride = 1 },
                                         )
                                     }
 
@@ -1359,17 +1352,11 @@ private fun ProfileProgressTile(spec: ProfileMetricSpec, modifier: Modifier) {
 @Composable
 private fun MasterStatMasthead(
     userLevel: UserLevel,
-    earnedCount: Int,
-    totalCount: Int,
-    totalStars: Int,
     currentStreak: Int,
     streakAtRisk: Boolean,
-    timeRemaining: String,
-    tierAccent: Color,
-    compact: Boolean,
-    hideStreaks: Boolean = false,
-    onBadgesClick: () -> Unit,
+    hideStreaks: Boolean,
 ) {
+    if (hideStreaks) return
     val streakValue = androidx.compose.ui.res.pluralStringResource(
         R.plurals.profile_bento_streak_day,
         currentStreak.coerceAtLeast(0),
@@ -1380,12 +1367,7 @@ private fun MasterStatMasthead(
         userLevel.longestStreak.coerceAtLeast(0),
         userLevel.longestStreak.coerceAtLeast(0),
     )
-    val badgeSwatch = me.avinas.tempo.ui.components.tempoTileSwatch(
-        me.avinas.tempo.ui.components.TempoTileTone.SKY
-    )
-    // Level and total XP already appear in the identity/level progress section.
-    // Do not repeat them as two enormous cards before Challenges/Badges.
-    val metrics = if (hideStreaks) emptyList() else listOf(
+    val metrics = listOf(
         ProfileMetricSpec(
             value = streakValue,
             label = stringResource(R.string.profile_bento_current_streak),
@@ -1402,67 +1384,16 @@ private fun MasterStatMasthead(
     )
     BoxWithConstraints(Modifier.fillMaxWidth()) {
         val singleColumn = maxWidth < 285.dp || LocalDensity.current.fontScale >= 1.6f
-        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            if (singleColumn) {
-                metrics.forEach { metric -> ProfileProgressTile(metric, Modifier.fillMaxWidth()) }
-            } else if (metrics.isNotEmpty()) {
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    metrics.forEach { metric ->
-                        ProfileProgressTile(metric, Modifier.weight(1f))
-                    }
+        if (singleColumn) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                metrics.forEach { metric ->
+                    ProfileProgressTile(metric, Modifier.fillMaxWidth())
                 }
             }
-            Surface(
-                onClick = onBadgesClick,
-                modifier = Modifier.fillMaxWidth().heightIn(min = 100.dp),
-                shape = MaterialTheme.shapes.extraExtraLarge,
-                color = badgeSwatch.container,
-                contentColor = badgeSwatch.foreground,
-            ) {
-                Column(
-                    Modifier.fillMaxWidth().padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Column(
-                            modifier = Modifier.weight(1f),
-                            verticalArrangement = Arrangement.spacedBy(4.dp),
-                        ) {
-                            Text(
-                                text = stringResource(R.string.profile_bento_badge_collection),
-                                style = MaterialTheme.typography.headlineSmallEmphasized,
-                                color = badgeSwatch.foreground,
-                            )
-                            Text(
-                                text = stringResource(
-                                    R.string.profile_bento_badge_progress,
-                                    earnedCount, totalCount,
-                                ),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = badgeSwatch.foreground.copy(alpha = 0.82f),
-                            )
-                        }
-                        Surface(
-                            modifier = Modifier.size(48.dp),
-                            shape = MaterialTheme.shapes.extraLarge,
-                            color = badgeSwatch.iconContainer,
-                            contentColor = badgeSwatch.foreground,
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(Icons.Default.ChevronRight, contentDescription = null)
-                            }
-                        }
-                    }
-                    LinearProgressIndicator(
-                        progress = {
-                            if (totalCount <= 0) 0f
-                            else (earnedCount.toFloat() / totalCount).coerceIn(0f, 1f)
-                        },
-                        modifier = Modifier.fillMaxWidth().height(6.dp),
-                        color = badgeSwatch.foreground,
-                        trackColor = badgeSwatch.foreground.copy(alpha = 0.15f),
-                    )
-
+        } else {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                metrics.forEach { metric ->
+                    ProfileProgressTile(metric, Modifier.weight(1f))
                 }
             }
         }
