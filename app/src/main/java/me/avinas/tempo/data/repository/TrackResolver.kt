@@ -85,8 +85,17 @@ class TrackResolver @Inject constructor(
                 return Resolution(it.id, isNewTrack = false, track = it)
             }
         }
-        trackRepository.findByTitleAndArtist(query.title, query.artist)?.let {
-            if (identifiersCompatible(it, query)) return merge(it, query)
+        trackRepository.findByTitleAndArtist(query.title, query.artist)?.let { firstMatch ->
+            if (identifiersCompatible(firstMatch, query)) return merge(firstMatch, query)
+            // The exact-match SQL lookup returns one row, not necessarily the
+            // *compatible* row. An older remaster can own that slot even when
+            // an anonymous or matching-ID recording is also present. Search
+            // the indexed title candidates before creating another duplicate.
+            trackRepository.findCandidatesByTitle(query.title)
+                .firstOrNull { candidate ->
+                    candidate.artist.trim().equals(query.artist.trim(), ignoreCase = true) &&
+                        identifiersCompatible(candidate, query)
+                }?.let { return merge(it, query) }
         }
 
         // A name the user renamed away or merged into another row still means that song.
