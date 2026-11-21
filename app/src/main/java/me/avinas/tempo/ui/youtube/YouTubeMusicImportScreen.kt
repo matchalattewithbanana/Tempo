@@ -271,28 +271,28 @@ private fun IdleContent(onSelectFiles: () -> Unit) {
             Text(
                 text = "Large exports are split into several ZIPs — download all of them and select them together.",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(vertical = 2.dp),
             )
 
             Text(
                 text = "Only YouTube Music entries are imported; regular YouTube videos are filtered out.",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(vertical = 2.dp),
             )
 
             Text(
                 text = "Takeout only includes plays recorded while Watch history was on, and exports sometimes cut off older data. If a play count looks too low, that's why.",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(vertical = 2.dp),
             )
 
             Text(
                 text = "Albums, album art and genres aren't in the Takeout file. Tempo fills them in automatically in the background, which can take a few hours for large libraries.",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(vertical = 2.dp),
             )
         }
