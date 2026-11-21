@@ -77,7 +77,7 @@ fun LiveNowPlayingCard(
         modifier = modifier.fillMaxWidth(),
         shape = appearanceCardShape(),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.66f)
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
         ),
     ) {
         Column(
