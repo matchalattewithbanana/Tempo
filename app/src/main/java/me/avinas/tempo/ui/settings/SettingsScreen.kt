@@ -468,8 +468,7 @@ fun SettingsScreen(
                     SettingsSectionHeader(stringResource(R.string.settings_category_browse))
                     me.avinas.tempo.ui.components.TempoSettingsBento(
                         destinations = listOfNotNull(
-                            onNavigateToAppearance?.let { open ->
-                                me.avinas.tempo.ui.components.TempoSettingsDestination(
+                            me.avinas.tempo.ui.components.TempoSettingsDestination(
                                 title = stringResource(R.string.settings_category_tracking),
                                 subtitle = stringResource(R.string.settings_category_tracking_desc),
                                 icon = Icons.Rounded.GraphicEq,
@@ -477,7 +476,8 @@ fun SettingsScreen(
                                 tone = me.avinas.tempo.ui.components.TempoTileTone.AQUA,
                                 onClick = { settingsCategory = "tracking" },
                             ),
-                            me.avinas.tempo.ui.components.TempoSettingsDestination(
+                            onNavigateToAppearance?.let { open ->
+                                me.avinas.tempo.ui.components.TempoSettingsDestination(
                                     title = stringResource(R.string.appearance_title),
                                     subtitle = stringResource(R.string.appearance_settings_summary),
                                     icon = Icons.Rounded.Palette,
