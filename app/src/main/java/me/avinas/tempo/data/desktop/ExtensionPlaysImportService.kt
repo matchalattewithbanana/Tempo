@@ -151,6 +151,7 @@ class ExtensionPlaysImportService @Inject constructor(
         var filesProcessed = 0
         var recordsRead = 0
         var eventsImported = 0
+        var eventsReconciled = 0
         var tracksCreated = 0
         var duplicates = 0
         var tooShort = 0
@@ -172,6 +173,7 @@ class ExtensionPlaysImportService @Inject constructor(
                 try {
                     val inserted = listeningEventDao.insertAllBatchedWithDedup(batch)
                     eventsImported += inserted.newlyAdded
+                    eventsReconciled += inserted.replaced
                     duplicates += inserted.skipped
                 } catch (e: CancellationException) {
                     // Re-queue unflushed events on cancellation unless running the terminal flush.
@@ -254,7 +256,7 @@ class ExtensionPlaysImportService @Inject constructor(
             addCappedError(errors, "No plays found in the selected files")
         }
 
-        finishSideEffects(newTrackIds, eventsImported)
+        finishSideEffects(newTrackIds, eventsImported + eventsReconciled)
 
         val result = ImportResult(
             recordsRead = recordsRead,
