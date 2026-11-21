@@ -326,6 +326,7 @@ interface ListeningEventDao {
                                 existing.source, existing.session_id,
                             ),
                             existing.id,
+                            existing.track_id,
                         ))
                     }
                 }
@@ -342,6 +343,12 @@ interface ListeningEventDao {
                 var shortest = Long.MAX_VALUE
                 for (slots in nearby.values) {
                     for (slot in slots) {
+                        // Aliasing is NOT transitive. A title-only track may
+                        // match Spotify IDs A and B, while A and B conflict.
+                        // Require direct identity compatibility before treating
+                        // an adjacent play as the same real listening event.
+                        if (slot.trackId !in (equivalentByTrackId[event.track_id]
+                                ?: listOf(event.track_id))) continue
                         val distance = ListeningImportPolicy.matchDistance(slot.play, play) ?: continue
                         val previous = closest
                         if (previous == null || distance < shortest ||
@@ -373,7 +380,7 @@ interface ListeningEventDao {
                     candidates[conflict.play.timestamp]?.remove(conflict)
                 }
                 toInsert.add(event)
-                addSlot(Slot(play))
+                addSlot(Slot(play, trackId = event.track_id))
             }
         }
 
@@ -394,7 +401,11 @@ interface ListeningEventDao {
             replaced = toDelete.size + toUpdate.size, updated = toUpdate.size)
     }
 
-    private data class Slot(val play: ListeningImportPolicy.Play, val existingId: Long? = null)
+    private data class Slot(
+        val play: ListeningImportPolicy.Play,
+        val existingId: Long? = null,
+        val trackId: Long,
+    )
 
     private fun reconciliationRange(timestamp: Long, source: String): LongRange {
         val padding = ListeningImportPolicy.searchPadding(source)
