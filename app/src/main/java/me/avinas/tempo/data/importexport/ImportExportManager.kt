@@ -572,15 +572,20 @@ class ImportExportManager @Inject constructor(
 
             // v6: Import UserLevel (gamification data)
             data.userLevel?.let { level ->
-                database.gamificationDao().upsertUserLevel(level)
-                Log.i(TAG, "Imported user level: ${level.currentLevel} (${level.totalXp} XP)")
+                if (conflictStrategy == ImportConflictStrategy.REPLACE ||
+                    database.gamificationDao().getUserLevel() == null
+                ) {
+                    database.gamificationDao().upsertUserLevel(level)
+                    Log.i(TAG, "Restored backup level: ${level.currentLevel} (${level.totalXp} XP)")
+                }
             }
             
             // v6: Import Badges
             if (data.badges.isNotEmpty()) {
-                database.gamificationDao().upsertBadges(data.badges)
-                val earnedCount = data.badges.count { it.isEarned }
-                Log.i(TAG, "Imported ${data.badges.size} badges ($earnedCount earned)")
+                val incomingBadges = if (conflictStrategy == ImportConflictStrategy.REPLACE) data.badges
+                    else data.badges.filter { database.gamificationDao().getBadgeById(it.badgeId) == null }
+                if (incomingBadges.isNotEmpty()) database.gamificationDao().upsertBadges(incomingBadges)
+                Log.i(TAG, "Restored ${incomingBadges.size} new/replaced badges")
             }
 
             // v8: Import UserKnownArtists
@@ -651,10 +656,16 @@ class ImportExportManager @Inject constructor(
             }
             Log.i(TAG, "Imported $importedContentMarks manual content marks")
             
-            // v5: Import App Preferences (use IGNORE to not overwrite existing)
+            // SKIP preserves this device's supported-app choices; REPLACE applies
+            // the backed-up choices. The old unconditional IGNORE meant that
+            // "Replace Existing" could not restore any app-specific setting.
             if (data.appPreferences.isNotEmpty()) {
-                database.appPreferenceDao().insertAll(data.appPreferences)
-                Log.i(TAG, "Imported ${data.appPreferences.size} app preferences")
+                if (conflictStrategy == ImportConflictStrategy.REPLACE) {
+                    data.appPreferences.forEach { database.appPreferenceDao().upsert(it) }
+                } else {
+                    database.appPreferenceDao().insertAll(data.appPreferences)
+                }
+                Log.i(TAG, "Imported ${data.appPreferences.size} app preferences using $conflictStrategy")
             }
             
             // v5: Import Scrobble Archive (Last.fm compressed history) from the
@@ -691,17 +702,20 @@ class ImportExportManager @Inject constructor(
             artworkStaging.retainForCommit()
             } // end database.withTransaction
             
-            // v7+: Restore profile identity to DataStore (outside transaction — independent system)
-            data.userName?.takeIf { it.isNotBlank() }?.let { name ->
-                profileIdentityManager.updateUserName(name)
-                Log.i(TAG, "Restored user name: $name")
+            // Preserve identity on SKIP; a Drive backup must not rename a
+            // currently configured profile unless replacement was requested.
+            if (conflictStrategy == ImportConflictStrategy.REPLACE) {
+                data.userName?.takeIf { it.isNotBlank() }?.let { name ->
+                    profileIdentityManager.updateUserName(name)
+                    Log.i(TAG, "Restored user name: $name")
+                }
+                val restoredProfileImagePath = resolveRestoredProfileImagePath(
+                    exportedProfileImagePath = data.userProfileImagePath,
+                    pathMapping = pathMapping,
+                )
+                profileIdentityManager.restoreProfileImagePath(restoredProfileImagePath)
+                Log.i(TAG, "Restored profile image path present=${!restoredProfileImagePath.isNullOrBlank()}")
             }
-            val restoredProfileImagePath = resolveRestoredProfileImagePath(
-                exportedProfileImagePath = data.userProfileImagePath,
-                pathMapping = pathMapping
-            )
-            profileIdentityManager.restoreProfileImagePath(restoredProfileImagePath)
-            Log.i(TAG, "Restored profile image path present=${!restoredProfileImagePath.isNullOrBlank()}")
             val restoredAppearance = try {
                 data.appearance?.let {
                     appearanceRepository.restoreBackup(it, replace = conflictStrategy == ImportConflictStrategy.REPLACE)
