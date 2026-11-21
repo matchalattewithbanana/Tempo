@@ -13,7 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
-import me.avinas.tempo.ui.theme.rememberReducedMotion
+import me.avinas.tempo.ui.appearance.LocalAppearanceRuntimePolicy
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -32,25 +32,27 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun StatCard(
     modifier: Modifier = Modifier,
-    backgroundColor: Color = MaterialTheme.colorScheme.surface,
+    backgroundColor: Color = MaterialTheme.colorScheme.surfaceContainerLow,
     gradientColors: List<Color>? = null,
     content: @Composable () -> Unit
 ) {
-    val reducedMotion = rememberReducedMotion()
+    // Ordinary metrics are visible on their very first frame. Entrance
+    // animation is opt-in and power/thermal/accessibility gated by policy,
+    // instead of forcing opacity and scale transitions on every screen.
+    val animateEntry = LocalAppearanceRuntimePolicy.current.allowListEntranceMotion
     val motionScheme = MaterialTheme.motionScheme
     var isVisible by remember { mutableStateOf(false) }
     val scale by animateFloatAsState(
-        targetValue = if (isVisible || reducedMotion) 1f else 0.97f,
-        animationSpec = if (reducedMotion) snap() else motionScheme.fastSpatialSpec(),
+        targetValue = if (!animateEntry || isVisible) 1f else 0.97f,
+        animationSpec = if (animateEntry) motionScheme.fastSpatialSpec() else snap(),
         label = "scale",
     )
     val alpha by animateFloatAsState(
-        targetValue = if (isVisible || reducedMotion) 1f else 0f,
-        animationSpec = if (reducedMotion) snap() else motionScheme.fastEffectsSpec(),
+        targetValue = if (!animateEntry || isVisible) 1f else 0f,
+        animationSpec = if (animateEntry) motionScheme.fastEffectsSpec() else snap(),
         label = "alpha",
     )
-
-    LaunchedEffect(Unit) {
+    LaunchedEffect(animateEntry) {
         isVisible = true
     }
 
