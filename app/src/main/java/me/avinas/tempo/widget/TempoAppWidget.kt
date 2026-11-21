@@ -38,6 +38,7 @@ import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import me.avinas.tempo.R
 import me.avinas.tempo.widget.theme.TempoWidgetColors
+import me.avinas.tempo.widget.theme.TempoWidgetTheme
 import me.avinas.tempo.widget.utils.WidgetHub
 import me.avinas.tempo.widget.utils.WidgetNavigation
 
@@ -51,12 +52,13 @@ class TempoAppWidget : GlanceAppWidget() {
             val prefs = currentState<Preferences>()
             val size = LocalSize.current
             
-            GlanceTheme {
-                // Outer Box handles the main click
+            TempoWidgetTheme {
+                // Widgets use the same semantic roles as Tempo, adapted to
+                // Android Glance and the launcher light/dark appearance.
                 Box(
                     modifier = GlanceModifier
                         .fillMaxSize()
-                        .background(ColorProvider(TempoWidgetColors.WidgetBackgroundGradientStart))
+                        .background(GlanceTheme.colors.surface)
                         .cornerRadius(28.dp)
                         .clickable(WidgetNavigation.openStats(context))
                         .padding(
