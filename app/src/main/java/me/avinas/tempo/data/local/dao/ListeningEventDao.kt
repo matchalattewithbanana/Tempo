@@ -4,6 +4,7 @@ import androidx.room.*
 import kotlinx.coroutines.flow.Flow
 import me.avinas.tempo.data.local.EventFingerprint
 import me.avinas.tempo.data.local.ListeningImportPolicy
+import me.avinas.tempo.data.local.ReconciliationTrackScope
 import me.avinas.tempo.data.local.SourceAuthority
 import me.avinas.tempo.data.local.entities.ListeningEvent
 import java.util.TreeMap
@@ -238,9 +239,7 @@ interface ListeningEventDao {
     suspend fun insertAllBatchedWithDedup(
         events: List<ListeningEvent>,
         replaceExistingOnMatch: Boolean = false,
-        // Tempo backup rows keep their original *live* source package even
-        // though they must be compared across restored/merged track identities.
-        forceAliasLookup: Boolean = false,
+        trackScope: ReconciliationTrackScope = ReconciliationTrackScope.SOURCE_DEFAULT,
     ): InsertResult {
         if (events.isEmpty()) return InsertResult(0, 0)
 
@@ -295,9 +294,9 @@ interface ListeningEventDao {
         // very same batch must share the same candidate slots. Otherwise each
         // track group sees only the DB, both appear new, and both are written.
         // Live-only single-event saves skip the alias queries for low latency.
-        val importedBatch = forceAliasLookup || layer1Survivors.any {
-            SourceAuthority.rank(it.source) < 90
-        }
+        val importedBatch =
+            trackScope == ReconciliationTrackScope.COMPATIBLE_ALIASES ||
+                layer1Survivors.any { SourceAuthority.rank(it.source) < 90 }
         val equivalentByTrackId = HashMap<Long, List<Long>>()
         if (importedBatch) {
             // One indexed metadata lookup per 800 tracks, NOT one DB query
