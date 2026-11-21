@@ -748,7 +748,7 @@ fun SettingsScreen(
                         TrackingListenerState.CONNECTED -> R.string.settings_health_connected
                     }
                 )
-                SettingsSectionHeader(stringResource(R.string.settings_music_tracking))
+                SettingsSectionHeader(stringResource(R.string.settings_tracking_access_status))
                 TempoSettingsGroup {
                     Column {
                         SettingsOption(
@@ -1038,7 +1038,7 @@ fun SettingsScreen(
                 } // Connections
                 if (settingsCategory == "data") {
                     item(key = "data-backups") {
-                        SettingsSectionHeader(stringResource(R.string.settings_backup_restore))
+                        SettingsSectionHeader(stringResource(R.string.settings_data_backup_section))
                         val backupStatus = if (!backupOverview.isGoogleDriveEnabled) {
                             R.string.settings_backup_overview_disabled
                         } else when (backupOverview.lastBackupStatus) {
@@ -1115,7 +1115,7 @@ fun SettingsScreen(
                         Spacer(Modifier.height(16.dp))
                     }
                     item(key = "data-accuracy") {
-                        SettingsSectionHeader(stringResource(R.string.settings_your_data))
+                        SettingsSectionHeader(stringResource(R.string.settings_history_tools))
                         TempoSettingsGroup {
                             Column {
                                 SettingsOption(
@@ -1151,7 +1151,7 @@ fun SettingsScreen(
                     }
                     if (uiState.analyticsConfigured) {
                         item(key = "data-privacy") {
-                            SettingsSectionHeader(stringResource(R.string.settings_privacy_policy))
+                            SettingsSectionHeader(stringResource(R.string.settings_privacy_controls))
                             TempoSettingsGroup {
                                 Column {
                                     SettingsSwitch(
@@ -1244,7 +1244,7 @@ fun SettingsScreen(
                 // Privacy & About
                     }
                     item(key = "about-links") {
-                SettingsSectionHeader(stringResource(R.string.settings_about))
+                SettingsSectionHeader(stringResource(R.string.settings_about_resources))
                 TempoSettingsGroup {
                     Column {
                         SettingsOption(
