@@ -522,112 +522,8 @@ fun SettingsScreen(
                         ),
                     )
                     Spacer(modifier = Modifier.height(12.dp))
-                    SettingsSectionHeader(stringResource(R.string.settings_tracking_access_status))
-                    val trackingHealth = trackingHeartbeat?.let { heartbeat ->
-                        evaluateTrackingHealth(
-                            permissionGranted = notificationListenerGranted,
-                            listenerConnected = heartbeat.listenerConnected,
-                            lastHeartbeatAtMs = heartbeat.lastServiceAliveAt,
-                            lastNotificationCallbackAtMs = heartbeat.lastNotificationCallbackAt,
-                            lastMediaSessionCallbackAtMs = heartbeat.lastMediaSessionCallbackAt,
-                            nowMs = trackingStatusCheckedAt,
-                        )
-                    }
-                    Surface(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = MaterialTheme.shapes.extraLarge,
-                        color = MaterialTheme.colorScheme.surfaceContainerLow,
-                    ) {
-                        Column {
-                            SettingsOption(
-                                title = stringResource(R.string.settings_tracking_access_title),
-                                subtitle = stringResource(
-                                    when {
-                                        trackingHealth == null -> R.string.ui_loading
-                                        notificationListenerGranted -> R.string.settings_tracking_access_granted
-                                        else -> R.string.settings_tracking_access_missing
-                                    }
-                                ),
-                                onClick = {
-                                    try {
-                                        context.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
-                                    } catch (_: ActivityNotFoundException) {
-                                        Toast.makeText(
-                                            context,
-                                            resources.getString(R.string.settings_notification_settings_error),
-                                            Toast.LENGTH_SHORT,
-                                        ).show()
-                                    }
-                                },
-                            )
-                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                            SettingsOption(
-                                title = stringResource(R.string.settings_health_listener),
-                                subtitle = stringResource(
-                                    when (trackingHealth?.listenerState) {
-                                        null -> R.string.ui_loading
-                                        TrackingListenerState.PERMISSION_REQUIRED ->
-                                            R.string.settings_health_permission_required
-                                        TrackingListenerState.WAITING ->
-                                            R.string.settings_health_waiting
-                                        TrackingListenerState.STALE ->
-                                            R.string.settings_health_stale
-                                        TrackingListenerState.CONNECTED ->
-                                            R.string.settings_health_connected
-                                    }
-                                ),
-                                onClick = { settingsCategory = "tracking" },
-                            )
-                            // The detailed last-player signal belongs in
-                            // Music Tracking diagnostics. The overview should
-                            // answer only whether access is granted/connected.
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(20.dp))
-                    SettingsSectionHeader(stringResource(R.string.settings_backup_overview_header))
-                    Surface(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = MaterialTheme.shapes.extraLarge,
-                        color = MaterialTheme.colorScheme.surfaceContainerLow,
-                    ) {
-                        // BackupSettingsManager is updated by the Drive worker.
-                        // Local folder backups have an independent WorkManager job.
-                        val latestStatus = if (!backupOverview.isGoogleDriveEnabled) {
-                            R.string.settings_backup_overview_disabled
-                        } else when (backupOverview.lastBackupStatus) {
-                            BackupStatus.NEVER -> R.string.settings_backup_overview_never
-                            BackupStatus.SUCCESS -> R.string.settings_backup_overview_success
-                            BackupStatus.FAILED -> R.string.settings_backup_overview_failed
-                            BackupStatus.IN_PROGRESS -> R.string.settings_backup_overview_running
-                        }
-                        val latestSuccess = backupOverview.lastBackupTime
-                            ?.takeIf { it > 0L && it <= System.currentTimeMillis() }
-                            ?.let { timestamp ->
-                                val formatted = java.text.DateFormat.getDateTimeInstance(
-                                    java.text.DateFormat.SHORT, java.text.DateFormat.SHORT,
-                                ).format(java.util.Date(timestamp))
-                                stringResource(R.string.settings_backup_overview_last_success, formatted)
-                            }
-                        SettingsOption(
-                            title = stringResource(R.string.settings_backup_restore),
-                            subtitle = latestSuccess ?: stringResource(latestStatus),
-                            onClick = { onNavigateToBackup?.invoke() },
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(20.dp))
-                    SettingsSectionHeader(stringResource(R.string.update_center_title))
-                    Surface(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = MaterialTheme.shapes.extraLarge,
-                        color = MaterialTheme.colorScheme.surfaceContainerLow,
-                    ) {
-                        SettingsOption(
-                            title = stringResource(R.string.update_check_now),
-                            subtitle = stringResource(R.string.update_center_desc),
-                            onClick = { onNavigateToUpdates?.invoke() },
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(16.dp))
+                    // Each action has one home. Search is the cross-category
+                    // shortcut; the overview remains the original Tempo mosaic.
                     } // Unfiltered settings overview
                     }
                 }
@@ -759,33 +655,6 @@ fun SettingsScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Appearance is a focused gallery instead of another long list of toggles.
-                    }
-                    item(key = "general-appearance") {
-                SettingsSectionHeader(stringResource(R.string.appearance_title))
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = MaterialTheme.shapes.extraLarge,
-                    color = MaterialTheme.colorScheme.surfaceContainerLow,
-                ) {
-                    // A Surface/GlassCard is a Box: rows must be stacked
-                    // explicitly or they paint at exactly the same position.
-                    Column {
-                        SettingsOption(
-                            title = stringResource(R.string.appearance_title),
-                            subtitle = stringResource(R.string.appearance_settings_summary),
-                            onClick = onNavigateToAppearance,
-                        )
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                        SettingsOption(
-                            title = stringResource(R.string.logo_picker_title),
-                            subtitle = stringResource(R.string.logo_picker_settings_description),
-                            onClick = onNavigateToLogoPicker,
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // Language Section
                     }
                     item(key = "general-language") {
                 SettingsSectionHeader(stringResource(R.string.settings_language))
@@ -1253,6 +1122,12 @@ fun SettingsScreen(
                         )
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                         SettingsOption(
+                            title = stringResource(R.string.settings_data_diagnostics),
+                            subtitle = stringResource(R.string.settings_data_diagnostics_desc),
+                            onClick = { onNavigateToYourData?.invoke() },
+                        )
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                        SettingsOption(
                             title = stringResource(R.string.enrichment_report_settings_option),
                             subtitle = stringResource(R.string.enrichment_report_settings_option_desc),
                             onClick = { onNavigateToEnrichmentReport?.invoke() },
@@ -1432,13 +1307,7 @@ fun SettingsScreen(
                         )
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                         SettingsOption(
-                            title = stringResource(R.string.settings_data_diagnostics),
-                            subtitle = stringResource(R.string.settings_data_diagnostics_desc),
-                            onClick = { onNavigateToYourData?.invoke() },
-                        )
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                        SettingsOption(
-                            title = stringResource(R.string.settings_version),
+                            title = stringResource(R.string.update_check_now),
                             subtitle = versionName,
                             onClick = { onNavigateToUpdates?.invoke() },
                         )
