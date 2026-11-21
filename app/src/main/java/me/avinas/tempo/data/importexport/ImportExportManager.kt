@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import androidx.room.withTransaction
 import me.avinas.tempo.data.local.AppDatabase
+import me.avinas.tempo.data.local.ReconciliationTrackScope
 import me.avinas.tempo.data.local.dao.ListeningEventDao
 import me.avinas.tempo.data.local.dao.isLocalBackupArtwork
 import me.avinas.tempo.data.local.entities.*
@@ -798,7 +799,7 @@ class ImportExportManager @Inject constructor(
                 // Backups retain original live package sources, so inferred
                 // import-source checks alone cannot activate cross-track alias
                 // reconciliation after restoring into a different library.
-                forceAliasLookup = true,
+                trackScope = ReconciliationTrackScope.COMPATIBLE_ALIASES,
             )
             inserted += result.inserted
             skipped += result.skipped
