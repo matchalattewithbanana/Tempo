@@ -7,22 +7,43 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
+internal val LocalSettingsSectionTone =
+    staticCompositionLocalOf<TempoTileTone?> { null }
+
 /** Expressive section typography, shared by all Settings categories. */
 @Composable
 fun SettingsSectionHeader(text: String) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.titleSmall,
-        fontWeight = FontWeight.SemiBold,
-        color = MaterialTheme.colorScheme.primary,
+    val tone = LocalSettingsSectionTone.current
+    val swatch = tone?.let { tempoTileSwatch(it) }
+    Row(
         modifier = Modifier.padding(start = 4.dp, top = 8.dp, bottom = 8.dp),
-    )
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        if (swatch != null) {
+            Surface(
+                modifier = Modifier.size(width = 4.dp, height = 18.dp),
+                shape = MaterialTheme.shapes.full,
+                color = swatch.iconContainer,
+                content = {},
+            )
+        }
+        Text(
+            text = text,
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+    }
 }
 
 /**
@@ -36,11 +57,20 @@ fun TempoSettingsGroup(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
+    val scheme = MaterialTheme.colorScheme
+    val tone = LocalSettingsSectionTone.current
+    val container = tone?.let { selectedTone ->
+        lerp(
+            scheme.surfaceContainerLow,
+            tempoTileSwatch(selectedTone).container,
+            0.34f,
+        )
+    } ?: scheme.surfaceContainerLow
     Surface(
         modifier = modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.extraExtraLarge,
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-        contentColor = MaterialTheme.colorScheme.onSurface,
+        shape = MaterialTheme.shapes.extraLarge,
+        color = container,
+        contentColor = scheme.onSurface,
         content = content,
     )
 }
