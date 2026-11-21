@@ -48,6 +48,7 @@ import me.avinas.tempo.ui.settings.BackupRestoreScreen
 import me.avinas.tempo.ui.settings.EnrichmentReportScreen
 import me.avinas.tempo.ui.settings.ExtensionImportScreen
 import me.avinas.tempo.ui.settings.SettingsScreen
+import me.avinas.tempo.ui.settings.SettingsDestination
 import me.avinas.tempo.ui.appearance.AppearanceScreen
 import me.avinas.tempo.ui.branding.LauncherLogoPickerScreen
 import me.avinas.tempo.ui.updates.UpdateCenterScreen
@@ -288,22 +289,42 @@ fun AppNavigation(
                     composable(Screen.Settings.route) {
                         SettingsScreen(
                             onNavigateBack = { navController.popBackStack() },
-                            onNavigateToBackup = { navController.navigate(Screen.BackupRestore.route) },
-                            onNavigateToSupportedApps = { navController.navigate(Screen.SupportedApps.route) },
-                            onNavigateToBackgroundProtection = { navController.navigate(Screen.BackgroundProtection.route) },
-                            onNavigateToLastFmImport = { navController.navigate(Screen.LastFmImport.route) },
-                            onNavigateToSpotifyJsonImport = { navController.navigate(Screen.SpotifyJsonImport.route) },
-                            onNavigateToDeezerImport = { navController.navigate(Screen.DeezerImport.route) },
-                            onNavigateToAppleMusicImport = { navController.navigate(Screen.AppleMusicImport.route) },
-                            onNavigateToYouTubeMusicImport = { navController.navigate(Screen.YouTubeMusicImport.route) },
-                            onNavigateToMusicoletImport = { navController.navigate(Screen.MusicoletImport.route) },
-                            onNavigateToExtensionImport = { navController.navigate(Screen.ExtensionImport.route) },
-                            onNavigateToDesktop = { navController.navigate(Screen.DesktopLink.route) },
-                            onNavigateToEnrichmentReport = { navController.navigate(Screen.EnrichmentReport.route) },
-                            onNavigateToYourData = { navController.navigate(Screen.YourData.route) },
-                            onNavigateToAppearance = { navController.navigate(Screen.Appearance.route) },
-                            onNavigateToLogoPicker = { navController.safeNavigate(Screen.LauncherLogoPicker.route) },
-                            onNavigateToUpdates = { navController.safeNavigate(Screen.UpdateCenter.route) },
+                            onNavigate = { destination ->
+                                when (destination) {
+                                    SettingsDestination.BACKUP ->
+                                        navController.navigate(Screen.BackupRestore.route)
+                                    SettingsDestination.SUPPORTED_APPS ->
+                                        navController.navigate(Screen.SupportedApps.route)
+                                    SettingsDestination.BACKGROUND_PROTECTION ->
+                                        navController.navigate(Screen.BackgroundProtection.route)
+                                    SettingsDestination.LASTFM_IMPORT ->
+                                        navController.navigate(Screen.LastFmImport.route)
+                                    SettingsDestination.SPOTIFY_JSON_IMPORT ->
+                                        navController.navigate(Screen.SpotifyJsonImport.route)
+                                    SettingsDestination.DEEZER_IMPORT ->
+                                        navController.navigate(Screen.DeezerImport.route)
+                                    SettingsDestination.APPLE_MUSIC_IMPORT ->
+                                        navController.navigate(Screen.AppleMusicImport.route)
+                                    SettingsDestination.YOUTUBE_MUSIC_IMPORT ->
+                                        navController.navigate(Screen.YouTubeMusicImport.route)
+                                    SettingsDestination.MUSICOLET_IMPORT ->
+                                        navController.navigate(Screen.MusicoletImport.route)
+                                    SettingsDestination.EXTENSION_IMPORT ->
+                                        navController.navigate(Screen.ExtensionImport.route)
+                                    SettingsDestination.DESKTOP ->
+                                        navController.navigate(Screen.DesktopLink.route)
+                                    SettingsDestination.ENRICHMENT_REPORT ->
+                                        navController.navigate(Screen.EnrichmentReport.route)
+                                    SettingsDestination.YOUR_DATA ->
+                                        navController.navigate(Screen.YourData.route)
+                                    SettingsDestination.APPEARANCE ->
+                                        navController.navigate(Screen.Appearance.route)
+                                    SettingsDestination.LOGO_PICKER ->
+                                        navController.safeNavigate(Screen.LauncherLogoPicker.route)
+                                    SettingsDestination.UPDATES ->
+                                        navController.safeNavigate(Screen.UpdateCenter.route)
+                                }
+                            },
                         )
                     }
 
