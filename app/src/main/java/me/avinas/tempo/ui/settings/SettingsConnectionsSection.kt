@@ -2,7 +2,9 @@ package me.avinas.tempo.ui.settings
 
 import android.content.ActivityNotFoundException
 import android.widget.Toast
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -13,6 +15,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
@@ -85,18 +88,18 @@ internal fun ConnectionsSettingsSection(
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
                     SettingsOption(
-                        title = if (spotifyConnected) {
-                            "Spotify API · Connected"
+                        title = stringResource(R.string.settings_spotify_service_title),
+                        subtitle = stringResource(
+                            if (spotifyConnected) {
+                                R.string.settings_spotify_service_connected
+                            } else {
+                                R.string.settings_spotify_service_disconnected
+                            },
+                        ),
+                        onClick = if (spotifyConnected) {
+                            null
                         } else {
-                            "Spotify API · Connect account"
-                        },
-                        subtitle = if (spotifyConnected) {
-                            "Spotify authorization active. Use the history sync option below to import recent plays."
-                        } else {
-                            "Sign into Spotify in your browser to allow Tempo to import listening history."
-                        },
-                        onClick = {
-                            if (!spotifyConnected) {
+                            {
                                 scope.launch {
                                     val intent = try {
                                         viewModel.startSpotifyAuthorization(spotifyClientId)
@@ -105,7 +108,9 @@ internal fun ConnectionsSettingsSection(
                                     } catch (_: Exception) {
                                         Toast.makeText(
                                             context,
-                                            resources.getString(R.string.spotify_secure_storage_unavailable),
+                                            resources.getString(
+                                                R.string.spotify_secure_storage_unavailable,
+                                            ),
                                             Toast.LENGTH_LONG,
                                         ).show()
                                         return@launch
@@ -113,7 +118,9 @@ internal fun ConnectionsSettingsSection(
                                     if (intent == null) {
                                         Toast.makeText(
                                             context,
-                                            "Enter a valid Spotify Client ID first.",
+                                            resources.getString(
+                                                R.string.settings_spotify_client_id_required,
+                                            ),
                                             Toast.LENGTH_LONG,
                                         ).show()
                                     } else {
@@ -122,7 +129,9 @@ internal fun ConnectionsSettingsSection(
                                         } catch (_: ActivityNotFoundException) {
                                             Toast.makeText(
                                                 context,
-                                                "No browser available for Spotify login.",
+                                                resources.getString(
+                                                    R.string.settings_spotify_no_browser,
+                                                ),
                                                 Toast.LENGTH_LONG,
                                             ).show()
                                         }
@@ -136,12 +145,11 @@ internal fun ConnectionsSettingsSection(
                         OutlinedTextField(
                             value = spotifyClientId,
                             onValueChange = { onSpotifyClientIdChange(it.trim()) },
-                            label = { Text("Spotify Developer Client ID (32 characters)") },
+                            label = {
+                                Text(stringResource(R.string.settings_spotify_client_id_label))
+                            },
                             supportingText = {
-                                Text(
-                                    "Create a Spotify Developer app and register " +
-                                        "tempo://spotify-callback as its redirect URI.",
-                                )
+                                Text(stringResource(R.string.settings_spotify_client_id_help))
                             },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
@@ -149,69 +157,71 @@ internal fun ConnectionsSettingsSection(
                     }
 
                     if (spotifyConnected) {
-                        SettingsOption(
-                            title = "Reconnect Spotify / update permissions",
-                            subtitle = "Reconnect to grant current playback-state access for " +
-                                "Spotify Connect verification. Existing listening history is retained.",
-                            onClick = {
-                                scope.launch {
-                                    viewModel.disconnectSpotify()
-                                    onSpotifyConnectedChange(false)
-                                    Toast.makeText(
-                                        context,
-                                        "Spotify disconnected. Tap Connect account to authorize updated permissions.",
-                                        Toast.LENGTH_LONG,
-                                    ).show()
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                        SettingsSwitch(
+                            title = stringResource(
+                                R.string.settings_spotify_history_verification,
+                            ),
+                            subtitle = stringResource(
+                                R.string.settings_spotify_history_verification_desc,
+                            ),
+                            checked = uiState.spotifyApiOnlyMode,
+                            onCheckedChange = viewModel::toggleSpotifyApiOnlyMode,
+                        )
+
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+
+                        SettingsSwitch(
+                            title = stringResource(R.string.settings_spotify_device_broadcasts),
+                            subtitle = stringResource(
+                                R.string.settings_spotify_device_broadcasts_desc,
+                            ),
+                            checked = spotifyBroadcastEnabled,
+                            onCheckedChange = { enabled ->
+                                SpotifyBroadcastPresence.setEnabled(context, enabled)
+                                onSpotifyBroadcastEnabledChange(enabled)
+                            },
+                        )
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                            horizontalArrangement = Arrangement.End,
+                        ) {
+                            if (uiState.spotifyApiOnlyMode) {
+                                TextButton(
+                                    onClick = {
+                                        SpotifyPollingWorker.syncNow(context)
+                                        Toast.makeText(
+                                            context,
+                                            resources.getString(
+                                                R.string.settings_spotify_sync_requested,
+                                            ),
+                                            Toast.LENGTH_SHORT,
+                                        ).show()
+                                    },
+                                ) {
+                                    Text(stringResource(R.string.settings_spotify_verify_now))
                                 }
-                            },
-                        )
-                    }
-
-                    if (spotifyConnected && uiState.spotifyApiOnlyMode) {
-                        SettingsOption(
-                            title = "Sync Spotify history now",
-                            subtitle = "Fetch recently played tracks immediately; Spotify may not " +
-                                "yet have reported the latest play.",
-                            onClick = {
-                                SpotifyPollingWorker.syncNow(context)
-                                Toast.makeText(
-                                    context,
-                                    "Spotify sync requested",
-                                    Toast.LENGTH_SHORT,
-                                ).show()
-                            },
-                        )
-                    }
-
-                    SettingsSwitch(
-                        title = "Spotify API history sync",
-                        subtitle = "Automatic Spotify history reconciliation (about every 20 minutes) " +
-                            "alongside local broadcasts and MediaSession. Requires Spotify login.",
-                        checked = uiState.spotifyApiOnlyMode,
-                        onCheckedChange = { enabled ->
-                            if (enabled && !spotifyConnected) {
-                                Toast.makeText(
-                                    context,
-                                    "Connect your Spotify account before using Spotify API sync.",
-                                    Toast.LENGTH_LONG,
-                                ).show()
-                            } else {
-                                viewModel.toggleSpotifyApiOnlyMode(enabled)
                             }
-                        },
-                    )
-
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-
-                    SettingsSwitch(
-                        title = "Spotify Device Broadcast Status",
-                        subtitle = "Real-time local Spotify playback updates. Turn on the matching " +
-                            "switch in Spotify > Settings > Playback. Requires Tempo tracking service.",
-                        checked = spotifyBroadcastEnabled,
-                        onCheckedChange = { enabled ->
-                            SpotifyBroadcastPresence.setEnabled(context, enabled)
-                            onSpotifyBroadcastEnabledChange(enabled)
-                        },
+                            TextButton(
+                                onClick = {
+                                    scope.launch {
+                                        viewModel.disconnectSpotify()
+                                        onSpotifyConnectedChange(false)
+                                        Toast.makeText(
+                                            context,
+                                            resources.getString(
+                                                R.string.settings_spotify_reconnect_done,
+                                            ),
+                                            Toast.LENGTH_LONG,
+                                        ).show()
+                                    }
+                                },
+                            ) {
+                                Text(stringResource(R.string.settings_spotify_reconnect))
+                            }
+                        }
+                    }
                     )
                 }
             }
