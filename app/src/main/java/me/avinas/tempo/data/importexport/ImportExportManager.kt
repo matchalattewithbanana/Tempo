@@ -252,29 +252,44 @@ class ImportExportManager @Inject constructor(
             )
 
             
-            // Preserve identity on SKIP; a Drive backup must not rename a
-            // currently configured profile unless replacement was requested.
+            // The Room transaction is already committed here. Profile identity and
+            // Appearance Studio live in separate stores and therefore cannot participate in
+            // that transaction. Treat failures as explicit partial-restore warnings rather than
+            // reporting the entire import as failed after committed library data is visible.
+            val postRestoreWarnings = mutableListOf<String>()
+
             if (conflictStrategy == ImportConflictStrategy.REPLACE) {
-                data.userName?.takeIf { it.isNotBlank() }?.let { name ->
-                    profileIdentityManager.updateUserName(name)
-                    Log.i(TAG, "Restored user name: $name")
+                try {
+                    data.userName?.takeIf { it.isNotBlank() }?.let { name ->
+                        profileIdentityManager.updateUserName(name)
+                        Log.i(TAG, "Restored user name: $name")
+                    }
+                    val restoredProfileImagePath = resolveRestoredProfileImagePath(
+                        exportedProfileImagePath = data.userProfileImagePath,
+                        pathMapping = pathMapping,
+                    )
+                    profileIdentityManager.restoreProfileImagePath(restoredProfileImagePath)
+                    Log.i(TAG, "Restored profile image path present=${!restoredProfileImagePath.isNullOrBlank()}")
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
+                } catch (failure: Exception) {
+                    Log.w(TAG, "Library restored but profile identity could not be restored", failure)
+                    postRestoreWarnings += "Profile identity could not be restored"
                 }
-                val restoredProfileImagePath = resolveRestoredProfileImagePath(
-                    exportedProfileImagePath = data.userProfileImagePath,
-                    pathMapping = pathMapping,
-                )
-                profileIdentityManager.restoreProfileImagePath(restoredProfileImagePath)
-                Log.i(TAG, "Restored profile image path present=${!restoredProfileImagePath.isNullOrBlank()}")
             }
+
             val restoredAppearance = try {
                 data.appearance?.let {
                     appearanceRepository.restoreBackup(it, replace = conflictStrategy == ImportConflictStrategy.REPLACE)
                 } ?: false
-            } catch (e: java.io.IOException) {
-                Log.w(TAG, "Library restored but appearance settings could not be written", e)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (failure: Exception) {
+                Log.w(TAG, "Library restored but appearance settings could not be written", failure)
+                postRestoreWarnings += "Appearance settings could not be restored"
                 false
             }
-            
+
             // Schedule pre-caching of hotlinked images. The list comes from the
             // restored backup file and is therefore untrusted input: a crafted
             // backup must not be able to make Tempo bulk-fetch arbitrary
@@ -304,6 +319,7 @@ class ImportExportManager @Inject constructor(
                 eventsSkipped = databaseRestore.events.skipped,
                 imagesCount = extractedImages.size,
                 appearanceStatus = if (restoredAppearance) BackupAppearanceStatus.RESTORED else BackupAppearanceStatus.UNCHANGED,
+                warnings = postRestoreWarnings.toList(),
             )
         } catch (e: CancellationException) {
             throw e
