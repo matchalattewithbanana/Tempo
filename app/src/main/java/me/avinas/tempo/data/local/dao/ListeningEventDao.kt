@@ -316,14 +316,18 @@ interface ListeningEventDao {
                 candidates.getOrPut(slot.play.timestamp) { mutableListOf() }.add(slot)
             }
             for (window in reconciliationWindows(trackEvents)) {
-                for (existing in getEventsForReconciliation(equivalentTrackIds, window.first, window.last)) {
-                    addSlot(Slot(
-                        ListeningImportPolicy.Play(
-                            existing.timestamp, existing.end_timestamp, existing.playDuration,
-                            existing.source, existing.session_id,
-                        ),
-                        existing.id,
-                    ))
+                // SQLite's bind-variable limit applies even when many old
+                // track rows normalize to the same artist/title identity.
+                for (ids in equivalentTrackIds.chunked(800)) {
+                    for (existing in getEventsForReconciliation(ids, window.first, window.last)) {
+                        addSlot(Slot(
+                            ListeningImportPolicy.Play(
+                                existing.timestamp, existing.end_timestamp, existing.playDuration,
+                                existing.source, existing.session_id,
+                            ),
+                            existing.id,
+                        ))
+                    }
                 }
             }
 
