@@ -28,8 +28,6 @@ import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import me.avinas.tempo.MainActivity
 import me.avinas.tempo.R
 import me.avinas.tempo.data.DefaultMusicApps
@@ -187,19 +185,13 @@ class MusicTrackingService : NotificationListenerService() {
         // Full play threshold: plays over 80% completion are considered full plays
         private const val FULL_PLAY_COMPLETION_THRESHOLD = 80
 
-        // Session auto-save interval
-        private const val SESSION_AUTOSAVE_INTERVAL_MS = 30_000L
-
         // Minimum gap between inbox writes for the same unrecognized package. Bounds the write
         // rate when an unknown app keeps producing media, without hiding the app from the user.
         private const val DETECTION_RECORD_THROTTLE_MS = 10_000L
 
-        // Maximum time to block in onDestroy while flushing pending listening events.
-        // A normal Room batch write is well under 100ms, so 5s is generous headroom.
-        // Bounded so we never hold the main thread long enough to risk an ANR, but
-        // long enough to land the final batch of events in the database before the
-        // process goes away. If it does time out, the sessions were already persisted
-        // to SharedPreferences at the top of the flush, so recovery picks them up.
+        // Maximum lifetime of the asynchronous final flush after service teardown.
+        // The lifecycle thread never waits for this work. A frozen recovery snapshot is
+        // persisted first; timeout/failure therefore leaves the next run a recovery path.
         private const val SHUTDOWN_FLUSH_TIMEOUT_MS = 5_000L
 
         // Track matching threshold for deduplication
@@ -251,7 +243,7 @@ class MusicTrackingService : NotificationListenerService() {
 
     // Enhanced tracking components
     private lateinit var trackingManager: MusicTrackingManager
-    private lateinit var sessionPersistence: SessionPersistence
+    private lateinit var sessionJournal: ActiveSessionJournal
     private lateinit var durationEstimator: SmartDurationEstimator
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -301,12 +293,6 @@ class MusicTrackingService : NotificationListenerService() {
     @Volatile
     private var isListenerConnected = false
     private val connectionLock = Any()
-
-    // Serialize checkpoints: a late write must not overwrite a newer pause/end snapshot.
-    private val sessionSaveMutex = Mutex()
-
-    // Session auto-save job
-    private var autoSaveJob: Job? = null
 
     // Cheap liveness signal for ServiceHealthWorker. This avoids heavier polling
     // while still letting the app notice when OEM battery management kills the listener.
@@ -807,7 +793,7 @@ class MusicTrackingService : NotificationListenerService() {
             // Initialize session persistence only. Reading/writing its SharedPreferences
             // marker is deferred to the IO-owned recovery coroutine below so service onCreate
             // never performs a synchronous disk commit.
-            sessionPersistence = SessionPersistence(applicationContext)
+            sessionJournal = ActiveSessionJournal(applicationContext, serviceScope)
 
             // Initialize smart duration estimator
             durationEstimator = SmartDurationEstimator()
@@ -825,7 +811,7 @@ class MusicTrackingService : NotificationListenerService() {
                     }
                 },
             )
-            sessionPersistence = SessionPersistence(applicationContext)
+            sessionJournal = ActiveSessionJournal(applicationContext, serviceScope)
             durationEstimator = SmartDurationEstimator()
         }
     }
@@ -833,19 +819,11 @@ class MusicTrackingService : NotificationListenerService() {
     private fun recoverPersistedSessions() {
         serviceScope.launch {
             try {
-                // Capture the previous marker before marking this service instance active.
-                // Both calls may hit disk and therefore stay on the IO service scope.
-                val needsSessionRecovery = sessionPersistence.wasUncleanShutdown()
-                sessionPersistence.markServiceActive()
+                val recoveredSessions = sessionJournal.beginRun()
+                if (recoveredSessions.isNotEmpty()) {
+                    Log.i(TAG, "Recovered ${recoveredSessions.size} sessions after unclean shutdown")
 
-                if (needsSessionRecovery) {
-                    Log.i(TAG, "Detected unclean shutdown, attempting session recovery")
-                    val recoveredSessions = sessionPersistence.loadSessions()
-
-                    if (recoveredSessions.isNotEmpty()) {
-                        Log.i(TAG, "Recovered ${recoveredSessions.size} sessions from persistence")
-
-                        // Process recovered sessions - they were interrupted
+                    // Process recovered sessions - they were interrupted
                         for (state in recoveredSessions) {
                             // Dedup guard: if an event with this sessionId already
                             // reached the database (session ended normally but the
@@ -963,11 +941,12 @@ class MusicTrackingService : NotificationListenerService() {
                             trackingManager.queueEvent(event, state.sessionId)
                             Log.i(TAG, "Queued recovered event for '${state.trackTitle}': ${finalPlayTime}ms (was ${estimatedPlayTime}ms)")
                         }
-                    }
                 }
 
-                // Clear persisted sessions after recovery
-                sessionPersistence.clearSessions()
+                // Clear only after every recovered session was evaluated/queued successfully.
+                sessionJournal.recoveryHandled()
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to recover persisted sessions", e)
             }
@@ -975,20 +954,7 @@ class MusicTrackingService : NotificationListenerService() {
     }
 
     private fun startSessionAutoSave() {
-        if (autoSaveJob?.isActive == true) return
-
-        Log.d(TAG, "Starting session auto-save")
-
-        autoSaveJob =
-            serviceScope.launch {
-                // Checkpoint immediately instead of losing up to 30 seconds on an OEM kill.
-                saveSessionsToPersistence()
-                while (isActive) {
-                    delay(SESSION_AUTOSAVE_INTERVAL_MS)
-                    if (playbackStates.isEmpty()) break
-                    saveSessionsToPersistence()
-                }
-            }
+        sessionJournal.ensureAutoSave { playbackStates.values.toList() }
     }
 
     /**
@@ -1093,12 +1059,8 @@ class MusicTrackingService : NotificationListenerService() {
             }
 
             if (playbackStates.isEmpty()) {
-                if (autoSaveJob?.isActive == true) {
-                    autoSaveJob?.cancel()
-                    // Remove the final stale recovery snapshot when the last session ends.
-                    serviceScope.launch { saveSessionsToPersistence() }
-                }
-                autoSaveJob = null
+                // Remove the final stale recovery snapshot when the last session ends.
+                sessionJournal.stopAutoSaveAndCheckpoint { playbackStates.values.toList() }
             } else {
                 startSessionAutoSave()
             }
@@ -1284,7 +1246,7 @@ class MusicTrackingService : NotificationListenerService() {
                 if (isPlaying && !session.isPlaying) session.resume()
                 else if (!isPlaying && session.isPlaying) {
                     session.pause()
-                    serviceScope.launch { saveSessionsToPersistence() }
+                    serviceScope.launch { sessionJournal.checkpoint(playbackStates.values.toList()) }
                 }
                 SpotifyBroadcastPresence.publishFromLocal(
                     packageName = packageName,
@@ -1307,36 +1269,6 @@ class MusicTrackingService : NotificationListenerService() {
             } catch (e: Exception) {
                 Log.w(TAG, "Error polling position for $packageName", e)
             }
-        }
-    }
-
-    private suspend fun saveSessionsToPersistence(): Boolean =
-        sessionSaveMutex.withLock { persistSessionSnapshot() }
-
-    private suspend fun persistSessionSnapshot(): Boolean {
-        try {
-            // Create a snapshot to avoid ConcurrentModificationException
-            val statesSnapshot = playbackStates.toMap()
-            // Persist sessions even before their trackId is resolved — title/artist
-            // are enough to recover the play after a kill, and recovery resolves the
-            // track lazily. Dropping these sessions used to lose plays entirely.
-            val currentSessions =
-                statesSnapshot
-                    .values.associate { session -> session.sessionId to session.recoverySnapshot() }
-
-            if (currentSessions.isNotEmpty()) {
-                sessionPersistence.saveSessions(currentSessions)
-            } else {
-                // No active sessions — clear any stale persisted sessions so a
-                // later kill cannot resurrect (and double-count) finished plays.
-                sessionPersistence.clearSessions()
-            }
-            return true
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            Log.w(TAG, "Failed to auto-save sessions", e)
-            return false
         }
     }
 
@@ -1459,7 +1391,7 @@ class MusicTrackingService : NotificationListenerService() {
         // Without a connected listener we cannot know whether the player is still
         // playing; stop the monotonic clocks rather than counting an unobserved gap.
         playbackStates.values.forEach { it.pause() }
-        serviceScope.launch { saveSessionsToPersistence() }
+        serviceScope.launch { sessionJournal.checkpoint(playbackStates.values.toList()) }
 
         super.onListenerDisconnected()
         Log.w(TAG, "NotificationListener disconnected - attempting reconnect")
@@ -1683,7 +1615,7 @@ class MusicTrackingService : NotificationListenerService() {
                     PlaybackState.STATE_PAUSED -> {
                         if (session.isPlaying) {
                             session.pause()
-                            serviceScope.launch { saveSessionsToPersistence() }
+                            serviceScope.launch { sessionJournal.checkpoint(playbackStates.values.toList()) }
                         }
                     }
                     PlaybackState.STATE_PLAYING -> session.resume()
@@ -3156,7 +3088,7 @@ class MusicTrackingService : NotificationListenerService() {
                     Log.d(TAG, "Resumed: '$title' at position ${currentPosition}ms")
                 } else if (!isPlaying && currentSession.isPlaying) {
                     currentSession.pause()
-                    serviceScope.launch { saveSessionsToPersistence() }
+                    serviceScope.launch { sessionJournal.checkpoint(playbackStates.values.toList()) }
                     Log.d(TAG, "Paused: '$title' at position ${currentPosition}ms, accumulated: ${currentSession.accumulatedPositionMs}ms")
                 }
                 if (duration > 0) {
@@ -3626,8 +3558,8 @@ class MusicTrackingService : NotificationListenerService() {
 
         if (::trackingRules.isInitialized) trackingRules.unregisterListener(durationRulesListener)
 
-        // Cancel auto-save job and position polling so no further state changes arrive
-        autoSaveJob?.cancel()
+        // Stop journal scheduling and position polling so no further state changes arrive.
+        sessionJournal.cancelAutoSave()
         positionPollingJob?.cancel()
         strandedReapJob?.cancel()
 
@@ -3682,7 +3614,7 @@ class MusicTrackingService : NotificationListenerService() {
                         // This is intentionally off the lifecycle thread. Commit the final recovery
                         // snapshot first; only clear it after every final event and pending queue
                         // entry has reached durable database/offline storage.
-                        sessionPersistence.saveSessions(recoverySnapshot)
+                        sessionJournal.checkpointSnapshot(recoverySnapshot)
                         playbackSnapshot.forEach { session ->
                             saveListeningEventSuspend(session)
                         }
@@ -3698,8 +3630,7 @@ class MusicTrackingService : NotificationListenerService() {
 
             if (flushed) {
                 try {
-                    sessionPersistence.clearSessions()
-                    sessionPersistence.markServiceInactive()
+                    sessionJournal.completeCleanShutdown()
                     Log.i(TAG, "Shutdown flush complete, metrics: ${trackingManager.getMetrics()}")
                 } catch (failure: Exception) {
                     // Keep the service-active marker on failure so recovery remains conservative.
