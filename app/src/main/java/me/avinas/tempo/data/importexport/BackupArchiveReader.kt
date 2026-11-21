@@ -4,28 +4,23 @@ import android.content.Context
 import android.net.Uri
 import android.util.Log
 import com.squareup.moshi.JsonReader
-import com.squareup.moshi.Moshi
 import java.io.BufferedInputStream
-import java.io.File
 import java.io.InputStream
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
-import me.avinas.tempo.data.local.entities.ListeningEvent
-import me.avinas.tempo.data.local.entities.ScrobbleArchive
 import okio.buffer
-import okio.sink
 import okio.source
 
 /**
  * Reads and validates one untrusted Tempo backup archive.
  *
  * Bounded entities stay in the decoded [TempoExportData]. Unbounded listening
- * events and scrobble rows are streamed to caller-owned staging files so large
- * histories never have to live in memory.
+ * events and scrobble rows are streamed into a caller-owned SQLite staging store,
+ * so large histories never have to live in memory and are not reparsed inside the
+ * main Room restore transaction.
  */
 internal class BackupArchiveReader(
     private val context: Context,
-    private val moshi: Moshi,
     private val codec: TempoExportJsonCodec,
 ) {
     sealed interface Result {
@@ -42,8 +37,7 @@ internal class BackupArchiveReader(
 
     fun read(
         uri: Uri,
-        stagedEventsFile: File,
-        stagedArchiveFile: File,
+        stagingStore: RestoreStagingStore,
         artworkStaging: RestoreArtworkStaging,
     ): Result {
         var exportData: TempoExportData? = null
@@ -68,47 +62,38 @@ internal class BackupArchiveReader(
                                     BackupArchivePolicy.MAX_DATA_JSON_BYTES,
                                 ).source().buffer(),
                             )
-                            val eventAdapter = moshi.adapter(ListeningEvent::class.java)
-                            val archiveAdapter = moshi.adapter(ScrobbleArchive::class.java)
-                            val eventSink = stagedEventsFile.sink().buffer()
-                            val archiveSink = stagedArchiveFile.sink().buffer()
-                            try {
-                                exportData = codec.read(
-                                    reader,
-                                    TempoExportJsonCodec.StreamHandlers(
-                                        onListeningEvent = { event ->
-                                            if (
-                                                stagedEventCount >=
-                                                BackupArchivePolicy.MAX_IMPORTED_EVENTS
-                                            ) {
-                                                throw SecurityException(
-                                                    "Backup contains too many listening events",
-                                                )
-                                            }
-                                            eventAdapter.toJson(eventSink, event)
-                                            eventSink.writeUtf8("\n")
-                                            stagedEventCount++
-                                        },
-                                        onScrobbleArchiveRow = { row ->
-                                            if (
-                                                stagedArchiveCount >=
-                                                BackupArchivePolicy.MAX_IMPORTED_ARCHIVE_ROWS
-                                            ) {
-                                                throw SecurityException(
-                                                    "Backup contains too many archive rows",
-                                                )
-                                            }
-                                            archiveAdapter.toJson(archiveSink, row)
-                                            archiveSink.writeUtf8("\n")
-                                            stagedArchiveCount++
-                                        },
-                                    ),
-                                )
-                            } finally {
-                                // Closing these buffered sinks would close the shared ZIP stream.
-                                eventSink.flush()
-                                archiveSink.flush()
-                            }
+                            exportData =
+                                stagingStore.writeBatch {
+                                    codec.read(
+                                        reader,
+                                        TempoExportJsonCodec.StreamHandlers(
+                                            onListeningEvent = { event ->
+                                                if (
+                                                    stagedEventCount >=
+                                                    BackupArchivePolicy.MAX_IMPORTED_EVENTS
+                                                ) {
+                                                    throw SecurityException(
+                                                        "Backup contains too many listening events",
+                                                    )
+                                                }
+                                                stagingStore.stage(event)
+                                                stagedEventCount++
+                                            },
+                                            onScrobbleArchiveRow = { row ->
+                                                if (
+                                                    stagedArchiveCount >=
+                                                    BackupArchivePolicy.MAX_IMPORTED_ARCHIVE_ROWS
+                                                ) {
+                                                    throw SecurityException(
+                                                        "Backup contains too many archive rows",
+                                                    )
+                                                }
+                                                stagingStore.stage(row)
+                                                stagedArchiveCount++
+                                            },
+                                        ),
+                                    )
+                                }
                         }
 
                         entry.name.startsWith(BackupArchivePolicy.IMAGES_DIR) &&
