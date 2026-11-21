@@ -107,14 +107,14 @@ private fun TimeRangeEmptyState(
         )
     }
 
-    GlassCard(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp), // Standard outer margins
-        backgroundColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-        contentPadding = PaddingValues(32.dp)
+    Surface(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        contentColor = MaterialTheme.colorScheme.onSurface,
+        shape = MaterialTheme.shapes.extraLarge,
     ) {
         Column(
+            modifier = Modifier.fillMaxWidth().padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
@@ -133,7 +133,7 @@ private fun TimeRangeEmptyState(
                     PulsingRadar(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onSecondaryContainer)
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = stringResource(R.string.empty_tracking_active),
+                        text = stringResource(R.string.empty_waiting_for_listening),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSecondaryContainer,
                         fontWeight = FontWeight.Bold,
@@ -169,7 +169,7 @@ private fun TimeRangeEmptyState(
                     text = contextLabel,
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f), 
+                    color = MaterialTheme.colorScheme.onSurfaceVariant, 
                     textAlign = TextAlign.Center
                 )
             }
@@ -182,7 +182,7 @@ private fun TimeRangeEmptyState(
                 style = MaterialTheme.typography.bodyMedium,
                 lineHeight = 24.sp,
                 fontWeight = FontWeight.Normal,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -212,15 +212,14 @@ private fun SetupGuideEmptyState(
     // Logic: Provide clear instruction in a premium container.
     // Differentiator: This card is "Louder" (HighProminence) and focused on ACTION.
     
-    GlassCard(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp),
-        backgroundColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-        variant = GlassCardVariant.HighProminence, // Stand out more
-        contentPadding = PaddingValues(32.dp)
+    Surface(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        contentColor = MaterialTheme.colorScheme.onSurface,
+        shape = MaterialTheme.shapes.extraLarge,
     ) {
         Column(
+            modifier = Modifier.fillMaxWidth().padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
@@ -244,7 +243,7 @@ private fun SetupGuideEmptyState(
             Text(
                 text = stringResource(R.string.empty_stats_flowing),
                 style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
             )
 
@@ -344,47 +343,17 @@ private fun StepItem(
     }
 }
 
+/** A static status marker avoids an infinite timer in an otherwise empty view. */
 @Composable
 private fun PulsingRadar(
     modifier: Modifier = Modifier,
-    color: Color = Color(0xFF22C55E)
+    color: Color = MaterialTheme.colorScheme.primary,
 ) {
-    val infiniteTransition = me.avinas.tempo.ui.theme.rememberMotionAwareInfiniteTransition(label = "Radar")
-    
-    val scale by infiniteTransition.animateFloat(
-        initialValue = 0.8f,
-        targetValue = 1.9f, // Expand outward
-        animationSpec = androidx.compose.animation.core.infiniteRepeatable(
-            animation = androidx.compose.animation.core.tween(2000, easing = androidx.compose.animation.core.FastOutSlowInEasing),
-            repeatMode = androidx.compose.animation.core.RepeatMode.Restart
-        ),
-        label = "RadarScale"
-    )
-
-    val alpha by infiniteTransition.animateFloat(
-        initialValue = 0.5f,
-        targetValue = 0.0f, // Fade out
-        animationSpec = androidx.compose.animation.core.infiniteRepeatable(
-            animation = androidx.compose.animation.core.tween(2000, easing = androidx.compose.animation.core.FastOutLinearInEasing),
-            repeatMode = androidx.compose.animation.core.RepeatMode.Restart
-        ),
-        label = "RadarAlpha"
-    )
-
-    Box(modifier = modifier, contentAlignment = Alignment.Center) {
-        // Ripple
-        Box(
-            modifier = Modifier
-                .size(8.dp)
-                .scale(scale)
-                .background(color.copy(alpha = alpha), androidx.compose.foundation.shape.CircleShape)
-        )
-        // Core Dot (Static)
-        Box(
-            modifier = Modifier
-                .size(8.dp)
-                .background(color, androidx.compose.foundation.shape.CircleShape)
-        )
+    Box(
+        modifier = modifier,
+        contentAlignment = Alignment.Center,
+    ) {
+        Box(Modifier.size(8.dp).background(color, CircleShape))
     }
 }
 
