@@ -63,6 +63,12 @@ The request is not just to add polygons or an expressive Settings hub. The same 
 - `LiveNowPlayingCard.kt`: an ordinary themed surface, still maintaining its isolated playback ticker.
 - `CommonComponents.kt`: normal `StatCard` begins fully visible and only performs an entrance transition if the existing motion policy explicitly allows it.
 - `WeekDigestLayout.kt` and unit test: responsive single/two-column layout policy including large type.
+- `StatsScreen.kt`: ranked lists use native clickable Material surfaces, semantic color roles, two-line song/artist labels and a full-width duration line rather than glass/inner shadow stacks.
+- `HistoryScreen.kt`: regular and archive rows use the new unaccented tonal path and native outline roles.
+- `SongDetailsScreen.kt`, `ArtistDetailsScreen.kt`, `AlbumDetailsScreen.kt`: seven nested full-screen app backdrops removed; art-led content retains its separate overlays.
+- `ProfileScreen.kt`: level, challenge and badge progress now use the centralized expressive motion scheme (including instant reduced-motion behavior) instead of fixed 900–1200ms tweens.
+- `AppearanceScreen.kt`, `SupportedAppsScreen.kt` and Settings detail pages: shorter native headers and one root app backdrop.
+
 
 Earlier screenshot corrections are in [`MATERIAL3_EXPRESSIVE_ROADMAP.md`](MATERIAL3_EXPRESSIVE_ROADMAP.md) and [#93](https://github.com/matchalattewithbanana/Tempo/issues/93).
 
