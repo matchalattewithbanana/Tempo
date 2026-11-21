@@ -174,14 +174,24 @@ fun AppNavigation(
                         }
                     },
                     popEnterTransition = {
-                        if (!animateNavigation) EnterTransition.None
-                        else slideInHorizontally(animationSpec = spatialSpec) { -it / 8 } +
-                            fadeIn(animationSpec = effectsSpec)
+                        when {
+                            !animateNavigation -> EnterTransition.None
+                            initialState.destination.route in primaryRoutes &&
+                                targetState.destination.route in primaryRoutes ->
+                                fadeIn(animationSpec = effectsSpec)
+                            else -> slideInHorizontally(animationSpec = spatialSpec) { -it / 8 } +
+                                fadeIn(animationSpec = effectsSpec)
+                        }
                     },
                     popExitTransition = {
-                        if (!animateNavigation) ExitTransition.None
-                        else slideOutHorizontally(animationSpec = spatialSpec) { it / 10 } +
-                            fadeOut(animationSpec = effectsSpec)
+                        when {
+                            !animateNavigation -> ExitTransition.None
+                            initialState.destination.route in primaryRoutes &&
+                                targetState.destination.route in primaryRoutes ->
+                                fadeOut(animationSpec = effectsSpec)
+                            else -> slideOutHorizontally(animationSpec = spatialSpec) { it / 10 } +
+                                fadeOut(animationSpec = effectsSpec)
+                        }
                     },
                 ) {
                     composable(Screen.Home.route) {
