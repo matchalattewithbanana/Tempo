@@ -526,7 +526,7 @@ class ListeningReconciliationIntegrationTest {
             Track(
                 title = "Same Song", artist = "Same Artist", album = null,
                 duration = 180_000L, albumArtUrl = null,
-                spotifyId = "spotify-track-1", musicbrainzId = null,
+                spotifyId = null, musicbrainzId = null,
             )
         )
         val start = 1_700_401_000_000L
