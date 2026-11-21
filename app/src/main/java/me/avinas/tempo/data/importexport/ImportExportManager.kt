@@ -203,25 +203,27 @@ class ImportExportManager @Inject constructor(
             )
         }
 
-        val stagedEventsFile = File(context.cacheDir, "import_events.jsonl")
-        val stagedArchiveFile = File(context.cacheDir, "import_archive.jsonl")
-        stagedEventsFile.delete()
-        stagedArchiveFile.delete()
-        val artworkStaging =
-            RestoreArtworkStaging(context.cacheDir, File(context.filesDir, ALBUM_ART_DIR))
+        val stagingDbFile =
+            File(context.cacheDir, "import_restore_${java.util.UUID.randomUUID()}.db")
+        var stagingStore: RestoreStagingStore? = null
+        var artworkStaging: RestoreArtworkStaging? = null
 
         try {
+            val rows = RestoreStagingStore(stagingDbFile)
+            stagingStore = rows
+            val artwork =
+                RestoreArtworkStaging(context.cacheDir, File(context.filesDir, ALBUM_ART_DIR))
+            artworkStaging = artwork
+
             _progress.value = ImportExportProgress("Reading backup file...", 0, 100, true)
             val archive = when (
                 val result = BackupArchiveReader(
                     context = context,
-                    moshi = moshi,
                     codec = codec,
                 ).read(
                     uri = uri,
-                    stagedEventsFile = stagedEventsFile,
-                    stagedArchiveFile = stagedArchiveFile,
-                    artworkStaging = artworkStaging,
+                    stagingStore = rows,
+                    artworkStaging = artwork,
                 )
             ) {
                 is BackupArchiveReader.Result.Error ->
@@ -240,15 +242,13 @@ class ImportExportManager @Inject constructor(
 
             val databaseRestore = BackupDatabaseRestorer(
                 database = database,
-                moshi = moshi,
                 onProgress = { _progress.value = it },
             ).restore(
                 data = data,
                 pathMapping = pathMapping,
-                stagedEventsFile = stagedEventsFile,
-                stagedArchiveFile = stagedArchiveFile,
+                stagingStore = rows,
                 conflictStrategy = conflictStrategy,
-                artworkStaging = artworkStaging,
+                artworkStaging = artwork,
             )
 
             
@@ -327,9 +327,9 @@ class ImportExportManager @Inject constructor(
             Log.e(TAG, "Import failed", e)
             ImportExportResult.Error("Import failed: ${e.message}", e)
         } finally {
-            stagedEventsFile.delete()
-            stagedArchiveFile.delete()
-            runCatching { artworkStaging.close() }
+            runCatching { stagingStore?.closeAndDelete() }
+                .onFailure { Log.w(TAG, "Unable to clean restore row staging", it) }
+            runCatching { artworkStaging?.close() }
                 .onFailure { Log.w(TAG, "Unable to clean restore artwork staging", it) }
             _progress.value = null
             operationLease.release()
