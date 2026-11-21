@@ -180,7 +180,7 @@ fun SongDetailsScreen(
             viewModel = viewModel,
         )
     } else {
-        DeepOceanBackground {
+        Box(Modifier.fillMaxSize()) {
             Column(
                 modifier = Modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -224,7 +224,7 @@ fun SongDetailsScreen(
 
 @Composable
 private fun SongDetailsLoadingSkeleton() {
-    DeepOceanBackground {
+    Box(Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -333,7 +333,7 @@ fun SongDetailsContent(
         }.toMap()
     }
 
-    DeepOceanBackground {
+    Box(Modifier.fillMaxSize()) {
         Box(modifier = Modifier.fillMaxSize().tempoAmbientBackdrop()) {
             ArtAtmosphereLayer(
                 artUrl = trackDetails.track.albumArtUrl
