@@ -6,7 +6,6 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -33,7 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import me.avinas.tempo.ui.appearance.AppearanceEffectIntensity
 import me.avinas.tempo.ui.appearance.LocalAppearanceRuntimePolicy
 import me.avinas.tempo.ui.theme.LocalTempoAppearance
@@ -193,25 +192,33 @@ fun Modifier.tempoAmbientBackdrop(): Modifier = composed {
  */
 fun Modifier.tempoListMotion(index: Int): Modifier = composed {
     val policy = LocalAppearanceRuntimePolicy.current
-    if (!policy.allowListEntranceMotion) this
-    else {
-        val strong = LocalTempoAppearance.current.effectIntensity == AppearanceEffectIntensity.EXPRESSIVE
-        val animated = remember { Animatable(0f) }
+    if (!policy.allowListEntranceMotion) {
+        this
+    } else {
+        val strong =
+            LocalTempoAppearance.current.effectIntensity == AppearanceEffectIntensity.EXPRESSIVE
+        val spatial = remember(index) { Animatable(0f) }
+        val effects = remember(index) { Animatable(0f) }
+        val spatialSpec = MaterialTheme.motionScheme.fastSpatialSpec<Float>()
+        val effectsSpec = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
+
         LaunchedEffect(index, strong) {
-            animated.snapTo(0f)
-            delay((index.coerceAtLeast(0) % 5) * (if (strong) 37L else 24L))
-            animated.animateTo(
-                1f,
-                animationSpec = tween(
-                    durationMillis = if (strong) 390 else 230,
-                    easing = FastOutSlowInEasing,
-                ),
-            )
+            spatial.snapTo(0f)
+            effects.snapTo(0f)
+            // No arbitrary stagger: opacity and geometry settle independently
+            // using the Material motion scheme and remain interruptible.
+            kotlinx.coroutines.coroutineScope {
+                launch { spatial.animateTo(1f, animationSpec = spatialSpec) }
+                launch { effects.animateTo(1f, animationSpec = effectsSpec) }
+            }
         }
+
         this.graphicsLayer {
-            alpha = animated.value
-            translationY = (1f - animated.value) * (if (strong) 18.dp.toPx() else 9.dp.toPx())
-            scaleX = 1f - (1f - animated.value) * (if (strong) 0.035f else 0.012f)
+            alpha = effects.value
+            translationY =
+                (1f - spatial.value) * (if (strong) 10.dp.toPx() else 6.dp.toPx())
+            val scaleDelta = if (strong) 0.018f else 0.008f
+            scaleX = 1f - (1f - spatial.value) * scaleDelta
             scaleY = scaleX
         }
     }
