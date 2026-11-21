@@ -1173,99 +1173,72 @@ fun ArchiveSectionHeader(
  */
 @Composable
 fun ArchiveHistoryListItem(item: ArchiveHistoryItem) {
-    GlassCard(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        shape = RoundedCornerShape(16.dp),
-        contentPadding = PaddingValues(12.dp),
-        variant = GlassCardVariant.LowProminence
+    val scheme = MaterialTheme.colorScheme
+    Surface(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+        shape = MaterialTheme.shapes.large,
+        color = scheme.surfaceContainerLow,
+        contentColor = scheme.onSurface,
     ) {
         Row(
+            modifier = Modifier.fillMaxWidth().padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            Box {
-                CachedAsyncImage(
-                    imageUrl = item.albumArtUrl.takeIf { me.avinas.tempo.ui.theme.LocalTempoAppearance.current.showHistoryArtwork },
-                    contentDescription = "Album art for ${item.trackTitle}",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .size(52.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(10.dp)),
-                    targetSizeDp = 52,
-                    placeholder = {
-                        Box(
-                            modifier = Modifier
-                                .size(52.dp)
-                                .clip(RoundedCornerShape(10.dp))
-                                .background(MaterialTheme.colorScheme.surfaceContainerLowest),
-                            contentAlignment = Alignment.Center
-                        ) {
+            CachedAsyncImage(
+                imageUrl = item.albumArtUrl.takeIf {
+                    me.avinas.tempo.ui.theme.LocalTempoAppearance.current.showHistoryArtwork
+                },
+                contentDescription = "Album art for ${item.trackTitle}",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.size(52.dp).clip(MaterialTheme.shapes.medium),
+                targetSizeDp = 52,
+                placeholder = {
+                    Surface(
+                        modifier = Modifier.size(52.dp),
+                        shape = MaterialTheme.shapes.medium,
+                        color = scheme.surfaceContainerHighest,
+                        contentColor = scheme.onSurfaceVariant,
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 imageVector = Icons.Rounded.Album,
                                 contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f),
-                                modifier = Modifier.size(22.dp)
+                                modifier = Modifier.size(22.dp),
                             )
                         }
                     }
-                )
-                // Archive play count badge
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .offset(x = 4.dp, y = 4.dp)
-                        .clip(RoundedCornerShape(6.dp))
-                        .background(MaterialTheme.colorScheme.secondaryContainer)
-                        .padding(horizontal = 5.dp, vertical = 1.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "${item.playCount}x",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
-                }
-            }
+                },
+            )
 
-            Spacer(modifier = Modifier.width(14.dp))
-
-            // Track Info
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = item.trackTitle,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = scheme.onSurface,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
                 )
-                Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = item.artistName,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = scheme.onSurfaceVariant,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
 
-            // Play count pill
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(GoldDark.copy(alpha = 0.12f))
-                    .border(0.8.dp, GoldDark.copy(alpha = 0.25f), RoundedCornerShape(8.dp))
-                    .padding(horizontal = 8.dp, vertical = 4.dp)
+            Surface(
+                shape = MaterialTheme.shapes.small,
+                color = scheme.secondaryContainer,
+                contentColor = scheme.onSecondaryContainer,
             ) {
                 Text(
                     text = "${item.playCount} plays",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = GoldLight,
-                    fontWeight = FontWeight.SemiBold
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
                 )
             }
         }
