@@ -1,39 +1,24 @@
 package me.avinas.tempo.ui.settings
 
 import me.avinas.tempo.ui.effects.tempoAmbientBackdrop
-import android.app.Activity
 import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.semantics.Role
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import me.avinas.tempo.data.reset.AppResetState
-import androidx.core.os.LocaleListCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
@@ -47,24 +32,12 @@ import kotlinx.coroutines.launch
 import me.avinas.tempo.R
 import me.avinas.tempo.service.SpotifyBroadcastPresence
 import me.avinas.tempo.service.TrackingServiceHeartbeat
-import me.avinas.tempo.data.importexport.ImportConflictStrategy
 import me.avinas.tempo.data.importexport.ImportExportResult
 import me.avinas.tempo.data.local.entities.AlbumArtSource
-import me.avinas.tempo.data.drive.BackupStatus
-import me.avinas.tempo.ui.components.TempoDialogBody
-import me.avinas.tempo.ui.components.TempoDialogButtonRow
-import me.avinas.tempo.ui.components.TempoDialogDangerButton
-import me.avinas.tempo.ui.components.TempoDialogIcon
-import me.avinas.tempo.ui.components.TempoDialogSecondaryButton
-import me.avinas.tempo.ui.components.TempoDialogSurface
-import me.avinas.tempo.ui.components.TempoDialogTextField
-import me.avinas.tempo.ui.components.TempoDialogTitle
-import me.avinas.tempo.ui.components.TempoIcons
 import me.avinas.tempo.ui.components.TempoSnackbar
 import me.avinas.tempo.ui.theme.*
 import me.avinas.tempo.utils.BatteryUtils
 import me.avinas.tempo.utils.OemBackgroundHelper
-import me.avinas.tempo.utils.ReviewUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
