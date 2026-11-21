@@ -113,7 +113,7 @@ fun AlbumDetailsScreen(
             onRemoveTrack = viewModel::requestRemove,
         )
 
-        else -> DeepOceanBackground {
+        else -> Box(Modifier.fillMaxSize()) {
             Column(
                 modifier = Modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -167,7 +167,7 @@ fun AlbumDetailsScreen(
 
 @Composable
 private fun AlbumDetailsLoadingSkeleton() {
-    DeepOceanBackground {
+    Box(Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -229,7 +229,7 @@ private fun AlbumDetailsContent(
         ?.takeIf { it.isNotBlank() }
         ?.let { MusicBrainzEnrichmentService.fixHttpUrl(it) }
 
-    DeepOceanBackground {
+    Box(Modifier.fillMaxSize()) {
         Box(modifier = Modifier.fillMaxSize().tempoAmbientBackdrop()) {
             ArtAtmosphereLayer(
                 artUrl = atmosphereArtUrl,
