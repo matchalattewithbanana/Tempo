@@ -9,12 +9,6 @@ on:
         required: true
         type: boolean
         default: false
-  # Authorized retry trigger for 5.1.69 beta, restricted to its notes file.
-  push:
-    branches: [main]
-    paths:
-      - 'docs/releases/v5.1.69-beta.md'
-
 concurrency:
   group: beta-release-${{ github.ref }}
   cancel-in-progress: false
@@ -25,7 +19,7 @@ permissions:
 jobs:
   validate:
     name: Unit tests, lint, APK and extension checks
-    if: github.ref == 'refs/heads/main' && (github.event_name != 'push' || contains(github.event.head_commit.message, '[release-beta-once-5.1.69]'))
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 45
     outputs:
@@ -55,7 +49,7 @@ jobs:
         env:
           TEMPO_DEBUG_KEYSTORE_BASE64: ${{ secrets.TEMPO_DEBUG_KEYSTORE_BASE64 }}
           TEMPO_BETA_SIGNER_SHA256: ${{ vars.TEMPO_BETA_SIGNER_SHA256 || 'fa14beee34664d2c41bc5db00f630b564992da649fa66cb4e62c523915c95407' }}
-          PUBLISH_BETA: ${{ inputs.publish_beta || (github.event_name == 'push' && contains(github.event.head_commit.message, '[release-beta-once-5.1.69]')) }}
+          PUBLISH_BETA: ${{ inputs.publish_beta }}
         shell: bash
         run: |
           set -euo pipefail
@@ -97,7 +91,7 @@ jobs:
       - name: Verify APK and expected version
         env:
           TEMPO_BETA_SIGNER_SHA256: ${{ vars.TEMPO_BETA_SIGNER_SHA256 || 'fa14beee34664d2c41bc5db00f630b564992da649fa66cb4e62c523915c95407' }}
-          PUBLISH_BETA: ${{ inputs.publish_beta || (github.event_name == 'push' && contains(github.event.head_commit.message, '[release-beta-once-5.1.69]')) }}
+          PUBLISH_BETA: ${{ inputs.publish_beta }}
           VERSION: ${{ steps.release.outputs.version }}
           VERSION_CODE: ${{ steps.release.outputs.version_code }}
         shell: bash
@@ -147,7 +141,7 @@ jobs:
 
   platform:
     name: Android emulator tests
-    if: github.ref == 'refs/heads/main' && (github.event_name != 'push' || contains(github.event.head_commit.message, '[release-beta-once-5.1.69]'))
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 45
     env:
@@ -186,7 +180,7 @@ jobs:
   publish:
     name: Publish immutable GitHub prerelease
     needs: [validate, platform]
-    if: ${{ github.ref == 'refs/heads/main' && (inputs.publish_beta || (github.event_name == 'push' && contains(github.event.head_commit.message, '[release-beta-once-5.1.69]'))) }}
+    if: ${{ github.ref == 'refs/heads/main' && inputs.publish_beta }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
