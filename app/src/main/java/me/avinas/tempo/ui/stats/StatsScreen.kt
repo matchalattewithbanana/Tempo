@@ -8,13 +8,8 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 
-import me.avinas.tempo.ui.theme.TextOnAccent
-import me.avinas.tempo.ui.theme.GoldDark
 import me.avinas.tempo.ui.theme.LocalTempoAppearance
-import me.avinas.tempo.ui.theme.LocalTempoPalette
 import me.avinas.tempo.ui.theme.rememberReducedMotion
-import me.avinas.tempo.ui.components.TempoDropdownMenu
-import me.avinas.tempo.ui.components.TempoDropdownMenuItem
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -23,7 +18,6 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -34,23 +28,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.TrendingDown
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.rounded.Album
-import androidx.compose.material.icons.rounded.MusicNote
-import androidx.compose.material.icons.rounded.AutoAwesome
-import androidx.compose.material.icons.rounded.PlayArrow
-import androidx.compose.material.icons.rounded.Schedule
-import androidx.compose.material.icons.rounded.Headphones
-import androidx.compose.material.icons.rounded.Equalizer
 import androidx.compose.material3.*
 import me.avinas.tempo.ui.components.TempoCircularLoadingIndicator
 import me.avinas.tempo.ui.components.TempoLinearLoadingIndicator
@@ -59,23 +39,13 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import me.avinas.tempo.ui.components.CachedAsyncImage
-import me.avinas.tempo.data.repository.SortBy
-import me.avinas.tempo.data.stats.CombinedBasicStats
 import me.avinas.tempo.data.stats.TimeRange
 import me.avinas.tempo.data.stats.TopAlbum
 import me.avinas.tempo.data.stats.TopArtist
@@ -86,7 +56,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import me.avinas.tempo.R
-import me.avinas.tempo.ui.appearance.AppearancePaletteResolver
 import me.avinas.tempo.ui.components.LoadErrorNotice
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
