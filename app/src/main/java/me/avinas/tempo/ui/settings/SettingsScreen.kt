@@ -123,8 +123,8 @@ fun SettingsScreen(
     var settingsSearch by rememberSaveable { mutableStateOf("") }
     val settingsScrollState = key(settingsCategory) { rememberScrollState() }
     LaunchedEffect(settingsSearch) {
-        // Avoid displaying newly filtered results below the previous scroll position.
-        if (settingsSearch.isNotBlank()) settingsScrollState.scrollTo(0)
+        // Search results and the unfiltered navigator both start at the top.
+        settingsScrollState.scrollTo(0)
     }
     val clearOrClose = {
         when {
@@ -357,12 +357,16 @@ fun SettingsScreen(
                         trailingIcon = if (settingsSearch.isBlank()) null else {
                             {
                                 IconButton(onClick = { settingsSearch = "" }) {
-                                    Icon(Icons.Default.Close, contentDescription = null)
+                                    Icon(Icons.Default.Close,
+                                        contentDescription = stringResource(R.string.stats_search_clear))
                                 }
                             }
                         },
                         shape = MaterialTheme.shapes.extraLarge,
                         singleLine = true,
+                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                            imeAction = androidx.compose.ui.text.input.ImeAction.Search,
+                        ),
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
                     )
                 }
@@ -426,6 +430,13 @@ fun SettingsScreen(
                             Triple(R.string.settings_import_youtube_music, R.string.settings_import_youtube_music_desc, onNavigateToYouTubeMusicImport),
                             Triple(R.string.settings_import_deezer, R.string.settings_import_deezer_desc, onNavigateToDeezerImport),
                             Triple(R.string.settings_import_lastfm, R.string.settings_import_lastfm_desc, onNavigateToLastFmImport),
+                            Triple(R.string.settings_import_musicolet, R.string.settings_import_musicolet_desc, onNavigateToMusicoletImport),
+                            Triple(R.string.settings_background_protection, R.string.settings_search_tracking_terms, onNavigateToBackgroundProtection),
+                            Triple(R.string.desktop_link_title, R.string.settings_search_connections_terms, onNavigateToDesktop),
+                            Triple(R.string.extension_import_title, R.string.settings_search_data_terms, onNavigateToExtensionImport),
+                            Triple(R.string.settings_your_data, R.string.settings_search_data_terms, onNavigateToYourData),
+                            Triple(R.string.enrichment_report_settings_option,
+                                R.string.enrichment_report_settings_option_desc, onNavigateToEnrichmentReport),
                         ).mapNotNull { (titleId, subtitleId, open) ->
                             if (open == null) null else Triple(stringResource(titleId), stringResource(subtitleId), open)
                         }.filter { (title, subtitle, _) ->
