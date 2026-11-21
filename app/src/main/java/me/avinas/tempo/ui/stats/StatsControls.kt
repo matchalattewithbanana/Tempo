@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+
 package me.avinas.tempo.ui.stats
 
 import me.avinas.tempo.ui.theme.TextOnAccent
