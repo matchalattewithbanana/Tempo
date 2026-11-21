@@ -83,6 +83,11 @@ interface ListeningEventDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(events: List<ListeningEvent>): List<Long>
 
+    // A restore's explicit REPLACE choice updates exact matching events in place.
+    // Preserving the primary key prevents accidental duplication of references.
+    @Update
+    suspend fun updateExistingForRestore(events: List<ListeningEvent>): Int
+
     /**
      * Check if an event already exists for this track within the tolerance window.
      * Used for deduplication during imports.
@@ -125,6 +130,31 @@ interface ListeningEventDao {
     )
     suspend fun getExistingFingerprints(fingerprints: List<String>): List<String>
 
+    @Query("SELECT * FROM listening_events WHERE content_fingerprint IN (:fingerprints)")
+    suspend fun getEventsByFingerprints(fingerprints: List<String>): List<ListeningEvent>
+
+    /** Reconcile semantically identical track rows that entered through different imports.
+     * Never equate two non-null, differing provider identifiers or explicit albums.
+     */
+    @Query(
+        """
+        SELECT candidate.id FROM tracks AS candidate
+        INNER JOIN tracks AS anchor ON anchor.id = :trackId
+        WHERE candidate.title = anchor.title COLLATE NOCASE
+          AND candidate.artist = anchor.artist COLLATE NOCASE
+          AND (candidate.album IS NULL OR anchor.album IS NULL
+               OR TRIM(candidate.album) = '' OR TRIM(anchor.album) = ''
+               OR candidate.album = anchor.album COLLATE NOCASE)
+          AND (candidate.spotify_id IS NULL OR anchor.spotify_id IS NULL
+               OR candidate.spotify_id = anchor.spotify_id)
+          AND (candidate.youtube_id IS NULL OR anchor.youtube_id IS NULL
+               OR candidate.youtube_id = anchor.youtube_id)
+          AND (candidate.musicbrainz_id IS NULL OR anchor.musicbrainz_id IS NULL
+               OR candidate.musicbrainz_id = anchor.musicbrainz_id)
+        """,
+    )
+    suspend fun getEquivalentTrackIds(trackId: Long): List<Long>
+
     /**
      * Layer 2: fetch a lightweight view of existing events for one track within a
      * time range, for cross-source temporal reconciliation. Bounded by the
@@ -134,12 +164,12 @@ interface ListeningEventDao {
         """
         SELECT id, track_id, timestamp, playDuration, source, content_fingerprint, end_timestamp, session_id
         FROM listening_events
-        WHERE track_id = :trackId
+        WHERE track_id IN (:trackIds)
         AND timestamp BETWEEN :tsMin AND :tsMax
     """,
     )
     suspend fun getEventsForReconciliation(
-        trackId: Long,
+        trackIds: List<Long>,
         tsMin: Long,
         tsMax: Long,
     ): List<ExistingEventRef>
@@ -168,15 +198,18 @@ interface ListeningEventDao {
      * Only the closest lower-authority match can be replaced.
      */
     @Transaction
-    suspend fun insertAllBatchedWithDedup(events: List<ListeningEvent>): InsertResult {
+    suspend fun insertAllBatchedWithDedup(
+        events: List<ListeningEvent>,
+        replaceExistingOnMatch: Boolean = false,
+    ): InsertResult {
         if (events.isEmpty()) return InsertResult(0, 0)
 
         // ── Layer 1: fingerprint every incoming event ──────────────────────
         val withFp = events.map { event ->
-            val fingerprint = event.contentFingerprint ?: EventFingerprint.compute(event)
             val normalized = ListeningImportPolicy.normalizeTiming(event)
-            if (normalized.contentFingerprint == fingerprint) normalized
-            else normalized.copy(contentFingerprint = fingerprint)
+            // Recompute after local track-id remapping and duration repair. An
+            // exported fingerprint belongs to the original DB, not this one.
+            normalized.copy(contentFingerprint = EventFingerprint.compute(normalized))
         }
 
         val incomingFps = withFp.mapNotNull { it.contentFingerprint }.distinct()
@@ -187,30 +220,49 @@ interface ListeningEventDao {
                 incomingFps.chunked(900).flatMap { getExistingFingerprints(it) }.toSet()
             }
 
-        // Drop exact-fingerprint duplicates (DB or earlier in this batch).
+        // In SKIP mode, an exact reimport is a no-op. Under explicit REPLACE,
+        // refresh changed metadata on the existing play without changing its ID.
+        val existingRows = if (replaceExistingOnMatch && existingFps.isNotEmpty()) {
+            existingFps.chunked(900).flatMap { getEventsByFingerprints(it) }
+                .mapNotNull { old -> old.contentFingerprint?.let { it to old } }.toMap()
+        } else emptyMap()
+        val toUpdate = ArrayList<ListeningEvent>()
         val seenFp = HashSet<String>(incomingFps.size)
         val layer1Survivors = ArrayList<ListeningEvent>(withFp.size)
         var skipped = 0
         for (e in withFp) {
             val fp = e.contentFingerprint
-            if (fp != null && (fp in existingFps || !seenFp.add(fp))) {
+            if (fp != null && !seenFp.add(fp)) {
+                skipped++
+            } else if (fp != null && fp in existingFps) {
+                if (replaceExistingOnMatch) {
+                    val old = existingRows[fp]
+                    if (old != null && old.source == e.source) {
+                        val candidate = e.copy(id = old.id)
+                        if (candidate != old) toUpdate.add(candidate)
+                    }
+                }
                 skipped++
             } else {
                 layer1Survivors.add(e)
             }
         }
+        if (toUpdate.isNotEmpty()) updateExistingForRestore(toUpdate)
 
         // ── Layer 2: cross-source temporal reconciliation ──────────────────
         val toInsert = ArrayList<ListeningEvent>(layer1Survivors.size)
         val toDelete = mutableSetOf<Long>()
 
         for ((trackId, trackEvents) in layer1Survivors.groupBy { it.track_id }) {
+            val equivalentTrackIds = if (trackEvents.any { it.source.contains("import") }) {
+                getEquivalentTrackIds(trackId).ifEmpty { listOf(trackId) }
+            } else listOf(trackId)
             val candidates = TreeMap<Long, MutableList<Slot>>()
             fun addSlot(slot: Slot) {
                 candidates.getOrPut(slot.play.timestamp) { mutableListOf() }.add(slot)
             }
             for (window in reconciliationWindows(trackEvents)) {
-                for (existing in getEventsForReconciliation(trackId, window.first, window.last)) {
+                for (existing in getEventsForReconciliation(equivalentTrackIds, window.first, window.last)) {
                     addSlot(Slot(
                         ListeningImportPolicy.Play(
                             existing.timestamp, existing.end_timestamp, existing.playDuration,
@@ -248,7 +300,14 @@ interface ListeningEventDao {
                 val conflict = closest
                 val existingId = conflict?.existingId
                 if (conflict != null) {
-                    if (existingId == null || play.authority <= conflict.play.authority) {
+                    // REPLACE is meaningful for matching plays recorded by the
+                    // same source; never overwrite a higher-authority live event.
+                    val canReplace = existingId != null && (
+                        play.authority > conflict.play.authority ||
+                            (replaceExistingOnMatch && play.authority == conflict.play.authority &&
+                                play.source == conflict.play.source)
+                        )
+                    if (!canReplace) {
                         skipped++
                         continue
                     }
@@ -273,7 +332,8 @@ interface ListeningEventDao {
                 toInsert.chunked(BATCH_SIZE).sumOf { batch -> insertAll(batch).size }
             }
 
-        return InsertResult(inserted = inserted, skipped = skipped, replaced = toDelete.size)
+        return InsertResult(inserted = inserted, skipped = skipped,
+            replaced = toDelete.size + toUpdate.size)
     }
 
     private data class Slot(val play: ListeningImportPolicy.Play, val existingId: Long? = null)
