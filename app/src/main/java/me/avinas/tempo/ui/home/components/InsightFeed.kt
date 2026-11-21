@@ -1749,9 +1749,9 @@ private fun FeatureGaugeVisualizer(value: Float, color: Color, label: String) {
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text("0% LOW", style = TextStyle(fontFamily = AppFontFamily, fontSize = 8.5.sp), color = appearancePalette.mutedText.copy(alpha = 0.6f))
-            Text("50% MODERATE", style = TextStyle(fontFamily = AppFontFamily, fontSize = 8.5.sp), color = appearancePalette.mutedText.copy(alpha = 0.6f))
-            Text("100% HIGH", style = TextStyle(fontFamily = AppFontFamily, fontSize = 8.5.sp), color = appearancePalette.mutedText.copy(alpha = 0.6f))
+            Text("0% LOW", style = MaterialTheme.typography.labelSmall, color = appearancePalette.mutedText.copy(alpha = 0.6f))
+            Text("50% MODERATE", style = MaterialTheme.typography.labelSmall, color = appearancePalette.mutedText.copy(alpha = 0.6f))
+            Text("100% HIGH", style = MaterialTheme.typography.labelSmall, color = appearancePalette.mutedText.copy(alpha = 0.6f))
         }
     }
 }
