@@ -107,7 +107,7 @@ fun ArtistDetailsScreen(
     val uiState by viewModel.uiState.collectAsState()
     val artistDetails = uiState.artistDetails
 
-    DeepOceanBackground {
+    Box(Modifier.fillMaxSize()) {
         if (uiState.isLoading) {
             ArtistDetailsLoadingSkeleton()
         } else if (artistDetails != null) {
