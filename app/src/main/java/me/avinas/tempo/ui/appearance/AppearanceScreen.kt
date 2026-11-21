@@ -911,19 +911,19 @@ private fun AppearancePresetCard(
         // A real miniature of the theme: canvas, raised card, typography,
         // progress accent and surface swatches, including the selected light tone.
         Box(
-            modifier = Modifier.fillMaxWidth().height(132.dp)
+            modifier = Modifier.fillMaxWidth().height(148.dp)
                 .clip(previewInnerShape)
                 .background(Brush.verticalGradient(listOf(palette.topBackground, palette.background))),
         ) {
             Column(
-                modifier = Modifier.fillMaxSize().padding(10.dp),
-                verticalArrangement = Arrangement.spacedBy(9.dp),
+                modifier = Modifier.fillMaxSize().padding(8.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(7.dp)) {
                     // A tiny Material-shaped album tile makes the saved
                     // palette preview feel like a real music screen.
-                    Box(Modifier.size(33.dp)
+                    Box(Modifier.size(30.dp)
                         .clip(MaterialShapes.Cookie9Sided.toShape())
                         .background(palette.accent), contentAlignment = Alignment.Center) {
                         Text("♫", color = palette.onAccent, style = MaterialTheme.typography.titleLarge)
@@ -935,8 +935,8 @@ private fun AppearancePresetCard(
                 Column(
                     modifier = Modifier.fillMaxWidth()
                         .clip(RoundedCornerShape(12.dp))
-                        .background(palette.surface).padding(9.dp),
-                    verticalArrangement = Arrangement.spacedBy(5.dp),
+                        .background(palette.surface).padding(7.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     Text(stringResource(R.string.stats_period_listening_time),
                         color = palette.mutedText, style = MaterialTheme.typography.labelSmall,
