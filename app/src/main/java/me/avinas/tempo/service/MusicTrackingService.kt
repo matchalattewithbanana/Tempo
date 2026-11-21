@@ -205,292 +205,6 @@ class MusicTrackingService : NotificationListenerService() {
         // Track matching threshold for deduplication
         private const val TRACK_MATCH_THRESHOLD = 0.85
 
-        // Patterns for extracting artist from title (e.g., "Song - Artist", "Song (by Artist)")
-        private val TITLE_ARTIST_PATTERNS =
-            listOf(
-                Regex("""^(.+?)\s*[-–—]\s*(.+)$"""), // "Title - Artist" or "Title – Artist"
-                Regex("""^(.+?)\s*\|\s*(.+)$"""), // "Title | Artist"
-                Regex("""^(.+?)\s+by\s+(.+)$""", RegexOption.IGNORE_CASE), // "Title by Artist"
-            )
-
-        // Placeholder and album detection patterns - pre-compiled for performance
-        private val NUMERIC_ONLY_PATTERN = Regex("^\\d+$")
-        private val YEAR_PATTERN = Regex(".*\\(\\d{4}\\).*") // Contains year like "(2023)"
-        private val REMASTER_PATTERN = Regex(".*\\d{4}.*remaster.*") // Remaster with year
-    }
-
-    // Metadata extraction helpers
-
-    private fun extractArtistFromMetadata(metadata: MediaMetadata): String {
-        // Primary: METADATA_KEY_ARTIST
-        metadata
-            .getString(MediaMetadata.METADATA_KEY_ARTIST)
-            ?.takeIf { it.isNotBlank() && !isPlaceholderArtist(it) }
-            ?.let { return it.trim() }
-
-        // Fallback 1: ALBUM_ARTIST
-        metadata
-            .getString(MediaMetadata.METADATA_KEY_ALBUM_ARTIST)
-            ?.takeIf { it.isNotBlank() && !isPlaceholderArtist(it) }
-            ?.let { return it.trim() }
-
-        // Fallback 2: AUTHOR (some apps use this)
-        metadata
-            .getString(MediaMetadata.METADATA_KEY_AUTHOR)
-            ?.takeIf { it.isNotBlank() && !isPlaceholderArtist(it) }
-            ?.let { return it.trim() }
-
-        // Fallback 3: DISPLAY_SUBTITLE (often contains artist, but can be video descriptions)
-        // Additional validation to filter out video descriptions/subtitles
-        metadata
-            .getString(MediaMetadata.METADATA_KEY_DISPLAY_SUBTITLE)
-            ?.takeIf { it.isNotBlank() && !isPlaceholderArtist(it) && isLikelyArtistName(it) }
-            ?.let { return it.trim() }
-
-        // Fallback 4: WRITER
-        metadata
-            .getString(MediaMetadata.METADATA_KEY_WRITER)
-            ?.takeIf { it.isNotBlank() && !isPlaceholderArtist(it) }
-            ?.let { return it.trim() }
-
-        // Fallback 5: COMPOSER (rare but some classical music apps)
-        metadata
-            .getString(MediaMetadata.METADATA_KEY_COMPOSER)
-            ?.takeIf { it.isNotBlank() && !isPlaceholderArtist(it) }
-            ?.let { return it.trim() }
-
-        // Fallback 6: Try to extract from title if it contains separator
-        val title =
-            metadata.getString(MediaMetadata.METADATA_KEY_TITLE)
-                ?: metadata.getString(MediaMetadata.METADATA_KEY_DISPLAY_TITLE)
-        if (title != null) {
-            extractArtistFromTitle(title)?.let { return it }
-        }
-
-        // Debug log when falling back to Unknown Artist (debounced - only once per track)
-        // Skip logging when title is empty - metadata hasn't fully arrived yet
-        val logKey = title?.takeIf { it.isNotBlank() }
-        if (logKey != null && loggedArtistExtractionFailures.put(logKey, true) == null) {
-            Log.d(
-                TAG,
-                "Artist extraction failed for MediaMetadata. Available keys: " +
-                    "ARTIST='${metadata.getString(MediaMetadata.METADATA_KEY_ARTIST)}', " +
-                    "ALBUM_ARTIST='${metadata.getString(MediaMetadata.METADATA_KEY_ALBUM_ARTIST)}', " +
-                    "DISPLAY_SUBTITLE='${metadata.getString(MediaMetadata.METADATA_KEY_DISPLAY_SUBTITLE)}', " +
-                    "TITLE='$title'",
-            )
-        }
-
-        return "Unknown Artist"
-    }
-
-    private fun extractArtistFromNotification(
-        extras: android.os.Bundle,
-        title: String,
-    ): String {
-        // Primary: EXTRA_TEXT (most common for artist in media notifications)
-        extras
-            .getCharSequence(EXTRA_TEXT)
-            ?.toString()
-            ?.takeIf { it.isNotBlank() && !isPlaceholderArtist(it) }
-            ?.let { return it.trim() }
-
-        // Fallback 1: EXTRA_SUB_TEXT (sometimes contains artist)
-        extras
-            .getCharSequence(EXTRA_SUB_TEXT)
-            ?.toString()
-            ?.takeIf { it.isNotBlank() && !isPlaceholderArtist(it) }
-            ?.let {
-                // SUB_TEXT might be album, check if it looks like an artist name
-                // (doesn't contain common album indicators)
-                if (!looksLikeAlbum(it)) return it.trim()
-            }
-
-        // Fallback 2: EXTRA_INFO_TEXT
-        extras
-            .getCharSequence(EXTRA_INFO_TEXT)
-            ?.toString()
-            ?.takeIf { it.isNotBlank() && !isPlaceholderArtist(it) }
-            ?.let { return it.trim() }
-
-        // Fallback 3: BIG_TEXT might contain artist info
-        extras
-            .getCharSequence(EXTRA_BIG_TEXT)
-            ?.toString()
-            ?.takeIf { it.isNotBlank() }
-            ?.let { bigText ->
-                // Try to parse "Title - Artist" or "Title\nArtist" format
-                val lines = bigText.split("\n").map { it.trim() }.filter { it.isNotBlank() }
-                if (lines.size >= 2 && lines[0] == title) {
-                    return lines[1].takeIf { !isPlaceholderArtist(it) } ?: "Unknown Artist"
-                }
-            }
-
-        // Fallback 4: Try to extract from title
-        extractArtistFromTitle(title)?.let { return it }
-
-        // Debug log when falling back to Unknown Artist (debounced - only once per track)
-        if (loggedArtistExtractionFailures.put(title, true) == null) {
-            Log.d(
-                TAG,
-                "Artist extraction failed for notification. Available: " +
-                    "TEXT='${extras.getCharSequence(EXTRA_TEXT)}', " +
-                    "SUB_TEXT='${extras.getCharSequence(EXTRA_SUB_TEXT)}', " +
-                    "INFO_TEXT='${extras.getCharSequence(EXTRA_INFO_TEXT)}', " +
-                    "TITLE='$title'",
-            )
-        }
-
-        return "Unknown Artist"
-    }
-
-    /**
-     * Try to extract artist from title string (e.g., "Song - Artist" format).
-     */
-    private fun extractArtistFromTitle(title: String): String? {
-        for (pattern in TITLE_ARTIST_PATTERNS) {
-            val match = pattern.find(title)
-            if (match != null) {
-                val potentialArtist = match.groupValues[2].trim()
-                // Validate it looks like an artist name (not too long, not just numbers)
-                if (potentialArtist.length in 1..50 &&
-                    !potentialArtist.all { it.isDigit() } &&
-                    !isPlaceholderArtist(potentialArtist)
-                ) {
-                    return potentialArtist
-                }
-            }
-        }
-        return null
-    }
-
-    /**
-     * Clean title by removing embedded artist if detected.
-     */
-    private fun cleanTitleIfNeeded(title: String): String {
-        for (pattern in TITLE_ARTIST_PATTERNS) {
-            val match = pattern.find(title)
-            if (match != null) {
-                val cleanTitle = match.groupValues[1].trim()
-                if (cleanTitle.isNotBlank()) {
-                    return cleanTitle
-                }
-            }
-        }
-        return title
-    }
-
-    /**
-     * Check if artist string is a placeholder/unknown value.
-     */
-    private fun isPlaceholderArtist(artist: String): Boolean {
-        val lower = artist.lowercase()
-        return lower in
-            listOf(
-                "unknown",
-                "unknown artist",
-                "<unknown>",
-                "various artists",
-                "various",
-                "n/a",
-                "na",
-                "none",
-                "null",
-                "",
-                " ",
-                "artist",
-                "track",
-                "music",
-                "audio",
-                "media",
-            ) || lower.startsWith("track ") || lower.matches(NUMERIC_ONLY_PATTERN)
-    }
-
-    /**
-     * Check if string looks like an album name rather than artist.
-     */
-    private fun looksLikeAlbum(text: String): Boolean {
-        val lower = text.lowercase()
-        return lower.contains("album") ||
-            lower.contains("soundtrack") ||
-            lower.contains("ost") ||
-            lower.contains("compilation") ||
-            lower.contains("collection") ||
-            lower.contains("vol.") ||
-            lower.contains("volume") ||
-            lower.matches(YEAR_PATTERN) || // Contains year like "(2023)"
-            lower.matches(REMASTER_PATTERN) // Remaster with year
-    }
-
-    /**
-     * Whether a string looks like an artist name rather than a video description. YouTube Music
-     * and other apps put video descriptions in DISPLAY_SUBTITLE, which used to be captured as
-     * artist names.
-     */
-    private fun isLikelyArtistName(text: String): Boolean {
-        // Too long for a typical artist name (descriptions are often longer)
-        if (text.length > 60) return false
-
-        val lowerText = text.lowercase()
-
-        // Video/audio quality suffixes in parentheses - very specific patterns
-        // These are clearly metadata, not artist names
-        val qualityPatterns = listOf("1080p", "720p", "480p", "4k", "hd video", "full hd")
-        if (qualityPatterns.any { lowerText.contains("($it") || lowerText.contains("[$it") }) {
-            return false
-        }
-
-        // Clear video description patterns that indicate metadata, not artist
-        val videoPatterns =
-            listOf(
-                "official video",
-                "official audio",
-                "official music video",
-                "lyric video",
-                "lyrics video",
-                "music video",
-                "full video",
-                "visualizer",
-                "full album",
-                "audio only",
-            )
-        if (videoPatterns.any { lowerText.contains(it) }) {
-            return false
-        }
-
-        // Specific parenthesized description patterns (more restrictive)
-        // Only reject if it's clearly a description suffix like "(Official Video)"
-        val descriptionSuffixes =
-            listOf(
-                "(official)",
-                "(audio)",
-                "(video)",
-                "(lyrics)",
-                "(visualizer)",
-                "(official video)",
-                "(official audio)",
-                "(lyric video)",
-                "(theme song)",
-                "(full video)",
-                "(music video)",
-                "(trailer)",
-            )
-        if (descriptionSuffixes.any { lowerText.endsWith(it) }) {
-            return false
-        }
-
-        // The original problematic case: "Kaisa Mera Desh (Anti Corruption anthem)"
-        // Detect anthem/theme in parentheses specifically
-        if (lowerText.contains("anthem)") || lowerText.contains("theme)")) {
-            return false
-        }
-
-        // Very long text with separator + parentheses likely indicates description format
-        if (text.length > 50 && lowerText.contains(" - ") && lowerText.contains("(")) {
-            return false
-        }
-
-        return true
     }
 
     // Dependencies - initialized in onCreate via Hilt EntryPoint
@@ -614,7 +328,6 @@ class MusicTrackingService : NotificationListenerService() {
     // concurrent structural mutation could corrupt its buckets or spin. LruCache is internally
     // synchronized and bounded, which is exactly the semantics wanted here. `put` also returns
     // the previous value, making the "log only the first time" test atomic in one call.
-    private val loggedArtistExtractionFailures = android.util.LruCache<String, Boolean>(100)
 
     // Bounded set of titles for which we've logged "Skipping likely advertisement"
     private val loggedAdvertisementSkips = android.util.LruCache<String, Boolean>(50)
@@ -1852,31 +1565,15 @@ class MusicTrackingService : NotificationListenerService() {
             controllerState == PlaybackState.STATE_NONE
         ) return
 
-        val rawTitle = extras.getCharSequence(EXTRA_TITLE)?.toString()?.trim()
-        // Skip notifications with empty titles - metadata hasn't fully arrived yet
-        if (rawTitle.isNullOrBlank()) {
+        val notificationMetadata =
+            LocalMediaMetadata.fromNotificationExtras(extras, packageName)
+        if (notificationMetadata == null) {
             Log.d(TAG, "Ignoring notification with empty title from $packageName")
             return
         }
-        val artist = extractArtistFromNotification(extras, rawTitle)
-
-        // Clean title if it contains embedded artist (e.g., "Song - Artist")
-        val title =
-            if (artist != "Unknown Artist" && artist != extractArtistFromTitle(rawTitle)) {
-                rawTitle // Artist came from elsewhere, keep title as-is
-            } else if (extractArtistFromTitle(rawTitle) != null) {
-                cleanTitleIfNeeded(rawTitle) // Artist extracted from title, clean it
-            } else {
-                rawTitle
-            }
-
-        val album =
-            extras
-                .getCharSequence(EXTRA_SUB_TEXT)
-                ?.toString()
-                ?.trim()
-                ?.takeIf { !it.equals(artist, ignoreCase = true) } // Don't use SUB_TEXT if it's the artist
-                ?: extras.getCharSequence(EXTRA_INFO_TEXT)?.toString()?.trim()
+        val title = notificationMetadata.title
+        val artist = notificationMetadata.artist
+        val album = notificationMetadata.album
 
         // Apply every policy decision available from notification metadata before creating a session.
         if (
@@ -1884,6 +1581,7 @@ class MusicTrackingService : NotificationListenerService() {
                 packageName = packageName,
                 title = title,
                 artist = artist,
+                metadata = notificationMetadata,
             ) == TrackingRuntimePolicy.MediaVerdict.REJECT
         ) {
             removeRejectedSession(packageName, title, artist)
@@ -2007,12 +1705,7 @@ class MusicTrackingService : NotificationListenerService() {
                 if (artist.isNotBlank() &&
                     !me.avinas.tempo.utils.ArtistParser
                         .isUnknownArtist(artist) &&
-                    LocalMediaMetadata(
-                        title = title,
-                        artist = artist,
-                        album = album,
-                        sourcePackage = packageName,
-                    ).isLikelyAdvertisement()
+                    notificationMetadata.isLikelyAdvertisement()
                 ) {
                     if (loggedAdvertisementSkips.put(title, true) == null) {
                         Log.d(TAG, "Skipping likely advertisement: '$title' from $packageName")
@@ -2048,7 +1741,6 @@ class MusicTrackingService : NotificationListenerService() {
                 }
 
                 // Clear log debounce caches for fresh logging on new track
-                loggedArtistExtractionFailures.evictAll()
                 loggedAdvertisementSkips.evictAll()
 
                 val newSession =
@@ -2563,34 +2255,6 @@ class MusicTrackingService : NotificationListenerService() {
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error extracting album art from notification", e)
-        }
-        return null
-    }
-
-    /**
-     * Extract album art bitmap from MediaSession metadata.
-     */
-    private fun extractAlbumArtFromMetadata(metadata: MediaMetadata): Bitmap? {
-        try {
-            // Try METADATA_KEY_ART first (generic art)
-            metadata.getBitmap(MediaMetadata.METADATA_KEY_ART)?.let {
-                Log.d(TAG, "Extracted album art from METADATA_KEY_ART")
-                return it
-            }
-
-            // Try METADATA_KEY_ALBUM_ART
-            metadata.getBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART)?.let {
-                Log.d(TAG, "Extracted album art from METADATA_KEY_ALBUM_ART")
-                return it
-            }
-
-            // Try METADATA_KEY_DISPLAY_ICON
-            metadata.getBitmap(MediaMetadata.METADATA_KEY_DISPLAY_ICON)?.let {
-                Log.d(TAG, "Extracted album art from METADATA_KEY_DISPLAY_ICON")
-                return it
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error extracting album art from metadata", e)
         }
         return null
     }
@@ -3301,26 +2965,20 @@ class MusicTrackingService : NotificationListenerService() {
         // Need metadata to process further
         if (metadata == null) return
 
-        val rawTitle =
-            metadata.getString(MediaMetadata.METADATA_KEY_TITLE)
-                ?: metadata.getString(MediaMetadata.METADATA_KEY_DISPLAY_TITLE)
-        // Skip metadata with empty titles - metadata hasn't fully arrived yet
-        if (rawTitle.isNullOrBlank()) {
+        val normalizedMetadata =
+            LocalMediaMetadata.fromMediaMetadata(
+                metadata = metadata,
+                sourcePackage = packageName,
+                includeArtwork = false,
+            )
+        if (normalizedMetadata == null) {
             Log.d(TAG, "Ignoring MediaSession update with empty title from $packageName")
             return
         }
-        val artist = extractArtistFromMetadata(metadata)
-
-        // Clean title if artist was extracted from it
-        val title =
-            if (artist != "Unknown Artist" && extractArtistFromTitle(rawTitle) == artist) {
-                cleanTitleIfNeeded(rawTitle)
-            } else {
-                rawTitle
-            }
-
-        val album = metadata.getString(MediaMetadata.METADATA_KEY_ALBUM)
-        val duration = metadata.getLong(MediaMetadata.METADATA_KEY_DURATION)
+        val title = normalizedMetadata.title
+        val artist = normalizedMetadata.artist
+        val album = normalizedMetadata.album
+        val duration = normalizedMetadata.durationMs ?: 0L
 
         if (
             trackingPolicy.evaluateMedia(
@@ -3328,6 +2986,7 @@ class MusicTrackingService : NotificationListenerService() {
                 title = title,
                 artist = artist,
                 durationMs = duration,
+                metadata = normalizedMetadata,
             ) == TrackingRuntimePolicy.MediaVerdict.REJECT
         ) {
             removeRejectedSession(packageName, title, artist)
@@ -3578,8 +3237,7 @@ class MusicTrackingService : NotificationListenerService() {
                     saveListeningEvent(it)
                 }
 
-                // Extract ALL available metadata from MediaSession (for fallback use)
-                val localMetadata = LocalMediaMetadata.fromMediaMetadata(metadata, packageName)
+                val localMetadata = normalizedMetadata
 
                 if (
                     trackingPolicy.evaluateMedia(
@@ -3598,7 +3256,7 @@ class MusicTrackingService : NotificationListenerService() {
                 if (artist.isNotBlank() &&
                     !me.avinas.tempo.utils.ArtistParser
                         .isUnknownArtist(artist) &&
-                    localMetadata?.isLikelyAdvertisement() == true
+                    localMetadata.isLikelyAdvertisement()
                 ) {
                     if (loggedAdvertisementSkips.put(title, true) == null) {
                         Log.d(TAG, "Skipping likely advertisement: '$title' from $packageName")
@@ -3606,11 +3264,6 @@ class MusicTrackingService : NotificationListenerService() {
                     return
                 }
 
-                // Extract album art from metadata (for fallback use)
-                val albumArtBitmap = localMetadata?.albumArtBitmap ?: extractAlbumArtFromMetadata(metadata)
-
-                // Clear log debounce caches for fresh logging on new track
-                loggedArtistExtractionFailures.evictAll()
                 loggedAdvertisementSkips.evictAll()
 
                 val newSession =
@@ -3635,37 +3288,33 @@ class MusicTrackingService : NotificationListenerService() {
                 // Insert track asynchronously
                 serviceScope.launch {
                     try {
-                        val track = getOrInsertTrack(title, artist, album, localMetadata)
+                        val richMetadata =
+                            LocalMediaMetadata.fromMediaMetadata(metadata, packageName)
+                                ?: localMetadata
+                        val track = getOrInsertTrack(title, artist, album, richMetadata)
                         newSession.trackId = track.id
                         Log.d(TAG, "Track ID ${track.id} assigned for '$title' (via MediaSession)")
 
                         // Save the extracted art off the MediaController callback (main) thread —
                         // JPEG encode + file write there was a jank/ANR risk on rapid track skips.
-                        val localArtUrl = albumArtBitmap?.let { saveAlbumArtToStorage(it, title, artist) }
+                        val localArtUrl =
+                            richMetadata.albumArtBitmap
+                                ?.let { saveAlbumArtToStorage(it, title, artist) }
 
                         // Cache local art URI for downstream metadata fallback
                         if (localArtUrl != null) {
-                            val currentCache = localMetadataCache.get(track.id) ?: localMetadata
-                            if (currentCache != null) {
-                                localMetadataCache.put(track.id, currentCache.copy(albumArtUri = localArtUrl))
-                                Log.d(TAG, "Updated local metadata cache with art URI: $localArtUrl")
-                            } else if (localMetadata == null) {
-                                localMetadataCache.put(
-                                    track.id,
-                                    LocalMediaMetadata(
-                                        title = title,
-                                        artist = artist,
-                                        album = album,
-                                        albumArtUri = localArtUrl,
-                                    ),
-                                )
-                            }
+                            val currentCache = localMetadataCache.get(track.id) ?: richMetadata
+                            localMetadataCache.put(
+                                track.id,
+                                currentCache.copy(albumArtUri = localArtUrl),
+                            )
+                            Log.d(TAG, "Updated local metadata cache with art URI: $localArtUrl")
                         }
 
                         // Save local metadata as fallback (delayed to let external enrichment run first)
-                        if (localMetadata != null && localMetadata.hasRichMetadata()) {
+                        if (richMetadata.hasRichMetadata()) {
                             delay(30_000)
-                            val latestMetadata = localMetadataCache.get(track.id) ?: localMetadata
+                            val latestMetadata = localMetadataCache.get(track.id) ?: richMetadata
                             saveLocalMetadataFallback(track.id, latestMetadata)
                         } else if (localArtUrl != null) {
                             delay(20_000)
