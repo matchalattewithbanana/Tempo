@@ -4,7 +4,6 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.snap
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -35,8 +34,8 @@ import me.avinas.tempo.ui.utils.scaledSize
  *   back · native revolving notes around the head,
  *   mid  · welcome.png fullscreen art,
  *   top  · headline + CTA overlaid on the image.
- * Entry plays once (backdrop fades, copy rises); the orbit revolves
- * slowly and subtly underneath. Honors reduced motion settings.
+ * Entry plays once as one foreground hero transition. Decorative artwork
+ * remains stable, and reduced-motion settings skip the transition entirely.
  */
 @Composable
 fun WelcomeScreen(
@@ -145,12 +144,7 @@ fun WelcomeScreen(
                         containerColor = TempoPrimary,
                         contentColor = TextOnAccent,
                     ),
-                shape = RoundedCornerShape(18.dp),
-                elevation =
-                    ButtonDefaults.buttonElevation(
-                        defaultElevation = 8.dp,
-                        pressedElevation = 4.dp,
-                    ),
+                shape = MaterialTheme.shapes.extraLarge,
             ) {
                 Text(
                     text = stringResource(R.string.welcome_get_started),
