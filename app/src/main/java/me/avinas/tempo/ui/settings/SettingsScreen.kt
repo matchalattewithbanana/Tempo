@@ -95,7 +95,20 @@ fun SettingsScreen(
                             append(resources.getString(R.string.settings_import_success, result.totalRecords, result.imagesCount))
                             if (result.warnings.isNotEmpty()) {
                                 append("\n")
-                                append(result.warnings.joinToString(separator = "\n"))
+                                append(
+                                    result.warnings.joinToString(separator = "\n") { warning ->
+                                        resources.getString(
+                                            when (warning) {
+                                                me.avinas.tempo.data.importexport.BackupRestoreWarning.PROFILE_IDENTITY ->
+                                                    R.string.backup_restore_warning_profile
+                                                me.avinas.tempo.data.importexport.BackupRestoreWarning.APPEARANCE ->
+                                                    R.string.backup_restore_warning_appearance
+                                                me.avinas.tempo.data.importexport.BackupRestoreWarning.IMAGE_CACHE ->
+                                                    R.string.backup_restore_warning_image_cache
+                                            },
+                                        )
+                                    },
+                                )
                             }
                         }
                     snackbarHostState.showSnackbar(successMessage)
