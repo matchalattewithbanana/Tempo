@@ -33,7 +33,11 @@ internal fun DataSettingsSection(
     onClearData: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    SettingsSectionList(state = state, modifier = modifier) {
+    SettingsSectionList(
+        state = state,
+        tone = SettingsSection.DATA.tone,
+        modifier = modifier,
+    ) {
         item(key = "data-backups") {
             SettingsSectionHeader(stringResource(R.string.settings_data_backup_section))
             val backupStatus = if (!backupOverview.isGoogleDriveEnabled) {
