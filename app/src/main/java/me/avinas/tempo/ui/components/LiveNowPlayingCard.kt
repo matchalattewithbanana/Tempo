@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.background
+import androidx.compose.animation.animateContentSize
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Column
@@ -96,6 +98,7 @@ fun LiveNowPlayingCard(
 
     val scheme = MaterialTheme.colorScheme
     val iconEffects = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
+    val sizeSpec = MaterialTheme.motionScheme.defaultSpatialSpec<IntSize>()
     val activePlayback = isRecent && presence?.playing == true && ageMs <= 2 * 60_000L
     val surface by animateColorAsState(
         targetValue = if (activePlayback) scheme.primaryContainer else scheme.surfaceContainerLow,
@@ -116,7 +119,7 @@ fun LiveNowPlayingCard(
     }
 
     Card(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth().animateContentSize(animationSpec = sizeSpec),
         shape = MaterialTheme.shapes.extraExtraLarge,
         colors = CardDefaults.cardColors(containerColor = surface),
     ) {
