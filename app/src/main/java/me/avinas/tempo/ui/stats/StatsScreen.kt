@@ -973,42 +973,64 @@ private fun StatsTopBar(
 
 private val StatsAvailableRanges = TimeRange.entries.toList()
 
+/**
+ * Listening analytics deserve a visual dashboard rather than three tightly
+ * packed values. The time metric leads, while counts become responsive tiles.
+ */
 @Composable
 private fun StatsPeriodSummary(totals: CombinedBasicStats) {
     val summary = LocalTempoAppearance.current.statsSummary
-    Surface(
-        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp).fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.surfaceContainer,
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(14.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            StatsPeriodMetric(
-                stringResource(R.string.stats_period_listening_time),
-                displayStatsDuration(totals.totalTimeMs),
-                Modifier.weight(1.25f),
+        me.avinas.tempo.ui.components.TempoMetricTile(
+            value = displayStatsDuration(totals.totalTimeMs),
+            label = stringResource(R.string.stats_period_listening_time),
+            icon = Icons.Rounded.Headphones,
+            tone = me.avinas.tempo.ui.components.TempoTileTone.AQUA,
+            modifier = Modifier.fillMaxWidth(),
+            minimumHeight = 132.dp,
+        )
+        BoxWithConstraints(Modifier.fillMaxWidth()) {
+            val single = maxWidth < 360.dp ||
+                androidx.compose.ui.platform.LocalDensity.current.fontScale >= 1.3f
+            val cells: List<Triple<String, String, androidx.compose.ui.graphics.vector.ImageVector>> = listOf(
+                Triple(
+                    stringResource(R.string.stats_period_number, totals.playCount),
+                    stringResource(R.string.stats_period_plays),
+                    Icons.Rounded.PlayArrow,
+                ),
+                Triple(
+                    stringResource(R.string.stats_period_number, totals.summaryCount(summary)),
+                    stringResource(statsSummaryLabel(summary)),
+                    Icons.Rounded.Equalizer,
+                ),
             )
-            StatsPeriodMetric(
-                stringResource(R.string.stats_period_plays),
-                stringResource(R.string.stats_period_number, totals.playCount),
-                Modifier.weight(1f),
-            )
-            StatsPeriodMetric(
-                stringResource(statsSummaryLabel(summary)),
-                stringResource(R.string.stats_period_number, totals.summaryCount(summary)),
-                Modifier.weight(1f),
-            )
+            if (single) {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    cells.forEachIndexed { index, (value, label, icon) ->
+                        me.avinas.tempo.ui.components.TempoMetricTile(
+                            value = value, label = label, icon = icon,
+                            tone = if (index == 0) me.avinas.tempo.ui.components.TempoTileTone.SKY
+                                else me.avinas.tempo.ui.components.TempoTileTone.LILAC,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
+                }
+            } else {
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    cells.forEachIndexed { index, (value, label, icon) ->
+                        me.avinas.tempo.ui.components.TempoMetricTile(
+                            value = value, label = label, icon = icon,
+                            tone = if (index == 0) me.avinas.tempo.ui.components.TempoTileTone.SKY
+                                else me.avinas.tempo.ui.components.TempoTileTone.LILAC,
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                }
+            }
         }
-    }
-}
-
-@Composable
-private fun StatsPeriodMetric(label: String, value: String, modifier: Modifier) {
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(3.dp)) {
-        Text(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-        Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
