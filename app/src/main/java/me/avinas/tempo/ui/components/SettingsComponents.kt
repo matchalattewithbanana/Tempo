@@ -25,6 +25,26 @@ fun SettingsSectionHeader(text: String) {
     )
 }
 
+/**
+ * Shared container for related Settings actions. The accent lives in the
+ * category navigator; detail rows use one calm, readable Material surface.
+ * Keeping a single container treatment prevents GlassCard/Solid/Surface
+ * styles from changing unpredictably between Settings categories.
+ */
+@Composable
+fun TempoSettingsGroup(
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.extraExtraLarge,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        contentColor = MaterialTheme.colorScheme.onSurface,
+        content = content,
+    )
+}
+
 /** The official Material list item keeps supporting text, focus and touch targets
  * consistent throughout Settings without per-row shadow or glass layers.
  */
