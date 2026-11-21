@@ -965,6 +965,17 @@ class MusicTrackingService : NotificationListenerService() {
     }
 
     /**
+     * Applies package policy to sessions already in flight.
+     *
+     * The policy decides eligibility; this service owns Android controller/session teardown.
+     */
+    private fun dropDisallowedSessions() {
+        playbackStates.keys
+            .filter { !trackingPolicy.decidePackage(it).shouldTrack }
+            .forEach(::cleanupSessionForPackage)
+    }
+
+    /**
      * Keeps policy inputs live. Each Room source emits immutable snapshots; the policy owns
      * precedence and lookup details while the service owns the expensive Android rescan.
      */
@@ -2508,48 +2519,6 @@ class MusicTrackingService : NotificationListenerService() {
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error saving local metadata fallback for track $trackId", e)
-        }
-    }
-
-    /** Backfills Track.albumArtUrl from enriched metadata or local storage fallback. */
-    private suspend fun checkAndBackfillTrackArt(
-        trackId: Long,
-        enrichedArtUrl: String?,
-        localMetadata: LocalMediaMetadata,
-        savedLocalArtUrl: String? = null,
-    ) {
-        try {
-            val track = trackRepository.getById(trackId).first()
-            if (track != null && track.albumArtUrl.isNullOrBlank()) {
-                // If we have enriched art, use that first
-                // Fix HTTP URLs to HTTPS for better reliability
-                val fixedEnrichedUrl =
-                    me.avinas.tempo.data.enrichment.MusicBrainzEnrichmentService
-                        .fixHttpUrl(enrichedArtUrl)
-                if (!fixedEnrichedUrl.isNullOrBlank()) {
-                    Log.i(TAG, "Backfilling Track $trackId with enriched art: $fixedEnrichedUrl")
-                    trackRepository.updateAutomaticAlbumArtUrl(trackId, fixedEnrichedUrl)
-                }
-                // Otherwise try pre-saved local art first (already on disk)
-                else if (savedLocalArtUrl != null) {
-                    Log.i(TAG, "Backfilling Track $trackId with pre-saved local art: $savedLocalArtUrl")
-                    trackRepository.updateAutomaticAlbumArtUrl(trackId, savedLocalArtUrl)
-                }
-                // Finally try to save from bitmap or URI
-                else {
-                    val localArtUrl =
-                        localMetadata.albumArtBitmap?.let {
-                            saveAlbumArtToStorage(it, localMetadata.title, localMetadata.artist)
-                        } ?: localMetadata.getBestAlbumArtSource()
-
-                    if (localArtUrl != null) {
-                        Log.i(TAG, "Backfilling Track $trackId with local art: $localArtUrl")
-                        trackRepository.updateAutomaticAlbumArtUrl(trackId, localArtUrl)
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            Log.w(TAG, "Error checking/backfilling track art", e)
         }
     }
 
