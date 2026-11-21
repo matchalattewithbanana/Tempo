@@ -1,0 +1,13 @@
+{
+  "title": "Tempo Documentation",
+  "src": "./docs",
+  "out": "./docs-dist",
+  "theme": {
+    "name": "default"
+  },
+  "layout": {
+    "sidebar": {
+      "collapsible": true
+    }
+  }
+}
