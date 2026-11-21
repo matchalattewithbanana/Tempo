@@ -72,13 +72,15 @@ internal class RestoreStagingStore(
     }
 
     fun <T> writeBatch(block: () -> T): T {
+        batchRows = 0
         database.beginTransaction()
         return try {
             val result = block()
             database.setTransactionSuccessful()
             result
         } finally {
-            database.endTransaction()
+            if (database.inTransaction()) database.endTransaction()
+            batchRows = 0
         }
     }
 
@@ -106,6 +108,7 @@ internal class RestoreStagingStore(
         check(
             database.insertOrThrow("listening_events_stage", null, values) != -1L,
         ) { "Unable to stage listening event" }
+        rotateBulkTransactionIfNeeded()
     }
 
     fun stage(row: ScrobbleArchive) {
@@ -130,6 +133,7 @@ internal class RestoreStagingStore(
         check(
             database.insertOrThrow("scrobble_archive_stage", null, values) != -1L,
         ) { "Unable to stage scrobble archive row" }
+        rotateBulkTransactionIfNeeded()
     }
 
     suspend fun forEachEvent(block: suspend (ListeningEvent) -> Unit) {
@@ -211,6 +215,24 @@ internal class RestoreStagingStore(
         }
     }
 
+    private var batchRows = 0
+
+    /**
+     * A backup may contain millions of rows. Periodically commit the disposable staging DB so
+     * one enormous rollback journal is never required. Partial staging is harmless on parse
+     * failure because the whole private staging database is deleted before returning an error.
+     */
+    private fun rotateBulkTransactionIfNeeded() {
+        if (!database.inTransaction()) return
+        batchRows++
+        if (batchRows < BULK_COMMIT_ROWS) return
+
+        database.setTransactionSuccessful()
+        database.endTransaction()
+        database.beginTransaction()
+        batchRows = 0
+    }
+
     override fun close() {
         if (database.isOpen) database.close()
     }
@@ -240,6 +262,8 @@ internal class RestoreStagingStore(
         if (isNull(index)) null else getString(index)
 
     private companion object {
+        const val BULK_COMMIT_ROWS = 5_000
+
         val EVENT_COLUMNS =
             arrayOf(
                 "track_id",
