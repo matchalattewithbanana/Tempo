@@ -91,22 +91,7 @@ import me.avinas.tempo.utils.ReviewUtils
 @Composable
 fun SettingsScreen(
     onNavigateBack: () -> Unit,
-    onNavigateToBackup: (() -> Unit)? = null,
-    onNavigateToSupportedApps: (() -> Unit)? = null,
-    onNavigateToBackgroundProtection: (() -> Unit)? = null,
-    onNavigateToLastFmImport: (() -> Unit)? = null,
-    onNavigateToSpotifyJsonImport: (() -> Unit)? = null,
-    onNavigateToDeezerImport: (() -> Unit)? = null,
-    onNavigateToAppleMusicImport: (() -> Unit)? = null,
-    onNavigateToYouTubeMusicImport: (() -> Unit)? = null,
-    onNavigateToMusicoletImport: (() -> Unit)? = null,
-    onNavigateToExtensionImport: (() -> Unit)? = null,
-    onNavigateToDesktop: () -> Unit = {},
-    onNavigateToEnrichmentReport: (() -> Unit)? = null,
-    onNavigateToYourData: (() -> Unit)? = null,
-    onNavigateToAppearance: (() -> Unit)? = null,
-    onNavigateToLogoPicker: (() -> Unit)? = null,
-    onNavigateToUpdates: (() -> Unit)? = null,
+    onNavigate: (SettingsDestination) -> Unit,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -376,31 +361,21 @@ fun SettingsScreen(
                     item(key = "overview") {
                     if (settingsSearch.isNotBlank()) {
                         val tokens = settingsSearch.trim().split(Regex("\\s+"))
-                        val directResults = listOf(
-                            Triple(R.string.appearance_title, R.string.settings_search_general_terms, onNavigateToAppearance),
-                            Triple(R.string.logo_picker_title, R.string.logo_picker_intro, onNavigateToLogoPicker),
-                            Triple(R.string.update_center_title, R.string.update_center_desc, onNavigateToUpdates),
-                            Triple(R.string.settings_manage_apps, R.string.settings_manage_apps_desc, onNavigateToSupportedApps),
-                            Triple(R.string.settings_backup_restore, R.string.settings_backup_restore_desc, onNavigateToBackup),
-                            Triple(R.string.settings_import_apple_music, R.string.settings_import_apple_music_desc, onNavigateToAppleMusicImport),
-                            Triple(R.string.settings_import_spotify_json, R.string.settings_import_spotify_json_desc, onNavigateToSpotifyJsonImport),
-                            Triple(R.string.settings_import_youtube_music, R.string.settings_import_youtube_music_desc, onNavigateToYouTubeMusicImport),
-                            Triple(R.string.settings_import_deezer, R.string.settings_import_deezer_desc, onNavigateToDeezerImport),
-                            Triple(R.string.settings_import_lastfm, R.string.settings_import_lastfm_desc, onNavigateToLastFmImport),
-                            Triple(R.string.settings_import_musicolet, R.string.settings_import_musicolet_desc, onNavigateToMusicoletImport),
-                            Triple(R.string.settings_background_protection, R.string.settings_search_tracking_terms, onNavigateToBackgroundProtection),
-                            Triple(R.string.desktop_link_title, R.string.settings_search_connections_terms, onNavigateToDesktop),
-                            Triple(R.string.extension_import_title, R.string.settings_search_data_terms, onNavigateToExtensionImport),
-                            Triple(R.string.settings_your_data, R.string.settings_search_data_terms, onNavigateToYourData),
-                            Triple(R.string.enrichment_report_settings_option,
-                                R.string.enrichment_report_settings_option_desc, onNavigateToEnrichmentReport),
-                        ).mapNotNull { (titleId, subtitleId, open) ->
-                            if (open == null) null else Triple(stringResource(titleId), stringResource(subtitleId), open)
+                        val directResults = SettingsDestination.entries.map { destination ->
+                            Triple(
+                                stringResource(destination.titleRes),
+                                stringResource(destination.subtitleRes),
+                                destination,
+                            )
                         }.filter { (title, subtitle, _) ->
                             tokens.all { title.contains(it, true) || subtitle.contains(it, true) }
                         }
-                        directResults.forEach { (title, subtitle, open) ->
-                            SettingsOption(title = title, subtitle = subtitle, onClick = open)
+                        directResults.forEach { (title, subtitle, destination) ->
+                            SettingsOption(
+                                title = title,
+                                subtitle = subtitle,
+                                onClick = { onNavigate(destination) },
+                            )
                         }
                         val categories = SettingsSection.browseOrder.map { section ->
                             Triple(
@@ -423,16 +398,16 @@ fun SettingsScreen(
                         }
                     } else {
                     SettingsSectionHeader(stringResource(R.string.settings_category_browse))
-                    val appearanceDestination = onNavigateToAppearance?.let { open ->
+                    val appearance = SettingsDestination.APPEARANCE
+                    val appearanceDestination =
                         me.avinas.tempo.ui.components.TempoSettingsDestination(
-                            title = stringResource(R.string.appearance_title),
-                            subtitle = stringResource(R.string.appearance_settings_summary),
+                            title = stringResource(appearance.titleRes),
+                            subtitle = stringResource(appearance.subtitleRes),
                             icon = Icons.Rounded.Palette,
-                            onClick = open,
+                            onClick = { onNavigate(appearance) },
                             featured = true,
                             tone = me.avinas.tempo.ui.components.TempoTileTone.ROSE,
                         )
-                    }
                     val sectionDestinations = SettingsSection.browseOrder.map { section ->
                         me.avinas.tempo.ui.components.TempoSettingsDestination(
                             title = stringResource(section.titleRes),
@@ -707,7 +682,7 @@ fun SettingsScreen(
                         SettingsOption(
                             title = stringResource(R.string.settings_manage_apps),
                             subtitle = stringResource(R.string.settings_manage_apps_desc),
-                            onClick = { onNavigateToSupportedApps?.invoke() },
+                            onClick = { onNavigate(SettingsDestination.SUPPORTED_APPS) },
                         )
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                         SettingsSwitch(
@@ -739,7 +714,7 @@ fun SettingsScreen(
                                     stringResource(R.string.settings_xiaomi_settings)
                                 },
                             subtitle = stringResource(R.string.settings_prevent_killed),
-                            onClick = { onNavigateToBackgroundProtection?.invoke() },
+                            onClick = { onNavigate(SettingsDestination.BACKGROUND_PROTECTION) },
                         )
                     }
 
@@ -804,13 +779,13 @@ fun SettingsScreen(
                                         "WEEKLY" -> stringResource(R.string.settings_lastfm_sync_weekly)
                                         else -> stringResource(R.string.settings_lastfm_import_complete)
                                     },
-                                onClick = { onNavigateToLastFmImport?.invoke() },
+                                onClick = { onNavigate(SettingsDestination.LASTFM_IMPORT) },
                             )
                         } else {
                             SettingsOption(
                                 title = stringResource(R.string.settings_import_lastfm),
                                 subtitle = stringResource(R.string.settings_import_lastfm_desc),
-                                onClick = { onNavigateToLastFmImport?.invoke() },
+                                onClick = { onNavigate(SettingsDestination.LASTFM_IMPORT) },
                             )
                         }
 
@@ -952,7 +927,7 @@ fun SettingsScreen(
                         SettingsOption(
                             title = stringResource(R.string.desktop_link_settings_title),
                             subtitle = stringResource(R.string.desktop_link_settings_subtitle),
-                            onClick = { onNavigateToDesktop() },
+                            onClick = { onNavigate(SettingsDestination.DESKTOP) },
                         )
                     }
                 }
@@ -984,7 +959,7 @@ fun SettingsScreen(
                             SettingsOption(
                                 title = stringResource(R.string.settings_backup_restore),
                                 subtitle = backupSubtitle,
-                                onClick = onNavigateToBackup,
+                                onClick = { onNavigate(SettingsDestination.BACKUP) },
                             )
                         }
                         Spacer(Modifier.height(16.dp))
@@ -1003,37 +978,37 @@ fun SettingsScreen(
                                 SettingsOption(
                                     title = stringResource(R.string.settings_import_spotify_json),
                                     subtitle = stringResource(R.string.settings_import_spotify_json_desc),
-                                    onClick = onNavigateToSpotifyJsonImport,
+                                    onClick = { onNavigate(SettingsDestination.SPOTIFY_JSON_IMPORT) },
                                 )
                                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                                 SettingsOption(
                                     title = stringResource(R.string.settings_import_apple_music),
                                     subtitle = stringResource(R.string.settings_import_apple_music_desc),
-                                    onClick = onNavigateToAppleMusicImport,
+                                    onClick = { onNavigate(SettingsDestination.APPLE_MUSIC_IMPORT) },
                                 )
                                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                                 SettingsOption(
                                     title = stringResource(R.string.settings_import_deezer),
                                     subtitle = stringResource(R.string.settings_import_deezer_desc),
-                                    onClick = onNavigateToDeezerImport,
+                                    onClick = { onNavigate(SettingsDestination.DEEZER_IMPORT) },
                                 )
                                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                                 SettingsOption(
                                     title = stringResource(R.string.settings_import_youtube_music),
                                     subtitle = stringResource(R.string.settings_import_youtube_music_desc),
-                                    onClick = onNavigateToYouTubeMusicImport,
+                                    onClick = { onNavigate(SettingsDestination.YOUTUBE_MUSIC_IMPORT) },
                                 )
                                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                                 SettingsOption(
                                     title = stringResource(R.string.settings_import_musicolet),
                                     subtitle = stringResource(R.string.settings_import_musicolet_desc),
-                                    onClick = onNavigateToMusicoletImport,
+                                    onClick = { onNavigate(SettingsDestination.MUSICOLET_IMPORT) },
                                 )
                                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                                 SettingsOption(
                                     title = stringResource(R.string.settings_import_extension),
                                     subtitle = stringResource(R.string.settings_import_extension_desc),
-                                    onClick = onNavigateToExtensionImport,
+                                    onClick = { onNavigate(SettingsDestination.EXTENSION_IMPORT) },
                                 )
                             }
                         }
@@ -1056,13 +1031,13 @@ fun SettingsScreen(
                                 SettingsOption(
                                     title = stringResource(R.string.settings_data_diagnostics),
                                     subtitle = stringResource(R.string.settings_data_diagnostics_desc),
-                                    onClick = onNavigateToYourData,
+                                    onClick = { onNavigate(SettingsDestination.YOUR_DATA) },
                                 )
                                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                                 SettingsOption(
                                     title = stringResource(R.string.enrichment_report_settings_option),
                                     subtitle = stringResource(R.string.enrichment_report_settings_option_desc),
-                                    onClick = onNavigateToEnrichmentReport,
+                                    onClick = { onNavigate(SettingsDestination.ENRICHMENT_REPORT) },
                                 )
                                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                                 SettingsOption(
@@ -1206,7 +1181,7 @@ fun SettingsScreen(
                         SettingsOption(
                             title = stringResource(R.string.update_check_now),
                             subtitle = versionName,
-                            onClick = { onNavigateToUpdates?.invoke() },
+                            onClick = { onNavigate(SettingsDestination.UPDATES) },
                         )
                     }
                 }
