@@ -270,18 +270,6 @@ class RoomStatsRepository @Inject constructor(
         // This prevents global UI refreshes on background enrichment
     }
     
-    /**
-     * Invalidate specific cache keys matching a pattern.
-     */
-    private fun invalidateCachePattern(pattern: String) {
-        val snapshot = cache.snapshot()
-        val keysToRemove = snapshot.keys.filter { key -> key.contains(pattern) }
-        keysToRemove.forEach { key -> cache.remove(key) }
-        // Same reasoning as invalidateCache(): computations already running for a
-        // matching key predate this invalidation.
-        inFlight.keys.filter { key -> key.contains(pattern) }.forEach { key -> inFlight.remove(key) }
-    }
-
     override fun invalidateCache(timeRange: TimeRange) {
         // Remove all cache entries for this time range
         val snapshot = cache.snapshot()
@@ -838,7 +826,7 @@ class RoomStatsRepository @Inject constructor(
                 val imageUrl = artist.imageUrl?.takeIf { it.isNotBlank() }
                     ?: getArtistImageUrlWithFallback(artist.artist, dbOnly = true)
                 val country = artist.country?.takeIf { it.isNotBlank() }
-                    ?: getArtistCountry(artist.artist)
+                    ?: statsDao.getArtistCountry(artist.artist)
                 val artistId = artist.artistId ?: run {
                     val normalizedName = me.avinas.tempo.data.local.entities.Artist.normalizeName(artist.artist)
                     val alias = artistAliasDao.findAlias(normalizedName)
@@ -1024,13 +1012,6 @@ class RoomStatsRepository @Inject constructor(
         }
     }
     
-    /**
-     * Get artist country from enriched metadata
-     */
-    private suspend fun getArtistCountry(artistName: String): String? {
-        return statsDao.getArtistCountry(artistName)
-    }
-
     override suspend fun getTopAlbums(
         timeRange: TimeRange,
         sortBy: SortBy,
@@ -1752,63 +1733,6 @@ class RoomStatsRepository @Inject constructor(
         return null
     }
 
-    // Kept for reference but no longer called - API deprecated
-    @Suppress("UNUSED")
-    private suspend fun legacyComputeAudioFeaturesStats(timeRange: TimeRange): AudioFeaturesStats? {
-        val raw = statsDao.getAverageAudioFeatures(
-            timeRange.getStartTimestamp(),
-            timeRange.getEndTimestamp()
-        ) ?: return null
-
-        if (raw.tracks_count == 0 || raw.avg_energy == null) {
-            return null
-        }
-
-        // Determine dominant mood
-        val dominantMood = when {
-            (raw.avg_valence ?: 0f) >= 0.6f && (raw.avg_energy ?: 0f) >= 0.6f -> "Upbeat & Happy"
-            (raw.avg_valence ?: 0f) >= 0.6f -> "Happy & Relaxed"
-            (raw.avg_energy ?: 0f) >= 0.6f -> "Energetic"
-            (raw.avg_valence ?: 0f) <= 0.4f && (raw.avg_energy ?: 0f) <= 0.4f -> "Melancholic"
-            else -> "Balanced"
-        }
-
-        // Get mood trends to determine energy trend
-        val moodTrends = statsDao.getMoodTrends(
-            timeRange.getStartTimestamp(),
-            timeRange.getEndTimestamp()
-        )
-        val energyTrend = calculateTrend(moodTrends.map { it.avgEnergy })
-
-        return AudioFeaturesStats(
-            averageEnergy = raw.avg_energy ?: 0f,
-            averageDanceability = raw.avg_danceability ?: 0f,
-            averageValence = raw.avg_valence ?: 0f,
-            averageTempo = raw.avg_tempo ?: 0f,
-            averageAcousticness = raw.avg_acousticness ?: 0f,
-            averageInstrumentalness = raw.avg_instrumentalness ?: 0f,
-            averageSpeechiness = raw.avg_speechiness ?: 0f,
-            averageLoudness = raw.avg_loudness ?: 0f,
-            tracksWithFeatures = raw.tracks_count,
-            dominantMood = dominantMood,
-            energyTrend = energyTrend
-        )
-    }
-
-    private fun calculateTrend(values: List<Float>): String {
-        if (values.size < 2) return "stable"
-        
-        val firstHalf = values.take(values.size / 2).average()
-        val secondHalf = values.drop(values.size / 2).average()
-        
-        val change = secondHalf - firstHalf
-        return when {
-            change > 0.05 -> "increasing"
-            change < -0.05 -> "decreasing"
-            else -> "stable"
-        }
-    }
-
     override suspend fun getMoodTrends(timeRange: TimeRange): List<MoodTrend> {
         val key = "mood_trends_${timeRange.name}"
         return getCached(key) {
@@ -2188,15 +2112,6 @@ class RoomStatsRepository @Inject constructor(
                 timeRange.getEndTimestamp()
             )
         }
-    }
-
-    private fun calculatePercentageChange(current: Number, previous: Number): Double {
-        val curr = current.toDouble()
-        val prev = previous.toDouble()
-        
-        if (prev == 0.0) return if (curr > 0) 100.0 else 0.0
-        
-        return ((curr - prev) / prev) * 100.0
     }
 
     // History
