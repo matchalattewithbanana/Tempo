@@ -991,7 +991,7 @@ private fun HeroProfileSection(
 ) {
     val animatedProgress by animateFloatAsState(
         targetValue = userLevel.levelProgress.coerceIn(0f, 1f),
-        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec<Float>(),
         label = "levelProgress",
     )
     val swatch = me.avinas.tempo.ui.components.tempoTileSwatch(
@@ -1074,22 +1074,27 @@ private fun HeroProfileSection(
                     color = swatch.foreground,
                 )
             }
-            ProgressTrack(
-                progress = animatedProgress,
+            LinearProgressIndicator(
+                progress = { animatedProgress },
                 modifier = Modifier.fillMaxWidth(),
                 color = swatch.foreground,
-                height = 6.dp,
+                trackColor = swatch.foreground.copy(alpha = 0.16f),
             )
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                ProgressPercentLabel(progress = animatedProgress, tierAccent = swatch.foreground)
+                Text(
+                    text = "${(animatedProgress * 100).roundToInt()}%",
+                    style = MaterialTheme.typography.labelLargeEmphasized,
+                    color = swatch.foreground,
+                )
                 Text(
                     text = String.format(Locale.getDefault(), "%,d XP to next level", userLevel.xpRemaining),
                     style = MaterialTheme.typography.labelSmall,
                     color = swatch.foreground,
+                    modifier = Modifier.weight(1f),
                     maxLines = 2,
                     textAlign = TextAlign.End,
                 )
@@ -1329,7 +1334,7 @@ private fun ProfileProgressTile(spec: ProfileMetricSpec, modifier: Modifier) {
                 text = spec.value,
                 style = MaterialTheme.typography.titleLargeEmphasized,
                 color = scheme.onSurface,
-                maxLines = 1,
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
@@ -1390,7 +1395,7 @@ private fun MasterStatMasthead(
         ),
     )
     BoxWithConstraints(Modifier.fillMaxWidth()) {
-        val singleColumn = maxWidth < 285.dp || LocalDensity.current.fontScale >= 1.6f
+        val singleColumn = maxWidth < 320.dp || LocalDensity.current.fontScale >= 1.3f
         if (singleColumn) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 metrics.forEach { metric ->
