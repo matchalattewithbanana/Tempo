@@ -194,3 +194,19 @@ Do not claim the reported screenshot problems fully closed until a tested APK re
 - [Build and release authorization](BUILD_AND_RELEASE_POLICY.md)
 - [Official Material 3 guidance](https://developer.android.com/develop/ui/compose/designsystems/material3)
 - [Official adaptive list/detail guidance](https://developer.android.com/develop/adaptive-apps/guides/list-detail)
+
+## Physical beta feedback follow-up — compact navigation, Profile and Settings
+
+**Status:** Source repairs committed to `main` after the published `5.1.69-beta`; **not built or runtime verified**. Tracking issue: [#98](https://github.com/matchalattewithbanana/Tempo/issues/98).
+
+Physical-device screenshots show four full-width oversized Profile progress tiles on a narrow phone, a redundant Badge Collection card before the Badges tab, inconsistent Home vs Stats short-bar item visibility, and large partly visible Settings bento tiles. Feedback also identifies unreliable overlapping imports and poor startup/tab motion.
+
+This corrective pass:
+- Replaces the experimental short bar with the well-established Material `NavigationBar`/item components so all three primary destinations remain allocated and labeled. Both regular and floating styles share the same rendering and selected state; the wide rail is unchanged.
+- Reduces Profile to a responsive two-metric streak row, keeps level/XP in the identity hero, removes the duplicate Badge Collection entry, and shields the scrolling hero with a themed top-bar surface.
+- Replaces the tall Settings staggered bento with compact adaptive category rows, moves manual service imports into Library & data, avoids repeating the Drive-backup success message, and reduces redundant overview tracking details.
+- Uses system-controlled splash dismissal with system night-aware launch backgrounds, drops artificial splash icon zoom/220ms hold, and avoids double-animating top-level tab switches. Detail navigation retains Material motion tokens.
+- Extends import reconciliation for saved live-source plays from Tempo ZIP restores and improves selection of compatible alternate track rows when a conflicting provider ID occupies the first title/artist match. Regression sources added; no existing user data is silently merged or deleted.
+
+**Still blocking sign-off:** Kotlin/Room/Compose compilation, Android instrumented tests, rendered comparison at compact and large text widths, TalkBack and insets, real-world import/restore idempotence, and an investigation of the duplicate song shown as both Stats hero and #2. The screenshots may reflect duplicate track identities or old inflated imports; an apparently duplicated row must not be hidden without evidence. See [#98](https://github.com/matchalattewithbanana/Tempo/issues/98) and [#95](https://github.com/matchalattewithbanana/Tempo/issues/95).
+
