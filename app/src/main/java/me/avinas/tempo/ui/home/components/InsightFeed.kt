@@ -688,11 +688,7 @@ private fun MoodVisualizer(valence: Float, energy: Float, color: Color) {
                 Box(
                     modifier = Modifier
                         .weight(1f)
-                        .fillMaxHeight()
-                        .graphicsLayer {
-                            scaleY = height.coerceIn(0.1f, 1f)
-                            transformOrigin = TransformOrigin(0.5f, 0.5f)
-                        }
+                        .fillMaxHeight(height.coerceIn(0.1f, 1f))
                         .background(
                             brush = Brush.verticalGradient(
                                 colors = listOf(color, color.copy(alpha = 0.25f))
@@ -1086,11 +1082,7 @@ private fun BingeVisualizer(
                 Box(
                     modifier = Modifier
                         .weight(1f)
-                        .fillMaxHeight()
-                        .graphicsLayer {
-                            scaleY = height
-                            transformOrigin = TransformOrigin(0.5f, 1f)
-                        }
+                        .fillMaxHeight(height)
                         .background(
                             brush = Brush.verticalGradient(
                                 colors = listOf(color, color.copy(alpha = 0.25f))
@@ -1552,8 +1544,7 @@ private fun StreakVisualizer(days: Int) {
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Canvas(
-            modifier = Modifier
-                 .size(46.dp)
+            modifier = Modifier.size(46.dp)
         ) {
             val w = size.width
             val h = size.height
@@ -1961,11 +1952,7 @@ private fun FallbackVisualizer(color: Color) {
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .fillMaxHeight()
-                    .graphicsLayer {
-                        scaleY = height
-                        transformOrigin = TransformOrigin(0.5f, 0.5f)
-                    }
+                    .fillMaxHeight(height)
                     .background(
                         brush = Brush.verticalGradient(listOf(color.copy(alpha = 0.6f), color.copy(alpha = 0.15f))),
                         shape = RoundedCornerShape(100.dp)
