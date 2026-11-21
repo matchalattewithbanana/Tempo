@@ -144,7 +144,24 @@ class AppearancePaletteTest {
         assertEquals(null, invalid.tertiaryAccent)
     }
 
-    private fun contrast(first: Color, second: Color): Double {
+    @Test fun `Material inverse actions and container roles stay paired in every tone`() {
+        AppearancePreset.entries.forEach { preset ->
+            AppearanceTone.entries.forEach { tone ->
+                val scheme = AppearancePaletteResolver.resolve(
+                    AppearanceSettings(preset = preset, tone = tone),
+                    systemDark = false,
+                ).materialColorScheme()
+                assertTrue("$preset $tone inverse action",
+                    contrast(scheme.inversePrimary, scheme.inverseSurface) >= 4.5)
+                assertTrue("$preset $tone inverse text",
+                    contrast(scheme.inverseOnSurface, scheme.inverseSurface) >= 4.5)
+                assertTrue("$preset $tone tertiary container",
+                    contrast(scheme.onTertiaryContainer, scheme.tertiaryContainer) >= 4.5)
+            }
+        }
+    }
+
+        private fun contrast(first: Color, second: Color): Double {
         fun luma(color: Color): Double {
             fun channel(value: Float): Double {
                 val v = value.toDouble()
