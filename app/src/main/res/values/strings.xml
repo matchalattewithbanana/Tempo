@@ -2021,4 +2021,19 @@
         <item quantity="one">%d day</item>
         <item quantity="other">%d days</item>
     </plurals>
+    <string name="settings_spotify_service_title">Spotify</string>
+    <string name="settings_spotify_service_connected">Connected. Tempo can verify recent plays without replacing local tracking.</string>
+    <string name="settings_spotify_service_disconnected">Connect your account for periodic history verification and Spotify Connect checks.</string>
+    <string name="settings_spotify_client_id_label">Spotify Developer Client ID</string>
+    <string name="settings_spotify_client_id_help">Register tempo://spotify-callback as the redirect URI in your Spotify Developer app.</string>
+    <string name="settings_spotify_history_verification">Automatic history verification</string>
+    <string name="settings_spotify_history_verification_desc">Periodically reconciles Spotify history with local tracking instead of adding another copy of the same play.</string>
+    <string name="settings_spotify_device_broadcasts">Device broadcasts</string>
+    <string name="settings_spotify_device_broadcasts_desc">Use Spotify’s local playback broadcasts for real-time device status. Enable the matching option in Spotify’s Playback settings.</string>
+    <string name="settings_spotify_verify_now">Verify now</string>
+    <string name="settings_spotify_reconnect">Reconnect</string>
+    <string name="settings_spotify_reconnect_done">Spotify disconnected. Tap Spotify to authorize the updated permissions.</string>
+    <string name="settings_spotify_sync_requested">Spotify verification requested</string>
+    <string name="settings_spotify_client_id_required">Enter a valid Spotify Client ID first.</string>
+    <string name="settings_spotify_no_browser">No browser is available for Spotify login.</string>
 </resources>
