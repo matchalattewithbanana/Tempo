@@ -235,7 +235,7 @@ class SpotifyImportService @Inject constructor(
                 if (pending.isEmpty()) return
                 try {
                     val result = listeningEventDao.insertAllBatchedWithDedup(pending)
-                    eventsCreated += result.inserted
+                    eventsCreated += result.newlyAdded
                     duplicatesSkipped += result.skipped
                 } catch (e: CancellationException) {
                     throw e
