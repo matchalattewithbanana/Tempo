@@ -1030,9 +1030,10 @@ class MusicTrackingService : NotificationListenerService() {
     private fun watchAppPreferences() {
         serviceScope.launch {
             appPreferenceDao.getAllApps().collect { apps ->
-                trackingPolicy.updateAppPreferences(apps)
-                dropDisallowedSessions()
-                reevaluateActiveContent()
+                if (trackingPolicy.updateAppPreferences(apps)) {
+                    dropDisallowedSessions()
+                    reevaluateActiveContent()
+                }
             }
         }
     }
@@ -1040,8 +1041,9 @@ class MusicTrackingService : NotificationListenerService() {
     private fun watchUserPreferences() {
         serviceScope.launch {
             userPreferencesDao.preferences().collect { preferences ->
-                trackingPolicy.updateUserPreferences(preferences)
-                reevaluateActiveContent()
+                if (trackingPolicy.updateUserPreferences(preferences)) {
+                    reevaluateActiveContent()
+                }
             }
         }
     }
@@ -1049,8 +1051,9 @@ class MusicTrackingService : NotificationListenerService() {
     private fun watchManualContentMarks() {
         serviceScope.launch {
             manualContentMarkDao.getAllMarks().collect { marks ->
-                trackingPolicy.updateManualContentMarks(marks)
-                reevaluateActiveContent()
+                if (trackingPolicy.updateManualContentMarks(marks)) {
+                    reevaluateActiveContent()
+                }
             }
         }
     }
