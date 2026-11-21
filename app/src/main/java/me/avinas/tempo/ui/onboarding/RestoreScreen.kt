@@ -389,7 +389,7 @@ fun RestoreScreen(
                         Text(
                             text = "Sign in to list backups from your Google Drive.",
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color.White.copy(alpha = 0.7f),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                         Button(
@@ -397,8 +397,8 @@ fun RestoreScreen(
                             modifier = Modifier.fillMaxWidth(),
                             colors =
                                 ButtonDefaults.buttonColors(
-                                    containerColor = Color(0xFF4285F4),
-                                    contentColor = Color.White,
+                                    containerColor = MaterialTheme.colorScheme.primary,
+                                    contentColor = MaterialTheme.colorScheme.onPrimary,
                                 ),
                             shape = RoundedCornerShape(12.dp),
                         ) {
@@ -430,13 +430,13 @@ fun RestoreScreen(
                                                         "MMM dd, yyyy",
                                                         Locale.getDefault(),
                                                     ).format(Date(backup.createdAt)),
-                                                color = Color.White,
+                                                color = MaterialTheme.colorScheme.onSurface,
                                                 style = MaterialTheme.typography.bodyMedium,
                                                 fontSize = adaptiveTextUnitByCategory(16.sp, 15.sp, 14.sp),
                                             )
                                             Text(
                                                 text = formatBytes(backup.sizeBytes) + (backup.deviceName?.let { " • $it" } ?: ""),
-                                                color = Color.White.copy(alpha = 0.6f),
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                                 style = MaterialTheme.typography.bodySmall,
                                                 fontSize = adaptiveTextUnitByCategory(14.sp, 13.sp, 12.sp),
                                             )
@@ -448,14 +448,14 @@ fun RestoreScreen(
                                         )
                                     }
                                     if (index < driveBackups.lastIndex) {
-                                        HorizontalDivider(color = Color.White.copy(alpha = 0.05f))
+                                        HorizontalDivider(color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     }
                                 }
                             }
                         } else {
                             Text(
                                 text = "No backups found on Drive.",
-                                color = Color.White.copy(alpha = 0.5f),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 style = MaterialTheme.typography.bodyMedium,
                             )
                         }
@@ -468,7 +468,7 @@ fun RestoreScreen(
                 ExpandableRestoreCard(
                     title = "Restore from File",
                     subtitle = "Select a .zip backup file",
-                    accent = Color.White,
+                    accent = MaterialTheme.colorScheme.primary,
                     icon = Icons.Default.FolderOpen,
                     expanded = expandedId == "local",
                     onToggle = { toggleExpanded("local") },
@@ -477,7 +477,7 @@ fun RestoreScreen(
                     Text(
                         text = "Pick a .zip backup file previously exported from Tempo.",
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color.White.copy(alpha = 0.7f),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     Button(
@@ -487,8 +487,8 @@ fun RestoreScreen(
                         modifier = Modifier.fillMaxWidth(),
                         colors =
                             ButtonDefaults.buttonColors(
-                                containerColor = Color.White.copy(alpha = 0.12f),
-                                contentColor = Color.White,
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
                             ),
                         shape = RoundedCornerShape(12.dp),
                     ) {
@@ -517,14 +517,14 @@ fun RestoreScreen(
                             Icon(
                                 imageVector = Icons.Default.Info,
                                 contentDescription = null,
-                                tint = Color.White.copy(alpha = 0.6f),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.size(20.dp),
                             )
                             Spacer(modifier = Modifier.width(12.dp))
                             Text(
                                 text = "You can do this later from Settings.",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = Color.White.copy(alpha = 0.8f),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.weight(1f),
                             )
                             IconButton(
@@ -534,7 +534,7 @@ fun RestoreScreen(
                                 Icon(
                                     imageVector = Icons.Default.Close,
                                     contentDescription = "Dismiss",
-                                    tint = Color.White.copy(alpha = 0.5f),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.size(16.dp),
                                 )
                             }
@@ -783,12 +783,12 @@ fun LastFmImportCard(
                         text = "Last.fm",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
                     Text(
                         text = "Import years of listening history",
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color.White.copy(alpha = 0.6f),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
 
@@ -802,7 +802,7 @@ fun LastFmImportCard(
                                 Icons.Default.KeyboardArrowDown
                             },
                         contentDescription = if (isExpanded) "Collapse" else "Expand",
-                        tint = Color.White.copy(alpha = 0.6f),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
@@ -811,14 +811,16 @@ fun LastFmImportCard(
             AnimatedVisibility(
                 visible = isExpanded,
                 enter =
-                    expandVertically(expandFrom = Alignment.Top, animationSpec = tween(280, easing = FastOutSlowInEasing)) +
-                        fadeIn(tween(220)),
+                    expandVertically(expandFrom = Alignment.Top,
+                        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec<androidx.compose.ui.unit.IntSize>()) +
+                        fadeIn(MaterialTheme.motionScheme.fastEffectsSpec<Float>()),
                 exit =
-                    shrinkVertically(shrinkTowards = Alignment.Top, animationSpec = tween(220, easing = FastOutSlowInEasing)) +
-                        fadeOut(tween(160)),
+                    shrinkVertically(shrinkTowards = Alignment.Top,
+                        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec<androidx.compose.ui.unit.IntSize>()) +
+                        fadeOut(MaterialTheme.motionScheme.fastEffectsSpec<Float>()),
             ) {
                 Column {
-                    HorizontalDivider(color = Color.White.copy(alpha = 0.1f))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.onSurfaceVariant)
 
                     when {
                         // Import complete
@@ -864,7 +866,7 @@ fun LastFmImportCard(
                                     Text(
                                         text = "Discovering your account...",
                                         style = MaterialTheme.typography.bodyMedium,
-                                        color = Color.White.copy(alpha = 0.7f),
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
                                 }
                             }
@@ -914,13 +916,13 @@ private fun LastFmUsernameInput(
                 },
             colors =
                 OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White,
-                    focusedBorderColor = Color(0xFF8B5CF6),
-                    unfocusedBorderColor = Color.White.copy(alpha = 0.5f),
-                    focusedLabelColor = Color(0xFF8B5CF6),
-                    unfocusedLabelColor = Color.White.copy(alpha = 0.7f),
-                    cursorColor = Color(0xFF8B5CF6),
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                    focusedLabelColor = MaterialTheme.colorScheme.primary,
+                    unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    cursorColor = MaterialTheme.colorScheme.primary,
                 ),
             modifier = Modifier.fillMaxWidth(),
         )
@@ -957,14 +959,14 @@ private fun LastFmTierSelection(
         Text(
             text = "Welcome, ${discovery.username}!",
             style = MaterialTheme.typography.titleMedium,
-            color = Color.White,
+            color = MaterialTheme.colorScheme.onSurface,
             fontWeight = FontWeight.Bold,
         )
 
         Text(
             text = "${numberFormat.format(discovery.totalScrobbles)} total scrobbles",
             style = MaterialTheme.typography.bodySmall,
-            color = Color.White.copy(alpha = 0.7f),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -972,12 +974,12 @@ private fun LastFmTierSelection(
         Text(
             text = "Your complete history is imported.",
             style = MaterialTheme.typography.bodyMedium,
-            color = Color.White.copy(alpha = 0.9f),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Text(
             text = "Choose which tracks power your leaderboards:",
             style = MaterialTheme.typography.bodySmall,
-            color = Color.White.copy(alpha = 0.6f),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -1017,7 +1019,7 @@ private fun LastFmTierSelection(
         Text(
             text = "All your tracks are saved. This just affects chart speed.",
             style = MaterialTheme.typography.bodySmall,
-            color = Color.White.copy(alpha = 0.5f),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -1030,7 +1032,7 @@ private fun LastFmTierSelection(
         ) {
             Text(
                 text = "Use different account",
-                color = Color.White.copy(alpha = 0.6f),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }
@@ -1078,13 +1080,13 @@ private fun LastFmTierOption(
             Text(
                 text = name,
                 style = MaterialTheme.typography.bodyMedium,
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.SemiBold,
             )
             Text(
                 text = description,
                 style = MaterialTheme.typography.bodySmall,
-                color = Color.White.copy(alpha = 0.6f),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
 
@@ -1160,14 +1162,14 @@ private fun LastFmImportProgress(
                 progress = { (progressData.percent / 100f).coerceIn(0f, 1f) },
                 modifier = Modifier.fillMaxSize(),
                 color = lastFmRed,
-                trackColor = Color.White.copy(alpha = 0.15f),
+                trackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
                 strokeWidth = 6.dp,
             )
 
             Text(
                 text = "${progressData.percent}%",
                 style = MaterialTheme.typography.titleMedium,
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.Bold,
             )
         }
@@ -1178,7 +1180,7 @@ private fun LastFmImportProgress(
         Text(
             text = progressData.phase,
             style = MaterialTheme.typography.titleSmall,
-            color = Color.White,
+            color = MaterialTheme.colorScheme.onSurface,
             fontWeight = FontWeight.SemiBold,
         )
 
@@ -1188,14 +1190,14 @@ private fun LastFmImportProgress(
             Text(
                 text = "${numberFormat.format(progressData.current)} of ${numberFormat.format(progressData.total)} scrobbles",
                 style = MaterialTheme.typography.bodySmall,
-                color = Color.White.copy(alpha = 0.7f),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         } else {
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = "This may take a few minutes",
                 style = MaterialTheme.typography.bodySmall,
-                color = Color.White.copy(alpha = 0.6f),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
 
@@ -1234,7 +1236,7 @@ private fun LastFmImportProgress(
         TextButton(onClick = onCancel) {
             Text(
                 text = "Cancel",
-                color = Color.White.copy(alpha = 0.6f),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }
@@ -1269,7 +1271,7 @@ private fun ImportStatItem(
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall,
-            color = Color.White.copy(alpha = 0.5f),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }
@@ -1300,7 +1302,7 @@ private fun LastFmImportComplete(
         Text(
             text = "Import Complete!",
             style = MaterialTheme.typography.titleMedium,
-            color = Color.White,
+            color = MaterialTheme.colorScheme.onSurface,
             fontWeight = FontWeight.Bold,
         )
 
@@ -1316,7 +1318,7 @@ private fun LastFmImportComplete(
                     else -> "No new scrobbles found this time"
                 },
             style = MaterialTheme.typography.bodySmall,
-            color = Color.White.copy(alpha = 0.7f),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
 
         if (result.skippedPages > 0) {
@@ -1427,12 +1429,12 @@ fun SpotifyJsonImportCard(
                         text = "Spotify Data Export",
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
                     Text(
                         text = "Import from JSON files",
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color.White.copy(alpha = 0.6f),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
 
@@ -1440,7 +1442,7 @@ fun SpotifyJsonImportCard(
                     Icon(
                         imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                         contentDescription = if (isExpanded) "Collapse" else "Expand",
-                        tint = Color.White.copy(alpha = 0.6f),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
@@ -1448,11 +1450,13 @@ fun SpotifyJsonImportCard(
             AnimatedVisibility(
                 visible = isExpanded,
                 enter =
-                    expandVertically(expandFrom = Alignment.Top, animationSpec = tween(280, easing = FastOutSlowInEasing)) +
-                        fadeIn(tween(220)),
+                    expandVertically(expandFrom = Alignment.Top,
+                        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec<androidx.compose.ui.unit.IntSize>()) +
+                        fadeIn(MaterialTheme.motionScheme.fastEffectsSpec<Float>()),
                 exit =
-                    shrinkVertically(shrinkTowards = Alignment.Top, animationSpec = tween(220, easing = FastOutSlowInEasing)) +
-                        fadeOut(tween(160)),
+                    shrinkVertically(shrinkTowards = Alignment.Top,
+                        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec<androidx.compose.ui.unit.IntSize>()) +
+                        fadeOut(MaterialTheme.motionScheme.fastEffectsSpec<Float>()),
             ) {
                 Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
                     when (uiState) {
@@ -1479,7 +1483,7 @@ fun SpotifyJsonImportCard(
                                         append(", then select the JSON files. You can also do this later from Settings.")
                                     },
                                 style = MaterialTheme.typography.bodySmall,
-                                color = Color.White.copy(alpha = 0.7f),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
 
                             Spacer(modifier = Modifier.height(12.dp))
@@ -1537,7 +1541,7 @@ fun SpotifyJsonImportCard(
                             Text(
                                 text = message,
                                 style = MaterialTheme.typography.bodySmall,
-                                color = Color.White.copy(alpha = 0.7f),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
 
                             Spacer(modifier = Modifier.height(8.dp))
@@ -1546,7 +1550,7 @@ fun SpotifyJsonImportCard(
                                 progress = { progress },
                                 modifier = Modifier.fillMaxWidth(),
                                 color = spotifyGreen,
-                                trackColor = Color.White.copy(alpha = 0.1f),
+                                trackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
                             )
                         }
 
@@ -1564,14 +1568,14 @@ fun SpotifyJsonImportCard(
                             Text(
                                 text = "Import Complete!",
                                 style = MaterialTheme.typography.titleSmall,
-                                color = Color.White,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 fontWeight = FontWeight.Bold,
                             )
 
                             Text(
                                 text = "${result.tracksImported} tracks, ${result.eventsCreated} events",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = Color.White.copy(alpha = 0.7f),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
 
                             Spacer(modifier = Modifier.height(12.dp))
@@ -1598,7 +1602,7 @@ fun SpotifyJsonImportCard(
                             Text(
                                 text = uiState.message,
                                 style = MaterialTheme.typography.bodySmall,
-                                color = Color.White.copy(alpha = 0.7f),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
 
                             Spacer(modifier = Modifier.height(12.dp))
@@ -1723,12 +1727,12 @@ fun YouTubeMusicImportCard(
                         text = "YouTube Music Takeout",
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
                     Text(
                         text = "Import from YouTube Takeout (ZIP or JSON)",
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color.White.copy(alpha = 0.6f),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
 
@@ -1736,7 +1740,7 @@ fun YouTubeMusicImportCard(
                     Icon(
                         imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                         contentDescription = if (isExpanded) "Collapse" else "Expand",
-                        tint = Color.White.copy(alpha = 0.6f),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
@@ -1744,11 +1748,13 @@ fun YouTubeMusicImportCard(
             AnimatedVisibility(
                 visible = isExpanded,
                 enter =
-                    expandVertically(expandFrom = Alignment.Top, animationSpec = tween(280, easing = FastOutSlowInEasing)) +
-                        fadeIn(tween(220)),
+                    expandVertically(expandFrom = Alignment.Top,
+                        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec<androidx.compose.ui.unit.IntSize>()) +
+                        fadeIn(MaterialTheme.motionScheme.fastEffectsSpec<Float>()),
                 exit =
-                    shrinkVertically(shrinkTowards = Alignment.Top, animationSpec = tween(220, easing = FastOutSlowInEasing)) +
-                        fadeOut(tween(160)),
+                    shrinkVertically(shrinkTowards = Alignment.Top,
+                        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec<androidx.compose.ui.unit.IntSize>()) +
+                        fadeOut(MaterialTheme.motionScheme.fastEffectsSpec<Float>()),
             ) {
                 Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
                     when (uiState) {
@@ -1773,7 +1779,7 @@ fun YouTubeMusicImportCard(
                                         )
                                     },
                                 style = MaterialTheme.typography.bodySmall,
-                                color = Color.White.copy(alpha = 0.7f),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
 
                             Spacer(modifier = Modifier.height(4.dp))
@@ -1835,7 +1841,7 @@ fun YouTubeMusicImportCard(
                             Text(
                                 text = message,
                                 style = MaterialTheme.typography.bodySmall,
-                                color = Color.White.copy(alpha = 0.7f),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
 
                             Spacer(modifier = Modifier.height(8.dp))
@@ -1844,7 +1850,7 @@ fun YouTubeMusicImportCard(
                                 progress = { progress },
                                 modifier = Modifier.fillMaxWidth(),
                                 color = youTubeRed,
-                                trackColor = Color.White.copy(alpha = 0.1f),
+                                trackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
                             )
                         }
 
@@ -1862,14 +1868,14 @@ fun YouTubeMusicImportCard(
                             Text(
                                 text = "Import Complete!",
                                 style = MaterialTheme.typography.titleSmall,
-                                color = Color.White,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 fontWeight = FontWeight.Bold,
                             )
 
                             Text(
                                 text = "${result.tracksImported} tracks, ${result.eventsCreated} events",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = Color.White.copy(alpha = 0.7f),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
 
                             Spacer(modifier = Modifier.height(8.dp))
@@ -1877,7 +1883,7 @@ fun YouTubeMusicImportCard(
                             Text(
                                 text = "Continuing automatically...",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = Color.White.copy(alpha = 0.5f),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
 
@@ -1894,7 +1900,7 @@ fun YouTubeMusicImportCard(
                             Text(
                                 text = uiState.message,
                                 style = MaterialTheme.typography.bodySmall,
-                                color = Color.White.copy(alpha = 0.7f),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
 
                             Spacer(modifier = Modifier.height(12.dp))
