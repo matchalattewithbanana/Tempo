@@ -2,9 +2,12 @@ package me.avinas.tempo.ui.navigation
 
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -78,6 +81,13 @@ fun AppNavigation(
     val navController = rememberNavController()
     val reducedMotion = rememberReducedMotion()
     val animateNavigation = !reducedMotion && !me.avinas.tempo.ui.theme.LocalTempoAppearance.current.instantNavigation
+    // Built-in M3 motion specs: spatial springs move screens, effects springs
+    // fade content. Only detail routes slide; peer tabs simply fade through.
+    val spatialSpec = MaterialTheme.motionScheme.defaultSpatialSpec<IntOffset>()
+    val effectsSpec = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
+    val primaryRoutes = remember {
+        setOf(Screen.Home.route, Screen.Stats.route, Screen.History.route)
+    }
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     val currentDestination = navBackStackEntry?.destination
@@ -143,8 +153,36 @@ fun AppNavigation(
                         .then(if (showBottomBar && !useWideRail) {
                             Modifier.padding(bottom = bottomBarHeightDp)
                         } else Modifier),
-                    enterTransition = { if (animateNavigation) fadeIn(tween(120)) else EnterTransition.None },
-                    exitTransition = { if (animateNavigation) fadeOut(tween(120)) else ExitTransition.None },
+                    enterTransition = {
+                        when {
+                            !animateNavigation -> EnterTransition.None
+                            initialState.destination.route in primaryRoutes &&
+                                targetState.destination.route in primaryRoutes ->
+                                fadeIn(animationSpec = effectsSpec)
+                            else -> slideInHorizontally(animationSpec = spatialSpec) { it / 8 } +
+                                fadeIn(animationSpec = effectsSpec)
+                        }
+                    },
+                    exitTransition = {
+                        when {
+                            !animateNavigation -> ExitTransition.None
+                            initialState.destination.route in primaryRoutes &&
+                                targetState.destination.route in primaryRoutes ->
+                                fadeOut(animationSpec = effectsSpec)
+                            else -> slideOutHorizontally(animationSpec = spatialSpec) { -it / 10 } +
+                                fadeOut(animationSpec = effectsSpec)
+                        }
+                    },
+                    popEnterTransition = {
+                        if (!animateNavigation) EnterTransition.None
+                        else slideInHorizontally(animationSpec = spatialSpec) { -it / 8 } +
+                            fadeIn(animationSpec = effectsSpec)
+                    },
+                    popExitTransition = {
+                        if (!animateNavigation) ExitTransition.None
+                        else slideOutHorizontally(animationSpec = spatialSpec) { it / 10 } +
+                            fadeOut(animationSpec = effectsSpec)
+                    },
                 ) {
                     composable(Screen.Home.route) {
                         me.avinas.tempo.ui.home.HomeScreen(
