@@ -34,7 +34,11 @@ internal fun AboutSettingsSection(
 ) {
     val context = LocalContext.current
     val resources = LocalResources.current
-    SettingsSectionList(state = state, modifier = modifier) {
+    SettingsSectionList(
+        state = state,
+        tone = SettingsSection.ABOUT.tone,
+        modifier = modifier,
+    ) {
         item(key = "about-credits") {
             TempoAboutCredits(modifier = Modifier.fillMaxWidth())
             Spacer(modifier = Modifier.height(24.dp))
