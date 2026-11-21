@@ -77,7 +77,9 @@ immediate/periodic active-session autosave and the clean-shutdown acknowledgemen
 `service/OfflineEventStore.kt` owns the separate SQLite queue for listening events that have not
 yet reached the main library.
 `service/LocalMediaMetadata.kt` is the normalization boundary for MediaSession and notification
-metadata. Rich artwork extraction is kept off the callback hot path.
+metadata. `service/LocalAlbumArtStore.kt` owns notification/media artwork extraction,
+downsampling, local file storage and the missing-track-art fallback; `PlaybackIdentityKey` is the
+single title+artist cache-key implementation shared with duration caching.
 
 `MusicTrackingService` remains the Android adapter/orchestrator: it owns notification and
 MediaController callbacks, synchronization, active-session membership and foreground lifecycle.
@@ -86,12 +88,17 @@ protocol; the bounded final drain runs on a teardown scope after a recoverable s
 available. New business branching should not be added directly to that service when it belongs to
 one of the policy/session models above.
 
-The statistics layer still has a broad contract: `StatsRepository` exposes more than sixty
-operations spanning overview, rankings, history, details, image enrichment, editing and cache
-control. `RoomStatsRepository` has removed duplicated artist-detail assembly and dead legacy
-helpers, but capability-sized repository interfaces remain architectural debt. Split that contract
-only together with DI/consumer migration; adding facade-only subinterfaces would move declarations
-without reducing dependency breadth.
+The statistics layer still has a broad repository contract, but Room query ownership is no longer
+one ~3k-line file. `StatsDao` remains the single generated Room DAO exposed by
+`AppDatabase.statsDao()` and inherits focused overview, ranking, temporal, history,
+single-entity/artist, filtered and search query-family interfaces. The split preserves all SQL and
+method signatures while keeping each query module below 1k lines. Projection models and the shared
+ranked-album SQL fragments have their own package-level files.
+
+`StatsRepository` still exposes more than sixty operations spanning overview, rankings, history,
+details, image enrichment, editing and cache control. Split that contract only together with
+DI/consumer migration; facade-only subinterfaces would move declarations without reducing
+dependency breadth.
 
 Large remaining files should be reduced by information-hiding boundaries and behavior tests, not
 by arbitrary line-count splits. A file split is not considered an architectural improvement when
