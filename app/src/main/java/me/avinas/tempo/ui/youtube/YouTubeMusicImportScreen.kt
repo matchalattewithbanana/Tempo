@@ -59,7 +59,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import me.avinas.tempo.R
 import me.avinas.tempo.data.youtube.YouTubeMusicImportService
-import me.avinas.tempo.ui.components.DeepOceanBackground
 import me.avinas.tempo.ui.components.GlassCard
 import me.avinas.tempo.ui.theme.*
 
@@ -94,7 +93,7 @@ fun YouTubeMusicImportScreen(
             }
         }
 
-    DeepOceanBackground {
+    androidx.compose.foundation.layout.Box(Modifier.fillMaxSize()) {
         Scaffold(
             topBar = {
                 TopAppBar(
