@@ -358,4 +358,32 @@ class ListeningReconciliationIntegrationTest {
         assertEquals(live.source, dao.getEventsForTrack(id).single().source)
     }
 
+    @Test fun equivalentTrackIdsInsideTheSameBatchDoNotBothCount() = runBlocking {
+        val id = trackId()
+        val siblingId = database.trackDao().insert(
+            Track(
+                title = "Same Song", artist = "Same Artist", album = null,
+                duration = 180_000L, albumArtUrl = null,
+                spotifyId = null, musicbrainzId = null,
+            )
+        )
+        val start = 1_700_100_000_000L
+        val fromSpotify = ListeningEvent(
+            track_id = id, timestamp = start,
+            endTimestamp = start + 180_000,
+            playDuration = 180_000, completionPercentage = 0,
+            source = "com.spotify.music.import.json",
+        )
+        val fromLastFm = fromSpotify.copy(
+            track_id = siblingId, source = "fm.last.import",
+            timestamp = start + 3_000, endTimestamp = null,
+            playDuration = 0,
+        )
+        val dao = database.listeningEventDao()
+        val result = dao.insertAllBatchedWithDedup(listOf(fromLastFm, fromSpotify))
+        assertEquals(1, result.inserted)
+        assertEquals(1, result.skipped)
+        assertEquals(1, dao.getCount())
+    }
+
 }
