@@ -990,9 +990,9 @@ fun SettingsScreen(
                     }
                 } // Tracking
                 if (settingsCategory == "connections") {
-                    item(key = "connections-import") {
-                // Last.fm Import
-                SettingsSectionHeader(stringResource(R.string.settings_import_history))
+                    item(key = "connections-services") {
+                // Account connections and automatic sync controls
+                SettingsSectionHeader(stringResource(R.string.settings_category_connections))
                 GlassCard(
                     contentPadding = PaddingValues(0.dp),
                     variant = me.avinas.tempo.ui.components.GlassCardVariant.LowProminence,
@@ -1121,53 +1121,6 @@ fun SettingsScreen(
                         // tracking fallback, even when broadcast mode is disabled.
                         LiveNowPlayingCard(modifier = Modifier.padding(horizontal = 16.dp))
 
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-
-                        SettingsOption(
-                            title = stringResource(R.string.settings_import_spotify_json),
-                            subtitle = stringResource(R.string.settings_import_spotify_json_desc),
-                            onClick = { onNavigateToSpotifyJsonImport?.invoke() },
-                        )
-
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-
-                        SettingsOption(
-                            title = stringResource(R.string.settings_import_deezer),
-                            subtitle = stringResource(R.string.settings_import_deezer_desc),
-                            onClick = { onNavigateToDeezerImport?.invoke() },
-                        )
-
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-
-                        SettingsOption(
-                            title = stringResource(R.string.settings_import_apple_music),
-                            subtitle = stringResource(R.string.settings_import_apple_music_desc),
-                            onClick = { onNavigateToAppleMusicImport?.invoke() },
-                        )
-
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-
-                        SettingsOption(
-                            title = stringResource(R.string.settings_import_youtube_music),
-                            subtitle = stringResource(R.string.settings_import_youtube_music_desc),
-                            onClick = { onNavigateToYouTubeMusicImport?.invoke() },
-                        )
-
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-
-                        SettingsOption(
-                            title = stringResource(R.string.settings_import_musicolet),
-                            subtitle = stringResource(R.string.settings_import_musicolet_desc),
-                            onClick = { onNavigateToMusicoletImport?.invoke() },
-                        )
-
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-
-                        SettingsOption(
-                            title = stringResource(R.string.settings_import_extension),
-                            subtitle = stringResource(R.string.settings_import_extension_desc),
-                            onClick = { onNavigateToExtensionImport?.invoke() },
-                        )
                     }
                 }
 
@@ -1317,6 +1270,64 @@ fun SettingsScreen(
 
 
 
+                    }
+                    item(key = "data-imports") {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        SettingsSectionHeader(stringResource(R.string.settings_import_history))
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = MaterialTheme.shapes.extraLarge,
+                            color = MaterialTheme.colorScheme.surfaceContainerLow,
+                        ) {
+                            Column {
+                        SettingsOption(
+                            title = stringResource(R.string.settings_import_spotify_json),
+                            subtitle = stringResource(R.string.settings_import_spotify_json_desc),
+                            onClick = { onNavigateToSpotifyJsonImport?.invoke() },
+                        )
+
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+
+                        SettingsOption(
+                            title = stringResource(R.string.settings_import_deezer),
+                            subtitle = stringResource(R.string.settings_import_deezer_desc),
+                            onClick = { onNavigateToDeezerImport?.invoke() },
+                        )
+
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+
+                        SettingsOption(
+                            title = stringResource(R.string.settings_import_apple_music),
+                            subtitle = stringResource(R.string.settings_import_apple_music_desc),
+                            onClick = { onNavigateToAppleMusicImport?.invoke() },
+                        )
+
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+
+                        SettingsOption(
+                            title = stringResource(R.string.settings_import_youtube_music),
+                            subtitle = stringResource(R.string.settings_import_youtube_music_desc),
+                            onClick = { onNavigateToYouTubeMusicImport?.invoke() },
+                        )
+
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+
+                        SettingsOption(
+                            title = stringResource(R.string.settings_import_musicolet),
+                            subtitle = stringResource(R.string.settings_import_musicolet_desc),
+                            onClick = { onNavigateToMusicoletImport?.invoke() },
+                        )
+
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+
+                        SettingsOption(
+                            title = stringResource(R.string.settings_import_extension),
+                            subtitle = stringResource(R.string.settings_import_extension_desc),
+                            onClick = { onNavigateToExtensionImport?.invoke() },
+                        )
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(24.dp))
                     }
                 } // Library and data
                 if (settingsCategory == "about") {
