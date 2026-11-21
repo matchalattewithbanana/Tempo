@@ -570,7 +570,7 @@ fun HistoryFilterSheetContent(
                     1.dp,
                     Brush.verticalGradient(
                         listOf(
-                            Color.White.copy(alpha = 0.45f),
+                            MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.35f),
                             Color.Transparent
                         )
                     ),
@@ -696,8 +696,8 @@ fun SwipeToDeleteHistoryItem(
                             Brush.horizontalGradient(
                                 listOf(
                                     Color.Transparent,
-                                    TempoErrorDeep.copy(alpha = 0.6f),
-                                    TempoError.copy(alpha = 0.95f)
+                                    MaterialTheme.colorScheme.errorContainer,
+                                    MaterialTheme.colorScheme.error
                                 )
                             )
                         ),
@@ -706,7 +706,7 @@ fun SwipeToDeleteHistoryItem(
                     Icon(
                         imageVector = TempoIcons.Trash,
                         contentDescription = stringResource(R.string.history_delete_button),
-                        tint = Color.White,
+                        tint = MaterialTheme.colorScheme.onError,
                         modifier = Modifier
                             .padding(end = 24.dp)
                             .size(22.dp)
