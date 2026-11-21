@@ -14,7 +14,9 @@ interface ListeningEventDao {
         const val BATCH_SIZE = 80
 
         const val DUPLICATE_TOLERANCE_MS = ListeningImportPolicy.SAME_SOURCE_TOLERANCE_MS
-        private const val QUERY_JOIN_GAP_MS = 3_600_000L
+        // Merge only nearby indexed windows; the old one-hour gap could turn
+        // a few sparse history checks into a multi-month full-range scan.
+        private const val QUERY_JOIN_GAP_MS = 90_000L
     }
 
     @Query("SELECT * FROM listening_events WHERE id = :id")
