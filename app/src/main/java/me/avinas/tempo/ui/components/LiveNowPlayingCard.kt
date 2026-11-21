@@ -1,17 +1,27 @@
 package me.avinas.tempo.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.GraphicEq
+import androidx.compose.material.icons.rounded.MusicNote
+import androidx.compose.material.icons.rounded.PauseCircle
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialShapes
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -19,11 +29,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import me.avinas.tempo.R
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -38,6 +51,7 @@ import me.avinas.tempo.service.SpotifyBroadcastPresence
  * The second-by-second timer is isolated below so it does not recompose the
  * cover and track text every second.
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun LiveNowPlayingCard(
     modifier: Modifier = Modifier,
@@ -73,61 +87,120 @@ fun LiveNowPlayingCard(
         else (checkedAtMs - presence.updatedAtMs).coerceAtLeast(0L)
     val isRecent = presence != null && ageMs < 15 * 60_000L
 
+    val scheme = MaterialTheme.colorScheme
+    val activePlayback = isRecent && presence?.playing == true && ageMs <= 2 * 60_000L
+    val surface by animateColorAsState(
+        targetValue = if (activePlayback) scheme.primaryContainer else scheme.surfaceContainerLow,
+        animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
+        label = "playingContainer",
+    )
+    val foreground by animateColorAsState(
+        targetValue = if (activePlayback) scheme.onPrimaryContainer else scheme.onSurface,
+        animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
+        label = "playingForeground",
+    )
+    val stale = isRecent && ageMs > 2 * 60_000L
+    val stateLabel = when {
+        !isRecent -> stringResource(R.string.now_playing_idle)
+        stale -> stringResource(R.string.now_playing_last_detected)
+        presence?.playing == true -> stringResource(R.string.now_playing_playing)
+        else -> stringResource(R.string.now_playing_paused)
+    }
+
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = appearanceCardShape(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-        ),
+        shape = MaterialTheme.shapes.extraExtraLarge,
+        colors = CardDefaults.cardColors(containerColor = surface),
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth().padding(if (compact) 12.dp else 16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxWidth().padding(if (compact) 14.dp else 20.dp),
+            verticalArrangement = Arrangement.spacedBy(if (compact) 10.dp else 14.dp),
         ) {
-            Text(
-                text = if (ageMs > 2 * 60_000L && isRecent) androidx.compose.ui.res.stringResource(me.avinas.tempo.R.string.now_playing_last_detected) else "NOW PLAYING",
-                style = MaterialTheme.typography.labelMedium,
-                color = accent,
-                fontWeight = FontWeight.Bold,
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                Surface(
+                    modifier = Modifier.size(42.dp),
+                    shape = MaterialShapes.Cookie6Sided.toShape(),
+                    color = if (activePlayback) scheme.onPrimaryContainer.copy(alpha = 0.12f)
+                        else scheme.secondaryContainer,
+                    contentColor = foreground,
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = when {
+                                activePlayback -> Icons.Rounded.GraphicEq
+                                isRecent && !stale -> Icons.Rounded.PauseCircle
+                                else -> Icons.Rounded.MusicNote
+                            },
+                            contentDescription = null,
+                            modifier = Modifier.size(23.dp),
+                        )
+                    }
+                }
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.now_playing_heading),
+                        style = MaterialTheme.typography.titleMediumEmphasized,
+                        color = foreground,
+                    )
+                    Text(
+                        text = stateLabel,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = foreground.copy(alpha = 0.80f),
+                    )
+                }
+            }
             if (!isRecent || presence == null) {
                 Text(
-                    text = "Nothing playing on this device",
-                    style = MaterialTheme.typography.bodyMedium,
+                    text = stringResource(R.string.now_playing_empty),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = foreground,
                 )
                 Text(
-                    text = "Play music with Tempo's tracking service running.",
+                    text = stringResource(R.string.now_playing_empty_help),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = scheme.onSurfaceVariant,
                 )
             } else {
                 val choice = artwork?.takeIf {
                     it.identity == NowPlayingArtworkIdentity(
-                        presence.packageName, presence.title, presence.artist, presence.album
+                        presence.packageName, presence.title, presence.artist, presence.album,
                     )
                 }
-
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    // The player's own cover is the best match for the
-                    // currently playing release. Use the enriched image only
-                    // when local / MediaSession artwork cannot be loaded.
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    // Device / MediaSession art remains first choice, with enriched
+                    // art used only as fallback. This is not another artwork fetch.
                     val preferredArtwork = presence.albumArtUri ?: choice?.localUrl
-                    AlbumArtImage(
-                        albumArtUrl = preferredArtwork ?: choice?.remoteUrl,
-                        localArtUrl = if (preferredArtwork != null) choice?.remoteUrl else null,
-                        contentDescription = "Cover art for ${presence.title}",
-                        placeholderEmoji = "♫",
-                        targetSizePx = 256,
-                        modifier = Modifier.size(if (compact) 48.dp else 84.dp).clip(RoundedCornerShape(12.dp)),
-                    )
+                    Surface(
+                        modifier = Modifier.size(if (compact) 54.dp else 88.dp),
+                        shape = MaterialTheme.shapes.large,
+                        color = scheme.surfaceContainerHigh,
+                    ) {
+                        AlbumArtImage(
+                            albumArtUrl = preferredArtwork ?: choice?.remoteUrl,
+                            localArtUrl = if (preferredArtwork != null) choice?.remoteUrl else null,
+                            contentDescription = stringResource(R.string.now_playing_cover_description, presence.title),
+                            placeholderEmoji = "♫",
+                            targetSizePx = 256,
+                            modifier = Modifier.clip(MaterialTheme.shapes.large),
+                        )
+                    }
                     Column(
                         modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(3.dp),
+                        verticalArrangement = Arrangement.spacedBy(5.dp),
                     ) {
                         Text(
                             text = presence.title,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold,
+                            style = if (compact) MaterialTheme.typography.titleMediumEmphasized
+                                else MaterialTheme.typography.titleLargeEmphasized,
+                            color = foreground,
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis,
                         )
@@ -135,18 +208,22 @@ fun LiveNowPlayingCard(
                             text = listOfNotNull(presence.artist, presence.album)
                                 .filter { it.isNotBlank() }.joinToString(" · "),
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = foreground.copy(alpha = 0.80f),
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis,
                         )
                     }
                 }
-
-                Row(modifier = Modifier.fillMaxWidth()) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    // Status is informational: never imply a player-control API.
                     Text(
-                        text = if (ageMs > 2 * 60_000L) androidx.compose.ui.res.stringResource(me.avinas.tempo.R.string.now_playing_last_detected) else if (presence.playing) "▶ Playing" else "Ⅱ Paused",
-                        color = accent,
+                        text = stateLabel,
                         style = MaterialTheme.typography.labelMedium,
+                        color = foreground,
                     )
                     Spacer(modifier = Modifier.weight(1f))
                     Text(
@@ -154,19 +231,17 @@ fun LiveNowPlayingCard(
                             checkedAtMs - presence.verifiedByApiAtMs < 3 * 60_000L
                         ) "${presence.source} · API verified" else presence.source,
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
+                        color = foreground.copy(alpha = 0.76f),
+                        maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
-
-                if (!compact && ageMs <= 2 * 60_000L) LivePlaybackProgress(presence)
-
-                if (ageMs > 2 * 60_000L) {
+                if (!compact && !stale) LivePlaybackProgress(presence)
+                if (stale) {
                     Text(
-                        text = "Last status may be stale; waiting for another playback update",
+                        text = stringResource(R.string.now_playing_stale_help),
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = foreground.copy(alpha = 0.76f),
                     )
                 }
             }
