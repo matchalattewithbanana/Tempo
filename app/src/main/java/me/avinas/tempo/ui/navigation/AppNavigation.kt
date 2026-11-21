@@ -84,7 +84,8 @@ fun AppNavigation(
     val reducedMotion = rememberReducedMotion()
     val animateNavigation = !reducedMotion && !me.avinas.tempo.ui.theme.LocalTempoAppearance.current.instantNavigation
     // Built-in M3 motion specs: spatial springs move screens, effects springs
-    // fade content. Only detail routes slide; peer tabs simply fade through.
+    // fade detail content. Peer tabs switch immediately; the navigation item's
+    // active indicator already provides the state transition.
     val spatialSpec = MaterialTheme.motionScheme.defaultSpatialSpec<IntOffset>()
     val effectsSpec = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
     val primaryRoutes = remember {
@@ -170,8 +171,7 @@ fun AppNavigation(
                         when {
                             !animateNavigation -> EnterTransition.None
                             initialState.destination.route in primaryRoutes &&
-                                targetState.destination.route in primaryRoutes ->
-                                fadeIn(animationSpec = effectsSpec)
+                                targetState.destination.route in primaryRoutes -> EnterTransition.None
                             else -> slideInHorizontally(animationSpec = spatialSpec) { it / 8 } +
                                 fadeIn(animationSpec = effectsSpec)
                         }
@@ -180,8 +180,7 @@ fun AppNavigation(
                         when {
                             !animateNavigation -> ExitTransition.None
                             initialState.destination.route in primaryRoutes &&
-                                targetState.destination.route in primaryRoutes ->
-                                fadeOut(animationSpec = effectsSpec)
+                                targetState.destination.route in primaryRoutes -> ExitTransition.None
                             else -> slideOutHorizontally(animationSpec = spatialSpec) { -it / 10 } +
                                 fadeOut(animationSpec = effectsSpec)
                         }
@@ -190,8 +189,7 @@ fun AppNavigation(
                         when {
                             !animateNavigation -> EnterTransition.None
                             initialState.destination.route in primaryRoutes &&
-                                targetState.destination.route in primaryRoutes ->
-                                fadeIn(animationSpec = effectsSpec)
+                                targetState.destination.route in primaryRoutes -> EnterTransition.None
                             else -> slideInHorizontally(animationSpec = spatialSpec) { -it / 8 } +
                                 fadeIn(animationSpec = effectsSpec)
                         }
@@ -200,8 +198,7 @@ fun AppNavigation(
                         when {
                             !animateNavigation -> ExitTransition.None
                             initialState.destination.route in primaryRoutes &&
-                                targetState.destination.route in primaryRoutes ->
-                                fadeOut(animationSpec = effectsSpec)
+                                targetState.destination.route in primaryRoutes -> ExitTransition.None
                             else -> slideOutHorizontally(animationSpec = spatialSpec) { it / 10 } +
                                 fadeOut(animationSpec = effectsSpec)
                         }
