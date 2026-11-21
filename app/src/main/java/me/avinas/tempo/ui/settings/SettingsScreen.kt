@@ -321,106 +321,24 @@ fun SettingsScreen(
         Box(Modifier.fillMaxSize().tempoAmbientBackdrop()) {
             Column(Modifier.fillMaxSize().padding(padding)) {
                 if (settingsSection == null) {
-                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
-                    OutlinedTextField(
-                        value = settingsSearch,
-                        onValueChange = { settingsSearch = it },
-                        label = { Text(stringResource(R.string.settings_search_label)) },
-                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                        trailingIcon = if (settingsSearch.isBlank()) null else {
-                            {
-                                IconButton(onClick = { settingsSearch = "" }) {
-                                    Icon(Icons.Default.Close,
-                                        contentDescription = stringResource(R.string.stats_search_clear))
-                                }
-                            }
-                        },
-                        shape = MaterialTheme.shapes.extraLarge,
-                        singleLine = true,
-                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
-                            imeAction = androidx.compose.ui.text.input.ImeAction.Search,
-                        ),
-                        modifier = Modifier.widthIn(max = 960.dp).fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 6.dp),
+                    SettingsOverview(
+                        query = settingsSearch,
+                        onQueryChange = { settingsSearch = it },
+                        listState = settingsScrollState,
+                        onSectionSelected = { settingsSection = it },
+                        onNavigate = onNavigate,
+                        modifier = Modifier.weight(1f),
                     )
-                    }
-                }
-                Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
-                LazyColumn(
-                    state = settingsScrollState,
-                    modifier = Modifier.widthIn(max = 960.dp).fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                ) {
-                if (settingsSection == null) {
-                    item(key = "overview") {
-                    if (settingsSearch.isNotBlank()) {
-                        val tokens = settingsSearch.trim().split(Regex("\\s+"))
-                        val directResults = SettingsDestination.entries.map { destination ->
-                            Triple(
-                                stringResource(destination.titleRes),
-                                stringResource(destination.subtitleRes),
-                                destination,
-                            )
-                        }.filter { (title, subtitle, _) ->
-                            tokens.all { title.contains(it, true) || subtitle.contains(it, true) }
-                        }
-                        directResults.forEach { (title, subtitle, destination) ->
-                            SettingsOption(
-                                title = title,
-                                subtitle = subtitle,
-                                onClick = { onNavigate(destination) },
-                            )
-                        }
-                        val categories = SettingsSection.browseOrder.map { section ->
-                            Triple(
-                                section,
-                                stringResource(section.titleRes),
-                                stringResource(section.searchTermsRes),
-                            )
-                        }.filter { (_, title, terms) ->
-                            tokens.all { title.contains(it, true) || terms.contains(it, true) }
-                        }
-                        if (categories.isEmpty() && directResults.isEmpty()) {
-                            Text(stringResource(R.string.settings_search_empty))
-                        }
-                        categories.forEach { (section, title, terms) ->
-                            SettingsOption(
-                                title = title,
-                                subtitle = terms,
-                                onClick = { settingsSection = section },
-                            )
-                        }
-                    } else {
-                    SettingsSectionHeader(stringResource(R.string.settings_category_browse))
-                    val appearance = SettingsDestination.APPEARANCE
-                    val appearanceDestination =
-                        me.avinas.tempo.ui.components.TempoSettingsDestination(
-                            title = stringResource(appearance.titleRes),
-                            subtitle = stringResource(appearance.subtitleRes),
-                            icon = Icons.Rounded.Palette,
-                            onClick = { onNavigate(appearance) },
-                            featured = true,
-                            tone = me.avinas.tempo.ui.components.TempoTileTone.ROSE,
-                        )
-                    val sectionDestinations = SettingsSection.browseOrder.map { section ->
-                        me.avinas.tempo.ui.components.TempoSettingsDestination(
-                            title = stringResource(section.titleRes),
-                            subtitle = stringResource(section.descriptionRes),
-                            icon = section.icon,
-                            tone = section.tone,
-                            onClick = { settingsSection = section },
-                        )
-                    }
-                    me.avinas.tempo.ui.components.TempoSettingsBento(
-                        destinations = listOfNotNull(appearanceDestination) + sectionDestinations,
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    // Each action has one home. Search is the cross-category
-                    // shortcut; the overview remains the original Tempo mosaic.
-                    } // Unfiltered settings overview
-                    }
-                }
-
+                } else {
+                    Box(
+                        Modifier.weight(1f).fillMaxWidth(),
+                        contentAlignment = Alignment.TopCenter,
+                    ) {
+                        LazyColumn(
+                            state = settingsScrollState,
+                            modifier = Modifier.widthIn(max = 960.dp).fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                        ) {
                 if (settingsSection == SettingsSection.GENERAL) {
                     item(key = "general-profile") {
                 // Profile Section
@@ -1185,7 +1103,8 @@ fun SettingsScreen(
                 item(key = "bottom-padding") {
                     Spacer(modifier = Modifier.height(32.dp))
                 }
-                }
+                        }
+                    }
                 }
             }
         }
