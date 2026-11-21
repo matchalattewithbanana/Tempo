@@ -862,7 +862,7 @@ class LastFmImportService
                         // Batch insert with deduplication
                         if (eventsToInsert.isNotEmpty()) {
                             val insertResult = listeningEventDao.insertAllBatchedWithDedup(eventsToInsert)
-                            newScrobbles += insertResult.inserted
+                            newScrobbles += insertResult.newlyAdded
                             Log.d(
                                 TAG,
                                 "Sync page $page: inserted ${insertResult.inserted}, skipped ${insertResult.skipped}, replaced ${insertResult.replaced}",
@@ -1302,7 +1302,7 @@ class LastFmImportService
                         if (activeEventsBatch.size >= EVENT_BATCH_SIZE) {
                             val batchResult = listeningEventDao.insertAllBatchedWithDedup(activeEventsBatch)
                             // Count actual insertions (not duplicates skipped at batch level)
-                            eventsImported += batchResult.inserted
+                            eventsImported += batchResult.newlyAdded
                             duplicatesSkipped += batchResult.skipped
                             if (batchResult.replaced > 0) {
                                 Log.d(
@@ -1364,7 +1364,7 @@ class LastFmImportService
                 // One transaction per page is ~200 rows and the loop is network-bound anyway.
                 if (activeEventsBatch.isNotEmpty()) {
                     val batchResult = listeningEventDao.insertAllBatchedWithDedup(activeEventsBatch)
-                    eventsImported += batchResult.inserted
+                    eventsImported += batchResult.newlyAdded
                     duplicatesSkipped += batchResult.skipped
                     activeEventsBatch.clear()
                 }
@@ -1394,7 +1394,7 @@ class LastFmImportService
             if (activeEventsBatch.isNotEmpty()) {
                 val batchResult = listeningEventDao.insertAllBatchedWithDedup(activeEventsBatch)
                 // Count actual insertions for final batch
-                eventsImported += batchResult.inserted
+                eventsImported += batchResult.newlyAdded
                 duplicatesSkipped += batchResult.skipped
                 activeEventsBatch.clear()
             }
@@ -1895,13 +1895,13 @@ class LastFmImportService
                     Log.i(
                         TAG,
                         "Promoted ${archive.trackTitle} - ${archive.artistName}: " +
-                            "${insertResult.inserted} events created, ${insertResult.skipped} duplicates skipped, ${insertResult.replaced} replaced",
+                            "${insertResult.newlyAdded} new events, ${insertResult.skipped} duplicates skipped, ${insertResult.replaced} replaced",
                     )
 
                     Result.success(
                         PromotionResult(
                             trackId = track.id,
-                            eventsCreated = insertResult.inserted,
+                            eventsCreated = insertResult.newlyAdded,
                             duplicatesSkipped = insertResult.skipped,
                             isNewTrack = isNewTrack,
                         ),
