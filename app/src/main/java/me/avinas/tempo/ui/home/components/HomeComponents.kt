@@ -432,14 +432,6 @@ private fun ActiveSpotlightRing(
         )
 
         // Interactive "Play Story" badge
-        val badgeGradient = remember {
-            Brush.linearGradient(
-                colors = listOf(
-                    appearancePalette.accent,
-                    Color(0xFF8B5CF6)
-                )
-            )
-        }
         Box(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
@@ -449,13 +441,13 @@ private fun ActiveSpotlightRing(
                 .background(appearancePalette.elevatedSurface)
                 .padding(1.8.dp)
                 .clip(CircleShape)
-                .background(badgeGradient),
+                .background(MaterialTheme.colorScheme.primaryContainer),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = Icons.Rounded.PlayArrow,
                 contentDescription = null,
-                tint = Color.White,
+                tint = MaterialTheme.colorScheme.onPrimaryContainer,
                 modifier = Modifier
                     .size(11.dp)
                     .offset(x = 0.5.dp) // Optical center compensation for play triangle
