@@ -75,6 +75,27 @@ private fun NavHostController.safeNavigate(route: String) {
     }
 }
 
+private fun NavHostController.navigateSettingsDestination(destination: SettingsDestination) {
+    when (destination) {
+        SettingsDestination.BACKUP -> navigate(Screen.BackupRestore.route)
+        SettingsDestination.SUPPORTED_APPS -> navigate(Screen.SupportedApps.route)
+        SettingsDestination.BACKGROUND_PROTECTION -> navigate(Screen.BackgroundProtection.route)
+        SettingsDestination.LASTFM_IMPORT -> navigate(Screen.LastFmImport.route)
+        SettingsDestination.SPOTIFY_JSON_IMPORT -> navigate(Screen.SpotifyJsonImport.route)
+        SettingsDestination.DEEZER_IMPORT -> navigate(Screen.DeezerImport.route)
+        SettingsDestination.APPLE_MUSIC_IMPORT -> navigate(Screen.AppleMusicImport.route)
+        SettingsDestination.YOUTUBE_MUSIC_IMPORT -> navigate(Screen.YouTubeMusicImport.route)
+        SettingsDestination.MUSICOLET_IMPORT -> navigate(Screen.MusicoletImport.route)
+        SettingsDestination.EXTENSION_IMPORT -> navigate(Screen.ExtensionImport.route)
+        SettingsDestination.DESKTOP -> navigate(Screen.DesktopLink.route)
+        SettingsDestination.ENRICHMENT_REPORT -> navigate(Screen.EnrichmentReport.route)
+        SettingsDestination.YOUR_DATA -> navigate(Screen.YourData.route)
+        SettingsDestination.APPEARANCE -> navigate(Screen.Appearance.route)
+        SettingsDestination.LOGO_PICKER -> safeNavigate(Screen.LauncherLogoPicker.route)
+        SettingsDestination.UPDATES -> safeNavigate(Screen.UpdateCenter.route)
+    }
+}
+
 @Composable
 fun AppNavigation(
     walkthroughController: me.avinas.tempo.ui.components.WalkthroughController,
@@ -289,42 +310,7 @@ fun AppNavigation(
                     composable(Screen.Settings.route) {
                         SettingsScreen(
                             onNavigateBack = { navController.popBackStack() },
-                            onNavigate = { destination ->
-                                when (destination) {
-                                    SettingsDestination.BACKUP ->
-                                        navController.navigate(Screen.BackupRestore.route)
-                                    SettingsDestination.SUPPORTED_APPS ->
-                                        navController.navigate(Screen.SupportedApps.route)
-                                    SettingsDestination.BACKGROUND_PROTECTION ->
-                                        navController.navigate(Screen.BackgroundProtection.route)
-                                    SettingsDestination.LASTFM_IMPORT ->
-                                        navController.navigate(Screen.LastFmImport.route)
-                                    SettingsDestination.SPOTIFY_JSON_IMPORT ->
-                                        navController.navigate(Screen.SpotifyJsonImport.route)
-                                    SettingsDestination.DEEZER_IMPORT ->
-                                        navController.navigate(Screen.DeezerImport.route)
-                                    SettingsDestination.APPLE_MUSIC_IMPORT ->
-                                        navController.navigate(Screen.AppleMusicImport.route)
-                                    SettingsDestination.YOUTUBE_MUSIC_IMPORT ->
-                                        navController.navigate(Screen.YouTubeMusicImport.route)
-                                    SettingsDestination.MUSICOLET_IMPORT ->
-                                        navController.navigate(Screen.MusicoletImport.route)
-                                    SettingsDestination.EXTENSION_IMPORT ->
-                                        navController.navigate(Screen.ExtensionImport.route)
-                                    SettingsDestination.DESKTOP ->
-                                        navController.navigate(Screen.DesktopLink.route)
-                                    SettingsDestination.ENRICHMENT_REPORT ->
-                                        navController.navigate(Screen.EnrichmentReport.route)
-                                    SettingsDestination.YOUR_DATA ->
-                                        navController.navigate(Screen.YourData.route)
-                                    SettingsDestination.APPEARANCE ->
-                                        navController.navigate(Screen.Appearance.route)
-                                    SettingsDestination.LOGO_PICKER ->
-                                        navController.safeNavigate(Screen.LauncherLogoPicker.route)
-                                    SettingsDestination.UPDATES ->
-                                        navController.safeNavigate(Screen.UpdateCenter.route)
-                                }
-                            },
+                            onNavigate = navController::navigateSettingsDestination,
                         )
                     }
 
