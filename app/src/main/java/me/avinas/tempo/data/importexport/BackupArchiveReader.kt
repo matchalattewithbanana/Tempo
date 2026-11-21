@@ -47,6 +47,7 @@ internal class BackupArchiveReader(
         artworkStaging: RestoreArtworkStaging,
     ): Result {
         var exportData: TempoExportData? = null
+        var dataEntrySeen = false
         var totalExtractedImageBytes = 0L
         var stagedEventCount = 0
         var stagedArchiveCount = 0
@@ -57,6 +58,10 @@ internal class BackupArchiveReader(
                 while (entry != null) {
                     when {
                         entry.name == TempoExportData.DATA_FILENAME -> {
+                            if (dataEntrySeen) {
+                                throw SecurityException("Backup contains duplicate ${TempoExportData.DATA_FILENAME} entries")
+                            }
+                            dataEntrySeen = true
                             val reader = JsonReader.of(
                                 LimitedEntryInputStream(
                                     zipIn,
