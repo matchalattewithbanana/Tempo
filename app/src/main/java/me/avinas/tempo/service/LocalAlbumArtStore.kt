@@ -49,7 +49,6 @@ internal class LocalAlbumArtStore(
                     check(toSave.compress(Bitmap.CompressFormat.JPEG, JPEG_QUALITY, output)) {
                         "Bitmap encoder rejected local album art"
                     }
-                    output.fd.sync()
                 }
             } finally {
                 if (toSave !== bitmap) toSave.recycle()
