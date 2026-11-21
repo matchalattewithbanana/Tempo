@@ -36,7 +36,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import me.avinas.tempo.R
 import me.avinas.tempo.data.applemusic.AppleMusicImportService
 import me.avinas.tempo.ui.applemusic.AppleMusicImportViewModel.State
-import me.avinas.tempo.ui.components.DeepOceanBackground
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,7 +52,7 @@ fun AppleMusicImportScreen(
     val importing = state is State.Importing
     BackHandler(enabled = importing) { viewModel.cancel() }
 
-    DeepOceanBackground {
+    androidx.compose.foundation.layout.Box(Modifier.fillMaxSize()) {
         Scaffold(
             containerColor = Color.Transparent,
             topBar = {
