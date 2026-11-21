@@ -2,7 +2,6 @@ package me.avinas.tempo.ui.history
 
 import me.avinas.tempo.ui.effects.tempoAmbientBackdrop
 import me.avinas.tempo.ui.effects.tempoTiltSurface
-import me.avinas.tempo.ui.effects.tempoListMotion
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -855,7 +854,7 @@ fun HistoryListContent(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .tempoListMotion(index)
+                            
                             .then(
                                 if (isFirstItem) {
                                     Modifier.onGloballyPositioned { coordinates ->
@@ -929,7 +928,7 @@ fun HistoryListContent(
                         key = { _, item -> "lastfm_${item.id}" },
                         contentType = { _, _ -> "history_item" }
                     ) { index, item ->
-                        Box(modifier = Modifier.fillMaxWidth().tempoListMotion(index)) {
+                        Box(modifier = Modifier.fillMaxWidth()) {
                             SwipeToDeleteHistoryItem(
                                 item = item,
                                 index = index,
@@ -989,7 +988,7 @@ fun HistoryListContent(
                         key = { _, item -> "archive_sep_${item.archiveId}" },
                         contentType = { _, _ -> "archive_item" }
                     ) { index, archiveItem ->
-                        Box(Modifier.tempoListMotion(index)) {
+                        Box(Modifier) {
                             ArchiveHistoryListItem(item = archiveItem)
                         }
                     }
@@ -1010,7 +1009,7 @@ fun HistoryListContent(
                     key = { _, item -> "archive_uni_${item.archiveId}" },
                     contentType = { _, _ -> "archive_item" }
                 ) { index, archiveItem ->
-                    Box(Modifier.tempoListMotion(index)) {
+                    Box(Modifier) {
                         ArchiveHistoryListItem(item = archiveItem)
                     }
                 }
