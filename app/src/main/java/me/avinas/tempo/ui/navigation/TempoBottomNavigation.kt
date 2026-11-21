@@ -143,10 +143,17 @@ fun TempoBottomNavigation(
                                     actions[index]()
                                 }
                             },
-                            modifier = Modifier.size(
-                                width = if (showLabels) 80.dp else 56.dp,
-                                height = 62.dp,
-                            ),
+                            modifier = Modifier
+                                .size(
+                                    width = if (showLabels) 80.dp else 56.dp,
+                                    height = 62.dp,
+                                )
+                                // A navigation destination should announce selection,
+                                // not merely "toggle on" like a settings switch.
+                                .semantics {
+                                    role = Role.Tab
+                                    this.selected = selected
+                                },
                             shapes = IconButtonDefaults.toggleableShapes(),
                             colors = IconButtonDefaults.filledIconToggleButtonColors(
                                 containerColor = androidx.compose.ui.graphics.Color.Transparent,
