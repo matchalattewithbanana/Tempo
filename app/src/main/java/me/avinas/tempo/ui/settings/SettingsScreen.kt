@@ -140,7 +140,7 @@ fun SettingsScreen(
     var trackingHeartbeat by remember { mutableStateOf<TrackingServiceHeartbeat.Snapshot?>(null) }
     var trackingStatusCheckedAt by remember { mutableLongStateOf(System.currentTimeMillis()) }
     LaunchedEffect(settingsCategory, lifecycleOwner) {
-        if (settingsCategory == "overview") {
+        if (settingsCategory == "tracking") {
             lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
                 while (true) {
                     val (granted, heartbeat) = withContext(Dispatchers.IO) {
@@ -713,13 +713,40 @@ fun SettingsScreen(
                 } // General
                 if (settingsCategory == "tracking") {
                     item(key = "tracking-source") {
-                // Tracking
+                val trackingHealth = trackingHeartbeat?.let { heartbeat ->
+                    evaluateTrackingHealth(
+                        permissionGranted = notificationListenerGranted,
+                        listenerConnected = heartbeat.listenerConnected,
+                        lastHeartbeatAtMs = heartbeat.lastServiceAliveAt,
+                        lastNotificationCallbackAtMs = heartbeat.lastNotificationCallbackAt,
+                        lastMediaSessionCallbackAtMs = heartbeat.lastMediaSessionCallbackAt,
+                        nowMs = trackingStatusCheckedAt,
+                    )
+                }
+                val listenerStatus = stringResource(
+                    when (trackingHealth?.listenerState) {
+                        null -> R.string.ui_loading
+                        TrackingListenerState.PERMISSION_REQUIRED -> R.string.settings_health_permission_required
+                        TrackingListenerState.WAITING -> R.string.settings_health_waiting
+                        TrackingListenerState.STALE -> R.string.settings_health_stale
+                        TrackingListenerState.CONNECTED -> R.string.settings_health_connected
+                    }
+                )
                 SettingsSectionHeader(stringResource(R.string.settings_music_tracking))
                 TempoSettingsGroup {
                     Column {
                         SettingsOption(
-                            title = stringResource(R.string.settings_manage_permissions),
-                            subtitle = stringResource(R.string.settings_manage_permissions_desc),
+                            title = stringResource(R.string.settings_health_listener),
+                            subtitle = listenerStatus,
+                            showArrow = false,
+                        )
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                        SettingsOption(
+                            title = stringResource(R.string.settings_tracking_access_title),
+                            subtitle = stringResource(
+                                if (notificationListenerGranted) R.string.settings_tracking_access_granted
+                                else R.string.settings_tracking_access_missing
+                            ),
                             onClick = {
                                 try {
                                     val intent = Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)
@@ -843,7 +870,7 @@ fun SettingsScreen(
                 if (settingsCategory == "connections") {
                     item(key = "connections-services") {
                 // Account connections and automatic sync controls
-                SettingsSectionHeader(stringResource(R.string.settings_category_connections))
+                SettingsSectionHeader(stringResource(R.string.settings_connected_accounts))
                 TempoSettingsGroup {
                     Column {
                         if (uiState.isLastFmConnected) {
