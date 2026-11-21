@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import androidx.room.withTransaction
 import me.avinas.tempo.data.local.AppDatabase
+import me.avinas.tempo.data.local.dao.ListeningEventDao
 import me.avinas.tempo.data.local.dao.isLocalBackupArtwork
 import me.avinas.tempo.data.local.entities.*
 import me.avinas.tempo.data.profile.ProfileIdentityManager
@@ -332,6 +333,8 @@ class ImportExportManager @Inject constructor(
             var importedAlbums = 0
             var importedTracks = 0
             var importedEvents = 0
+            var replacedEvents = 0
+            var skippedEvents = 0
             
             // Wrap all Room DB writes in a single transaction so partial failures are rolled back
             database.withTransaction {
@@ -506,8 +509,11 @@ class ImportExportManager @Inject constructor(
             // whose track could not be mapped are skipped. The pipeline deduplicates
             // against existing rows (fingerprint + temporal reconciliation), so a
             // re-import is a no-op and real listening data is never overwritten.
-            importedEvents = replayStagedEvents(stagedEventsFile, trackIdMap)
-            Log.i(TAG, "Imported $importedEvents listening events from staged file")
+            val eventResult = replayStagedEvents(stagedEventsFile, trackIdMap, conflictStrategy)
+            importedEvents = eventResult.newlyAdded
+            replacedEvents = eventResult.replaced
+            skippedEvents = eventResult.skipped
+            Log.i(TAG, "Restored listening events: $importedEvents new, $replacedEvents replaced, $skippedEvents skipped")
             
             _progress.value = ImportExportProgress("Importing metadata...", 80, 100)
             
@@ -730,6 +736,8 @@ class ImportExportManager @Inject constructor(
                 artistsCount = importedArtists,
                 albumsCount = importedAlbums,
                 eventsCount = importedEvents,
+                eventsReplaced = replacedEvents,
+                eventsSkipped = skippedEvents,
                 imagesCount = extractedImages.size,
                 appearanceStatus = if (restoredAppearance) BackupAppearanceStatus.RESTORED else BackupAppearanceStatus.UNCHANGED,
             )
@@ -754,18 +762,30 @@ class ImportExportManager @Inject constructor(
      */
     private suspend fun replayStagedEvents(
         stagedFile: File,
-        trackIdMap: Map<Long, Long>
-    ): Int {
-        if (!stagedFile.exists() || stagedFile.length() == 0L) return 0
+        trackIdMap: Map<Long, Long>,
+        conflictStrategy: ImportConflictStrategy,
+    ): ListeningEventDao.InsertResult {
+        if (!stagedFile.exists() || stagedFile.length() == 0L) {
+            return ListeningEventDao.InsertResult(0, 0)
+        }
 
         val eventAdapter = moshi.adapter(ListeningEvent::class.java)
         var inserted = 0
+        var skipped = 0
+        var replaced = 0
+        var updated = 0
         var chunk = ArrayList<ListeningEvent>(EVENT_IMPORT_CHUNK)
 
         suspend fun flush() {
             if (chunk.isEmpty()) return
-            val result = database.listeningEventDao().insertAllBatchedWithDedup(chunk)
+            val result = database.listeningEventDao().insertAllBatchedWithDedup(
+                chunk,
+                replaceExistingOnMatch = conflictStrategy == ImportConflictStrategy.REPLACE,
+            )
             inserted += result.inserted
+            skipped += result.skipped
+            replaced += result.replaced
+            updated += result.updated
             chunk = ArrayList(EVENT_IMPORT_CHUNK)
         }
 
@@ -779,14 +799,16 @@ class ImportExportManager @Inject constructor(
                     null
                 } ?: continue
                 val newTrackId = trackIdMap[event.track_id] ?: continue
-                chunk.add(event.copy(id = 0, track_id = newTrackId))
+                // A fingerprint from a backup was hashed with its OLD track ID.
+                // The dedup pipeline recalculates it against the local identity.
+                chunk.add(event.copy(id = 0, track_id = newTrackId, contentFingerprint = null))
                 if (chunk.size >= EVENT_IMPORT_CHUNK) {
                     flush()
                 }
             }
         }
         flush()
-        return inserted
+        return ListeningEventDao.InsertResult(inserted, skipped, replaced, updated)
     }
 
     /**
