@@ -867,21 +867,31 @@ class MusicTrackingService : NotificationListenerService() {
             analyticsDailyReporter = entryPoint.analyticsDailyReporter()
             trackingPolicy = TrackingRuntimePolicy(trackingRules)
 
-            // Load initial policy snapshots before the post-init rescan.
+            // Load every independent policy source before the post-init rescan. Manual content
+            // marks are part of the same eligibility contract as app/user preferences; relying on
+            // a later Flow emission left a startup window where an explicit NON_MUSIC rule could
+            // be ignored by the first MediaSession callback.
             serviceScope.launch {
                 try {
-                    trackingPolicy.updateUserPreferences(userPreferencesDao.getSync())
-                    val apps = appPreferenceDao.getAllApps().first()
-                    trackingPolicy.updateAppPreferences(apps)
-                    Log.d(
-                        TAG,
-                        "Loaded tracking policy: mergeAlternateVersions=" +
-                            trackingPolicy.mergeAlternateVersions +
-                            ", appRows=" + apps.size,
-                    )
+                    coroutineScope {
+                        val preferences = async { userPreferencesDao.getSync() }
+                        val apps = async { appPreferenceDao.getAllApps().first() }
+                        val marks = async { manualContentMarkDao.getAllSync() }
 
-                    // Now that policy state is ready, scan active MediaSessions. This closes the
-                    // startup race where a user-added app could be judged before its Room row loaded.
+                        trackingPolicy.updateUserPreferences(preferences.await())
+                        val appRows = apps.await()
+                        trackingPolicy.updateAppPreferences(appRows)
+                        trackingPolicy.updateManualContentMarks(marks.await())
+
+                        Log.d(
+                            TAG,
+                            "Loaded tracking policy: mergeAlternateVersions=" +
+                                trackingPolicy.mergeAlternateVersions +
+                                ", appRows=" + appRows.size,
+                        )
+                    }
+
+                    // All policy state is ready before active media is evaluated.
                     withContext(Dispatchers.Main) {
                         rescanActiveMediaSessions()
                     }
