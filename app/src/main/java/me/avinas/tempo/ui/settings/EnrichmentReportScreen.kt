@@ -76,7 +76,8 @@ fun EnrichmentReportScreen(
             )
         }
     ) { padding ->
-        DeepOceanBackground {
+        // AppNavigation supplies the Appearance backdrop; avoid duplicate overdraw.
+        Box(Modifier.fillMaxSize()) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
