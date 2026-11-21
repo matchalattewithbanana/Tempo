@@ -679,7 +679,7 @@ fun WeekInReviewGrid(
             val tiles: List<@Composable (Modifier) -> Unit> = listOf(
                 { tile ->
                     WeekDigestTile(
-                        label = stringResource(R.string.home_week_review),
+                        label = stringResource(R.string.home_top_artist),
                         value = topArtistName ?: "—",
                         modifier = tile,
                         accent = MaterialTheme.colorScheme.tertiaryContainer,
@@ -700,7 +700,7 @@ fun WeekInReviewGrid(
                 },
                 { tile ->
                     WeekDigestTile(
-                        label = stringResource(R.string.home_week_review),
+                        label = stringResource(R.string.desktop_stats_top_track),
                         value = topTrackName ?: "—",
                         modifier = tile,
                         accent = MaterialTheme.colorScheme.secondaryContainer,
