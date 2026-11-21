@@ -82,11 +82,16 @@ internal object ListeningImportPolicy {
                 // therefore have end anchors up to 59s apart even though
                 // ms_played matches. Require near-identical measured durations
                 // AND significant real-time overlap to protect fast replays.
+                // A legacy StreamingHistory end anchor is rounded to a minute.
+                // Do not conflate two independently timed, second-precision plays.
+                val hasMinuteAnchor = first.endTimestamp % 60_000L == 0L ||
+                    second.endTimestamp % 60_000L == 0L
                 val endDistance = distance(first.endTimestamp, second.endTimestamp)
                 val overlap = minOf(first.endTimestamp, second.endTimestamp) -
                     maxOf(first.timestamp, second.timestamp)
                 val shorter = minOf(first.duration, second.duration)
-                if (endDistance <= 60_000L && distance(first.duration, second.duration) <= 2_000L &&
+                if (hasMinuteAnchor && endDistance <= 60_000L &&
+                    distance(first.duration, second.duration) <= 2_000L &&
                     overlap >= MEASURED_OVERLAP_MIN_MS && overlap >= shorter / 2L
                 ) return endDistance
             }
