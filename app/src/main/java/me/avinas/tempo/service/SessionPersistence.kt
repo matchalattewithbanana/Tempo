@@ -94,7 +94,7 @@ class SessionPersistence(private val context: Context) {
         }
     }
     
-    fun clearSessions() {
+    suspend fun clearSessions() = withContext(Dispatchers.IO) {
         prefs.edit()
             .remove(KEY_ACTIVE_SESSIONS)
             .putLong(KEY_LAST_SAVE_TIMESTAMP, System.currentTimeMillis())
@@ -103,7 +103,7 @@ class SessionPersistence(private val context: Context) {
     }
     
     /** Records the service as active so [wasUncleanShutdown] can spot a crash or kill. */
-    fun markServiceActive() {
+    suspend fun markServiceActive() = withContext(Dispatchers.IO) {
         try {
             if (!prefs.edit().putLong(KEY_SERVICE_LAST_ACTIVE, System.currentTimeMillis()).commit()) {
                 Log.w(TAG, "Unable to persist active-service marker")
@@ -113,7 +113,7 @@ class SessionPersistence(private val context: Context) {
         }
     }
     
-    fun markServiceInactive() {
+    suspend fun markServiceInactive() = withContext(Dispatchers.IO) {
         try {
             if (!prefs.edit().putLong(KEY_SERVICE_LAST_ACTIVE, 0).commit()) {
                 Log.w(TAG, "Unable to persist inactive-service marker")
@@ -123,9 +123,8 @@ class SessionPersistence(private val context: Context) {
         }
     }
     
-    fun wasUncleanShutdown(): Boolean {
-        val lastActive = prefs.getLong(KEY_SERVICE_LAST_ACTIVE, 0)
-        return lastActive > 0
+    suspend fun wasUncleanShutdown(): Boolean = withContext(Dispatchers.IO) {
+        prefs.getLong(KEY_SERVICE_LAST_ACTIVE, 0) > 0
     }
     
     fun getTimeSinceLastSave(): Long {
