@@ -66,7 +66,7 @@ class AppleMusicImportService @Inject constructor(
                     listeningEventDao.insertAllBatchedWithDedup(events)
                 }
                 summary = summary.copy(
-                    imported = summary.imported + result.inserted,
+                    imported = summary.imported + result.newlyAdded,
                     duplicates = summary.duplicates + result.skipped,
                 )
                 pending.clear()
