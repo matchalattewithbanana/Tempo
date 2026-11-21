@@ -42,6 +42,30 @@ A new **original Tempo tonal tile system** now supplies five light/dark/OLED-awa
 
 These are **source-level changes only**. A fresh Android build, screenshot testing on 320/360/393/412dp and high-font / light / OLED variants, and memory/frame-time checks remain mandatory. Do not equate committed UI with verified visual quality.
 
+## Opening, transitions and Now Playing (21 November 2026)
+
+This pass uses the user-provided Orion Store ZIP as **read-only reference**: `OrionActivity.kt` configures the system splash and animates its exit, while `Root.kt` uses separate motion patterns for navigation and overlays. Tempo implements its own, simpler behavior to avoid slowing the main music experience.
+
+### Source changes on `main`
+
+- **Android 12+ launch:** `values-v31/themes.xml` supplies the Tempo icon as the native system splash mark. `MainActivity` fades the native splash out with a short icon enlargement **after** Android has its first app frame; there is **no timer holding the splash** and no new permission/dependency. When Android system animations are disabled, removal is immediate. The 220ms View-property exit is a **Tempo design decision**, not an official Material spring token. Older Android versions retain their existing standard window launch behavior.
+- **Navigation:** `AppNavigation` replaces fixed 120ms fades with the active `MaterialTheme.motionScheme`. Peer Home/Stats/History routes use effects-only transitions; entering a detail route uses a small forward slide on a spatial spring plus an effects fade; popping reverses direction. Both the app's instant navigation setting and reduced-motion policy retain nonanimated transitions. No new routes, destination callbacks or bottom-bar logic.
+- **Onboarding:** `AnimatedOpacity` no longer staggers useful content with an artificial per-item delay; opacity uses an effects spring, and the short upward arrival uses a spatial spring. The step navigator uses spatial/effects springs in both directions, **but hands off to Home immediately** rather than fading first-screen content away again.
+- **Live Now Playing:** `LiveNowPlayingCard` is a Material expressive card, with theme-aware `primaryContainer` when actively playing, `surfaceContainerLow` otherwise, a decorative Material shape, animated status icon, strong artwork and typography hierarchy, and a spatial resize on state changes. Status distinguishes **playing, paused, stale last-detected and idle**. No new player controls are implied; Spotify broadcasts, MediaSession art priority, API verification labels and the separate 1Hz live estimate are preserved.
+- **Compact Now Playing:** `CompactNowPlayingStrip` now uses a Material `Surface`, native color roles and a small expressive state icon instead of a hardcoded bordered glass row. The once-per-minute freshness check now runs only while the app is STARTED; state changes animate with a Material effects spring. User-selected inline/compact/hidden policy is unchanged.
+- **Localization:** new English base strings describe Now Playing state and album art; other locales temporarily receive Android's resource fallback until explicitly translated.
+
+### Acceptance gates (not yet run)
+
+- [ ] Android 12+ cold/warm start: icon visible, splash removed after first frame, no black flash on re-entry, no double animation, no delay added to Home; verify API 26–30 fallback launch.
+- [ ] Set **system animator duration to Off**, plus Tempo **Reduce motion** and **Instant navigation** separately; platform splash exit must respect system Off, and in-app transitions must snap in both app modes. Verify known limitation: native pre-Compose exit does not yet consult app-only Reduce motion (it is read asynchronously from DataStore).
+- [ ] Rapid Home ⇄ Stats ⇄ History taps, deep Song/Artist/Album routes, system predictive back, keyboard and tablet rail: no duplicate back-stack route, content flashing, or bottom-bar overlap.
+- [ ] Now Playing: stopped/idle, playing, paused, stale 2–15 minutes, expired at 15 minutes, local MediaSession art, Spotify art fallback, missing artwork, source labels and stale API verification; no extra remote fetches.
+- [ ] Full + compact layouts, 320/360/393/412dp, Light/Dark/OLED/custom colors, font scaling 1.3×/1.5×/2.0×, TalkBack announcements, contrast and touch semantics.
+- [ ] Android compilation, app smoke tests, and frame/memory profiling with active playback. Do not call the changes verified until these pass.
+
+The M3 rules used are spatial springs for movement/size and effects springs for opacity/color. Applied choreography and launch timing are Tempo choices, not specified M3 values. A music app benefits from a rare launch/Now Playing hero moment; repeated ornamental animations on every analytics card are deliberately avoided.
+
 ## Component contract — apply throughout the app
 
 1. **Color**: text and controls use native semantic roles (`surfaceContainerLow/High`, `onSurface`, `onSurfaceVariant`, `primaryContainer`, `onPrimaryContainer`, etc.). Light, Dark, OLED and wallpaper/custom schemes are first-class. Artwork-derived accents must pass contrast checks and must not change functional semantics.
