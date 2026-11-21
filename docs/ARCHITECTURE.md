@@ -46,14 +46,29 @@ The current tree is an incremental MVVM/repository architecture, not a completed
 
 `data/remote/spotify/AccountSessionGate.kt` serializes short credential/state commits and invalidates obsolete token calls. The refresh mutex coalesces refreshes; it is not held by disconnect while waiting for network I/O.
 
-## Organization backlog
+## Tracking boundaries and organization backlog
 
-`service/PlaybackSession.kt` owns per-play accounting, pause and seek state,
-and conversion to the existing recovery record. `MusicTrackingService` owns
-Android callbacks, session membership, and scheduling persistence. Extracting
-the session model moved about 360 lines out of the service. The existing
-playback duration, live accounting and duplicate-save tests exercise that model.
+`service/PlaybackSession.kt` owns per-play accounting, pause/seek state and recovery snapshots.
+`service/TrackingRuntimePolicy.kt` owns package eligibility, manual content corrections,
+podcast/audiobook filtering and duration policy from immutable Room/preference snapshots.
+`service/PlaybackTransitionPolicy.kt` owns pure same-track/replay/new-session decisions.
+`service/LocalMediaMetadata.kt` is the normalization boundary for MediaSession and notification
+metadata. Rich artwork extraction is kept off the callback hot path.
 
-Large tracking, statistics, import and Profile files should be split by responsibility through focused follow-ups with migration/API and behavior tests. This maintenance pass establishes the map and contributor boundaries; it does not claim those runtime refactors are complete.
+`MusicTrackingService` remains the Android adapter/orchestrator: it owns notification and
+MediaController callbacks, synchronization, active-session membership, foreground lifecycle and
+scheduling persistence. New business branching should not be added directly to that service when
+it belongs to one of the policy/session models above.
+
+The statistics layer still has a broad contract: `StatsRepository` exposes more than sixty
+operations spanning overview, rankings, history, details, image enrichment, editing and cache
+control. `RoomStatsRepository` has removed duplicated artist-detail assembly and dead legacy
+helpers, but capability-sized repository interfaces remain architectural debt. Split that contract
+only together with DI/consumer migration; adding facade-only subinterfaces would move declarations
+without reducing dependency breadth.
+
+Large remaining files should be reduced by information-hiding boundaries and behavior tests, not
+by arbitrary line-count splits. A file split is not considered an architectural improvement when
+callers still need to understand the same mutable state or policy details.
 
 Generated `build/`, `.gradle/` and `node_modules/` output stays outside version control. The extension keeps selected generated Chrome and Firefox files under `browser-extension/dist/`. Rebuilding those packages in the checkout can update the committed copies. Historical audits describe their original revision.
