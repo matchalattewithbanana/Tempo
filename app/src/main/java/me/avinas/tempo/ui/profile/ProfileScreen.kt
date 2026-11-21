@@ -321,22 +321,7 @@ internal fun MastheadHeroMetric(
     accentTint: Color,
 ) {
     val appearancePalette = LocalTempoPalette.current
-    val reducedMotion = rememberReducedMotion()
-    val pulseScale by if (reducedMotion) {
-        remember { mutableFloatStateOf(1f) }
-    } else {
-        val transition = me.avinas.tempo.ui.theme.rememberMotionAwareInfiniteTransition(label = "heroMetricPulse")
-        transition.animateFloat(
-            initialValue = 0.85f,
-            targetValue = 1.35f,
-            animationSpec =
-                infiniteRepeatable(
-                    animation = tween(1400, easing = FastOutSlowInEasing),
-                    repeatMode = RepeatMode.Reverse,
-                ),
-            label = "heroMetricPulseScale",
-        )
-    }
+    // Static focus mark: no perpetual animation or per-frame UI work.
 
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Row(
@@ -347,10 +332,7 @@ internal fun MastheadHeroMetric(
                 modifier =
                     Modifier
                         .size(6.dp)
-                        .graphicsLayer {
-                            scaleX = pulseScale
-                            scaleY = pulseScale
-                        }.clip(CircleShape)
+.clip(CircleShape)
                         .background(accentTint),
             )
             Text(
@@ -527,8 +509,10 @@ private fun CollapsingProfileTitle(
     val appearancePalette = LocalTempoPalette.current
     AnimatedVisibility(
         visible = visible,
-        enter = fadeIn(tween(180)) + slideInVertically(tween(180)) { -10 },
-        exit = fadeOut(tween(140)) + slideOutVertically(tween(140)) { -10 },
+        enter = fadeIn(animationSpec = MaterialTheme.motionScheme.fastEffectsSpec()) +
+            slideInVertically(animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()) { -10 },
+        exit = fadeOut(animationSpec = MaterialTheme.motionScheme.fastEffectsSpec()) +
+            slideOutVertically(animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()) { -10 },
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -580,19 +564,8 @@ private fun ProfileLoadingSkeleton(
     contentModifier: Modifier,
     heroTopClearance: Dp,
 ) {
-    val reducedMotion = rememberReducedMotion()
-    val pulse =
-        me.avinas.tempo.ui.theme.rememberMotionAwareInfiniteTransition(label = "profileSkeleton").animateFloat(
-            initialValue = 0.40f,
-            targetValue = 0.85f,
-            animationSpec =
-                infiniteRepeatable(
-                    tween(900, easing = FastOutSlowInEasing),
-                    RepeatMode.Reverse,
-                ),
-            label = "profileSkeletonAlpha",
-        )
-    val currentAlpha = if (reducedMotion) 0.65f else pulse.value
+    // An initial loading placeholder should not run an infinite animation loop.
+    val currentAlpha = 0.65f
 
     Column(
         modifier = contentModifier,
@@ -2550,6 +2523,9 @@ fun BadgeDetailsOverlay(
     val xpEarned = GamificationEngine.getBadgeXpContribution(badge.badgeId, badge.stars)
 
     val reducedMotion = rememberReducedMotion()
+    val fastSpatialSpec = MaterialTheme.motionScheme.fastSpatialSpec<Float>()
+    val defaultSpatialSpec = MaterialTheme.motionScheme.defaultSpatialSpec<Float>()
+    val fastEffectsSpec = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
     val coroutineScope = rememberCoroutineScope()
     val haptic = LocalHapticFeedback.current
     val density = LocalDensity.current.density
@@ -2562,64 +2538,32 @@ fun BadgeDetailsOverlay(
     val contentAlpha = remember { Animatable(0f) }
     val contentOffsetY = remember { Animatable(if (reducedMotion) 0f else 48f) }
 
-    // Dismiss animation handler
+    // MotionScheme selects expressive springs normally and instant snap specs when
+    // Android / Tempo disables animation. No fixed delays block dismissal.
     fun dismissSmoothly() {
         if (isClosing) return
         isClosing = true
-        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+        if (!reducedMotion) haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
         coroutineScope.launch {
-            launch {
-                contentAlpha.animateTo(0f, tween(160, easing = FastOutLinearInEasing))
-                contentOffsetY.animateTo(28f, tween(160, easing = FastOutLinearInEasing))
-            }
-            launch {
-                emblemScale.animateTo(if (reducedMotion) 0.80f else 0.38f, tween(190, easing = FastOutLinearInEasing))
-                emblemAlpha.animateTo(0f, tween(180, easing = FastOutLinearInEasing))
-                glowScale.animateTo(0.20f, tween(190, easing = FastOutLinearInEasing))
-            }
-            delay(220)
+            val jobs = listOf(
+                launch { contentAlpha.animateTo(0f, fastEffectsSpec) },
+                launch { contentOffsetY.animateTo(if (reducedMotion) 0f else 28f, fastSpatialSpec) },
+                launch { emblemScale.animateTo(if (reducedMotion) 1f else 0.38f, fastSpatialSpec) },
+                launch { emblemAlpha.animateTo(0f, fastEffectsSpec) },
+                launch { glowScale.animateTo(0.20f, fastSpatialSpec) },
+            )
+            jobs.forEach { it.join() }
             onDismiss()
         }
     }
 
-    // Trigger entrance animations
-    LaunchedEffect(badge.badgeId) {
-        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-        launch {
-            emblemAlpha.animateTo(1f, tween(120, easing = LinearEasing))
-        }
-        launch {
-            glowScale.animateTo(
-                targetValue = 1.18f,
-                animationSpec =
-                    spring(
-                        dampingRatio = Spring.DampingRatioLowBouncy,
-                        stiffness = Spring.StiffnessLow,
-                    ),
-            )
-        }
-        launch {
-            emblemScale.animateTo(
-                targetValue = 1f,
-                animationSpec =
-                    spring(
-                        dampingRatio = if (reducedMotion) 1f else 0.62f,
-                        stiffness = if (reducedMotion) 400f else 340f,
-                    ),
-            )
-        }
-        launch {
-            if (!reducedMotion) delay(70)
-            launch {
-                contentAlpha.animateTo(1f, tween(280, easing = FastOutSlowInEasing))
-            }
-            launch {
-                contentOffsetY.animateTo(
-                    targetValue = 0f,
-                    animationSpec = spring(dampingRatio = 0.78f, stiffness = 420f),
-                )
-            }
-        }
+    LaunchedEffect(badge.badgeId, reducedMotion) {
+        if (!reducedMotion) haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+        launch { emblemAlpha.animateTo(1f, fastEffectsSpec) }
+        launch { glowScale.animateTo(1.18f, defaultSpatialSpec) }
+        launch { emblemScale.animateTo(1f, defaultSpatialSpec) }
+        launch { contentAlpha.animateTo(1f, fastEffectsSpec) }
+        launch { contentOffsetY.animateTo(0f, defaultSpatialSpec) }
     }
 
     ProfileModal(
