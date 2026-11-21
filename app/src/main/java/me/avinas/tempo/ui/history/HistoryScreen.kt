@@ -1024,49 +1024,45 @@ fun HistoryListContent(
 @Composable
 fun SeparatedModeInfoBanner(
     archiveTrackCount: Int,
-    archiveTotalPlays: Long
+    archiveTotalPlays: Long,
 ) {
-    GlassCard(
+    val scheme = MaterialTheme.colorScheme
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 4.dp),
-        backgroundColor = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.75f),
-        accentColor = GoldDark,
-        shape = RoundedCornerShape(16.dp),
-        contentPadding = PaddingValues(14.dp),
-        variant = GlassCardVariant.QuietGlass
+        shape = MaterialTheme.shapes.extraLarge,
+        color = scheme.secondaryContainer,
+        contentColor = scheme.onSecondaryContainer,
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().padding(14.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(GoldDark.copy(alpha = 0.15f))
-                    .border(0.8.dp, GoldDark.copy(alpha = 0.3f), CircleShape),
-                contentAlignment = Alignment.Center
+            Surface(
+                modifier = Modifier.size(36.dp),
+                shape = CircleShape,
+                color = scheme.onSecondaryContainer.copy(alpha = 0.10f),
+                contentColor = scheme.onSecondaryContainer,
             ) {
-                Icon(
-                    imageVector = Icons.Default.Info,
-                    contentDescription = null,
-                    tint = GoldLight,
-                    modifier = Modifier.size(18.dp)
-                )
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
             }
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = stringResource(R.string.history_lastfm_imported),
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    style = MaterialTheme.typography.titleSmallEmphasized,
                 )
                 Text(
                     text = "${archiveTotalPlays.formatNumber()} plays • $archiveTrackCount tracks archived",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = scheme.onSecondaryContainer,
                 )
             }
         }
@@ -1081,61 +1077,45 @@ fun SectionDividerHeader(
     title: String,
     subtitle: String,
     icon: ImageVector,
-    iconTint: Color
+    iconTint: Color,
 ) {
+    val scheme = MaterialTheme.colorScheme
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 10.dp)
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(iconTint.copy(alpha = 0.14f))
-                    .border(0.8.dp, iconTint.copy(alpha = 0.3f), RoundedCornerShape(10.dp)),
-                contentAlignment = Alignment.Center
+            Surface(
+                modifier = Modifier.size(36.dp),
+                shape = MaterialTheme.shapes.medium,
+                color = scheme.surfaceContainerHigh,
+                contentColor = iconTint,
             ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = iconTint,
-                    modifier = Modifier.size(18.dp)
-                )
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
             }
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    style = MaterialTheme.typography.titleMediumEmphasized,
+                    color = scheme.onSurface,
                 )
                 Text(
                     text = subtitle,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = scheme.onSurfaceVariant,
                 )
             }
         }
-        Spacer(modifier = Modifier.height(10.dp))
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(0.8.dp)
-                .background(
-                    Brush.horizontalGradient(
-                        listOf(
-                            iconTint.copy(alpha = 0.4f),
-                            iconTint.copy(alpha = 0.1f),
-                            Color.Transparent
-                        )
-                    )
-                )
-        )
+        HorizontalDivider(color = scheme.outlineVariant)
     }
 }
 
