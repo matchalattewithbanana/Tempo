@@ -64,7 +64,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import me.avinas.tempo.R
 import me.avinas.tempo.data.lastfm.LastFmImportService
-import me.avinas.tempo.ui.components.DeepOceanBackground
 import me.avinas.tempo.ui.theme.*
 import java.text.NumberFormat
 import java.util.Locale
@@ -94,7 +93,7 @@ fun LastFmImportScreen(
     val uiState by viewModel.uiState.collectAsState()
     val importProgress by viewModel.importProgress.collectAsState()
 
-    DeepOceanBackground {
+    androidx.compose.foundation.layout.Box(Modifier.fillMaxSize()) {
         Scaffold(
             topBar = {
                 TopAppBar(
