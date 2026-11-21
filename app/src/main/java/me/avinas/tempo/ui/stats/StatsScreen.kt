@@ -72,6 +72,8 @@ import androidx.compose.material.icons.rounded.Bolt
 import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Schedule
+import androidx.compose.material.icons.rounded.Headphones
+import androidx.compose.material.icons.rounded.Equalizer
 import androidx.compose.material3.*
 import me.avinas.tempo.ui.components.TempoCircularLoadingIndicator
 import me.avinas.tempo.ui.components.TempoLinearLoadingIndicator
@@ -150,6 +152,7 @@ fun StatsScreen(
     var searchOpen by rememberSaveable { mutableStateOf(uiState.searchQuery.isNotBlank()) }
     val searchFocusRequester = remember { FocusRequester() }
     val keyboard = LocalSoftwareKeyboardController.current
+    val reducedMotion = rememberReducedMotion()
     // Wait only for the search field to enter composition. The previous fixed
     // 280ms delay made every search feel unresponsive and did not scale with
     // reduced motion, UI load or keyboard animation duration.
