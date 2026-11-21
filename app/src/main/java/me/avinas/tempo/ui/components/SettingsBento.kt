@@ -2,7 +2,6 @@
 
 package me.avinas.tempo.ui.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -142,12 +141,6 @@ private fun TempoBentoDestination(
             Modifier.fillMaxWidth().heightIn(min = height)
                 .clip(MaterialTheme.shapes.extraExtraLarge),
         ) {
-            Box(
-                Modifier.align(Alignment.BottomEnd)
-                    .offset(x = 46.dp, y = 44.dp)
-                    .size(if (kind == BentoKind.FEATURED) 180.dp else 130.dp)
-                    .background(swatch.foreground.copy(alpha = 0.055f), swatch.shape),
-            )
             when (kind) {
                 BentoKind.SHORT, BentoKind.SINGLE -> {
                     Row(
@@ -164,7 +157,7 @@ private fun TempoBentoDestination(
                             Text(
                                 destination.subtitle,
                                 style = MaterialTheme.typography.bodySmall,
-                                color = swatch.foreground.copy(alpha = 0.78f),
+                                color = swatch.foreground,
                                 maxLines = if (kind == BentoKind.SINGLE) 2 else 3,
                                 overflow = TextOverflow.Ellipsis,
                             )
@@ -186,7 +179,7 @@ private fun TempoBentoDestination(
                             Text(
                                 destination.subtitle,
                                 style = MaterialTheme.typography.bodySmall,
-                                color = swatch.foreground.copy(alpha = 0.8f),
+                                color = swatch.foreground,
                                 maxLines = if (kind == BentoKind.TALL) 4 else 3,
                                 overflow = TextOverflow.Ellipsis,
                             )
