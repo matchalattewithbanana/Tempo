@@ -14,10 +14,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
@@ -242,77 +241,76 @@ fun BackupRestoreScreen(
     ) { padding ->
         // The root navigation already draws the selected Appearance backdrop.
         // Avoid a second full-screen gradient when displaying this page.
-        Box(Modifier.fillMaxSize()) {
-            Column(
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+            // Subpages use a readable centered pane at expanded widths.
+            // Compose only the visible backup sections instead of the entire page.
+            LazyColumn(
                 modifier = Modifier
-                    .fillMaxSize()
                     .padding(padding)
-                    .verticalScroll(rememberScrollState())
-                    .padding(16.dp)
+                    .widthIn(max = 960.dp)
+                    .fillMaxSize()
+                    .padding(16.dp),
             ) {
-                TempoSettingsCategoryHero(
-                    title = stringResource(R.string.settings_backup_restore),
-                    subtitle = stringResource(R.string.backup_restore_appearance_scope),
-                    icon = Icons.Default.CloudDownload,
-                    style = TempoEmblemStyle.MEMORY,
-                )
-                Spacer(Modifier.height(16.dp))
-                // Data Overview Section
-                DataOverviewSection(uiState)
-
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                // Google Drive Section
-                GoogleDriveSection(
-                    isSignedIn = isSignedIn,
-                    googleAccount = googleAccount,
-                    driveBackups = driveBackups,
-                    backupSettings = backupSettings,
-                    driveOperation = driveOperation,
-                    onSignIn = viewModel::requestSignIn,
-                    onSignOut = viewModel::signOut,
-                    onBackupNow = viewModel::backupToDrive,
-                    onRestore = viewModel::startDriveRestore,
-                    onDelete = viewModel::deleteDriveBackup,
-                    onRefreshBackups = viewModel::loadDriveBackups
-                )
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                AutomaticBackupSection(
-                    backupSettings = backupSettings,
-                    onSetInterval = viewModel::setBackupInterval,
-                    onSetWifiOnly = viewModel::setWifiOnly
-                )
-                
-                Spacer(modifier = Modifier.height(24.dp))
-                
-                // Local Backup Section
-                LocalBackupSection(
-                    uiState = uiState,
-                    onToggleLocalImages = viewModel::toggleIncludeLocalImages,
-                    onChooseAutoBackupFolder = viewModel::chooseLocalBackupFolder,
-                    onExport = {
-                        exportLauncher.launch("tempo_backup_${System.currentTimeMillis()}.zip")
-                    },
-                    onImport = {
-                        importLauncher.launch(
-                            arrayOf(
-                                "application/zip",
-                                "application/x-zip",
-                                "application/x-zip-compressed",
-                                "application/octet-stream"
+                item(key = "overview") {
+                    TempoSettingsCategoryHero(
+                        title = stringResource(R.string.settings_backup_restore),
+                        subtitle = stringResource(R.string.backup_restore_appearance_scope),
+                        icon = Icons.Default.CloudDownload,
+                        style = TempoEmblemStyle.MEMORY,
+                    )
+                    Spacer(Modifier.height(16.dp))
+                    DataOverviewSection(uiState)
+                    Spacer(Modifier.height(16.dp))
+                }
+                item(key = "drive") {
+                    GoogleDriveSection(
+                        isSignedIn = isSignedIn,
+                        googleAccount = googleAccount,
+                        driveBackups = driveBackups,
+                        backupSettings = backupSettings,
+                        driveOperation = driveOperation,
+                        onSignIn = viewModel::requestSignIn,
+                        onSignOut = viewModel::signOut,
+                        onBackupNow = viewModel::backupToDrive,
+                        onRestore = viewModel::startDriveRestore,
+                        onDelete = viewModel::deleteDriveBackup,
+                        onRefreshBackups = viewModel::loadDriveBackups,
+                    )
+                    Spacer(Modifier.height(24.dp))
+                }
+                item(key = "automatic") {
+                    AutomaticBackupSection(
+                        backupSettings = backupSettings,
+                        onSetInterval = viewModel::setBackupInterval,
+                        onSetWifiOnly = viewModel::setWifiOnly,
+                    )
+                    Spacer(Modifier.height(24.dp))
+                }
+                item(key = "local") {
+                    LocalBackupSection(
+                        uiState = uiState,
+                        onToggleLocalImages = viewModel::toggleIncludeLocalImages,
+                        onChooseAutoBackupFolder = viewModel::chooseLocalBackupFolder,
+                        onExport = {
+                            exportLauncher.launch("tempo_backup_${System.currentTimeMillis()}.zip")
+                        },
+                        onImport = {
+                            importLauncher.launch(
+                                arrayOf(
+                                    "application/zip",
+                                    "application/x-zip",
+                                    "application/x-zip-compressed",
+                                    "application/octet-stream",
+                                )
                             )
-                        )
-                    }
-                )
-                
-                Spacer(modifier = Modifier.height(24.dp))
-                
-                // Info Card
-                BackupTipsCard()
-                
-                Spacer(modifier = Modifier.height(32.dp))
+                        },
+                    )
+                    Spacer(Modifier.height(24.dp))
+                }
+                item(key = "tips") {
+                    BackupTipsCard()
+                    Spacer(Modifier.height(32.dp))
+                }
             }
         }
     }
