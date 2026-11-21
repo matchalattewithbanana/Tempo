@@ -1021,7 +1021,7 @@ private fun HeroProfileSection(
     val appearancePalette = LocalTempoPalette.current
     val animatedProgress by animateFloatAsState(
         targetValue = userLevel.levelProgress,
-        animationSpec = tween(durationMillis = 1200, easing = FastOutSlowInEasing),
+        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
         label = "levelProgress",
     )
     Column(
@@ -1631,7 +1631,7 @@ private fun ChallengeCard(challenge: DailyChallenge) {
         .compositeOver(appearancePalette.surfaceSunken)
     val animatedProgress by animateFloatAsState(
         targetValue = challenge.progressFraction,
-        animationSpec = tween(900, easing = FastOutSlowInEasing),
+        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
         label = "challengeProgress",
     )
 
@@ -1963,7 +1963,7 @@ private fun SpotlightBadgeCard(
     val progressLabel = "${badge.progress} / ${badge.maxProgress}"
     val animatedProgress by animateFloatAsState(
         targetValue = badge.progressFraction,
-        animationSpec = tween(1200, easing = FastOutSlowInEasing),
+        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
         label = "spotlightProgress",
     )
 
@@ -2088,7 +2088,7 @@ private fun BadgeCard(
     val isBeginner = badge.badgeId in GamificationEngine.BEGINNER_BADGES
     val animatedProgress by animateFloatAsState(
         targetValue = badge.progressFraction,
-        animationSpec = tween(1200, easing = FastOutSlowInEasing),
+        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
         label = "badgeProgress",
     )
     val earnedDate =
@@ -2463,7 +2463,7 @@ fun BadgeDetailsOverlay(
         }
     val animatedProgress by animateFloatAsState(
         targetValue = badge.progressFraction,
-        animationSpec = tween(1200, easing = FastOutSlowInEasing),
+        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
         label = "badgeDetailProgress",
     )
     val earnedDate =
