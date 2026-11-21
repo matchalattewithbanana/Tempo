@@ -382,25 +382,7 @@ private fun ActiveSpotlightRing(
 ) {
     val appearancePalette = LocalTempoPalette.current
     val storyAccessibilityLabel = stringResource(R.string.spotlight_view_story)
-    val infiniteTransition = me.avinas.tempo.ui.theme.rememberMotionAwareInfiniteTransition(label = "spotlightRingTransition")
-    val rotationAngle by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 360f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 7000, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "ringRotation"
-    )
-    val pulseAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.22f,
-        targetValue = 0.48f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 2400, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "ringPulse"
-    )
+    // Spotlight's story indicator does not need permanent GPU animation.
 
     val sweepGradientBrush = remember {
         Brush.sweepGradient(SpotlightStoryGradient)
@@ -424,8 +406,8 @@ private fun ActiveSpotlightRing(
             drawCircle(
                 brush = Brush.radialGradient(
                     colors = listOf(
-                        appearancePalette.accent.copy(alpha = pulseAlpha * 0.36f),
-                        Color(0xFF8B5CF6).copy(alpha = pulseAlpha * 0.16f),
+                        appearancePalette.accent.copy(alpha = 0.13f),
+                        Color(0xFF8B5CF6).copy(alpha = 0.04f),
                         Color.Transparent
                     ),
                     radius = size.minDimension / 2f
@@ -434,15 +416,13 @@ private fun ActiveSpotlightRing(
                 center = center
             )
 
-            // Rotating multi-stop gradient story ring
-            rotate(rotationAngle) {
-                drawCircle(
-                    brush = sweepGradientBrush,
-                    style = Stroke(width = outerStroke),
-                    radius = ringRadius,
-                    center = center
-                )
-            }
+            // Still multi-tonal, now stable while Home is idle.
+            drawCircle(
+                brush = sweepGradientBrush,
+                style = Stroke(width = outerStroke),
+                radius = ringRadius,
+                center = center,
+            )
         }
 
         // Inner circular avatar with intentional dark separator border
