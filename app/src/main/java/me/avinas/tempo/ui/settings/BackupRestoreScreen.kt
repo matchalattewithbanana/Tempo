@@ -357,7 +357,7 @@ fun BackupRestoreScreen(
                         Text(
                             text = "${progress.current}/${progress.total}",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -386,7 +386,7 @@ fun BackupRestoreScreen(
             dismissButton = {
                 Row {
                     TextButton(onClick = { viewModel.cancelImport() }) {
-                        Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f))
+                        Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     TextButton(
                         onClick = { viewModel.importData(uri, ImportConflictStrategy.SKIP) }
@@ -413,13 +413,13 @@ fun BackupRestoreScreen(
                     Text(
                         text = "Size: ${formatBytes(backup.sizeBytes)}",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     if (backup.appVersion != null) {
                         Text(
                             text = "App version: ${backup.appVersion}",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     Spacer(modifier = Modifier.height(12.dp))
@@ -440,7 +440,7 @@ fun BackupRestoreScreen(
             dismissButton = {
                 Row {
                     TextButton(onClick = { viewModel.cancelDriveRestore() }) {
-                        Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f))
+                        Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     TextButton(
                         onClick = { viewModel.restoreFromDrive(backup, ImportConflictStrategy.SKIP) }
@@ -502,7 +502,7 @@ fun BackupRestoreScreen(
                             trackColor = GlassFrostSoft
                         )
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text("${(op.progress * 100).toInt()}%", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f))
+                        Text("${(op.progress * 100).toInt()}%", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 },
                 confirmButton = { }
@@ -526,7 +526,7 @@ fun BackupRestoreScreen(
                             trackColor = GlassFrostSoft
                         )
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text("${(op.progress * 100).toInt()}%", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f))
+                        Text("${(op.progress * 100).toInt()}%", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 },
                 confirmButton = { }
@@ -640,7 +640,7 @@ private fun GoogleDriveSection(
                     Icon(
                         Icons.Default.ChevronRight,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f)
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             } else {
@@ -891,13 +891,13 @@ private fun DriveBackupItem(
                 Text(
                     text = formatBytes(backup.sizeBytes),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 if (backup.deviceName != null) {
                     Text(
                         text = " • ${backup.deviceName}",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -917,7 +917,7 @@ private fun DriveBackupItem(
                 Icon(
                     Icons.Default.Delete,
                     contentDescription = "Delete",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f)
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
