@@ -204,7 +204,7 @@ Physical-device screenshots show four full-width oversized Profile progress tile
 This corrective pass:
 - Replaces the experimental short bar with the well-established Material `NavigationBar`/item components so all three primary destinations remain allocated and labeled. Both regular and floating styles share the same rendering and selected state; the wide rail is unchanged.
 - Reduces Profile to a responsive two-metric streak row, keeps level/XP in the identity hero, removes the duplicate Badge Collection entry, and shields the scrolling hero with a themed top-bar surface.
-- Replaces the tall Settings staggered bento with compact adaptive category rows, moves manual service imports into Library & data, avoids repeating the Drive-backup success message, and reduces redundant overview tracking details.
+- An initial corrective pass replaced the staggered Settings bento with compact rows. **This was subsequently reversed** when the user clarified that the original featured/staggered bento was the intended shipped design. The current source restores that bento and instead consolidates the content *beneath* it (imports, status and duplicate links).
 - Uses system-controlled splash dismissal with system night-aware launch backgrounds, drops artificial splash icon zoom/220ms hold, and avoids double-animating top-level tab switches. Detail navigation retains Material motion tokens.
 - Extends import reconciliation for saved live-source plays from Tempo ZIP restores and improves selection of compatible alternate track rows when a conflicting provider ID occupies the first title/artist match. Regression sources added; no existing user data is silently merged or deleted.
 
@@ -223,3 +223,24 @@ The explicit Material 3 Expressive review checked the plugin's 2026 navigation, 
 - **Personalization:** the user-controlled icon-only navigation option remains available, despite M3 preferring persistent labels, rather than deleting a previously exposed user choice.
 
 **Still unverified:** Kotlin/Compose compilation, instrumented layout checks, light/dark/OLED/custom themes, TalkBack with 200% fonts, RTL, foldable 840dp rail, and actual animation/jank inspection on Android. These source edits are not part of the already published `5.1.69-beta` APK. See [#98](https://github.com/matchalattewithbanana/Tempo/issues/98).
+
+### Settings architecture correction — preserve the shipped visual design
+
+The user's two screenshots show the **same actual app** at different scroll positions. The bright, staggered category cards at the top are intentional and should be preserved, not treated as a mockup or replaced by generic list rows. Restored `SettingsBento.kt` and its phone/tablet breakpoint tests from the published `v5.1.69-beta`, with corrected Material foreground/background color pairings.
+
+The Settings overview is now a **navigation-only mosaic plus search**. Everything else has one primary home:
+
+| Section | Single source of truth |
+|---|---|
+| Featured Appearance tile | Appearance Studio, palettes, launcher logo and motion controls |
+| General | Profile identity, language, notifications, listening goals/streak preferences |
+| Music tracking | Notification-listener health and permission, supported players, battery controls, content filters and extended audio analysis |
+| Connections & sync | Spotify account/API/broadcast and Last.fm account controls, desktop connection |
+| Library & data | Cloud/local backups and last-known Drive status; file/extension imports + smart merge; listening accuracy, metadata and diagnostics; privacy controls; destructive reset last |
+| About & community | Community, legal/help, version and update-check navigation |
+
+Cross-category search continues to provide direct shortcuts, but those results no longer justify duplicating buttons in the overview or unrelated categories. Detail sections share one `TempoSettingsGroup` Material surface instead of mixing `GlassCard`, unrelated white/tonal containers and inconsistent corner geometry. Battery statuses use paired M3 error/tertiary/secondary color roles.
+
+**Preset/gallery jumps:** Appearance Studio opens the large curated-preset gallery collapsed, with a clear explanation of preview versus Apply. The opt-in “apply curated style” toggle starts **off**; palette selection by default does not change the user's typography, shape, density, navigation, or animation settings. The preview cards are more compact and do not spring-morph their corners when selected. New regression assertions cover non-destructive palette-only selection.
+
+**Remaining release gate:** source checks are not equivalent to compilation or visual QA. The revised branch still requires a manual authorized debug build, screenshots at 320/393/600dp and 1x/1.3x/2x fonts, expanded/collapsed preset comparison, all color modes, Settings back/search, and real-device clicks. No APK or release was initiated by this pass. Related: [#98](https://github.com/matchalattewithbanana/Tempo/issues/98).
