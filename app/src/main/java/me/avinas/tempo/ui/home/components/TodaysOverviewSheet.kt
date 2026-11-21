@@ -435,10 +435,10 @@ private fun TodaysTopBarNavigation(
 
         AnimatedVisibility(
             visible = showCollapsedTitle,
-            enter = fadeIn(effectsSpec) + slideInVertically(
+            enter = fadeIn(animationSpec = MaterialTheme.motionScheme.fastEffectsSpec<Float>()) + slideInVertically(
                 animationSpec = MaterialTheme.motionScheme.fastSpatialSpec<androidx.compose.ui.unit.IntOffset>()
             ) { -10 },
-            exit = fadeOut(effectsSpec) + slideOutVertically(
+            exit = fadeOut(animationSpec = MaterialTheme.motionScheme.fastEffectsSpec<Float>()) + slideOutVertically(
                 animationSpec = MaterialTheme.motionScheme.fastSpatialSpec<androidx.compose.ui.unit.IntOffset>()
             ) { -10 },
             modifier = Modifier
