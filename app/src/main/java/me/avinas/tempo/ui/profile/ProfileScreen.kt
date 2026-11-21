@@ -1305,6 +1305,7 @@ private data class ProfileMetricSpec(
     val supportingText: String? = null,
 )
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun ProfileProgressTile(spec: ProfileMetricSpec, modifier: Modifier) {
     val scheme = MaterialTheme.colorScheme
