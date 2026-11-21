@@ -41,7 +41,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.*
@@ -53,9 +52,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import me.avinas.tempo.R
 import me.avinas.tempo.ui.components.connectedChoiceColumns
 import me.avinas.tempo.ui.components.shouldUseFilterChips
@@ -120,50 +116,23 @@ fun AppearanceScreen(
     val newRows = remember(columns) { NewAppearanceEditions.chunked(columns) }
     val signatureRows = remember(columns) { SignatureAppearancePresets.chunked(columns) }
     var lookName by rememberSaveable { mutableStateOf("") }
-    var transferFailed by rememberSaveable { mutableStateOf(false) }
-    var transferDone by rememberSaveable { mutableStateOf(false) }
-    var transferBusy by remember { mutableStateOf(false) }
-    var exportSnapshot by rememberSaveable { mutableStateOf<String?>(null) }
-    val busy = saving || transferBusy
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    val exportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
-        val snapshot = exportSnapshot
-        exportSnapshot = null
-        if (uri != null && snapshot != null) {
-            transferBusy = true
-            scope.launch {
-                try {
-                    withContext(Dispatchers.IO) {
-                        requireNotNull(context.contentResolver.openOutputStream(uri, "wt")).use { it.write(snapshot.toByteArray(Charsets.UTF_8)) }
-                    }
-                    transferDone = true
-                } catch (cancelled: kotlinx.coroutines.CancellationException) { throw cancelled } catch (failure: Exception) { transferFailed = true } finally { transferBusy = false }
-            }
+    val transfer by viewModel.transferState.collectAsStateWithLifecycle()
+    val busy = saving || transfer.busy
+    val exportLauncher =
+        rememberLauncherForActivityResult(
+            ActivityResultContracts.CreateDocument("application/json"),
+        ) { uri ->
+            if (uri == null) viewModel.cancelPreparedExport()
+            else viewModel.exportPrepared(uri)
         }
-    }
-    val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        if (uri != null) {
-            transferBusy = true
-            scope.launch {
-                try {
-                    val imported = withContext(Dispatchers.IO) {
-                        requireNotNull(context.contentResolver.openInputStream(uri)).use { input ->
-                            val bytes = java.io.ByteArrayOutputStream()
-                            val buffer = ByteArray(4096)
-                            while (true) {
-                                val count = input.read(buffer)
-                                if (count < 0) break
-                                require(bytes.size() + count <= AppearanceCodec.MAX_BYTES)
-                                bytes.write(buffer, 0, count)
-                            }
-                            AppearanceCodec.decode(bytes.toString("UTF-8")).forLiveApp()
-                        }
-                    }
-                    draft = imported
-                    transferDone = true
-                } catch (cancelled: kotlinx.coroutines.CancellationException) { throw cancelled } catch (failure: Exception) { transferFailed = true } finally { transferBusy = false }
-            }
+    val importLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            uri?.let(viewModel::importAppearance)
+        }
+    LaunchedEffect(transfer.imported) {
+        transfer.imported?.let { imported ->
+            draft = imported
+            viewModel.consumeImportedAppearance()
         }
     }
     var showExitDialog by rememberSaveable { mutableStateOf(false) }
@@ -606,14 +575,24 @@ fun AppearanceScreen(
                 } }
                 Text(stringResource(R.string.appearance_transfer_hint), style = MaterialTheme.typography.bodySmall)
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    OutlinedButton(enabled = !busy, onClick = { transferDone = false; transferFailed = false; importLauncher.launch(arrayOf("application/json", "text/plain")) }) {
+                    OutlinedButton(
+                        enabled = !busy,
+                        onClick = {
+                            viewModel.clearTransferFeedback()
+                            importLauncher.launch(arrayOf("application/json", "text/plain"))
+                        },
+                    ) {
                         Text(stringResource(R.string.appearance_import))
                     }
-                    OutlinedButton(enabled = !busy, onClick = {
-                        transferDone = false; transferFailed = false
-                        exportSnapshot = AppearanceCodec.encode(draft)
-                        exportLauncher.launch("tempo-appearance.json")
-                    }) { Text(stringResource(R.string.appearance_export)) }
+                    OutlinedButton(
+                        enabled = !busy,
+                        onClick = {
+                            viewModel.prepareExport(draft)
+                            exportLauncher.launch("tempo-appearance.json")
+                        },
+                    ) {
+                        Text(stringResource(R.string.appearance_export))
+                    }
                 }
             }
             }
@@ -623,8 +602,13 @@ fun AppearanceScreen(
                 Text(stringResource(R.string.appearance_restore))
             }
             if (saveFailed) Text(stringResource(R.string.appearance_save_failed), color = MaterialTheme.colorScheme.error)
-            if (transferFailed) Text(stringResource(R.string.appearance_transfer_failed), color = MaterialTheme.colorScheme.error)
-            if (transferDone) Text(stringResource(R.string.appearance_transfer_done))
+            if (transfer.failed) {
+                Text(
+                    stringResource(R.string.appearance_transfer_failed),
+                    color = MaterialTheme.colorScheme.error,
+                )
+            }
+            if (transfer.completed) Text(stringResource(R.string.appearance_transfer_done))
                     Spacer(Modifier.height(12.dp))
                 }
             }
