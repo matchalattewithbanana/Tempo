@@ -746,7 +746,6 @@ fun ProfileScreen(
                                 ) {
                                     if (appearance.showProfileStreakWarning && streakMinutes != null) {
                                         StreakRiskBanner(
-                                            streakDurationMinutes = streakMinutes,
                                             timeRemaining = streakTimeRemaining,
                                         )
                                     }
@@ -1373,14 +1372,12 @@ private fun MasterStatMasthead(
             value = streakValue,
             label = stringResource(R.string.profile_bento_current_streak),
             icon = Icons.Rounded.LocalFireDepartment,
-
             supportingText = if (streakAtRisk) stringResource(R.string.profile_bento_streak_warning) else null,
         ),
         ProfileMetricSpec(
             value = bestStreakValue,
             label = stringResource(R.string.profile_bento_best_streak),
             icon = Icons.Rounded.Whatshot,
-
         ),
     )
     BoxWithConstraints(Modifier.fillMaxWidth()) {
@@ -1403,7 +1400,6 @@ private fun MasterStatMasthead(
 
 @Composable
 private fun StreakRiskBanner(
-    streakDurationMinutes: Long,
     timeRemaining: String,
 ) {
     // A status warning needs a legible paired color, not an always-dark glass
