@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Tempo Stats",
-  "version": "4.10.25.0",
-  "version_name": "4.10.25-beta",
+  "version": "5.1.69.0",
+  "version_name": "5.1.69-beta",
   "description": "Track music on YouTube Music, Spotify, SoundCloud & more. Sync your listening history to Tempo app.",
   "icons": {
     "16": "dist/icons/icon16.png",
