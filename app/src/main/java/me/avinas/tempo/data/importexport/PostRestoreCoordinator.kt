@@ -38,7 +38,7 @@ class PostRestoreCoordinator @Inject constructor(
         conflictStrategy: ImportConflictStrategy,
         onProgress: (ImportExportProgress) -> Unit,
     ): Outcome {
-        val warnings = mutableListOf<String>()
+        val warnings = mutableListOf<BackupRestoreWarning>()
 
         if (conflictStrategy == ImportConflictStrategy.REPLACE) {
             try {
