@@ -8,6 +8,7 @@ import dagger.Lazy
 import me.avinas.tempo.data.remote.spotify.SpotifyAuthManager
 import me.avinas.tempo.data.remote.spotify.SpotifyTokenStorage
 import android.net.Uri
+import androidx.core.app.NotificationManagerCompat
 import androidx.compose.runtime.Immutable
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
@@ -22,6 +23,9 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.async
 import me.avinas.tempo.data.drive.BackupSettings
 import me.avinas.tempo.data.drive.BackupSettingsManager
 import kotlinx.coroutines.launch
@@ -45,6 +49,10 @@ import me.avinas.tempo.worker.EnrichmentWorker
 import me.avinas.tempo.worker.GamificationWorker
 import me.avinas.tempo.worker.NotificationWorker
 import me.avinas.tempo.worker.SpotifyPollingWorker
+import me.avinas.tempo.service.SpotifyBroadcastPresence
+import me.avinas.tempo.service.TrackingServiceHeartbeat
+import me.avinas.tempo.utils.BatteryUtils
+import me.avinas.tempo.utils.OemBackgroundHelper
 import javax.inject.Inject
 
 @HiltViewModel
@@ -89,6 +97,17 @@ class SettingsViewModel
 
         private val _historyQuality = MutableStateFlow(HistoryQualityUiState())
         val historyQuality: StateFlow<HistoryQualityUiState> = _historyQuality.asStateFlow()
+
+        private var spotifyClientIdDraftDirty = false
+        private val _runtimeStatus =
+            MutableStateFlow(
+                SettingsRuntimeStatus(
+                    isXiaomiDevice = OemBackgroundHelper.isXiaomiDevice(),
+                    spotifyBroadcastEnabled = SpotifyBroadcastPresence.enabled(context),
+                    trackingStatusCheckedAt = System.currentTimeMillis(),
+                ),
+            )
+        val runtimeStatus: StateFlow<SettingsRuntimeStatus> = _runtimeStatus.asStateFlow()
 
         // Keys
         private val NOTIF_DAILY_KEY = booleanPreferencesKey("notif_daily_summary")
@@ -442,9 +461,119 @@ class SettingsViewModel
          * When enabled: Spotify listening data is fetched from API instead of notifications.
          * When disabled (default): All apps including Spotify use notification tracking.
          */
-        suspend fun spotifyAccountInfo(): Pair<Boolean, String> = withContext(Dispatchers.IO) {
-            val auth = spotifyAuthManager.get()
-            Pair(auth.isConnected(), spotifyTokenStorage.get().getCustomClientId().orEmpty())
+        /**
+         * Owns Settings' platform/runtime observations. The composable only supplies lifecycle
+         * visibility; permission, heartbeat, battery, OEM and Spotify reads stay below the UI.
+         */
+        suspend fun observeRuntimeStatus(section: SettingsSection?) {
+            when (section) {
+                SettingsSection.TRACKING -> {
+                    while (true) {
+                        refreshTrackingRuntimeStatus()
+                        delay(RUNTIME_STATUS_REFRESH_MS)
+                    }
+                }
+                SettingsSection.CONNECTIONS -> {
+                    while (true) {
+                        refreshConnectionsRuntimeStatus()
+                        delay(RUNTIME_STATUS_REFRESH_MS)
+                    }
+                }
+                else -> Unit
+            }
+        }
+
+        private suspend fun refreshTrackingRuntimeStatus() {
+            val snapshot =
+                withContext(Dispatchers.IO) {
+                    coroutineScope {
+                        val listener = async {
+                            NotificationManagerCompat.getEnabledListenerPackages(context)
+                                .contains(context.packageName)
+                        }
+                        val heartbeat = async { TrackingServiceHeartbeat.snapshot(context) }
+                        val battery = async { BatteryUtils.getBatteryLevel(context) }
+                        val autostart =
+                            if (_runtimeStatus.value.isXiaomiDevice) {
+                                async { OemBackgroundHelper.getAutostartState(context) }
+                            } else {
+                                null
+                            }
+
+                        TrackingRuntimeSnapshot(
+                            notificationListenerGranted = listener.await(),
+                            trackingHeartbeat = heartbeat.await(),
+                            batteryLevel = battery.await(),
+                            autostartState =
+                                autostart?.await()
+                                    ?: OemBackgroundHelper.AutostartState.UNKNOWN,
+                        )
+                    }
+                }
+
+            _runtimeStatus.update {
+                it.copy(
+                    notificationListenerGranted = snapshot.notificationListenerGranted,
+                    trackingHeartbeat = snapshot.trackingHeartbeat,
+                    trackingStatusCheckedAt = System.currentTimeMillis(),
+                    batteryLevel = snapshot.batteryLevel,
+                    autostartState = snapshot.autostartState,
+                )
+            }
+        }
+
+        private suspend fun refreshConnectionsRuntimeStatus() {
+            val previous = _runtimeStatus.value
+            val snapshot =
+                withContext(Dispatchers.IO) {
+                    coroutineScope {
+                        val account = async {
+                            val auth = spotifyAuthManager.get()
+                            auth.isConnected() to spotifyTokenStorage.get().getCustomClientId().orEmpty()
+                        }
+                        val battery = async { BatteryUtils.getBatteryLevel(context) }
+                        val (connected, clientId) = account.await()
+                        ConnectionsRuntimeSnapshot(
+                            spotifyConnected = connected,
+                            spotifyClientId = clientId,
+                            spotifyBroadcastEnabled = SpotifyBroadcastPresence.enabled(context),
+                            batteryLevel = battery.await(),
+                        )
+                    }
+                }
+
+            val newlyConnected =
+                previous.spotifyAccountLoaded &&
+                    snapshot.spotifyConnected &&
+                    !previous.spotifyConnected
+            _runtimeStatus.update { current ->
+                current.copy(
+                    spotifyConnected = snapshot.spotifyConnected,
+                    spotifyAccountLoaded = true,
+                    spotifyClientId =
+                        if (!spotifyClientIdDraftDirty) snapshot.spotifyClientId
+                        else current.spotifyClientId,
+                    spotifyBroadcastEnabled = snapshot.spotifyBroadcastEnabled,
+                    batteryLevel = snapshot.batteryLevel,
+                )
+            }
+            if (newlyConnected && _uiState.value.spotifyApiOnlyMode) {
+                SpotifyPollingWorker.syncNow(context)
+            }
+        }
+
+        fun updateSpotifyClientIdDraft(value: String) {
+            spotifyClientIdDraftDirty = true
+            _runtimeStatus.update { it.copy(spotifyClientId = value) }
+        }
+
+        fun updateSpotifyConnectionUi(connected: Boolean) {
+            if (!connected) spotifyClientIdDraftDirty = false
+            _runtimeStatus.update { it.copy(spotifyConnected = connected, spotifyAccountLoaded = true) }
+        }
+
+        fun updateSpotifyBroadcastUi(enabled: Boolean) {
+            _runtimeStatus.update { it.copy(spotifyBroadcastEnabled = enabled) }
         }
 
         suspend fun startSpotifyAuthorization(clientId: String): Intent? = withContext(Dispatchers.IO) {
@@ -482,6 +611,24 @@ class SettingsViewModel
                     SpotifyPollingWorker.cancel(context)
                 }
             }
+        }
+
+        private data class TrackingRuntimeSnapshot(
+            val notificationListenerGranted: Boolean,
+            val trackingHeartbeat: TrackingServiceHeartbeat.Snapshot?,
+            val batteryLevel: Int,
+            val autostartState: OemBackgroundHelper.AutostartState,
+        )
+
+        private data class ConnectionsRuntimeSnapshot(
+            val spotifyConnected: Boolean,
+            val spotifyClientId: String,
+            val spotifyBroadcastEnabled: Boolean,
+            val batteryLevel: Int,
+        )
+
+        private companion object {
+            const val RUNTIME_STATUS_REFRESH_MS = 30_000L
         }
 
         val resetState = appDataResetter.state
@@ -650,6 +797,23 @@ data class HistoryQualityUiState(
 )
 
 @Immutable
+@Immutable
+data class SettingsRuntimeStatus(
+    val notificationListenerGranted: Boolean = false,
+    val trackingHeartbeat: TrackingServiceHeartbeat.Snapshot? = null,
+    val trackingStatusCheckedAt: Long = 0L,
+    val batteryLevel: Int = 100,
+    val isXiaomiDevice: Boolean = false,
+    val autostartState: OemBackgroundHelper.AutostartState = OemBackgroundHelper.AutostartState.UNKNOWN,
+    val spotifyConnected: Boolean = false,
+    val spotifyAccountLoaded: Boolean = false,
+    val spotifyClientId: String = "",
+    val spotifyBroadcastEnabled: Boolean = false,
+) {
+    val isBatteryCritical: Boolean get() = batteryLevel <= BatteryUtils.CRITICAL_BATTERY_LEVEL
+    val isLowBattery: Boolean get() = batteryLevel <= BatteryUtils.LOW_BATTERY_LEVEL
+}
+
 data class SettingsUiState(
     val dailySummaryEnabled: Boolean = true,
     val weeklyRecapEnabled: Boolean = true,
