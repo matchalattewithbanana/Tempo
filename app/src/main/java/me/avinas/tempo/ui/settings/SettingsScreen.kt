@@ -64,12 +64,10 @@ import kotlinx.coroutines.launch
 import me.avinas.tempo.R
 import me.avinas.tempo.service.SpotifyBroadcastPresence
 import me.avinas.tempo.service.TrackingServiceHeartbeat
-import me.avinas.tempo.ui.components.LiveNowPlayingCard
 import me.avinas.tempo.data.importexport.ImportConflictStrategy
 import me.avinas.tempo.data.importexport.ImportExportResult
 import me.avinas.tempo.data.local.entities.AlbumArtSource
 import me.avinas.tempo.data.drive.BackupStatus
-import me.avinas.tempo.ui.components.GlassCard
 import me.avinas.tempo.ui.components.SettingsOption
 import me.avinas.tempo.ui.components.SettingsSectionHeader
 import me.avinas.tempo.ui.components.TempoSettingsGroup
@@ -533,16 +531,13 @@ fun SettingsScreen(
                     item(key = "general-profile") {
                 // Profile Section
                 SettingsSectionHeader(stringResource(R.string.settings_profile))
-                GlassCard(
-                    modifier =
-                        Modifier.fillMaxWidth().clickable {
-                            tempName = uiState.userName
-                            showNameDialog = true
-                        },
-                    contentPadding = PaddingValues(16.dp),
-                    variant = me.avinas.tempo.ui.components.GlassCardVariant.LowProminence,
+                TempoSettingsGroup(
+                    modifier = Modifier.clickable {
+                        tempName = uiState.userName
+                        showNameDialog = true
+                    },
                 ) {
-                    Column {
+                    Column(modifier = Modifier.padding(16.dp)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically,
