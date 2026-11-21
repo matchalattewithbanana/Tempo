@@ -28,4 +28,21 @@ class ExpressiveLayoutPolicyTest {
         assertEquals(1, connectedChoiceColumns(390, 1f, 0))
         assertEquals(3, connectedChoiceColumns(390, 1f, 3))
     }
+    @Test fun materialBreakpointsResolveToOneCanonicalPolicy() {
+        assertEquals(TempoWidthClass.COMPACT, tempoAdaptiveLayout(599.9f).widthClass)
+        assertEquals(TempoWidthClass.MEDIUM, tempoAdaptiveLayout(600f).widthClass)
+        assertEquals(TempoWidthClass.EXPANDED, tempoAdaptiveLayout(840f).widthClass)
+        assertEquals(TempoWidthClass.LARGE, tempoAdaptiveLayout(1200f).widthClass)
+        assertEquals(TempoWidthClass.EXTRA_LARGE, tempoAdaptiveLayout(1600f).widthClass)
+    }
+
+    @Test fun expandedLayoutsExposeStructuralCapabilities() {
+        assertEquals(TempoPrimaryNavigation.BOTTOM_BAR, tempoAdaptiveLayout(393f).primaryNavigation)
+        assertEquals(TempoPrimaryNavigation.COLLAPSED_RAIL, tempoAdaptiveLayout(700f).primaryNavigation)
+        assertEquals(TempoPrimaryNavigation.EXPANDED_RAIL, tempoAdaptiveLayout(900f).primaryNavigation)
+        org.junit.Assert.assertFalse(tempoAdaptiveLayout(839.9f).supportsTwoPane)
+        org.junit.Assert.assertTrue(tempoAdaptiveLayout(840f).supportsTwoPane)
+        assertEquals(16f, tempoAdaptiveLayout(393f).contentMarginDp)
+        assertEquals(24f, tempoAdaptiveLayout(840f).contentMarginDp)
+    }
 }

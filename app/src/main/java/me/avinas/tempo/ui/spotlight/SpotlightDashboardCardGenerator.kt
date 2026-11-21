@@ -711,7 +711,5 @@ internal class SpotlightDashboardCardGenerator(
             CardGenerationResult.Error("discovery", e)
         }
     }
-    
-    // Story Generation (Optimized with parallel data fetching)
-    
+
 }

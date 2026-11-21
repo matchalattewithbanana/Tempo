@@ -50,12 +50,11 @@ import me.avinas.tempo.ui.theme.TempoDarkSurfaceElevated
 import me.avinas.tempo.ui.theme.TempoDarkSurfaceSunken
 import me.avinas.tempo.ui.theme.TempoPrimary
 
-/* GlassCard surface roles (one per job, never mixed):
- *  - Obsidian     solid near-black anchor — structural stat blocks.
- *  - QuietGlass   ~90% opaque glass + ≤5% accent — analytic cards that must
- *                 stay legible over the art atmosphere.
- *  - TintedSolid  opaque dark + ~12% pastel tint — identity/emotion cards.
- *  - High/LowProminence — legacy translucent frost for the rest of the app.
+/*
+ * Compatibility names retained for existing callers. Routine variants now map
+ * to Material surface-container roles; only explicit caller-supplied colors or
+ * shadows opt into custom artwork treatment. This keeps migration source-safe
+ * without maintaining a second app-wide glass surface system.
  */
 
 enum class GlassCardVariant {

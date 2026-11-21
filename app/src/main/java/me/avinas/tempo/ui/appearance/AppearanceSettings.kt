@@ -44,6 +44,8 @@ data class AppearanceSettings(
     val fontStyle: AppearanceFontStyle = AppearanceFontStyle.TEMPO,
     val reduceMotion: Boolean = false,
     val instantNavigation: Boolean = false,
+    // Legacy serialized field retained for imported looks. Material navigation
+    // labels are always visible, so this is intentionally not a live UI option.
     val showNavigationLabels: Boolean = true,
     val showHistoryArtwork: Boolean = true,
     val accentSource: AppearanceAccentSource = AppearanceAccentSource.PRESET,
