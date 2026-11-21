@@ -643,100 +643,91 @@ fun GlassStatItem(rank: Int, item: StatItem, onClick: (StatItem) -> Unit) {
         is TopAlbum -> item.totalTimeMs
     }
 
-    val palette = LocalTempoPalette.current
     val scheme = MaterialTheme.colorScheme
-    val tintColor: Color
-    val bgAlpha: Float
-    when (rank) {
-        1 -> {
-            tintColor = GoldDark
-            bgAlpha = 0.15f
-        }
-        2 -> {
-            tintColor = Color(0xFFE879F9)
-            bgAlpha = 0.12f
-        }
-        3 -> {
-            tintColor = Color(0xFFB45309)
-            bgAlpha = 0.12f
-        }
-        else -> {
-            tintColor = GlassStatItemPalette[(rank - 4) % GlassStatItemPalette.size]
-            bgAlpha = 0.15f
-        }
-    }
-    
-    // Smart Composition: Rank 1-3 get 3D/HighProminence, Rest get 2D/LowProminence
-    // Since this composable handles rank 2+, we check against 3.
-    val variant = if (rank <= 3) me.avinas.tempo.ui.components.GlassCardVariant.HighProminence else me.avinas.tempo.ui.components.GlassCardVariant.LowProminence
-
-    val rankColor = remember(palette, tintColor) {
-        AppearancePaletteResolver.readableAccent(palette, tintColor, palette.surfaceSunken)
+    // A ranked result is a readable, tappable Material row, not a shadow
+    // and alpha-gradient stack repeated dozens of times.
+    val featured = rank in 1..3
+    val container = if (featured) scheme.surfaceContainerHigh else scheme.surfaceContainerLow
+    val rankTint = when (rank) {
+        1 -> scheme.primary
+        2 -> scheme.secondary
+        3 -> scheme.tertiary
+        else -> scheme.onSurfaceVariant
     }
 
-    GlassCard(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-            .premiumClickable(onClick = { onClick(item) })
-            .innerShadow(
-                color = if (rank <= 3) Color.White.copy(alpha = 0.1f) else Color.Black.copy(alpha = 0.2f),
-                cornersRadius = 24.dp,
-                spread = 1.dp,
-                blur = 2.dp
-            ),
-        backgroundColor = tintColor.copy(alpha = bgAlpha), // Increased alpha
-        contentPadding = PaddingValues(12.dp), // Slightly tighter padding
-        variant = variant
+    Surface(
+        onClick = { onClick(item) },
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+        shape = MaterialTheme.shapes.large,
+        color = container,
+        contentColor = scheme.onSurface,
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
             Text(
                 text = "#$rank",
-                style = MaterialTheme.typography.titleMedium, // Reduced from Large
-                fontWeight = FontWeight.Bold,
-                color = if (rank <= 3) rankColor else scheme.onSurfaceVariant,
-                modifier = Modifier.width(36.dp)
+                style = MaterialTheme.typography.titleMediumEmphasized,
+                color = rankTint,
+                modifier = Modifier.width(36.dp),
             )
-            
             if (LocalTempoAppearance.current.showStatsArtwork) {
                 Box(
-                    modifier = Modifier.size(48.dp).clip(RoundedCornerShape(8.dp)).background(scheme.surfaceContainerHigh),
-                    contentAlignment = Alignment.Center
+                    modifier = Modifier.size(48.dp)
+                        .clip(MaterialTheme.shapes.medium)
+                        .background(scheme.surfaceContainerHighest),
+                    contentAlignment = Alignment.Center,
                 ) {
-                    if (imageUrl != null) {
+                    if (!imageUrl.isNullOrBlank()) {
                         CachedAsyncImage(
                             imageUrl = imageUrl,
                             contentDescription = null,
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop,
-                            targetSizeDp = 48 // Downsample for faster decode & less memory
+                            targetSizeDp = 48,
                         )
                     } else {
-                        Icon(Icons.Rounded.MusicNote, contentDescription = null, tint = scheme.onSurfaceVariant)
+                        Icon(
+                            Icons.Rounded.MusicNote,
+                            contentDescription = null,
+                            tint = scheme.onSurfaceVariant,
+                        )
                     }
                 }
-
-                Spacer(modifier = Modifier.width(16.dp))
             }
-            Column(modifier = Modifier.weight(1f)) {
-                Text(title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface, maxLines = 1)
-                Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(3.dp),
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    color = scheme.onSurface,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = scheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                // Settings may display time in days/hours/minutes: give the
+                // duration its own full-width line rather than forcing it
+                // beside an already narrow song or artist title.
+                Text(
+                    text = displayStatsDuration(timeMs),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = rankTint,
+                )
             }
-            
-            Text(displayStatsDuration(timeMs), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
-
-// Top-level palette to avoid allocation on every recomposition
-private val GlassStatItemPalette = listOf(
-    Color(0xFFC026D3), // Fuchsia 600 (Orchid)
-    Color(0xFFDB2777), // Pink 600 (Rose)
-    Color(0xFFF59E0B), // Gold
-    Color(0xFF9333EA), // Purple 600
-    Color(0xFFBE185D), // Pink 700 (Raspberry)
-    Color(0xFFE879F9)  // Orchid
-)
 
 @Composable
 fun EmptyStatsState() {
