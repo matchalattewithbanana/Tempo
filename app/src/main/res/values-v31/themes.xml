@@ -9,8 +9,8 @@
         <item name="colorOnSecondary">@android:color/black</item>
         <item name="android:statusBarColor">@color/purple_700</item>
         <!-- Android 12+ system splash: recognisable Tempo mark, no artificial hold. -->
-        <item name="android:windowSplashScreenBackground">@color/black</item>
+        <item name="android:windowSplashScreenBackground">@color/tempo_splash_background</item>
         <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
-        <item name="android:windowBackground">@color/black</item>
+        <item name="android:windowBackground">@color/tempo_splash_background</item>
     </style>
 </resources>
