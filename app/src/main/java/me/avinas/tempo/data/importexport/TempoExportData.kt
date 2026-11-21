@@ -108,6 +108,7 @@ sealed class ImportExportResult {
         val eventsReplaced: Int = 0,
         val imagesCount: Int = 0,
         val appearanceStatus: BackupAppearanceStatus? = null,
+        val warnings: List<String> = emptyList(),
     ) : ImportExportResult() {
         val totalRecords: Int get() = tracksCount + artistsCount + albumsCount + eventsCount
     }
