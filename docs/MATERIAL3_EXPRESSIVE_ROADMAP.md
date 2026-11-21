@@ -14,6 +14,18 @@ Build a distinctive, quick, delightful music journal with consistent Material 3 
 - Do **not** add carousels, floating actions or animation to places without a discoverable user purpose.
 - Do not silently change notification access, background tracking permissions, or release signing.
 
+## Source implementation checkpoint — 21 November 2026 (M3 Expressive skill follow-up)
+
+**Source updates committed to `main` with `[skip ci]`, without changing tracking records, import deduplication, signing, version numbers, or release workflows.** These are genuine source changes, **not** a compilation/device validation certificate.
+
+- **Motion and jank:** Profile badge detail, collapsing title, Song Details audio preview and level-up celebration now use theme motion schemes; reduced-motion mode snaps on supported interactions. Removed permanent Profile skeleton/hero pulses, Song Details skeleton/equalizer loops, Home Spotlight rotation/pulse, BPM ring loops, and delayed numerical/chart reveals in Song Details, Insight Feed, and the daily cadence chart. The level-up confetti now runs once instead of looping forever.
+- **Adaptive navigation:** Compact primary destinations use `ShortNavigationBar` with `ShortNavigationBarArrangement.EqualWeight`. Floating destination selection has tab semantics. Existing navigation bar height/inset reservation remains in place. No new route or back-stack behavior.
+- **Screen loading:** Settings now has 16 keyed lazy groups rather than one eagerly composed scroll column. Its search field and content are centered within a readable capped width on expanded layouts. Backup & Restore now has five independently composed lazy groups, while operation/confirmation dialogs remain independent of scrolling.
+- **Theme consistency:** Custom tertiary container/on-container tokens and inverse snackbar-action tokens are paired. Color swatches for expressive tiles adapt text contrast. Artist fan-standing ranks retain accent hues but use theme tonal surfaces/text instead of fixed light-mode pastel cards. Level-up content now uses theme surface/text roles. Snackbar dismissal uses a localized description.
+- **Regression sources:** Contrast tests cover Material inverse and tertiary role pairings across preset tones; expressive tile foreground tests cover bright and dark surfaces.
+
+**Still blocking M3 Expressive sign-off:** Android Gradle compilation; full unit, Android lint and instrumented tests; screenshots of Home/Stats/History/Profile/Settings/Backup/Song/Artist across Light/Dark/OLED/System/custom colors; low-width/large-text/RTL and TalkBack input; short navigation and compact now-playing inset/selection behavior; restore and import interaction smoke tests; measured startup, jank, memory, and battery benchmarks. Source-level structural checks alone do not prove runtime correctness. The larger Phase 1–5 adaptive two-pane, layout-studio, share and screen-by-screen migration roadmap below remains open; do not label it completed.
+
 ## Roadmap overview
 
 | Phase | Focus | Key deliverables | Exit gate |
