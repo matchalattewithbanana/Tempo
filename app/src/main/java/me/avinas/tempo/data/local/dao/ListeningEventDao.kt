@@ -16,9 +16,6 @@ interface ListeningEventDao {
         const val BATCH_SIZE = 80
 
         const val DUPLICATE_TOLERANCE_MS = ListeningImportPolicy.SAME_SOURCE_TOLERANCE_MS
-        // Merge only nearby indexed windows; the old one-hour gap could turn
-        // a few sparse history checks into a multi-month full-range scan.
-        private const val QUERY_JOIN_GAP_MS = 90_000L
     }
 
     @Query("SELECT * FROM listening_events WHERE id = :id")
@@ -316,60 +313,39 @@ interface ListeningEventDao {
             val equivalentTrackIds = trackEvents.flatMap { event ->
                 equivalentByTrackId[event.track_id] ?: listOf(event.track_id)
             }.distinct()
-            val candidates =
-                ListeningEventReconciliation.Candidates(equivalentByTrackId)
+            val existingSlots = mutableListOf<ListeningEventReconciliation.Slot>()
             for (window in ListeningEventReconciliation.windows(trackEvents)) {
                 // SQLite's bind-variable limit applies even when many old
                 // track rows normalize to the same artist/title identity.
                 for (ids in equivalentTrackIds.chunked(800)) {
-                    for (existing in getEventsForReconciliation(ids, window.first, window.last)) {
-                        candidates.add(
+                    getEventsForReconciliation(ids, window.first, window.last)
+                        .mapTo(existingSlots) { existing ->
                             ListeningEventReconciliation.Slot(
-                                play = ListeningImportPolicy.Play(
-                                    existing.timestamp,
-                                    existing.end_timestamp,
-                                    existing.playDuration,
-                                    existing.source,
-                                    existing.session_id,
-                                ),
+                                play =
+                                    ListeningImportPolicy.Play(
+                                        existing.timestamp,
+                                        existing.end_timestamp,
+                                        existing.playDuration,
+                                        existing.source,
+                                        existing.session_id,
+                                    ),
                                 existingId = existing.id,
                                 trackId = existing.track_id,
-                            ),
-                        )
-                    }
+                            )
+                        }
                 }
             }
 
-            val incoming = trackEvents.map { it to ListeningImportPolicy.Play(it) }
-                .sortedWith(compareByDescending<Pair<ListeningEvent, ListeningImportPolicy.Play>> { it.second.authority }
-                    .thenBy { it.second.timestamp })
-
-            for ((event, play) in incoming) {
-                val conflict = candidates.closest(event.track_id, play)
-                if (conflict != null) {
-                    // REPLACE is meaningful for matching plays recorded by the
-                    // same source; never overwrite a higher-authority live event.
-                    if (
-                        !ListeningEventReconciliation.shouldReplace(
-                            conflict = conflict,
-                            incoming = play,
-                            replaceExistingOnMatch = replaceExistingOnMatch,
-                        )
-                    ) {
-                        skipped++
-                        continue
-                    }
-                    toDelete.add(requireNotNull(conflict.existingId))
-                    candidates.remove(conflict)
-                }
-                toInsert.add(event)
-                candidates.add(
-                    ListeningEventReconciliation.Slot(
-                        play = play,
-                        trackId = event.track_id,
-                    ),
+            val plan =
+                ListeningEventReconciliation.plan(
+                    incomingEvents = trackEvents,
+                    existingSlots = existingSlots,
+                    equivalentByTrackId = equivalentByTrackId,
+                    replaceExistingOnMatch = replaceExistingOnMatch,
                 )
-            }
+            skipped += plan.skipped
+            toDelete += plan.toDelete
+            toInsert += plan.toInsert
         }
 
         // Delete the lower-authority events that were replaced.
