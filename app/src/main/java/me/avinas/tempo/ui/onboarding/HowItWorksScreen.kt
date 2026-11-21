@@ -317,6 +317,7 @@ private fun FlowConnector(
     val connectorHeight = rememberClampedHeightPercentage(0.024f, 16.dp, 24.dp)
     // This leaf alone subscribes to the loop — the screen body stays settled.
     val p = progress.value
+    val connectorColor = MaterialTheme.colorScheme.onSurfaceVariant
     Box(
         modifier = Modifier
             .height(connectorHeight)
@@ -329,7 +330,7 @@ private fun FlowConnector(
             
             // Draw animated dashed line
             drawLine(
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = connectorColor,
                 start = Offset(size.width / 2, 0f),
                 end = Offset(size.width / 2, size.height),
                 strokeWidth = 2.dp.toPx(),
