@@ -675,7 +675,7 @@ fun WeekInReviewGrid(
             modifier = Modifier.padding(horizontal = 4.dp),
         )
         BoxWithConstraints(Modifier.fillMaxWidth()) {
-            val twoColumns = maxWidth >= 360.dp
+            val twoColumns = weekDigestColumns(maxWidth.value, androidx.compose.ui.platform.LocalDensity.current.fontScale) == 2
             val tiles: List<@Composable (Modifier) -> Unit> = listOf(
                 { tile ->
                     WeekDigestTile(
