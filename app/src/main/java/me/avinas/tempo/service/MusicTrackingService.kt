@@ -145,9 +145,6 @@ class MusicTrackingService : NotificationListenerService() {
         // seeded lists, which is how apps could be blocked by one and allowed by the other.
 
         // Typical music duration range (used for music detection)
-        private const val MIN_MUSIC_DURATION_MS = 30_000L // 30 seconds
-        private const val TYPICAL_SONG_MIN_MS = 60_000L // 1 minute
-        private const val TYPICAL_SONG_MAX_MS = 10 * 60 * 1000L // 10 minutes
 
         // Notification extras keys for music metadata
         private const val EXTRA_TITLE = Notification.EXTRA_TITLE
@@ -207,6 +204,7 @@ class MusicTrackingService : NotificationListenerService() {
     private lateinit var trackingRules: TrackingRulesPreferences
 
     private lateinit var trackingPolicy: TrackingRuntimePolicy
+    private lateinit var mediaSessionClassifier: MediaSessionContentClassifier
 
     /**
      * Re-evaluates active sessions whenever a tracking rule changes in Settings.
@@ -502,6 +500,7 @@ class MusicTrackingService : NotificationListenerService() {
             refreshCoordinator = entryPoint.refreshCoordinator()
             analyticsDailyReporter = entryPoint.analyticsDailyReporter()
             trackingPolicy = TrackingRuntimePolicy(trackingRules)
+            mediaSessionClassifier = MediaSessionContentClassifier(trackingPolicy)
 
             // Load every independent policy source before the post-init rescan. Manual content
             // marks are part of the same eligibility contract as app/user preferences; relying on
@@ -2431,7 +2430,7 @@ class MusicTrackingService : NotificationListenerService() {
 
                     TrackingDecision.UNKNOWN -> {
                         val metadata = controller.metadata
-                        if (isMusicSession(controller)) {
+                        if (mediaSessionClassifier.isMusic(controller)) {
                             Log.i(TAG, "Refusing media session from unrecognized app: $packageName")
                             recordDetectedApp(
                                 packageName = packageName,
@@ -2458,95 +2457,6 @@ class MusicTrackingService : NotificationListenerService() {
             updateTrackingNotification(null, null)
         }
         updateServiceLifecycle()
-    }
-
-    /**
-     * Classifies a MediaController session as playable music rather than video or UI noise.
-     *
-     * This is not the package tracking decision — [TrackingRuntimePolicy.decidePackage] owns
-     * that. It is the media-shape classifier used after package policy, with runtime content
-     * policy applied before the remaining generic MediaSession heuristics.
-     *
-     * The distinction matters: this function used to be the *last* line of defence against
-     * non-music, and a voice note satisfies every signal it looks for — a title, a creator, a
-     * duration, an active play state. That is why it could never be trusted as the gate.
-     */
-    private fun isMusicSession(controller: MediaController): Boolean {
-        val packageName = controller.packageName
-
-        // Manual content exceptions and duration rules apply even to apps the user enabled:
-        // ALWAYS_MUSIC bypasses content heuristics, NON_MUSIC/VIDEO excludes the content,
-        // and the configured maximum duration rejects long-form media.
-        val earlyMetadata = controller.metadata
-        val earlyTitle =
-            earlyMetadata?.getString(MediaMetadata.METADATA_KEY_TITLE)
-                ?: earlyMetadata?.getString(MediaMetadata.METADATA_KEY_DISPLAY_TITLE)
-        if (!earlyTitle.isNullOrBlank()) {
-            val earlyArtist =
-                earlyMetadata?.getString(MediaMetadata.METADATA_KEY_ARTIST)
-                    ?: earlyMetadata?.getString(MediaMetadata.METADATA_KEY_ALBUM_ARTIST)
-                    ?: "Unknown Artist"
-            val earlyDuration = earlyMetadata?.getLong(MediaMetadata.METADATA_KEY_DURATION) ?: 0L
-            when (
-                trackingPolicy.evaluateMedia(
-                    packageName = packageName,
-                    title = earlyTitle,
-                    artist = earlyArtist,
-                    durationMs = earlyDuration,
-                )
-            ) {
-                TrackingRuntimePolicy.MediaVerdict.FORCE_ALLOW -> return true
-                TrackingRuntimePolicy.MediaVerdict.REJECT -> return false
-                TrackingRuntimePolicy.MediaVerdict.DEFER -> Unit
-            }
-        }
-
-        val metadata = controller.metadata
-        val playbackState = controller.playbackState
-
-        // Must have title at minimum
-        val title =
-            metadata?.getString(MediaMetadata.METADATA_KEY_TITLE)
-                ?: metadata?.getString(MediaMetadata.METADATA_KEY_DISPLAY_TITLE)
-        if (title == null) return false
-
-        // Check duration - music typically 30s to 20 minutes
-        val duration = metadata?.getLong(MediaMetadata.METADATA_KEY_DURATION) ?: 0
-        if (duration > 0) {
-            // Very short (< 30s) = probably notification sound, ad, voice note, etc.
-            if (duration < MIN_MUSIC_DURATION_MS) {
-                Log.d(TAG, "Rejecting short content ($duration ms): '$title' from $packageName")
-                return false
-            }
-            // Long content is no longer rejected unconditionally here: the configurable
-            // maximum-duration rule (checked above, and again at save time once a reliable
-            // duration is known) decides whether long-form media is tracked.
-        }
-
-        // Check if metadata looks like music (has artist/album)
-        val artist =
-            metadata?.getString(MediaMetadata.METADATA_KEY_ARTIST)
-                ?: metadata?.getString(MediaMetadata.METADATA_KEY_ALBUM_ARTIST)
-        val album = metadata?.getString(MediaMetadata.METADATA_KEY_ALBUM)
-
-        // Having artist OR album is a strong indicator of music
-        val hasMusicMetadata = !artist.isNullOrBlank() || !album.isNullOrBlank()
-
-        // Package name heuristics: keep video players out of the inbox entirely.
-        val lowerPkg = packageName.lowercase()
-        val looksLikeVideoApp =
-            lowerPkg.contains("video") || lowerPkg.contains("movie") ||
-                lowerPkg.contains("tv") || lowerPkg.contains("stream") ||
-                lowerPkg.contains("player") && !lowerPkg.contains("music")
-
-        if (looksLikeVideoApp && !hasMusicMetadata) {
-            Log.d(TAG, "Rejecting likely video app without music metadata: $packageName")
-            return false
-        }
-
-        // Accept if playing and has music-like metadata
-        val isPlaying = playbackState?.state == PlaybackState.STATE_PLAYING
-        return isPlaying || hasMusicMetadata
     }
 
     private fun processMediaControllerState(controller: MediaController) {
