@@ -3,6 +3,7 @@ package me.avinas.tempo.ui.components
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.*
@@ -32,7 +33,7 @@ fun SettingsSectionHeader(text: String) {
         if (swatch != null) {
             Surface(
                 modifier = Modifier.size(width = 4.dp, height = 18.dp),
-                shape = MaterialTheme.shapes.full,
+                shape = CircleShape,
                 color = swatch.iconContainer,
                 content = {},
             )
