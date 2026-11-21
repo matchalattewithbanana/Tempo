@@ -144,9 +144,9 @@ fun SupportedAppsScreen(
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
-            MediumFlexibleTopAppBar(
+            TopAppBar(
                 title = { Text(stringResource(R.string.settings_manage_apps),
-                    style = MaterialTheme.typography.headlineSmallEmphasized,
+                    style = MaterialTheme.typography.titleLargeEmphasized,
                     color = MaterialTheme.colorScheme.onSurface) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
@@ -166,7 +166,8 @@ fun SupportedAppsScreen(
             )
         }
     ) { padding ->
-        DeepOceanBackground {
+        // AppNavigation supplies the Appearance backdrop; avoid duplicate overdraw.
+        Box(Modifier.fillMaxSize()) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
