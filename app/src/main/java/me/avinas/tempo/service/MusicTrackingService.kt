@@ -607,79 +607,6 @@ class MusicTrackingService : NotificationListenerService() {
      */
     private val lastDetectionRecordedAt = java.util.concurrent.ConcurrentHashMap<String, Long>()
 
-    /**
-     * Three layers, in order: whole apps (dedicated podcast/audiobook apps, but not Spotify),
-     * metadata-based detection (critical for Spotify), then the user's manual marks.
-     */
-    private suspend fun shouldFilterContent(
-        packageName: String,
-        metadata: LocalMediaMetadata?,
-        title: String,
-        artist: String,
-    ): Boolean {
-        val now = System.currentTimeMillis()
-        if (now - lastPreferencesFetch > PREFERENCES_CACHE_TTL_MS) {
-            try {
-                val prefs = userPreferencesDao.getSync()
-                cachedFilterPodcasts = prefs?.filterPodcasts ?: true
-                cachedFilterAudiobooks = prefs?.filterAudiobooks ?: true
-                trackingPolicy.mergeAlternateVersions = prefs?.mergeAlternateVersions ?: true
-                lastPreferencesFetch = now
-            } catch (e: Exception) {
-                Log.w(TAG, "Failed to refresh preferences in shouldFilterContent, using cached", e)
-            }
-        }
-
-        val filterPodcasts = cachedFilterPodcasts
-        val filterAudiobooks = cachedFilterAudiobooks
-
-        if (filterPodcasts && packageName in DefaultMusicApps.PODCAST_PACKAGES) {
-            Log.d(TAG, "Filtering podcast app: $packageName")
-            return true
-        }
-        if (filterAudiobooks && packageName in DefaultMusicApps.AUDIOBOOK_PACKAGES) {
-            Log.d(TAG, "Filtering audiobook app: $packageName")
-            return true
-        }
-
-        if (metadata != null) {
-            if (filterPodcasts && metadata.isPodcast()) {
-                Log.d(TAG, "Filtering podcast content: ${metadata.title} by ${metadata.artist}")
-                return true
-            }
-            if (filterAudiobooks && metadata.isAudiobook()) {
-                Log.d(TAG, "Filtering audiobook content: ${metadata.title} by ${metadata.artist}")
-                return true
-            }
-        }
-
-        // Resolved from the in-memory cache rather than through the DAO. This runs on the
-        // synchronous MediaSession/notification path for every new track and every save attempt,
-        // and the DAO's equivalent would re-read the whole manual_content_marks table each time —
-        // which is exactly what the @Volatile cache above exists to avoid. Same resolver, same
-        // inputs, so the result is identical.
-        val manualMark = findManualContentMark(title, artist)
-        if (manualMark != null) {
-            val shouldFilter =
-                when (manualMark.contentType) {
-                    "PODCAST" -> filterPodcasts
-                    "AUDIOBOOK" -> filterAudiobooks
-                    else -> false
-                }
-            if (shouldFilter) {
-                Log.d(
-                    TAG,
-                    "Filtering manually marked content: $title by $artist (type: ${manualMark.contentType}, pattern: ${manualMark.patternType})",
-                )
-                return true
-            } else {
-                Log.d(TAG, "Manual mark found for '$title' but filtering disabled for ${manualMark.contentType}")
-            }
-        }
-
-        return false
-    }
-
     // Enhanced tracking components
     private lateinit var trackingManager: MusicTrackingManager
     private lateinit var sessionPersistence: SessionPersistence
@@ -1134,25 +1061,15 @@ class MusicTrackingService : NotificationListenerService() {
      */
     private suspend fun reevaluateActiveContent() {
         playbackStates.values.toList().forEach { session ->
-            val rejectedByTrackingRule =
-                shouldRejectByTrackingRules(
-                    session.packageName,
-                    session.title,
-                    session.artist,
-                    session.estimatedDurationMs ?: 0L,
+            val verdict =
+                trackingPolicy.evaluateMedia(
+                    packageName = session.packageName,
+                    title = session.title,
+                    artist = session.artist,
+                    durationMs = session.estimatedDurationMs ?: 0L,
+                    metadata = session.trackId?.let { localMetadataCache.get(it) },
                 )
-            val filteredByContent =
-                if (rejectedByTrackingRule) {
-                    false
-                } else {
-                    shouldFilterContent(
-                        session.packageName,
-                        session.trackId?.let { localMetadataCache.get(it) },
-                        session.title,
-                        session.artist,
-                    )
-                }
-            if (rejectedByTrackingRule || filteredByContent) {
+            if (verdict == TrackingRuntimePolicy.MediaVerdict.REJECT) {
                 removeRejectedSession(session.packageName, session.title, session.artist, session)
             }
         }
@@ -1313,22 +1230,14 @@ class MusicTrackingService : NotificationListenerService() {
                                     null
                                 }
 
-                            if (shouldRejectByTrackingRules(
-                                    state.packageName,
-                                    state.trackTitle,
-                                    state.trackArtist,
-                                    reliableDuration ?: 0L,
-                                )
-                            ) {
-                                continue
-                            }
-
-                            if (shouldFilterContent(
-                                    state.packageName,
-                                    localMetadataCache.get(trackId),
-                                    state.trackTitle,
-                                    state.trackArtist,
-                                )
+                            if (
+                                trackingPolicy.evaluateMedia(
+                                    packageName = state.packageName,
+                                    title = state.trackTitle,
+                                    artist = state.trackArtist,
+                                    durationMs = reliableDuration ?: 0L,
+                                    metadata = localMetadataCache.get(trackId),
+                                ) == TrackingRuntimePolicy.MediaVerdict.REJECT
                             ) {
                                 continue
                             }
@@ -2014,9 +1923,14 @@ class MusicTrackingService : NotificationListenerService() {
                 ?.takeIf { !it.equals(artist, ignoreCase = true) } // Don't use SUB_TEXT if it's the artist
                 ?: extras.getCharSequence(EXTRA_INFO_TEXT)?.toString()?.trim()
 
-        // Manual video/non-music override: never track this content, even from an
-        // otherwise enabled music app (e.g. a podcast episode on a music app).
-        if (manualContentOverride(title, artist) == ContentOverrideType.VIDEO) {
+        // Apply every policy decision available from notification metadata before creating a session.
+        if (
+            trackingPolicy.evaluateMedia(
+                packageName = packageName,
+                title = title,
+                artist = artist,
+            ) == TrackingRuntimePolicy.MediaVerdict.REJECT
+        ) {
             removeRejectedSession(packageName, title, artist)
             updateTrackingNotification(null, null)
             updateServiceLifecycle()
@@ -2157,12 +2071,17 @@ class MusicTrackingService : NotificationListenerService() {
                 val cachedDurationKey = generateHash("$title|$artist")
                 val cachedDuration = durationEstimateCache.get(cachedDurationKey)
 
-                // Reject by rules once a cached duration is known (NON_MUSIC override or over
-                // the configured maximum) before a session is even created for this track.
-                if (cachedDuration != null &&
-                    shouldRejectByTrackingRules(packageName, title, artist, cachedDuration)
+                // Re-apply policy when a reliable cached duration is available.
+                if (
+                    cachedDuration != null &&
+                    trackingPolicy.evaluateMedia(
+                        packageName = packageName,
+                        title = title,
+                        artist = artist,
+                        durationMs = cachedDuration,
+                    ) == TrackingRuntimePolicy.MediaVerdict.REJECT
                 ) {
-                    Log.d(TAG, "Rejecting content by tracking rules (cached duration): '$title' by '$artist'")
+                    Log.d(TAG, "Rejecting content by tracking policy (cached duration): '$title' by '$artist'")
                     removeRejectedSession(packageName, title, artist)
                     updateTrackingNotification(null, null)
                     return
@@ -2193,16 +2112,6 @@ class MusicTrackingService : NotificationListenerService() {
                 // Asynchronously resolve and insert track before persisting child records
                 serviceScope.launch {
                     try {
-                        // CONTENT FILTERING: same rules as the MediaSession path (podcast/
-                        // audiobook apps, manual marks, Spotify-API-only mode). Without this,
-                        // plays detected via notification are tracked and saved before the
-                        // media path gets a chance to filter them out.
-                        if (shouldFilterContent(packageName, null, title, artist)) {
-                            Log.d(TAG, "Content filtered via notification: '$title' by '$artist' from $packageName")
-                            removeRejectedSession(packageName, title, artist, newSession)
-                            updateTrackingNotification(null, null)
-                            return@launch
-                        }
                         val track = getOrInsertTrack(title, artist, album)
                         newSession.trackId = track.id
 
@@ -2211,7 +2120,14 @@ class MusicTrackingService : NotificationListenerService() {
                         if (duration != null && duration > 0) {
                             // Duration only became known now — re-apply content/duration rules
                             // before this session can be saved.
-                            if (shouldRejectByTrackingRules(packageName, title, artist, duration)) {
+                            if (
+                                trackingPolicy.evaluateMedia(
+                                    packageName = packageName,
+                                    title = title,
+                                    artist = artist,
+                                    durationMs = duration,
+                                ) == TrackingRuntimePolicy.MediaVerdict.REJECT
+                            ) {
                                 removeRejectedSession(packageName, title, artist, newSession)
                                 updateTrackingNotification(null, null)
                                 updateServiceLifecycle()
@@ -2327,19 +2243,6 @@ class MusicTrackingService : NotificationListenerService() {
         if (cleanTitleMatch != null) {
             Log.d(TAG, "Found clean title match for track ${cleanTitleMatch.id}: '$title' by '$artist'")
             return handleExistingTrack(cleanTitleMatch, artist, album)
-        }
-
-        val now = System.currentTimeMillis()
-        if (now - lastPreferencesFetch > PREFERENCES_CACHE_TTL_MS) {
-            try {
-                val prefs =
-                    userPreferencesDao.getSync() ?: me.avinas.tempo.data.local.entities
-                        .UserPreferences()
-                trackingPolicy.mergeAlternateVersions = prefs.mergeAlternateVersions
-                lastPreferencesFetch = now
-            } catch (e: Exception) {
-                Log.w(TAG, "Failed to refresh preferences, using cached value", e)
-            }
         }
 
         val strictMatching = !trackingPolicy.mergeAlternateVersions
@@ -2880,13 +2783,14 @@ class MusicTrackingService : NotificationListenerService() {
             return
         }
 
-        // Apply any rule that can already be decided before resolving the track row.
-        if (shouldRejectByTrackingRules(
-                session.packageName,
-                session.title,
-                session.artist,
-                session.estimatedDurationMs ?: 0L,
-            )
+        // Apply every policy decision available before resolving the track row.
+        if (
+            trackingPolicy.evaluateMedia(
+                packageName = session.packageName,
+                title = session.title,
+                artist = session.artist,
+                durationMs = session.estimatedDurationMs ?: 0L,
+            ) == TrackingRuntimePolicy.MediaVerdict.REJECT
         ) {
             return
         }
@@ -2944,22 +2848,14 @@ class MusicTrackingService : NotificationListenerService() {
             }
         }
 
-        if (shouldRejectByTrackingRules(
-                session.packageName,
-                session.title,
-                session.artist,
-                session.estimatedDurationMs ?: 0L,
-            )
-        ) {
-            return
-        }
-
-        if (shouldFilterContent(
-                session.packageName,
-                localMetadataCache.get(trackId),
-                session.title,
-                session.artist,
-            )
+        if (
+            trackingPolicy.evaluateMedia(
+                packageName = session.packageName,
+                title = session.title,
+                artist = session.artist,
+                durationMs = session.estimatedDurationMs ?: 0L,
+                metadata = localMetadataCache.get(trackId),
+            ) == TrackingRuntimePolicy.MediaVerdict.REJECT
         ) {
             return
         }
@@ -3375,23 +3271,18 @@ class MusicTrackingService : NotificationListenerService() {
                 earlyMetadata?.getString(MediaMetadata.METADATA_KEY_ARTIST)
                     ?: earlyMetadata?.getString(MediaMetadata.METADATA_KEY_ALBUM_ARTIST)
                     ?: "Unknown Artist"
-            when (manualContentOverride(earlyTitle, earlyArtist)) {
-                ContentOverrideType.VIDEO -> {
-                    Log.d(TAG, "Rejecting manual video/non-music override: '$earlyTitle' by '$earlyArtist'")
-                    return false
-                }
-
-                ContentOverrideType.MUSIC -> {
-                    return true
-                }
-
-                null -> {
-                    Unit
-                }
-            }
             val earlyDuration = earlyMetadata?.getLong(MediaMetadata.METADATA_KEY_DURATION) ?: 0L
-            if (shouldRejectByTrackingRules(packageName, earlyTitle, earlyArtist, earlyDuration)) {
-                return false
+            when (
+                trackingPolicy.evaluateMedia(
+                    packageName = packageName,
+                    title = earlyTitle,
+                    artist = earlyArtist,
+                    durationMs = earlyDuration,
+                )
+            ) {
+                TrackingRuntimePolicy.MediaVerdict.FORCE_ALLOW -> return true
+                TrackingRuntimePolicy.MediaVerdict.REJECT -> return false
+                TrackingRuntimePolicy.MediaVerdict.DEFER -> Unit
             }
         }
 
@@ -3514,7 +3405,14 @@ class MusicTrackingService : NotificationListenerService() {
         val album = metadata.getString(MediaMetadata.METADATA_KEY_ALBUM)
         val duration = metadata.getLong(MediaMetadata.METADATA_KEY_DURATION)
 
-        if (shouldRejectByTrackingRules(packageName, title, artist, duration)) {
+        if (
+            trackingPolicy.evaluateMedia(
+                packageName = packageName,
+                title = title,
+                artist = artist,
+                durationMs = duration,
+            ) == TrackingRuntimePolicy.MediaVerdict.REJECT
+        ) {
             removeRejectedSession(packageName, title, artist)
             updateTrackingNotification(null, null)
             updateServiceLifecycle()
@@ -3766,6 +3664,19 @@ class MusicTrackingService : NotificationListenerService() {
                 // Extract ALL available metadata from MediaSession (for fallback use)
                 val localMetadata = LocalMediaMetadata.fromMediaMetadata(metadata, packageName)
 
+                if (
+                    trackingPolicy.evaluateMedia(
+                        packageName = packageName,
+                        title = title,
+                        artist = artist,
+                        durationMs = duration,
+                        metadata = localMetadata,
+                    ) == TrackingRuntimePolicy.MediaVerdict.REJECT
+                ) {
+                    Log.d(TAG, "Content rejected by tracking policy: '$title' by '$artist' from $packageName")
+                    return
+                }
+
                 // Check if this is likely an advertisement - skip tracking ads
                 if (artist.isNotBlank() &&
                     !me.avinas.tempo.utils.ArtistParser
@@ -3807,17 +3718,6 @@ class MusicTrackingService : NotificationListenerService() {
                 // Insert track asynchronously
                 serviceScope.launch {
                     try {
-                        // Checked here because shouldFilterContent is suspend; title/artist are
-                        // passed directly so manual marks work even without full metadata.
-                        if (shouldFilterContent(packageName, localMetadata, title, artist)) {
-                            val contentType = localMetadata?.getContentType()?.name ?: "MANUAL_MARK"
-                            Log.d(TAG, "Content filtered ($contentType): '$title' by '$artist' from $packageName")
-                            // Remove the session we just added
-                            playbackStates.remove(packageName)
-                            updateTrackingNotification(null, null)
-                            return@launch
-                        }
-
                         val track = getOrInsertTrack(title, artist, album, localMetadata)
                         newSession.trackId = track.id
                         Log.d(TAG, "Track ID ${track.id} assigned for '$title' (via MediaSession)")
