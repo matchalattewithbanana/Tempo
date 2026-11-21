@@ -224,4 +224,138 @@ class ListeningReconciliationIntegrationTest {
         assertEquals(2, dao.getEventsForTrack(id).size)
     }
 
+    @Test fun longOffsetMeasuredOverlapFromDifferentExportsDoesNotInflateHistory() = runBlocking {
+        val id = trackId()
+        val dao = database.listeningEventDao()
+        val start = 1_700_100_000_000L
+        val spotify = ListeningEvent(
+            track_id = id, timestamp = start, endTimestamp = start + 180_000,
+            playDuration = 180_000, completionPercentage = 0,
+            source = "com.spotify.music.import.json",
+        )
+        val apple = spotify.copy(
+            timestamp = start + 82_000, endTimestamp = start + 262_000,
+            source = "com.apple.android.music.import.csv",
+        )
+        assertEquals(1, dao.insertAllBatchedWithDedup(listOf(spotify)).inserted)
+        assertEquals(1, dao.insertAllBatchedWithDedup(listOf(apple)).skipped)
+        assertEquals(1, dao.getEventsForTrack(id).size)
+    }
+
+    @Test fun adjacentMeasuredCrossSourceSessionsRemainDistinct() = runBlocking {
+        val id = trackId()
+        val dao = database.listeningEventDao()
+        val start = 1_700_100_000_000L
+        val spotify = ListeningEvent(
+            track_id = id, timestamp = start, endTimestamp = start + 40_000,
+            playDuration = 40_000, completionPercentage = 0,
+            source = "com.spotify.music.import.json",
+        )
+        val apple = spotify.copy(
+            timestamp = start + 40_000, endTimestamp = start + 80_000,
+            source = "com.apple.android.music.import.csv",
+        )
+        assertEquals(1, dao.insertAllBatchedWithDedup(listOf(spotify)).inserted)
+        assertEquals(1, dao.insertAllBatchedWithDedup(listOf(apple)).inserted)
+        assertEquals(2, dao.getEventsForTrack(id).size)
+    }
+
+    @Test fun duplicateAcrossEquivalentTrackIdsIsReconciled() = runBlocking {
+        val id = trackId()
+        val siblingId = database.trackDao().insert(
+            Track(
+                title = "Same Song", artist = "Same Artist", album = null,
+                duration = 180_000L, albumArtUrl = null,
+                spotifyId = null, musicbrainzId = null,
+            )
+        )
+        val dao = database.listeningEventDao()
+        val start = 1_700_100_000_000L
+        val lastFm = ListeningEvent(
+            track_id = id, timestamp = start, playDuration = 0,
+            completionPercentage = 0, source = "fm.last.import",
+        )
+        val spotify = ListeningEvent(
+            track_id = siblingId, timestamp = start + 2_000,
+            endTimestamp = start + 182_000, playDuration = 180_000,
+            completionPercentage = 0, source = "com.spotify.music.import.json",
+        )
+        assertEquals(1, dao.insertAllBatchedWithDedup(listOf(lastFm)).inserted)
+        val result = dao.insertAllBatchedWithDedup(listOf(spotify))
+        assertEquals(1, result.replaced)
+        assertEquals(0, result.newlyAdded)
+        assertEquals(1, dao.getCount())
+        assertEquals(spotify.source, dao.getEventsForTrack(siblingId).single().source)
+    }
+
+    @Test fun differentKnownProviderIdsDoNotFalselyCollapseTracks() = runBlocking {
+        val id = trackId()
+        val other = database.trackDao().insert(
+            Track(
+                title = "Same Song", artist = "Same Artist", album = null,
+                duration = 180_000L, albumArtUrl = null,
+                spotifyId = "different-spotify-recording", musicbrainzId = null,
+            )
+        )
+        val dao = database.listeningEventDao()
+        val start = 1_700_100_000_000L
+        val first = ListeningEvent(
+            track_id = id, timestamp = start, endTimestamp = start + 180_000,
+            playDuration = 180_000, completionPercentage = 0,
+            source = "com.spotify.music.import.json",
+        )
+        val second = first.copy(track_id = other, source = "com.deezer.music.import.xlsx")
+        assertEquals(1, dao.insertAllBatchedWithDedup(listOf(first)).inserted)
+        assertEquals(1, dao.insertAllBatchedWithDedup(listOf(second)).inserted)
+        assertEquals(2, dao.getCount())
+    }
+
+    @Test fun skipAndReplaceAreDifferentAndPreserveEventPrimaryKeys() = runBlocking {
+        val id = trackId()
+        val dao = database.listeningEventDao()
+        val start = 1_700_100_000_000L
+        val original = ListeningEvent(
+            track_id = id, timestamp = start, endTimestamp = start + 120_000,
+            playDuration = 120_000, completionPercentage = 0,
+            source = "com.spotify.music.import.json", wasSkipped = false,
+        )
+        assertEquals(1, dao.insertAllBatchedWithDedup(listOf(original)).inserted)
+        val before = dao.getEventsForTrack(id).single()
+        val backup = original.copy(
+            // Simulates an export created on a different DB, where stored fingerprints
+            // and primary keys describe that DB rather than the local database.
+            id = 999L, contentFingerprint = "stale-source-fingerprint",
+            wasSkipped = true,
+        )
+        assertEquals(1, dao.insertAllBatchedWithDedup(listOf(backup)).skipped)
+        assertEquals(false, dao.getEventsForTrack(id).single().wasSkipped)
+        val replaced = dao.insertAllBatchedWithDedup(
+            listOf(backup), replaceExistingOnMatch = true,
+        )
+        assertEquals(0, replaced.inserted)
+        assertEquals(1, replaced.replaced)
+        assertEquals(1, replaced.updated)
+        assertEquals(0, replaced.newlyAdded)
+        val after = dao.getEventsForTrack(id).single()
+        assertEquals(before.id, after.id)
+        assertTrue(after.wasSkipped)
+        assertEquals(1, dao.getCount())
+    }
+
+    @Test fun explicitRestoreReplaceNeverDowngradesObservedSession() = runBlocking {
+        val id = trackId()
+        val dao = database.listeningEventDao()
+        val live = localPlay(id)
+        assertEquals(1, dao.insertAllBatchedWithDedup(listOf(live)).inserted)
+        val imported = live.copy(
+            source = "com.spotify.music.import.json", sessionId = null,
+        )
+        val result = dao.insertAllBatchedWithDedup(
+            listOf(imported), replaceExistingOnMatch = true,
+        )
+        assertEquals(0, result.inserted)
+        assertEquals(1, dao.getEventsForTrack(id).size)
+        assertEquals(live.source, dao.getEventsForTrack(id).single().source)
+    }
+
 }
