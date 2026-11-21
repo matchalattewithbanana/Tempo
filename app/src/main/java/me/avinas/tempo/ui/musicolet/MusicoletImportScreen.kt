@@ -255,7 +255,7 @@ private fun IdleContent(
                         "overwrite or hide anything Tempo measured while you listened. " +
                         "Importing the same backup twice changes nothing.",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }
@@ -387,7 +387,7 @@ private fun CompletedContent(result: MusicoletImportService.ImportResult, onDone
                 Text(
                     text = "Covers $period",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
 
@@ -415,7 +415,7 @@ private fun CompletedContent(result: MusicoletImportService.ImportResult, onDone
                         "${result.unmatchedPeriodPlays} plays belong to songs that are no longer " +
                             "in the backup's song list, so they had no title to import.",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
                 )
             }
@@ -437,7 +437,7 @@ private fun CompletedContent(result: MusicoletImportService.ImportResult, onDone
                 Text(
                     text = (result.warnings + result.errors).joinToString("\n"),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
                 )
             }
