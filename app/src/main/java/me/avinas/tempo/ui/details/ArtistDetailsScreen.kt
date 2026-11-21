@@ -865,73 +865,37 @@ fun FanStandingCard(
                 status = stringResource(R.string.fan_status_top_1),
                 description = stringResource(R.string.fan_status_top_1_desc),
                 icon = Icons.Rounded.AutoAwesome,
-                pastelBackground = Color(0xFFFEF3C7),
-                pastelBorder = Color(0xFFFDE68A),
-                iconBackground = Color(0xFFFDE68A),
-                iconBorder = Color(0xFFF59E0B).copy(alpha = 0.35f),
-                iconTint = Color(0xFFB45309),
-                titleColor = Color(0xFF92400E),
-                descColor = Color(0xFF78350F).copy(alpha = 0.88f),
+                tint = Color(0xFFB45309),
             )
             percentile <= 5.0 -> FanStandingTierStyle(
                 status = stringResource(R.string.fan_status_top_5),
                 description = stringResource(R.string.fan_status_top_5_desc),
                 icon = Icons.Rounded.AutoAwesome,
-                pastelBackground = Color(0xFFFFEDD5),
-                pastelBorder = Color(0xFFFED7AA),
-                iconBackground = Color(0xFFFED7AA),
-                iconBorder = Color(0xFFEA580C).copy(alpha = 0.35f),
-                iconTint = Color(0xFFEA580C),
-                titleColor = Color(0xFF9A3412),
-                descColor = Color(0xFF7C2D12).copy(alpha = 0.88f),
+                tint = Color(0xFFEA580C),
             )
             percentile <= 10.0 -> FanStandingTierStyle(
                 status = stringResource(R.string.fan_status_top_10),
                 description = stringResource(R.string.fan_status_top_10_desc),
                 icon = Icons.Rounded.LocalFireDepartment,
-                pastelBackground = Color(0xFFFFE4E6),
-                pastelBorder = Color(0xFFFECDD3),
-                iconBackground = Color(0xFFFECDD3),
-                iconBorder = Color(0xFFE11D48).copy(alpha = 0.35f),
-                iconTint = Color(0xFFE11D48),
-                titleColor = Color(0xFF9F1239),
-                descColor = Color(0xFF881337).copy(alpha = 0.88f),
+                tint = Color(0xFFE11D48),
             )
             percentile <= 25.0 -> FanStandingTierStyle(
                 status = stringResource(R.string.fan_status_top_25),
                 description = stringResource(R.string.fan_status_top_25_desc),
                 icon = Icons.Rounded.Headphones,
-                pastelBackground = Color(0xFFE0F2FE),
-                pastelBorder = Color(0xFFBAE6FD),
-                iconBackground = Color(0xFFBAE6FD),
-                iconBorder = Color(0xFF0284C7).copy(alpha = 0.35f),
-                iconTint = Color(0xFF0284C7),
-                titleColor = Color(0xFF075985),
-                descColor = Color(0xFF0C4A6E).copy(alpha = 0.88f),
+                tint = Color(0xFF0284C7),
             )
             percentile <= 50.0 -> FanStandingTierStyle(
                 status = stringResource(R.string.fan_status_top_50),
                 description = stringResource(R.string.fan_status_top_50_desc),
                 icon = Icons.Rounded.MusicNote,
-                pastelBackground = Color(0xFFCCFBF1),
-                pastelBorder = Color(0xFF99F6E4),
-                iconBackground = Color(0xFF99F6E4),
-                iconBorder = Color(0xFF0D9488).copy(alpha = 0.35f),
-                iconTint = Color(0xFF0D9488),
-                titleColor = Color(0xFF115E59),
-                descColor = Color(0xFF134E4A).copy(alpha = 0.88f),
+                tint = Color(0xFF0D9488),
             )
             else -> FanStandingTierStyle(
                 status = stringResource(R.string.fan_status_listener),
                 description = stringResource(R.string.fan_status_listener_desc),
                 icon = Icons.Rounded.MusicNote,
-                pastelBackground = Color(0xFFF1F5F9),
-                pastelBorder = Color(0xFFE2E8F0),
-                iconBackground = Color(0xFFE2E8F0),
-                iconBorder = Color(0xFF94A3B8).copy(alpha = 0.35f),
-                iconTint = Color(0xFF475569),
-                titleColor = Color(0xFF334155),
-                descColor = Color(0xFF475569).copy(alpha = 0.88f),
+                tint = Color(0xFF475569),
             )
         }
     } else {
@@ -940,70 +904,53 @@ fun FanStandingCard(
                 status = stringResource(R.string.fan_status_ultimate),
                 description = stringResource(R.string.fan_status_ultimate_desc),
                 icon = Icons.Rounded.AutoAwesome,
-                pastelBackground = Color(0xFFFEF3C7),
-                pastelBorder = Color(0xFFFDE68A),
-                iconBackground = Color(0xFFFDE68A),
-                iconBorder = Color(0xFFF59E0B).copy(alpha = 0.35f),
-                iconTint = Color(0xFFB45309),
-                titleColor = Color(0xFF92400E),
-                descColor = Color(0xFF78350F).copy(alpha = 0.88f),
+                tint = Color(0xFFB45309),
             )
             playCount > 500 -> FanStandingTierStyle(
                 status = stringResource(R.string.fan_status_super),
                 description = stringResource(R.string.fan_status_super_desc),
                 icon = Icons.Rounded.AutoAwesome,
-                pastelBackground = Color(0xFFFFEDD5),
-                pastelBorder = Color(0xFFFED7AA),
-                iconBackground = Color(0xFFFED7AA),
-                iconBorder = Color(0xFFEA580C).copy(alpha = 0.35f),
-                iconTint = Color(0xFFEA580C),
-                titleColor = Color(0xFF9A3412),
-                descColor = Color(0xFF7C2D12).copy(alpha = 0.88f),
+                tint = Color(0xFFEA580C),
             )
             playCount > 200 -> FanStandingTierStyle(
                 status = stringResource(R.string.fan_status_big),
                 description = stringResource(R.string.fan_status_big_desc),
                 icon = Icons.Rounded.LocalFireDepartment,
-                pastelBackground = Color(0xFFFFE4E6),
-                pastelBorder = Color(0xFFFECDD3),
-                iconBackground = Color(0xFFFECDD3),
-                iconBorder = Color(0xFFE11D48).copy(alpha = 0.35f),
-                iconTint = Color(0xFFE11D48),
-                titleColor = Color(0xFF9F1239),
-                descColor = Color(0xFF881337).copy(alpha = 0.88f),
+                tint = Color(0xFFE11D48),
             )
             playCount > 50 -> FanStandingTierStyle(
                 status = stringResource(R.string.fan_status_regular),
                 description = stringResource(R.string.fan_status_regular_desc),
                 icon = Icons.Rounded.Headphones,
-                pastelBackground = Color(0xFFE0F2FE),
-                pastelBorder = Color(0xFFBAE6FD),
-                iconBackground = Color(0xFFBAE6FD),
-                iconBorder = Color(0xFF0284C7).copy(alpha = 0.35f),
-                iconTint = Color(0xFF0284C7),
-                titleColor = Color(0xFF075985),
-                descColor = Color(0xFF0C4A6E).copy(alpha = 0.88f),
+                tint = Color(0xFF0284C7),
             )
             else -> FanStandingTierStyle(
                 status = stringResource(R.string.fan_status_listener),
                 description = stringResource(R.string.fan_status_listener_desc),
                 icon = Icons.Rounded.MusicNote,
-                pastelBackground = Color(0xFFF1F5F9),
-                pastelBorder = Color(0xFFE2E8F0),
-                iconBackground = Color(0xFFE2E8F0),
-                iconBorder = Color(0xFF94A3B8).copy(alpha = 0.35f),
-                iconTint = Color(0xFF475569),
-                titleColor = Color(0xFF334155),
-                descColor = Color(0xFF475569).copy(alpha = 0.88f),
+                tint = Color(0xFF475569),
             )
         }
     }
 
+    val scheme = MaterialTheme.colorScheme
+    val palette = LocalTempoPalette.current
+    val container = scheme.surfaceContainerLow
+    // Tier hues keep their meaning, but every text color and icon adapts
+    // to the active Light/Dark/OLED/custom palette.
+    val tierAccent = me.avinas.tempo.ui.appearance.AppearancePaletteResolver.readableAccent(
+        palette, tier.tint, container,
+    )
+    val iconContainer = lerp(container, tierAccent, 0.13f)
+    val iconForeground = me.avinas.tempo.ui.appearance.AppearancePaletteResolver.readableAccent(
+        palette, tierAccent, iconContainer,
+    )
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        color = tier.pastelBackground,
-        border = BorderStroke(1.dp, tier.pastelBorder),
+        shape = MaterialTheme.shapes.large,
+        color = container,
+        contentColor = scheme.onSurface,
+        border = BorderStroke(1.dp, scheme.outlineVariant),
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 18.dp, vertical = 16.dp),
@@ -1014,14 +961,14 @@ fun FanStandingCard(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(tier.iconBackground)
-                    .border(0.8.dp, tier.iconBorder, CircleShape),
+                    .background(iconContainer)
+                    .border(0.8.dp, scheme.outlineVariant, CircleShape),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     imageVector = tier.icon,
                     contentDescription = null,
-                    tint = tier.iconTint,
+                    tint = iconForeground,
                     modifier = Modifier.size(20.dp),
                 )
             }
@@ -1030,14 +977,14 @@ fun FanStandingCard(
                 Text(
                     text = tier.status.uppercase(Locale.getDefault()),
                     style = KickerSmall,
-                    color = tier.titleColor,
+                    color = tierAccent,
                     fontWeight = FontWeight.Bold,
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = tier.description,
                     style = MaterialTheme.typography.bodySmall,
-                    color = tier.descColor,
+                    color = scheme.onSurfaceVariant,
                     fontWeight = FontWeight.Medium,
                     lineHeight = 18.sp,
                 )
@@ -1050,13 +997,7 @@ private data class FanStandingTierStyle(
     val status: String,
     val description: String,
     val icon: ImageVector,
-    val pastelBackground: Color,
-    val pastelBorder: Color,
-    val iconBackground: Color,
-    val iconBorder: Color,
-    val iconTint: Color,
-    val titleColor: Color,
-    val descColor: Color,
+    val tint: Color,
 )
 
 // ──────────────────────────────────────────────────────────────
