@@ -16,11 +16,11 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.semantics.Role
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -121,10 +121,10 @@ fun SettingsScreen(
     // Settings home is intentionally a small category navigator.
     var settingsCategory by rememberSaveable { mutableStateOf("overview") }
     var settingsSearch by rememberSaveable { mutableStateOf("") }
-    val settingsScrollState = key(settingsCategory) { rememberScrollState() }
+    val settingsScrollState = key(settingsCategory) { rememberLazyListState() }
     LaunchedEffect(settingsSearch) {
         // Search results and the unfiltered navigator both start at the top.
-        settingsScrollState.scrollTo(0)
+        settingsScrollState.scrollToItem(0)
     }
     val clearOrClose = {
         when {
@@ -370,13 +370,14 @@ fun SettingsScreen(
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
                     )
                 }
-                Column(
+                LazyColumn(
+                    state = settingsScrollState,
                     modifier = Modifier.weight(1f)
                         .fillMaxWidth()
-                        .verticalScroll(settingsScrollState)
                         .padding(horizontal = 16.dp, vertical = 8.dp),
                 ) {
                 if (settingsCategory != "overview") {
+                    item(key = "category-hero") {
                     val hero = when (settingsCategory) {
                         "general" -> Triple(
                             R.string.settings_category_general,
@@ -415,8 +416,10 @@ fun SettingsScreen(
                         },
                     )
                     Spacer(Modifier.height(12.dp))
+                    }
                 }
                 if (settingsCategory == "overview") {
+                    item(key = "overview") {
                     if (settingsSearch.isNotBlank()) {
                         val tokens = settingsSearch.trim().split(Regex("\\s+"))
                         val directResults = listOf(
@@ -634,9 +637,11 @@ fun SettingsScreen(
                     }
                     Spacer(modifier = Modifier.height(16.dp))
                     } // Unfiltered settings overview
+                    }
                 }
 
                 if (settingsCategory == "general") {
+                    item(key = "general") {
                 // Profile Section
                 SettingsSectionHeader(stringResource(R.string.settings_profile))
                 GlassCard(
@@ -842,8 +847,10 @@ fun SettingsScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
+                    }
                 } // General
                 if (settingsCategory == "tracking") {
+                    item(key = "tracking") {
                 // Tracking
                 SettingsSectionHeader(stringResource(R.string.settings_music_tracking))
                 GlassCard(
@@ -978,8 +985,10 @@ fun SettingsScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
+                    }
                 } // Tracking
                 if (settingsCategory == "connections") {
+                    item(key = "connections") {
                 // Last.fm Import
                 SettingsSectionHeader(stringResource(R.string.settings_import_history))
                 GlassCard(
@@ -1230,8 +1239,10 @@ fun SettingsScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
+                    }
                 } // Connections
                 if (settingsCategory == "data") {
+                    item(key = "data") {
                 // Data Management
                 SettingsSectionHeader(stringResource(R.string.settings_your_data))
                 GlassCard(
@@ -1372,8 +1383,10 @@ fun SettingsScreen(
                     )
                 }
 
+                    }
                 } // Library and data
                 if (settingsCategory == "about") {
+                    item(key = "about") {
                 TempoAboutCredits(modifier = Modifier.fillMaxWidth())
                 Spacer(modifier = Modifier.height(24.dp))
                 // Community
@@ -1483,8 +1496,11 @@ fun SettingsScreen(
                     }
                 }
 
+                    }
                 } // Community and About
-                Spacer(modifier = Modifier.height(32.dp))
+                item(key = "bottom-padding") {
+                    Spacer(modifier = Modifier.height(32.dp))
+                }
                 }
             }
         }
