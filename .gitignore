@@ -64,6 +64,7 @@ desktop.ini
 *.sh
 
 # Web & Desktop app build artifacts
+/docs-dist/
 node_modules/
 desktop/node_modules/
 desktop/dist/
