@@ -53,7 +53,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import me.avinas.tempo.R
 import me.avinas.tempo.data.musicolet.MusicoletImportService
-import me.avinas.tempo.ui.components.DeepOceanBackground
 import me.avinas.tempo.ui.components.GlassCard
 import me.avinas.tempo.ui.theme.GlassFrostSoft
 import me.avinas.tempo.ui.theme.TempoError
@@ -94,7 +93,7 @@ fun MusicoletImportScreen(
             }
         }
 
-    DeepOceanBackground {
+    androidx.compose.foundation.layout.Box(Modifier.fillMaxSize()) {
         Scaffold(
             topBar = {
                 TopAppBar(
