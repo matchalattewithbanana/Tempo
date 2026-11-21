@@ -460,7 +460,8 @@ data class LocalMediaMetadata(
          */
         fun fromMediaMetadata(
             metadata: MediaMetadata,
-            sourcePackage: String? = null
+            sourcePackage: String? = null,
+            includeArtwork: Boolean = true,
         ): LocalMediaMetadata? {
             val rawTitle = metadata.getString(MediaMetadata.METADATA_KEY_TITLE)
                 ?: metadata.getString(MediaMetadata.METADATA_KEY_DISPLAY_TITLE)
@@ -519,11 +520,16 @@ data class LocalMediaMetadata(
                 // Album art (downsampled: every consumer saves at <=512px anyway, and
                 // these instances end up cached in-memory by the tracking service —
                 // full-size bitmaps there would add up to megabytes over a listening session)
-                albumArtBitmap = downsample(
-                    metadata.getBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART)
-                        ?: metadata.getBitmap(MediaMetadata.METADATA_KEY_ART)
-                        ?: metadata.getBitmap(MediaMetadata.METADATA_KEY_DISPLAY_ICON)
-                ),
+                albumArtBitmap =
+                    if (includeArtwork) {
+                        downsample(
+                            metadata.getBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART)
+                                ?: metadata.getBitmap(MediaMetadata.METADATA_KEY_ART)
+                                ?: metadata.getBitmap(MediaMetadata.METADATA_KEY_DISPLAY_ICON),
+                        )
+                    } else {
+                        null
+                    },
                 albumArtUri = metadata.getString(MediaMetadata.METADATA_KEY_ALBUM_ART_URI)?.takeIf { it.isNotBlank() },
                 artUri = metadata.getString(MediaMetadata.METADATA_KEY_ART_URI)?.takeIf { it.isNotBlank() },
                 
