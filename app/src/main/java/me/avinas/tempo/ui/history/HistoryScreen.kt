@@ -327,56 +327,30 @@ fun HistoryScreen(
                             // Filter Button
                             val isFilterActive = uiState.startDate != null || !uiState.showSkips
 
-                            Box(
-                                modifier = Modifier
-                                    .size(48.dp)
-                                    .clip(CircleShape)
-                                    .then(
-                                        if (isFilterActive) {
-                                            Modifier
-                                                .background(
-                                                    Brush.verticalGradient(
-                                                        listOf(
-                                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.25f),
-                                                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
-                                                        )
-                                                    )
-                                                )
-                                                .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.6f), CircleShape)
-                                        } else {
-                                            Modifier
-                                                .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.85f))
-                                                .border(0.8.dp, GlassBorderSoft, CircleShape)
-                                        }
-                                    )
-                                    .premiumClickable(
-                                        onClick = {
-                                            haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                            showFilterSheet = true
-                                        },
-                                        pressedScale = 0.94f
-                                    ),
-                                contentAlignment = Alignment.Center
+                            IconButton(
+                                onClick = {
+                                    haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    showFilterSheet = true
+                                },
+                                modifier = Modifier.size(48.dp),
+                                colors = IconButtonDefaults.iconButtonColors(
+                                    containerColor = if (isFilterActive) {
+                                        MaterialTheme.colorScheme.secondaryContainer
+                                    } else {
+                                        MaterialTheme.colorScheme.surfaceContainerHigh
+                                    },
+                                    contentColor = if (isFilterActive) {
+                                        MaterialTheme.colorScheme.onSecondaryContainer
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurfaceVariant
+                                    },
+                                ),
                             ) {
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.List,
                                     contentDescription = stringResource(R.string.history_filter_title),
-                                    tint = if (isFilterActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.size(20.dp)
+                                    modifier = Modifier.size(20.dp),
                                 )
-
-                                // Active indicator dot
-                                if (isFilterActive) {
-                                    Box(
-                                        modifier = Modifier
-                                            .align(Alignment.TopEnd)
-                                            .padding(top = 4.dp, end = 4.dp)
-                                            .size(7.dp)
-                                            .clip(CircleShape)
-                                            .background(MaterialTheme.colorScheme.primary)
-                                            .border(1.dp, MaterialTheme.colorScheme.background, CircleShape)
-                                    )
-                                }
                             }
                         }
                     }
@@ -537,43 +511,18 @@ fun HistoryFilterSheetContent(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Apply Button
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp)
-                .shadow(
-                    elevation = 6.dp,
-                    shape = RoundedCornerShape(24.dp),
-                    spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)
-                )
-                .clip(RoundedCornerShape(24.dp))
-                .background(MaterialTheme.colorScheme.primary)
-                .border(
-                    1.dp,
-                    Brush.verticalGradient(
-                        listOf(
-                            MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.35f),
-                            Color.Transparent
-                        )
-                    ),
-                    RoundedCornerShape(24.dp)
-                )
-                .premiumClickable(
-                    onClick = {
-                        haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                        val (start, end) = getRangeBounds(selectedRange)
-                        onApply(start, end, showSkips)
-                    },
-                    pressedScale = 0.98f
-                ),
-            contentAlignment = Alignment.Center
+        Button(
+            onClick = {
+                haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                val (start, end) = getRangeBounds(selectedRange)
+                onApply(start, end, showSkips)
+            },
+            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
         ) {
             Text(
                 text = stringResource(R.string.history_apply_filters),
-                color = MaterialTheme.colorScheme.onPrimary,
                 style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
             )
         }
     }
@@ -1656,20 +1605,11 @@ fun SearchEmptyState(query: String, onClear: () -> Unit) {
                 textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(16.dp))
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
-                    .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f), RoundedCornerShape(20.dp))
-                    .premiumClickable(onClick = onClear)
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                contentAlignment = Alignment.Center
-            ) {
+            TextButton(onClick = onClear) {
                 Text(
                     text = stringResource(R.string.stats_search_clear),
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
                 )
             }
         }
