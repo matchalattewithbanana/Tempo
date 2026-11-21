@@ -42,9 +42,29 @@ The current tree is an incremental MVVM/repository architecture, not a completed
 
 ## Focused backup and account boundaries
 
-`data/importexport/BackupSnapshotWriter.kt` owns the Room transaction and streamed JSON snapshot. `ImportExportManager` owns operation progress, temporary-file lifecycle, ZIP/image I/O and restore orchestration. `RestoreArtworkStaging` owns only the current restore's artwork files.
+`data/importexport/BackupSnapshotWriter.kt` owns the Room transaction and streamed JSON export snapshot.
+Restore is deliberately split into deeper phases:
+
+- `BackupArchiveReader` validates the untrusted ZIP and streams unbounded history rows into a disposable `RestoreStagingStore` SQLite database instead of materializing or reparsing JSON inside Room.
+- `BackupDatabaseRestorer` owns the single atomic Room restore transaction and remapping/merge orchestration.
+- `ListeningEventReconciliation` owns the pure candidate ordering and mutation-plan policy; `ListeningEventDao` owns bounded SQL reads and transactional commits.
+- `RestoreArtworkStaging` owns only the current restore's artwork files.
+- `PostRestoreCoordinator` owns the explicitly post-commit, non-Room phase: profile identity, Appearance Studio, allow-listed image-cache scheduling and stats invalidation. Failures there are reported as partial-restore warnings because those stores cannot participate in the Room transaction.
+- `ImportExportManager` is the operation boundary: progress, operation serialization, temporary resource lifetime and high-level export/restore orchestration.
 
 `data/remote/spotify/AccountSessionGate.kt` serializes short credential/state commits and invalidates obsolete token calls. The refresh mutex coalesces refreshes; it is not held by disconnect while waiting for network I/O.
+
+## Home and Settings UI boundaries
+
+`ui/home/HomeDashboardLoader.kt` owns Home's database fan-out, Room concurrency pacing and the
+semantic dashboard snapshot. `HomeChartProcessor.kt` owns pure calendar/chart shaping.
+`HomeViewModel` owns visibility, reactive reload cancellation and prompt/screen state; it should
+not grow repository query orchestration back into the ViewModel.
+
+Settings uses the typed `SettingsSection` catalog for category ownership. `SettingsScreen` is a
+small navigation/dialog orchestration surface; notification-listener health, heartbeat, battery,
+OEM and Spotify runtime observation live in `SettingsViewModel` and are exposed as one
+`SettingsRuntimeStatus` flow.
 
 ## Tracking boundaries and organization backlog
 
@@ -52,13 +72,19 @@ The current tree is an incremental MVVM/repository architecture, not a completed
 `service/TrackingRuntimePolicy.kt` owns package eligibility, manual content corrections,
 podcast/audiobook filtering and duration policy from immutable Room/preference snapshots.
 `service/PlaybackTransitionPolicy.kt` owns pure same-track/replay/new-session decisions.
+`service/ActiveSessionJournal.kt` owns unclean-run markers, serialized recovery checkpoints,
+immediate/periodic active-session autosave and the clean-shutdown acknowledgement boundary.
+`service/OfflineEventStore.kt` owns the separate SQLite queue for listening events that have not
+yet reached the main library.
 `service/LocalMediaMetadata.kt` is the normalization boundary for MediaSession and notification
 metadata. Rich artwork extraction is kept off the callback hot path.
 
 `MusicTrackingService` remains the Android adapter/orchestrator: it owns notification and
-MediaController callbacks, synchronization, active-session membership, foreground lifecycle and
-scheduling persistence. New business branching should not be added directly to that service when
-it belongs to one of the policy/session models above.
+MediaController callbacks, synchronization, active-session membership and foreground lifecycle.
+It no longer blocks `onDestroy` waiting for Room or owns the SharedPreferences checkpoint
+protocol; the bounded final drain runs on a teardown scope after a recoverable session snapshot is
+available. New business branching should not be added directly to that service when it belongs to
+one of the policy/session models above.
 
 The statistics layer still has a broad contract: `StatsRepository` exposes more than sixty
 operations spanning overview, rankings, history, details, image enrichment, editing and cache
