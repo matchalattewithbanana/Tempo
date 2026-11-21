@@ -21,3 +21,12 @@ internal fun connectedChoiceColumns(
     }
     return (if (optionCount == 4 && max == 3) 2 else max).coerceAtMost(optionCount)
 }
+
+/**
+ * Material 3 Expressive recommends connected groups for small sets of related
+ * single choices and filter chips instead of large segmented control sets.
+ */
+internal fun shouldUseFilterChips(optionCount: Int): Boolean {
+    require(optionCount >= 0)
+    return optionCount > 5
+}
