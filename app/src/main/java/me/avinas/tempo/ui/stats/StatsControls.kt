@@ -4,7 +4,6 @@ import me.avinas.tempo.ui.theme.TextOnAccent
 import me.avinas.tempo.ui.theme.LocalTempoAppearance
 import me.avinas.tempo.ui.components.TempoDropdownMenu
 import me.avinas.tempo.ui.components.TempoDropdownMenuItem
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -231,10 +230,18 @@ internal fun StatsTopBar(
     onOpenShare: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val headerAlpha by animateFloatAsState(targetValue = if (isScrolled) 1f else 0f, label = "headerAlpha")
+    val headerColor by androidx.compose.animation.animateColorAsState(
+        targetValue = if (isScrolled) {
+            MaterialTheme.colorScheme.surfaceContainer
+        } else {
+            Color.Transparent
+        },
+        animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
+        label = "statsHeaderColor",
+    )
 
     Surface(
-        color = MaterialTheme.colorScheme.surface.copy(alpha = headerAlpha),
+        color = headerColor,
         shadowElevation = 0.dp,
         modifier = modifier
     ) {
