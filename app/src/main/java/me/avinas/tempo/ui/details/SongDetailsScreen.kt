@@ -255,20 +255,9 @@ private fun SongDetailsLoadingSkeleton() {
 @Composable
 internal fun SkeletonBlock(modifier: Modifier, cornerRadius: Dp) {
     val appearancePalette = LocalTempoPalette.current
-    val reducedMotion = rememberReducedMotion()
-    // Layer-phase pulse: no recomposition per frame.
-    val pulse = me.avinas.tempo.ui.theme.rememberMotionAwareInfiniteTransition(label = "skeleton").animateFloat(
-        initialValue = 0.40f,
-        targetValue = 0.85f,
-        animationSpec = infiniteRepeatable(
-            tween(900, easing = FastOutSlowInEasing),
-            RepeatMode.Reverse,
-        ),
-        label = "skeletonAlpha",
-    )
+    // Static skeletons avoid an infinite transition per track/album placeholder.
     Box(
         modifier
-            .graphicsLayer { alpha = if (reducedMotion) 0.65f else pulse.value }
             .clip(RoundedCornerShape(cornerRadius))
             .background(GlassFrostMedium)
             .border(0.8.dp, appearancePalette.border.copy(alpha = 0.45f), RoundedCornerShape(cornerRadius))
@@ -963,10 +952,11 @@ private fun AudioPreviewPill(
 ) {
     val secondsElapsed = (positionMs / 1000).toInt().coerceIn(0, 30)
     val timecode = stringResource(R.string.details_preview_timecode, secondsElapsed)
-    // Position arrives at 4Hz; tween bridges the gaps so the fill glides.
+    // Source progress arrives frequently; use the theme's fast spatial spring,
+    // which snaps immediately under reduced motion.
     val animatedProgress by animateFloatAsState(
         targetValue = progress.coerceIn(0f, 1f),
-        animationSpec = tween(250, easing = LinearEasing),
+        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
         label = "previewProgressFill",
     )
 
@@ -1021,7 +1011,7 @@ private fun AudioPreviewPill(
                 Box(
                     modifier = Modifier
                         .fillMaxHeight()
-                        .fillMaxWidth(animatedProgress)
+                        .fillMaxWidth(animatedProgress.coerceIn(0f, 1f))
                         .background(PillTextPrimary)
                 )
             }
@@ -1034,25 +1024,12 @@ private fun MiniEqualizer(
     color: Color,
     modifier: Modifier = Modifier,
 ) {
-    val reducedMotion = rememberReducedMotion()
-    // Draw-phase animation: the bars pulse without recomposing the pill.
-    val phase = me.avinas.tempo.ui.theme.rememberMotionAwareInfiniteTransition(label = "previewEq").animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(1150, easing = LinearEasing)),
-        label = "previewEqPhase",
-    )
-
+    // A stable playing indicator is legible without perpetual drawing work.
     Canvas(modifier = modifier.size(width = 12.dp, height = 12.dp)) {
         val barWidth = 2.5.dp.toPx()
         val gap = ((size.width - barWidth * 3f) / 2f).coerceAtLeast(0f)
         repeat(3) { index ->
-            val level = if (reducedMotion) {
-                listOf(0.40f, 0.85f, 0.60f)[index]
-            } else {
-                val wave = sin(phase.value * 2f * PI.toFloat() * (1.4f + index * 0.75f))
-                0.30f + 0.65f * (0.5f + 0.5f * wave)
-            }
+            val level = listOf(0.40f, 0.85f, 0.60f)[index]
             val barHeight = size.height * level
             drawRoundRect(
                 color = color,
@@ -1421,14 +1398,8 @@ private fun ScrubbableRhythmChart(
         "1.0"
     }
 
-    // Bars grow in with a small stagger on first appearance
-    val reducedMotion = rememberReducedMotion()
-    val entrance = remember { Animatable(if (reducedMotion) 1f else 0f) }
-    LaunchedEffect(history) {
-        if (entrance.value < 1f) {
-            entrance.animateTo(1f, tween(750, easing = FastOutSlowInEasing))
-        }
-    }
+    // Render historical data at its final values immediately; loading and
+    // navigation already provide coherent feedback without a 750ms chart delay.
 
     // Screen-reader summary of the currently inspected day
     val inspectedItem = selectedIndex?.takeIf { it in history.indices }?.let { history[it] }
@@ -1566,7 +1537,7 @@ private fun ScrubbableRhythmChart(
                     }
 
                     val fraction = (item.playCount.toFloat() / maxPlays).coerceIn(0.06f, 1f)
-                    val stagger = ((entrance.value * (barCount + 10)) - index).coerceIn(0f, 1f)
+                    val stagger = 1f
                     val barHeight = totalHeight * fraction * stagger
                     val barTop = totalHeight - barHeight
 
@@ -1912,12 +1883,9 @@ private fun AcousticSpecMeter(
 ) {
     val appearancePalette = LocalTempoPalette.current
     val percent = (fraction * 100).roundToInt().coerceIn(0, 100)
-    val animatedPercent by animateIntAsState(
-        targetValue = percent,
-        animationSpec = tween(durationMillis = 550, delayMillis = delayMs, easing = FastOutSlowInEasing),
-        label = "meterPercent",
-    )
-    val animatedFraction = rememberAnimatedFraction(fraction, delayMs = delayMs, durationMs = 550)
+    // Numeric listening metrics must never show an interpolated, inaccurate value.
+    val animatedPercent = percent
+    val animatedFraction = fraction.coerceIn(0f, 1f)
 
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
@@ -2895,24 +2863,8 @@ fun formatReleaseDate(dateString: String?): String? {
     }
 }
 
-@Composable
-private fun rememberAnimatedFraction(
-    target: Float,
-    delayMs: Int = 0,
-    durationMs: Int = 600,
-): Float {
-    if (rememberReducedMotion()) return target
-    var started by rememberSaveable { mutableStateOf(false) }
-    LaunchedEffect(target) { started = true }
-    val fraction by animateFloatAsState(
-        targetValue = if (started) target else 0f,
-        animationSpec = tween(durationMillis = durationMs, delayMillis = delayMs, easing = FastOutSlowInEasing),
-        label = "fraction",
-    )
-    return fraction
-}
-
 /**
+ * Keeps artwork-derived accents usable/**
  * Keeps artwork-derived accents usable on dark glass: tames neon saturation
  * and lifts near-black swatches into a readable accent band. Grays keep their
  * hue (coercing saturation on a gray would fabricate a red tint).
