@@ -108,7 +108,7 @@ sealed class ImportExportResult {
         val eventsReplaced: Int = 0,
         val imagesCount: Int = 0,
         val appearanceStatus: BackupAppearanceStatus? = null,
-        val warnings: List<String> = emptyList(),
+        val warnings: List<BackupRestoreWarning> = emptyList(),
     ) : ImportExportResult() {
         val totalRecords: Int get() = tracksCount + artistsCount + albumsCount + eventsCount
     }
@@ -120,6 +120,12 @@ sealed class ImportExportResult {
 }
 
 enum class BackupAppearanceStatus { INCLUDED, RESTORED, UNCHANGED }
+
+enum class BackupRestoreWarning {
+    PROFILE_IDENTITY,
+    APPEARANCE,
+    IMAGE_CACHE,
+}
 
 /**
  * Progress update during import/export operations.
