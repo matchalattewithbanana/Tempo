@@ -33,18 +33,13 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import me.avinas.tempo.MainActivity
 import me.avinas.tempo.R
-import me.avinas.tempo.data.AppTrackingPolicy
 import me.avinas.tempo.data.DefaultMusicApps
-import me.avinas.tempo.data.TrackingDecision
 import me.avinas.tempo.data.analytics.AnalyticsDailyReporter
 import me.avinas.tempo.data.local.dao.ManualContentMarkDao
 import me.avinas.tempo.data.local.dao.UserPreferencesDao
 import me.avinas.tempo.data.local.entities.ListeningEvent
-import me.avinas.tempo.data.local.entities.ManualContentMark
-import me.avinas.tempo.data.local.entities.ManualContentRuleResolver
 import me.avinas.tempo.data.local.entities.Track
 import me.avinas.tempo.data.preferences.TrackingRulesPreferences
-import me.avinas.tempo.data.preferences.TrackingRulesPreferences.ContentOverrideType
 import me.avinas.tempo.data.repository.ArtistLinkingService
 import me.avinas.tempo.data.repository.EnrichedMetadataRepository
 import me.avinas.tempo.data.repository.ListeningRepository
@@ -585,12 +580,7 @@ class MusicTrackingService : NotificationListenerService() {
     /** Set during component init, read by [recoverPersistedSessions] later in onCreate. */
     private var needsSessionRecovery = false
 
-    /**
-     * Room-backed manual content marks, kept live by [watchManualContentMarks] so the
-     * synchronous MediaSession/notification paths never need a database read.
-     */
-    @Volatile
-    private var cachedManualContentMarks: List<ManualContentMark> = emptyList()
+    private lateinit var trackingPolicy: TrackingRuntimePolicy
 
     /**
      * Re-evaluates active sessions whenever a tracking rule changes in Settings.
@@ -611,35 +601,11 @@ class MusicTrackingService : NotificationListenerService() {
             }
         }
 
-    // App filter caches populated from Room
-    @Volatile
-    private var cachedEnabledApps: Set<String> = emptySet()
-
-    @Volatile
-    private var cachedBlockedApps: Set<String> = emptySet()
-
-    /** All packages in the DB, whether enabled or not. */
-    @Volatile
-    private var cachedAllKnownPackages: Set<String> = emptySet()
-
-    /**
-     * Known apps the user switched off (row present, isEnabled=0, not blocked).
-     * Kept separate from [cachedBlockedApps] so the policy can tell "user said no" apart from
-     * "user has no opinion" — the latter must fall through to the curated allowlist.
-     */
-    @Volatile
-    private var cachedDisabledApps: Set<String> = emptySet()
-
     /**
      * Last time each package was written to the detected-apps inbox, for throttling.
      * Bounded by the number of distinct unknown packages seen in one service lifetime.
      */
     private val lastDetectionRecordedAt = java.util.concurrent.ConcurrentHashMap<String, Long>()
-
-    @Volatile
-    private var isAppPreferenceCacheInitialized: Boolean = false
-    private var lastAppPreferenceFetch: Long = 0
-    private val APP_PREFERENCE_CACHE_TTL_MS = 30_000L // Refresh every 30 seconds
 
     /**
      * Three layers, in order: whole apps (dedicated podcast/audiobook apps, but not Spotify),
@@ -657,7 +623,7 @@ class MusicTrackingService : NotificationListenerService() {
                 val prefs = userPreferencesDao.getSync()
                 cachedFilterPodcasts = prefs?.filterPodcasts ?: true
                 cachedFilterAudiobooks = prefs?.filterAudiobooks ?: true
-                cachedMergeAlternateVersions = prefs?.mergeAlternateVersions ?: true
+                trackingPolicy.mergeAlternateVersions = prefs?.mergeAlternateVersions ?: true
                 lastPreferencesFetch = now
             } catch (e: Exception) {
                 Log.w(TAG, "Failed to refresh preferences in shouldFilterContent, using cached", e)
@@ -767,22 +733,6 @@ class MusicTrackingService : NotificationListenerService() {
     // LruCache is both thread-safe (read on the notification thread, written from IO
     // coroutines) and bounded, so a long-lived listener can't accumulate entries forever.
     private val durationEstimateCache = android.util.LruCache<String, Long>(512)
-
-    // Smart Metadata: Cached user preference for matching strictness
-    // This avoids database call on every track match (preferences rarely change)
-    @Volatile
-    private var cachedMergeAlternateVersions: Boolean = true
-
-    // Default value
-    @Volatile
-    private var cachedFilterPodcasts: Boolean = true
-
-    @Volatile
-    private var cachedFilterAudiobooks: Boolean = true
-
-    @Volatile
-    private var lastPreferencesFetch: Long = 0
-    private val PREFERENCES_CACHE_TTL_MS = 60_000L // Refresh every 60 seconds
 
     // Notification debouncing - prevents excessive notification updates
     private var lastNotificationUpdate = 0L
@@ -989,41 +939,28 @@ class MusicTrackingService : NotificationListenerService() {
             detectedAppDao = entryPoint.detectedAppDao()
             refreshCoordinator = entryPoint.refreshCoordinator()
             analyticsDailyReporter = entryPoint.analyticsDailyReporter()
+            trackingPolicy = TrackingRuntimePolicy(trackingRules)
 
-            // Load initial preferences for caching
+            // Load initial policy snapshots before the post-init rescan.
             serviceScope.launch {
                 try {
-                    val prefs =
-                        userPreferencesDao.getSync() ?: me.avinas.tempo.data.local.entities
-                            .UserPreferences()
-                    cachedMergeAlternateVersions = prefs.mergeAlternateVersions
-                    lastPreferencesFetch = System.currentTimeMillis()
-                    Log.d(TAG, "Loaded user preferences: mergeAlternateVersions=$cachedMergeAlternateVersions")
-
-                    // Load app preferences cache
-                    refreshAppPreferenceCache()
-
-                    // Load all known packages for checking disabled vs unknown apps
-                    cachedAllKnownPackages =
-                        appPreferenceDao
-                            .getAllApps()
-                            .first()
-                            .map { it.packageName }
-                            .toSet()
-                    isAppPreferenceCacheInitialized = true
-                    Log.i(
+                    trackingPolicy.updateUserPreferences(userPreferencesDao.getSync())
+                    val apps = appPreferenceDao.getAllApps().first()
+                    trackingPolicy.updateAppPreferences(apps)
+                    Log.d(
                         TAG,
-                        "App preference cache initialized with ${cachedEnabledApps.size} enabled, ${cachedBlockedApps.size} blocked, ${cachedAllKnownPackages.size} total known",
+                        "Loaded tracking policy: mergeAlternateVersions=" +
+                            trackingPolicy.mergeAlternateVersions +
+                            ", appRows=" + apps.size,
                     )
 
-                    // Fix for tracking bug: now that cache is ready, scan active MediaSessions.
-                    // This resolves the race condition where initializeMediaSessionManager()
-                    // runs before the cache loads, causing all apps to be initially skipped.
+                    // Now that policy state is ready, scan active MediaSessions. This closes the
+                    // startup race where a user-added app could be judged before its Room row loaded.
                     withContext(Dispatchers.Main) {
                         rescanActiveMediaSessions()
                     }
                 } catch (e: Exception) {
-                    Log.w(TAG, "Failed to load initial preferences, using defaults", e)
+                    Log.w(TAG, "Failed to load initial tracking policy, using safe defaults", e)
                 }
             }
 
@@ -1033,6 +970,7 @@ class MusicTrackingService : NotificationListenerService() {
             watchBatteryPreference()
             // Live tracking-rule sources: app enable/block rows and manual content exceptions.
             watchAppPreferences()
+            watchUserPreferences()
             watchManualContentMarks()
         } catch (e: Exception) {
             Log.e(TAG, "Failed to initialize dependencies", e)
@@ -1065,57 +1003,6 @@ class MusicTrackingService : NotificationListenerService() {
     }
 
     /**
-     * Refresh the cached enabled/blocked app sets from database.
-     * Called on init and periodically when checking apps.
-     */
-    private suspend fun refreshAppPreferenceCache() {
-        try {
-            cachedEnabledApps = appPreferenceDao.getEnabledPackageNames().toSet()
-            cachedBlockedApps = appPreferenceDao.getBlockedPackageNames().toSet()
-            cachedDisabledApps = appPreferenceDao.getDisabledPackageNames().toSet()
-            lastAppPreferenceFetch = System.currentTimeMillis()
-            Log.d(
-                TAG,
-                "Refreshed app preferences: ${cachedEnabledApps.size} enabled, " +
-                    "${cachedBlockedApps.size} blocked, ${cachedDisabledApps.size} disabled",
-            )
-        } catch (e: Exception) {
-            Log.w(TAG, "Failed to refresh app preferences, using cached values", e)
-        }
-    }
-
-    private suspend fun ensureAppPreferenceCacheValid() {
-        val now = System.currentTimeMillis()
-        if (now - lastAppPreferenceFetch > APP_PREFERENCE_CACHE_TTL_MS) {
-            refreshAppPreferenceCache()
-        }
-    }
-
-    /**
-     * The single gate for "may Tempo journal playback from this package?".
-     *
-     * Replaces the old enabled/blocked pair, which answered "is this app on a list?" and left
-     * every caller to invent its own default. Those defaults were permissive, which is how
-     * Viber voice notes ended up in the journal. See [AppTrackingPolicy] for the precedence
-     * ladder; this method only supplies the cached state.
-     *
-     * Before the cache loads (race on service start) the user-specific sets are empty, so the
-     * ladder still resolves curated apps through the static allowlist while an unknown app is
-     * held back until the real preferences arrive — rescanActiveMediaSessions() re-runs then.
-     */
-    private fun decideTracking(packageName: String): TrackingDecision =
-        AppTrackingPolicy.decide(
-            packageName = packageName,
-            userEnabledPackages = cachedEnabledApps,
-            userBlockedPackages = cachedBlockedApps,
-            userDisabledPackages = cachedDisabledApps,
-            // Defensive: the notification callback can fire before dependency init completes.
-            // Defaulting to false keeps the deny-by-default guarantee in that window.
-            trackUnrecognizedApps =
-                ::trackingRules.isInitialized && trackingRules.trackUnrecognizedApps,
-        )
-
-    /**
      * Records a rejected package in the detected-apps inbox so the user can allow it later.
      *
      * Throttled per package: an unrecognized app that keeps playing would otherwise write a row
@@ -1130,7 +1017,7 @@ class MusicTrackingService : NotificationListenerService() {
         // Before the preference cache loads, a user-added app looks unrecognized because its
         // enable row has not been read yet. Recording it would fill the inbox with apps the user
         // already allowed; the post-init rescan re-evaluates them anyway.
-        if (!isAppPreferenceCacheInitialized) return
+        if (!trackingPolicy.appPreferencesReady) return
 
         val now = System.currentTimeMillis()
         val last = lastDetectionRecordedAt[packageName] ?: 0L
@@ -1159,7 +1046,7 @@ class MusicTrackingService : NotificationListenerService() {
         Log.i(TAG, "Cleaning up session for disabled/blocked app: $packageName (${session.title})")
 
         // Save any accumulated play time before removing
-        if (session.calculateCurrentPlayDuration() >= minimumPlayDurationMs()) {
+        if (session.calculateCurrentPlayDuration() >= trackingPolicy.minimumPlayDurationMs) {
             saveListeningEvent(session)
         }
 
@@ -1180,69 +1067,6 @@ class MusicTrackingService : NotificationListenerService() {
 
         // Update service lifecycle (may go idle if no more sessions)
         updateServiceLifecycle()
-    }
-
-    /** Configured minimum accumulated play time before an event is stored. */
-    private fun minimumPlayDurationMs(): Long =
-        if (::trackingRules.isInitialized) {
-            trackingRules.minimumPlayDurationMs
-        } else {
-            TrackingRulesPreferences.DEFAULT_MIN_PLAY_DURATION_MS
-        }
-
-    private fun findManualContentMark(
-        title: String,
-        artist: String,
-    ): ManualContentMark? = ManualContentRuleResolver.resolve(cachedManualContentMarks, title, artist)
-
-    private fun manualContentOverride(
-        title: String,
-        artist: String,
-    ): ContentOverrideType? =
-        when (findManualContentMark(title, artist)?.contentType?.uppercase()) {
-            "ALWAYS_MUSIC" -> ContentOverrideType.MUSIC
-            "NON_MUSIC", "VIDEO" -> ContentOverrideType.VIDEO
-            else -> null
-        }
-
-    /**
-     * Applies the user's content exceptions and per-app/global maximum duration rules.
-     * Unknown duration (0) is never rejected here — callers re-check once a reliable
-     * duration is resolved from the track row or enrichment.
-     */
-    private fun shouldRejectByTrackingRules(
-        packageName: String,
-        title: String,
-        artist: String,
-        durationMs: Long,
-    ): Boolean {
-        when (manualContentOverride(title, artist)) {
-            ContentOverrideType.VIDEO -> {
-                Log.d(TAG, "Rejecting manual video/non-music override: '$title' by '$artist'")
-                return true
-            }
-
-            ContentOverrideType.MUSIC -> {
-                return false
-            }
-
-            null -> {
-                Unit
-            }
-        }
-
-        if (durationMs > 0L && ::trackingRules.isInitialized) {
-            val maxDuration = trackingRules.getMaxMusicDurationMs(packageName)
-            if (maxDuration != null && durationMs > maxDuration) {
-                Log.d(
-                    TAG,
-                    "Rejecting content over configured music limit: '$title' by '$artist' " +
-                        "(${durationMs / 1000}s > ${maxDuration / 1000}s) from $packageName",
-                )
-                return true
-            }
-        }
-        return false
     }
 
     /**
@@ -1272,53 +1096,33 @@ class MusicTrackingService : NotificationListenerService() {
         }
     }
 
-    private fun applyAppPreferenceCache(apps: List<me.avinas.tempo.data.local.entities.AppPreference>) {
-        cachedEnabledApps = apps.filter { it.isEnabled && !it.isBlocked }.map { it.packageName }.toSet()
-        cachedBlockedApps = apps.filter { it.isBlocked }.map { it.packageName }.toSet()
-        cachedDisabledApps = apps.filter { !it.isEnabled && !it.isBlocked }.map { it.packageName }.toSet()
-        cachedAllKnownPackages = apps.map { it.packageName }.toSet()
-        isAppPreferenceCacheInitialized = true
-        lastAppPreferenceFetch = System.currentTimeMillis()
-    }
-
     /**
-     * Keeps app enable/block state live. Switching an app off (or blocking it) stops its running
-     * session immediately; switching one on rescans active media.
-     *
-     * The stop condition runs through [decideTracking] rather than comparing sets by hand, so a
-     * package that is blocked purely by the built-in lists (never seeded as a row) is cleaned up
-     * too. It also means unblocking YouTube now really does start tracking it — before, the
-     * static set was checked first and the Unblock button silently did nothing.
+     * Keeps policy inputs live. Each Room source emits immutable snapshots; the policy owns
+     * precedence and lookup details while the service owns the expensive Android rescan.
      */
     private fun watchAppPreferences() {
         serviceScope.launch {
             appPreferenceDao.getAllApps().collect { apps ->
-                applyAppPreferenceCache(apps)
+                trackingPolicy.updateAppPreferences(apps)
                 dropDisallowedSessions()
                 reevaluateActiveContent()
             }
         }
     }
 
-    /**
-     * Drops sessions whose package the current policy no longer allows.
-     *
-     * Shared by the preference observer and the tracking-rules listener so both take effect
-     * without a restart, and so the expensive half — rescanning MediaSessions and notifications,
-     * which are binder IPCs — happens exactly once per change in [reevaluateActiveContent]
-     * rather than in a second near-identical sweep.
-     */
-    private fun dropDisallowedSessions() {
-        playbackStates.keys
-            .filter { !decideTracking(it).shouldTrack }
-            .forEach(::cleanupSessionForPackage)
+    private fun watchUserPreferences() {
+        serviceScope.launch {
+            userPreferencesDao.preferences().collect { preferences ->
+                trackingPolicy.updateUserPreferences(preferences)
+                reevaluateActiveContent()
+            }
+        }
     }
 
-    /** Keeps manual content exceptions live and re-evaluates anything already playing. */
     private fun watchManualContentMarks() {
         serviceScope.launch {
             manualContentMarkDao.getAllMarks().collect { marks ->
-                cachedManualContentMarks = marks
+                trackingPolicy.updateManualContentMarks(marks)
                 reevaluateActiveContent()
             }
         }
@@ -1465,13 +1269,13 @@ class MusicTrackingService : NotificationListenerService() {
                             // content (podcasts, mixes) that the user allows to be tracked.
                             val cappedPlayTime = estimatedPlayTime.coerceAtLeast(0L)
 
-                            if (cappedPlayTime < minimumPlayDurationMs()) continue
+                            if (cappedPlayTime < trackingPolicy.minimumPlayDurationMs) continue
 
                             // Sessions are persisted across process death. One written by an
                             // older build (before default-deny) can reference an app that is no
                             // longer tracked — a Viber voice note, say. Replaying it would put the
                             // very content this model excludes back into the journal.
-                            if (!decideTracking(state.packageName).shouldTrack) {
+                            if (!trackingPolicy.decidePackage(state.packageName).shouldTrack) {
                                 Log.i(
                                     TAG,
                                     "Dropping recovered session from untracked app: ${state.packageName}",
@@ -1537,7 +1341,7 @@ class MusicTrackingService : NotificationListenerService() {
                                     cappedPlayTime
                                 }
 
-                            if (finalPlayTime < minimumPlayDurationMs()) continue
+                            if (finalPlayTime < trackingPolicy.minimumPlayDurationMs) continue
 
                             // Create a listening event for the recovered session
                             val event =
@@ -1708,7 +1512,7 @@ class MusicTrackingService : NotificationListenerService() {
             // Only retain it when the policy still allows the source app. The "keep showing the
             // paused session" behaviour exists so pausing music does not blank the notification;
             // it must not be a route for an app Tempo refuses to track to stay on screen.
-            val currentSession = playbackStates.values.firstOrNull { decideTracking(it.packageName).shouldTrack }
+            val currentSession = playbackStates.values.firstOrNull { trackingPolicy.decidePackage(it.packageName).shouldTrack }
             if (currentSession != null) {
                 // We have a session (likely paused), keep showing it
                 // This resolves the user complaint "it stopped tracking on pause"
@@ -1770,7 +1574,7 @@ class MusicTrackingService : NotificationListenerService() {
         if (playbackStates.isEmpty()) return false
 
         val now = System.currentTimeMillis()
-        val minimumPlayDuration = minimumPlayDurationMs()
+        val minimumPlayDuration = trackingPolicy.minimumPlayDurationMs
 
         // Fetched at most once per sweep, and only when a session actually needs it: reading
         // `activeNotifications` is a binder IPC that marshals the whole notification list, so
@@ -1813,7 +1617,7 @@ class MusicTrackingService : NotificationListenerService() {
         }
 
         if (reaped) {
-            val next = playbackStates.values.firstOrNull { decideTracking(it.packageName).shouldTrack }
+            val next = playbackStates.values.firstOrNull { trackingPolicy.decidePackage(it.packageName).shouldTrack }
             updateTrackingNotification(next?.title, next?.artist)
         }
         return reaped
@@ -2135,7 +1939,7 @@ class MusicTrackingService : NotificationListenerService() {
                 (category == Notification.CATEGORY_TRANSPORT ||
                     category == Notification.CATEGORY_SERVICE)
 
-        return when (val decision = decideTracking(packageName)) {
+        return when (val decision = trackingPolicy.decidePackage(packageName)) {
             TrackingDecision.ALLOW -> true
 
             TrackingDecision.BLOCKED, TrackingDecision.NEVER_TRACKED -> {
@@ -2531,14 +2335,14 @@ class MusicTrackingService : NotificationListenerService() {
                 val prefs =
                     userPreferencesDao.getSync() ?: me.avinas.tempo.data.local.entities
                         .UserPreferences()
-                cachedMergeAlternateVersions = prefs.mergeAlternateVersions
+                trackingPolicy.mergeAlternateVersions = prefs.mergeAlternateVersions
                 lastPreferencesFetch = now
             } catch (e: Exception) {
                 Log.w(TAG, "Failed to refresh preferences, using cached value", e)
             }
         }
 
-        val strictMatching = !cachedMergeAlternateVersions
+        val strictMatching = !trackingPolicy.mergeAlternateVersions
 
         val candidates =
             trackRepository.findFuzzyCandidates(title, artist).map { track ->
@@ -3071,7 +2875,7 @@ class MusicTrackingService : NotificationListenerService() {
         val playDuration = session.calculateCurrentPlayDuration()
 
         // Don't save plays shorter than the configured minimum.
-        if (playDuration < minimumPlayDurationMs()) {
+        if (playDuration < trackingPolicy.minimumPlayDurationMs) {
             Log.d(TAG, "Skipping short play: ${playDuration}ms for '${session.title}'")
             return
         }
@@ -3189,7 +2993,7 @@ class MusicTrackingService : NotificationListenerService() {
         val currentTime = System.currentTimeMillis()
 
         // Final check for play duration
-        if (playDuration < minimumPlayDurationMs()) {
+        if (playDuration < trackingPolicy.minimumPlayDurationMs) {
             Log.d(TAG, "Skipping short play in insert: ${playDuration}ms for '${session.title}'")
             return
         }
@@ -3493,7 +3297,7 @@ class MusicTrackingService : NotificationListenerService() {
                 // rule here ("track unknown apps if the session looks like music") is what let
                 // Viber and Signal voice messages into the journal — a voice note has a title, a
                 // creator and a duration, so every heuristic for "music" matched it.
-                when (val decision = decideTracking(packageName)) {
+                when (val decision = trackingPolicy.decidePackage(packageName)) {
                     TrackingDecision.ALLOW -> {
                         val callback = PackageSpecificCallback(packageName)
                         controller.registerCallback(callback)
