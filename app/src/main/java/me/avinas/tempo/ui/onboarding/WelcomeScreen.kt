@@ -1,7 +1,6 @@
 package me.avinas.tempo.ui.onboarding
 
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.snap
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
