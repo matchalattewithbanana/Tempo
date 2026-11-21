@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.ui.res.stringResource
+import me.avinas.tempo.R
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -83,7 +85,7 @@ fun TempoSnackbar(
                 IconButton(onClick = data::dismiss) {
                     Icon(
                         Icons.Default.Close,
-                        contentDescription = "Dismiss message",
+                        contentDescription = stringResource(R.string.album_close_cd),
                         tint = colors.inverseOnSurface,
                     )
                 }
