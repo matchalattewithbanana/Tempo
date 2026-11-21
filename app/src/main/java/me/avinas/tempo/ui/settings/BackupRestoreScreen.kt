@@ -192,7 +192,7 @@ fun BackupRestoreScreen(
                     } else null
                     snackbarHostState.showSnackbar(
                         listOfNotNull(summary, reconciliation,
-                            appearance?.let { resources.getString(it) }).joinToString("\\n")
+                            appearance?.let { resources.getString(it) }).joinToString("\n")
                     )
                 }
                 is ImportExportResult.Error -> {
