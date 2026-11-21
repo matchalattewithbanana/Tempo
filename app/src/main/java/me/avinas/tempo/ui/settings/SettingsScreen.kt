@@ -177,9 +177,15 @@ fun SettingsScreen(
         importExportResult?.let { result ->
             when (result) {
                 is ImportExportResult.Success -> {
-                    snackbarHostState.showSnackbar(
-                        resources.getString(R.string.settings_import_success, result.totalRecords, result.imagesCount),
-                    )
+                    val successMessage =
+                        buildString {
+                            append(resources.getString(R.string.settings_import_success, result.totalRecords, result.imagesCount))
+                            if (result.warnings.isNotEmpty()) {
+                                append("\n")
+                                append(result.warnings.joinToString(separator = "\n"))
+                            }
+                        }
+                    snackbarHostState.showSnackbar(successMessage)
                 }
 
                 is ImportExportResult.Error -> {
