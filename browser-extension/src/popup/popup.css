@@ -43,6 +43,15 @@
   --bg-hover:         rgba(47, 219, 184, 0.09);
   --bg-input:         #12111a;
 
+  /* Web-native equivalents of the Android Material semantic color roles.
+     The popup does not pretend to run Compose or dynamic Material You. */
+  --surface:          var(--bg-primary);
+  --surface-container-low: var(--bg-card);
+  --surface-container-high: var(--bg-raised);
+  --on-surface:       var(--text-primary);
+  --on-surface-variant: var(--text-secondary);
+  --outline-variant:  var(--border);
+
   --text-primary:     #f5f4f8;
   --text-secondary:   #b8b6c6;
   --text-muted:       #8f8d9e;
@@ -231,9 +240,9 @@ body::before {
   justify-content: center;
   gap: 3px;
   width: 100%;
-  min-height: 46px;
+  min-height: 48px;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--text-muted);
   cursor: pointer;
@@ -1560,7 +1569,7 @@ input[type="text"]:focus {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #fff;
+  color: var(--on-surface);
   margin-bottom: 4px;
 }
 
@@ -1973,47 +1982,11 @@ input[type="text"]:focus {
   transition: transform var(--t), box-shadow var(--t), opacity var(--t);
 }
 
-/* Soft breathing glow so the eye lands here first.
-   Static ring on the pseudo-element; opacity/scale animate compositor-only
-   instead of box-shadow (which repaints every frame). The button's wide aspect
-   makes exact 7px-uniform spread growth impossible with a uniform scale, so the
-   expansion is an approximation — same breathing-ring read. */
+/* Material-inspired emphasis relies on the filled high-priority action,
+   not an infinite pulse or moving sheen. Hover/press remain responsive. */
+.btn-scan-cta::before,
 .btn-scan-cta::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  box-shadow: 0 0 0 7px rgba(47, 219, 184, 0.45);
-  opacity: 0;
-  animation: scan-cta-pulse 2.4s ease-in-out infinite;
-  pointer-events: none;
-}
-
-@keyframes scan-cta-pulse {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50%      { transform: scale(1.06); opacity: 0; }
-}
-
-/* Moving sheen sweep */
-.btn-scan-cta::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 50%;
-  height: 100%;
-  background: linear-gradient(105deg, transparent, rgba(255, 255, 255, 0.28), transparent);
-  /* left:-75%→125% of the button re-expressed as translateX of this 50%-wide
-     element (-150%/250%) — identical travel, compositor-only. */
-  transform: translateX(-150%) skewX(-20deg);
-  animation: scan-cta-sheen 3.2s ease-in-out infinite;
-  pointer-events: none;
-}
-
-@keyframes scan-cta-sheen {
-  0%   { transform: translateX(-150%) skewX(-20deg); }
-  60%  { transform: translateX(250%) skewX(-20deg); }
-  100% { transform: translateX(250%) skewX(-20deg); }
+  content: none;
 }
 
 .btn-scan-cta:hover:not(:disabled) {
