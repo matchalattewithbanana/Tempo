@@ -1,11 +1,7 @@
 package me.avinas.tempo.ui.onboarding
 
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.snap
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -23,7 +19,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import me.avinas.tempo.R
 import me.avinas.tempo.ui.components.DeepOceanBackground
@@ -51,26 +46,20 @@ fun WelcomeScreen(
     val reducedMotion = rememberReducedMotion()
     val haptic = LocalHapticFeedback.current
 
-    // Staggered entry, played ONCE: backdrop fades, headline lands in two
-    // beats (line 1, then line 2 + CTA 80ms later) on a soft spring — the
-    // hook without eagerness. Orbit keeps revolving subtly underneath.
-    val figureEntry = remember { Animatable(0f) }
-    val headlineEntry = remember { Animatable(0f) }
-    val ctaEntry = remember { Animatable(0f) }
+    // One onboarding hero transition: content moves with the spatial spring
+    // while opacity uses the effects spring. No hand-authored stagger or tween.
+    val contentSpatial = remember { Animatable(0f) }
+    val contentEffects = remember { Animatable(0f) }
+    val spatialSpec = MaterialTheme.motionScheme.defaultSpatialSpec<Float>()
+    val effectsSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
     LaunchedEffect(reducedMotion) {
         if (reducedMotion) {
-            figureEntry.snapTo(1f)
-            headlineEntry.snapTo(1f)
-            ctaEntry.snapTo(1f)
+            contentSpatial.snapTo(1f)
+            contentEffects.snapTo(1f)
         } else {
-            launch { figureEntry.animateTo(1f, tween(700, easing = FastOutSlowInEasing)) }
-            launch {
-                delay(150)
-                headlineEntry.animateTo(1f, spring(stiffness = Spring.StiffnessMediumLow, dampingRatio = Spring.DampingRatioNoBouncy))
-            }
-            launch {
-                delay(230)
-                ctaEntry.animateTo(1f, spring(stiffness = Spring.StiffnessMediumLow, dampingRatio = Spring.DampingRatioNoBouncy))
+            kotlinx.coroutines.coroutineScope {
+                launch { contentSpatial.animateTo(1f, animationSpec = spatialSpec) }
+                launch { contentEffects.animateTo(1f, animationSpec = effectsSpec) }
             }
         }
     }
@@ -79,17 +68,9 @@ fun WelcomeScreen(
     DeepOceanBackground(
         modifier = Modifier.fillMaxSize(),
     ) {
-        // ── BACK + MID — orbit behind, fitted art above, one entry fade ──
-        // No slide: fitted art must not translate. No zoom: the full
-        // image is always visible.
-        Box(
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .graphicsLayer { alpha = figureEntry.value },
-        ) {
-            WelcomeBackdrop(modifier = Modifier.fillMaxSize())
-        }
+        // Backdrop remains stable; only the foreground content performs the
+        // first-run hero transition.
+        WelcomeBackdrop(modifier = Modifier.fillMaxSize())
 
         // ── TOP — legibility scrim + headline and call to action ──
         // Gentle bottom blend so the copy melts into the artwork.
@@ -119,8 +100,8 @@ fun WelcomeScreen(
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.graphicsLayer {
-                    alpha = headlineEntry.value
-                    translationY = (1f - headlineEntry.value) * 24f
+                    alpha = contentEffects.value
+                    translationY = (1f - contentSpatial.value) * 18f
                 }
             ) {
                 Text(
@@ -155,8 +136,8 @@ fun WelcomeScreen(
                     Modifier
                         .fillMaxWidth()
                         .graphicsLayer {
-                            alpha = ctaEntry.value
-                            translationY = (1f - ctaEntry.value) * 24f
+                            alpha = contentEffects.value
+                            translationY = (1f - contentSpatial.value) * 18f
                         }
                         .height(scaledSize(54.dp, 0.85f, 1.1f)),
                 colors =
