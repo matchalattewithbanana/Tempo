@@ -1109,45 +1109,40 @@ fun SectionDividerHeader(
 @Composable
 fun ArchiveSectionHeader(
     itemCount: Int,
-    totalTracks: Int
+    totalTracks: Int,
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 10.dp)
+    val scheme = MaterialTheme.colorScheme
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        Surface(
+            modifier = Modifier.size(32.dp),
+            shape = MaterialTheme.shapes.medium,
+            color = scheme.secondaryContainer,
+            contentColor = scheme.onSecondaryContainer,
         ) {
-            Box(
-                modifier = Modifier
-                    .size(28.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(GoldDark.copy(alpha = 0.15f)),
-                contentAlignment = Alignment.Center
-            ) {
+            Box(contentAlignment = Alignment.Center) {
                 Icon(
                     imageVector = Icons.Default.History,
                     contentDescription = null,
-                    tint = GoldLight,
-                    modifier = Modifier.size(16.dp)
+                    modifier = Modifier.size(17.dp),
                 )
             }
+        }
+        Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = stringResource(R.string.history_from_archive).uppercase(Locale.getDefault()),
-                style = KickerSmall,
-                fontWeight = FontWeight.Bold,
-                color = GoldLight,
-                letterSpacing = 1.sp
+                text = stringResource(R.string.history_from_archive),
+                style = MaterialTheme.typography.titleSmallEmphasized,
+                color = scheme.onSurface,
+            )
+            Text(
+                text = "Showing $itemCount of $totalTracks archived tracks",
+                style = MaterialTheme.typography.bodySmall,
+                color = scheme.onSurfaceVariant,
             )
         }
-        Text(
-            text = "Showing $itemCount of $totalTracks archived tracks",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f),
-            modifier = Modifier.padding(start = 36.dp, top = 2.dp)
-        )
     }
 }
 
