@@ -13,15 +13,10 @@ import me.avinas.tempo.data.local.dao.isLocalBackupArtwork
 import me.avinas.tempo.data.local.entities.*
 import me.avinas.tempo.data.profile.ProfileIdentityManager
 import me.avinas.tempo.utils.ImageUrlHostAllowlist
-import com.squareup.moshi.JsonReader
 import me.avinas.tempo.worker.PostRestoreCacheWorker
-import okio.buffer
-import okio.sink
-import okio.source
 import java.io.*
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.zip.ZipEntry
-import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -42,14 +37,6 @@ class ImportExportManager @Inject constructor(
     companion object {
         private const val TAG = "ImportExportManager"
         private const val ALBUM_ART_DIR = "album_art"
-        private const val IMAGES_DIR = "images/"
-        private const val MAX_BUNDLED_IMAGE_BYTES = 10L * 1024L * 1024L
-        private const val MAX_TOTAL_IMAGE_BYTES = 50L * 1024L * 1024L
-        // ZIP entry sizes are attacker-controlled metadata. Cap the *decompressed*
-        // JSON stream and the two staged row sets before they can exhaust disk.
-        private const val MAX_DATA_JSON_BYTES = 1024L * 1024L * 1024L
-        private const val MAX_IMPORTED_EVENTS = 5_000_000
-        private const val MAX_IMPORTED_ARCHIVE_ROWS = 2_000_000
 
         // Chunk size for feeding streamed import rows into the dedup pipeline.
     }
@@ -160,7 +147,7 @@ class ImportExportManager @Inject constructor(
                     val file = resolveExportableLocalImage(path) ?: return@forEachIndexed
                     // Keep archive names within the restore format's length/safety limits.
                     val name = "img_${index}_${file.name}".take(128)
-                    if (sanitizeBundledImageName(name) != null) {
+                    if (BackupArchivePolicy.sanitizeBundledImageName(name) != null) {
                         imageSources[name] = file
                         manifest[name] = path
                     }
@@ -173,7 +160,7 @@ class ImportExportManager @Inject constructor(
                 ZipOutputStream(BufferedOutputStream(output)).use { zip ->
                     for ((name, file) in imageSources) {
                         currentCoroutineContext().ensureActive()
-                        zip.putNextEntry(ZipEntry("$IMAGES_DIR$name"))
+                        zip.putNextEntry(ZipEntry("${BackupArchivePolicy.IMAGES_DIR}$name"))
                         // A disappearing image aborts the backup, rather than publishing a
                         // manifest that claims a missing/partially copied image was included.
                         file.inputStream().use { it.copyTo(zip) }
@@ -216,108 +203,41 @@ class ImportExportManager @Inject constructor(
             )
         }
 
-        // The two unbounded arrays (listening events, scrobble archive) are streamed
-        // out of the ZIP into JSON-lines staging files during pass 1, then replayed
-        // chunk by chunk inside the DB transaction. Neither table is ever held in
-        // memory whole, so restores of huge libraries cannot OOM.
         val stagedEventsFile = File(context.cacheDir, "import_events.jsonl")
         val stagedArchiveFile = File(context.cacheDir, "import_archive.jsonl")
         stagedEventsFile.delete()
         stagedArchiveFile.delete()
-        val artworkStaging = RestoreArtworkStaging(context.cacheDir, File(context.filesDir, ALBUM_ART_DIR))
+        val artworkStaging =
+            RestoreArtworkStaging(context.cacheDir, File(context.filesDir, ALBUM_ART_DIR))
 
         try {
             _progress.value = ImportExportProgress("Reading backup file...", 0, 100, true)
-            
-            // First pass: read data.json to get manifest
-            var exportData: TempoExportData? = null
-            var totalExtractedImageBytes = 0L
-            var stagedEventCount = 0
-            var stagedArchiveCount = 0
-            
-            context.contentResolver.openInputStream(uri)?.use { inputStream ->
-                ZipInputStream(BufferedInputStream(inputStream)).use { zipIn ->
-                    var entry: ZipEntry? = zipIn.nextEntry
-                    while (entry != null) {
-                        when {
-                            entry.name == TempoExportData.DATA_FILENAME -> {
-                                // Stream-parse the document: bounded tables are collected,
-                                // unbounded arrays are staged row by row.
-                                val reader = JsonReader.of(LimitedEntryInputStream(zipIn, MAX_DATA_JSON_BYTES).source().buffer())
-                                val eventAdapter = moshi.adapter(ListeningEvent::class.java)
-                                val archiveAdapter = moshi.adapter(ScrobbleArchive::class.java)
-                                val eventSink = stagedEventsFile.sink().buffer()
-                                val archiveSink = stagedArchiveFile.sink().buffer()
-                                try {
-                                    exportData = codec.read(
-                                        reader,
-                                        TempoExportJsonCodec.StreamHandlers(
-                                            onListeningEvent = { event ->
-                                                if (stagedEventCount >= MAX_IMPORTED_EVENTS) {
-                                                    throw SecurityException("Backup contains too many listening events")
-                                                }
-                                                eventAdapter.toJson(eventSink, event)
-                                                eventSink.writeUtf8("\n")
-                                                stagedEventCount++
-                                            },
-                                            onScrobbleArchiveRow = { row ->
-                                                if (stagedArchiveCount >= MAX_IMPORTED_ARCHIVE_ROWS) {
-                                                    throw SecurityException("Backup contains too many archive rows")
-                                                }
-                                                archiveAdapter.toJson(archiveSink, row)
-                                                archiveSink.writeUtf8("\n")
-                                                stagedArchiveCount++
-                                            }
-                                        )
-                                    )
-                                } finally {
-                                    // flush only — close() would close the ZipInputStream
-                                    eventSink.flush()
-                                    archiveSink.flush()
-                                }
-                            }
-                            entry.name.startsWith(IMAGES_DIR) && !entry.isDirectory -> {
-                                // Extract only into this operation's private staging directory.
-                                val bundledName = entry.name.removePrefix(IMAGES_DIR)
-                                val safeBundledName = sanitizeBundledImageName(bundledName)
-                                if (safeBundledName == null) {
-                                    Log.w(TAG, "Skipping unsafe bundled image name in import")
-                                } else {
-                                    val remainingBudget = MAX_TOTAL_IMAGE_BYTES - totalExtractedImageBytes
-                                    totalExtractedImageBytes += artworkStaging.stage(
-                                        safeBundledName, zipIn,
-                                        minOf(MAX_BUNDLED_IMAGE_BYTES, remainingBudget)
-                                    )
-                                }
-                            }
-                        }
-                        zipIn.closeEntry()
-                        entry = zipIn.nextEntry
-                    }
-                }
-            }
-            
-            val data = exportData ?: return@withContext ImportExportResult.Error("Invalid backup file: no data found")
-            
-            // Validate version
-            if (data.version > TempoExportData.CURRENT_VERSION) {
-                return@withContext ImportExportResult.Error(
-                    "Backup is from a newer app version. Please update Tempo."
+            val archive = when (
+                val result = BackupArchiveReader(
+                    context = context,
+                    moshi = moshi,
+                    codec = codec,
+                ).read(
+                    uri = uri,
+                    stagedEventsFile = stagedEventsFile,
+                    stagedArchiveFile = stagedArchiveFile,
+                    artworkStaging = artworkStaging,
                 )
+            ) {
+                is BackupArchiveReader.Result.Error ->
+                    return@withContext ImportExportResult.Error(result.message)
+                is BackupArchiveReader.Result.Success -> result
             }
-            
-            // Archive parsing, limits and version validation have succeeded. Promote to a
-            // unique namespace before DB references are written; rollback removes only our files.
-            val extractedImages = artworkStaging.promote()
-            Log.i(TAG, "Extracted ${extractedImages.size} images, staged $stagedEventCount events and $stagedArchiveCount archive rows")
-            
-            // Build path mapping: old file:// path -> new file:// path
-            val pathMapping = data.localImageManifest.mapNotNull { (bundledName, originalPath) ->
-                extractedImages[bundledName]?.let { newPath -> originalPath to newPath }
-            }.toMap()
-            
-            _progress.value = ImportExportProgress("Importing artists...", 15, 100)
-            
+            val data = archive.data
+            val extractedImages = archive.extractedImages
+            val pathMapping = archive.pathMapping
+            Log.i(
+                TAG,
+                "Extracted ${extractedImages.size} images, staged " +
+                    "${archive.stagedEventCount} events and " +
+                    "${archive.stagedArchiveCount} archive rows",
+            )
+
             val databaseRestore = BackupDatabaseRestorer(
                 database = database,
                 moshi = moshi,
@@ -435,14 +355,6 @@ class ImportExportManager @Inject constructor(
         return localPaths.toList() to hotlinkUrls.toList()
     }
     
-    private fun sanitizeBundledImageName(bundledName: String): String? {
-        val candidate = bundledName.trim()
-        if (candidate.isBlank() || candidate.length > 128) return null
-        if (candidate.contains('/') || candidate.contains('\\') || candidate == "." || candidate == "..") return null
-        if (candidate.contains("..")) return null
-        return candidate
-    }
-
     private fun resolveExportableLocalImage(fileUri: String): File? {
         if (!fileUri.startsWith("file://")) return null
 
@@ -455,7 +367,7 @@ class ImportExportManager @Inject constructor(
             canonicalFile.path == root.path || canonicalFile.path.startsWith(root.path + File.separator)
         }
         if (!isAllowed) return null
-        if (canonicalFile.length() > MAX_BUNDLED_IMAGE_BYTES) return null
+        if (canonicalFile.length() > BackupArchivePolicy.MAX_BUNDLED_IMAGE_BYTES) return null
         return canonicalFile
     }
     
@@ -502,36 +414,6 @@ internal class ImportExportOperationGate {
             if (released.compareAndSet(false, true)) owner.release()
         }
     }
-}
-
-/** Enforces a decompressed ZIP entry limit without closing its owning ZipInputStream. */
-private class LimitedEntryInputStream(
-    private val source: InputStream,
-    private val limit: Long,
-) : InputStream() {
-    private var bytesRead = 0L
-
-    override fun read(): Int {
-        if (bytesRead >= limit) {
-            val extra = source.read()
-            if (extra < 0) return -1
-            throw SecurityException("Backup JSON exceeds the decompressed size limit")
-        }
-        val value = source.read()
-        if (value >= 0) bytesRead++
-        return value
-    }
-
-    override fun read(buffer: ByteArray, offset: Int, length: Int): Int {
-        if (length == 0) return 0
-        if (bytesRead >= limit) return if (read() < 0) -1 else error("unreachable")
-        val allowed = minOf(length.toLong(), limit - bytesRead).toInt()
-        val count = source.read(buffer, offset, allowed)
-        if (count > 0) bytesRead += count
-        return count
-    }
-
-    override fun close() = Unit
 }
 
 internal fun remapRestoredImageUrl(
