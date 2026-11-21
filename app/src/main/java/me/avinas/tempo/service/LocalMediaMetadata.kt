@@ -401,7 +401,7 @@ data class LocalMediaMetadata(
                 extras.getCharSequence(Notification.EXTRA_TITLE)
                     ?.toString()
                     ?.trim()
-                    ?.takeIf(String::isNotBlank)
+                    ?.takeIf { it.isNotBlank() }
                     ?: return null
 
             val titleArtist = extractArtistFromTitle(rawTitle)
@@ -414,13 +414,13 @@ data class LocalMediaMetadata(
                     extras.getCharSequence(Notification.EXTRA_INFO_TEXT)?.toString(),
                 )
                     .filterNotNull()
-                    .map(String::trim)
+                    .map { it.trim() }
                     .firstOrNull { it.isNotBlank() && !isPlaceholderArtist(it) }
                     ?: extras.getCharSequence(Notification.EXTRA_BIG_TEXT)
                         ?.toString()
                         ?.lineSequence()
-                        ?.map(String::trim)
-                        ?.filter(String::isNotBlank)
+                        ?.map { it.trim() }
+                        ?.filter { it.isNotBlank() }
                         ?.toList()
                         ?.takeIf { it.size >= 2 && it[0] == rawTitle }
                         ?.get(1)
@@ -431,7 +431,7 @@ data class LocalMediaMetadata(
             val title =
                 if (titleArtist != null && artist.equals(titleArtist, ignoreCase = true)) {
                     TITLE_ARTIST_PATTERNS.firstNotNullOfOrNull { pattern ->
-                        pattern.find(rawTitle)?.groupValues?.getOrNull(1)?.trim()?.takeIf(String::isNotBlank)
+                        pattern.find(rawTitle)?.groupValues?.getOrNull(1)?.trim()?.takeIf { it.isNotBlank() }
                     } ?: rawTitle
                 } else {
                     rawTitle
@@ -445,7 +445,7 @@ data class LocalMediaMetadata(
                     ?: extras.getCharSequence(Notification.EXTRA_INFO_TEXT)
                         ?.toString()
                         ?.trim()
-                        ?.takeIf(String::isNotBlank)
+                        ?.takeIf { it.isNotBlank() }
 
             return LocalMediaMetadata(
                 title = title,
