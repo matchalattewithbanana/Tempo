@@ -259,6 +259,16 @@ class MusicTrackingService : NotificationListenerService() {
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
+    // MusicTrackingManager owns durable batching/retry work that may need to outlive this
+    // service's callback scope briefly during teardown. Keeping it on a dedicated scope lets
+    // onDestroy cancel UI/listener observers immediately without cancelling the final durable
+    // queue drain. The scope is cancelled by the teardown worker after flush completes.
+    private val trackingIoScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    // Teardown work must never block NotificationListenerService.onDestroy(). This scope owns
+    // only the bounded final checkpoint/flush and cancels itself when that work finishes.
+    private val shutdownScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
     private fun PlaybackSession.transitionSnapshot() =
         PlaybackTransitionPolicy.Existing(
             title = title,
@@ -786,7 +796,7 @@ class MusicTrackingService : NotificationListenerService() {
         try {
             // Initialize tracking manager for batched event saving
             trackingManager = MusicTrackingManager(
-                listeningRepository, serviceScope, offlineStore,
+                listeningRepository, trackingIoScope, offlineStore,
                 onPersisted = { saved ->
                     if (saved.isNotEmpty()) {
                         (statsRepository as? RoomStatsRepository)?.onNewListeningEvent(
@@ -814,7 +824,7 @@ class MusicTrackingService : NotificationListenerService() {
             Log.e(TAG, "Failed to initialize tracking components", e)
             // Create fallback instances
             trackingManager = MusicTrackingManager(
-                listeningRepository, serviceScope, offlineStore,
+                listeningRepository, trackingIoScope, offlineStore,
                 onPersisted = { saved ->
                     if (saved.isNotEmpty()) {
                         (statsRepository as? RoomStatsRepository)?.onNewListeningEvent(saved.maxOf { it.timestamp })
@@ -2337,8 +2347,9 @@ class MusicTrackingService : NotificationListenerService() {
      * Suspend variant that performs the save inline (no internal coroutine launch).
      *
      * The normal hot path calls it via [saveListeningEvent] on [serviceScope].
-     * onDestroy calls it directly inside a bounded runBlocking so the final events
-     * are guaranteed to reach the database before the service scope is cancelled.
+     * The teardown worker can also call it directly after listener callbacks have been
+     * cancelled; durable session state is checkpointed first so a process kill remains
+     * recoverable without blocking the lifecycle thread.
      */
     private suspend fun saveListeningEventSuspend(session: PlaybackSession) {
         val playDuration = session.calculateCurrentPlayDuration()
@@ -3648,62 +3659,67 @@ class MusicTrackingService : NotificationListenerService() {
         releaseMediaSessionObservation()
         observedMediaNotificationKeys.clear()
 
-        // Flush everything synchronously BEFORE cancelling serviceScope.
-        //
-        // The previous implementation launched the final session saves and
-        // trackingManager.flushAll() on serviceScope and then immediately called
-        // serviceScope.cancel() — cancelling those very coroutines and silently
-        // dropping the last batch of listening events on EVERY clean destroy
-        // (reboot, app update, service restart). That directly under-counts plays.
-        // We block here (bounded) so accrued listening time always reaches the DB.
+        // Freeze active sessions before tearing down callback scopes. A recovery snapshot is
+        // written before any final event conversion, so a process death during the async flush
+        // leaves enough durable state for the next service instance to recover the play.
         val playbackSnapshot = playbackStates.values.toList()
-        val flushed =
-            try {
-                runBlocking(Dispatchers.IO) {
+        playbackSnapshot.forEach { it.pause() }
+        val recoverySnapshot =
+            playbackSnapshot.associate { session ->
+                session.sessionId to session.recoverySnapshot()
+            }
+        playbackStates.clear()
+
+        // Listener/policy observers belong to the service lifecycle and should stop immediately.
+        // MusicTrackingManager uses its own IO scope, so its durable queue remains available to
+        // the teardown worker below.
+        heartbeatJob?.cancel()
+        heartbeatJob = null
+        serviceScope.cancel()
+
+        shutdownScope.launch {
+            val flushed =
+                try {
                     withTimeoutOrNull(SHUTDOWN_FLUSH_TIMEOUT_MS) {
-                        // Persist the freshest session state first so an interrupted
-                        // flush can still be recovered on the next start.
-                        if (!saveSessionsToPersistence()) {
-                            return@withTimeoutOrNull false
-                        }
+                        // This is intentionally off the lifecycle thread. Commit the final recovery
+                        // snapshot first; only clear it after every final event and pending queue
+                        // entry has reached durable database/offline storage.
+                        sessionPersistence.saveSessions(recoverySnapshot)
                         playbackSnapshot.forEach { session ->
-                            session.pause()
                             saveListeningEventSuspend(session)
                         }
                         trackingManager.flushAll()
                         true
                     } ?: false
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
+                } catch (failure: Exception) {
+                    Log.e(TAG, "Error during asynchronous shutdown flush", failure)
+                    false
                 }
-            } catch (e: Exception) {
-                Log.e(TAG, "Error during shutdown flush", e)
-                false
-            }
-        playbackStates.clear()
 
-        if (flushed) {
-            // Events are safely in the DB — clear recovery sessions and record a
-            // clean shutdown. Doing this only AFTER a successful flush means a
-            // crash/timeout mid-flush still reports wasUncleanShutdown()==true, so
-            // the next start recovers the sessions instead of dropping them.
-            try {
-                sessionPersistence.clearSessions()
-                sessionPersistence.markServiceInactive()
-                Log.i(TAG, "Shutdown flush complete, metrics: ${trackingManager.getMetrics()}")
-            } catch (e: Exception) {
-                Log.w(TAG, "Error clearing persisted sessions on shutdown", e)
+            if (flushed) {
+                try {
+                    sessionPersistence.clearSessions()
+                    sessionPersistence.markServiceInactive()
+                    Log.i(TAG, "Shutdown flush complete, metrics: ${trackingManager.getMetrics()}")
+                } catch (failure: Exception) {
+                    // Keep the service-active marker on failure so recovery remains conservative.
+                    Log.w(TAG, "Error clearing persisted sessions on shutdown", failure)
+                }
+            } else {
+                Log.w(TAG, "Shutdown flush incomplete — persisted sessions left for recovery")
             }
-        } else {
-            Log.w(TAG, "Shutdown flush incomplete — persisted sessions left for recovery")
+
+            trackingIoScope.cancel()
+            shutdownScope.cancel()
         }
 
         // Log service uptime
         val uptime = System.currentTimeMillis() - serviceStartTime.get()
         Log.i(TAG, "Service uptime: ${uptime / 1000}s, Duration estimator stats: ${durationEstimator.getStats()}")
 
-        heartbeatJob?.cancel()
-        heartbeatJob = null
         TrackingServiceHeartbeat.markListenerDisconnected(this)
-        serviceScope.cancel()
         super.onDestroy()
     }
 
