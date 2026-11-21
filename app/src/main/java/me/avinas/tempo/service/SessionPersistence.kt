@@ -8,7 +8,6 @@ import com.squareup.moshi.Types
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.io.File
 
 /**
  * SharedPreferences + JSON backing for active playback sessions, so they survive service
@@ -25,7 +24,6 @@ class SessionPersistence(private val context: Context) {
         
         private const val SESSION_STALE_THRESHOLD_MS = 24 * 60 * 60 * 1000L // 24 hours
         
-        private const val AUTO_SAVE_INTERVAL_MS = 30_000L // 30 seconds
     }
     
     private val prefs: SharedPreferences by lazy {
@@ -127,14 +125,6 @@ class SessionPersistence(private val context: Context) {
         prefs.getLong(KEY_SERVICE_LAST_ACTIVE, 0) > 0
     }
     
-    fun getTimeSinceLastSave(): Long {
-        val lastSave = prefs.getLong(KEY_LAST_SAVE_TIMESTAMP, 0)
-        return System.currentTimeMillis() - lastSave
-    }
-    
-    fun needsAutoSave(): Boolean {
-        return getTimeSinceLastSave() > AUTO_SAVE_INTERVAL_MS
-    }
 }
 
 data class SerializableSession(
