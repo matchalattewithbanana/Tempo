@@ -39,6 +39,8 @@ import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.Leaderboard
 import androidx.compose.material.icons.rounded.MusicNote
+import androidx.compose.material.icons.rounded.GraphicEq
+import androidx.compose.material.icons.rounded.PauseCircle
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.MaterialTheme
@@ -64,6 +66,9 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
@@ -74,6 +79,10 @@ import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 
 import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.Surface
+import androidx.compose.material3.MaterialShapes
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.HorizontalFloatingToolbar
@@ -208,81 +217,116 @@ fun TempoBottomNavigation(
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun CompactNowPlayingStrip() {
     if (LocalTempoAppearance.current.nowListening != AppearanceNowListening.COMPACT) return
     val presence by SpotifyBroadcastPresence.presence.collectAsStateWithLifecycle()
     val current = presence ?: return
+    val lifecycleOwner = LocalLifecycleOwner.current
     var checkedAtMs by remember(current.updatedAtMs) {
         mutableLongStateOf(System.currentTimeMillis())
     }
-    LaunchedEffect(current.updatedAtMs) {
-        while (true) {
-            delay(60_000L)
+    // The strip is present on three destinations, but time checks must stop
+    // while the activity is not visible. Playback tracking is unaffected.
+    LaunchedEffect(lifecycleOwner, current.updatedAtMs) {
+        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
             checkedAtMs = System.currentTimeMillis()
+            while (true) {
+                delay(60_000L)
+                checkedAtMs = System.currentTimeMillis()
+            }
         }
     }
-    // A remote or paused snapshot can outlive the playback session; never show
-    // the mini-player indefinitely just because it was the last observed track.
-    if (!shouldShowCompactStrip(AppearanceNowListening.COMPACT, current.title, current.updatedAtMs, checkedAtMs)) return
+    if (!shouldShowCompactStrip(
+            AppearanceNowListening.COMPACT,
+            current.title, current.updatedAtMs, checkedAtMs,
+        )
+    ) return
 
-    val palette = LocalTempoPalette.current
     val artworkViewModel: NowPlayingArtworkViewModel = hiltViewModel()
     val artwork by artworkViewModel.artwork.collectAsStateWithLifecycle()
     val choice = artwork?.takeIf {
         it.identity == NowPlayingArtworkIdentity(current.packageName, current.title, current.artist, current.album)
     }
     val preferredArtwork = current.albumArtUri ?: choice?.localUrl
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp)
-            .clip(RoundedCornerShape(20.dp))
-            .background(palette.elevatedSurface)
-            .border(1.dp, palette.border.copy(alpha = 0.6f), RoundedCornerShape(20.dp))
-            .padding(horizontal = 14.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    val scheme = MaterialTheme.colorScheme
+    val fresh = checkedAtMs - current.updatedAtMs <= 2 * 60_000L
+    val playing = current.playing && fresh
+    val color by animateColorAsState(
+        targetValue = if (playing) scheme.primaryContainer else scheme.surfaceContainerHigh,
+        animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
+        label = "compactPlaybackColor",
+    )
+    val foreground = if (playing) scheme.onPrimaryContainer else scheme.onSurface
+    val stateLabel = when {
+        !fresh -> stringResource(R.string.now_playing_last_detected)
+        current.playing -> stringResource(R.string.now_playing_playing)
+        else -> stringResource(R.string.now_playing_paused)
+    }
+
+    Surface(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+        shape = MaterialTheme.shapes.extraLarge,
+        color = color,
+        contentColor = foreground,
     ) {
-        AlbumArtImage(
-            albumArtUrl = preferredArtwork ?: choice?.remoteUrl,
-            localArtUrl = if (preferredArtwork != null) choice?.remoteUrl else null,
-            contentDescription = null,
-            targetSizePx = 128,
-            placeholderEmoji = "♫",
-            modifier = Modifier.size(40.dp).clip(RoundedCornerShape(10.dp)),
-        )
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = current.title,
-                color = palette.onSurface,
-                style = MaterialTheme.typography.labelLarge,
-                maxLines = 1,
-                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            AlbumArtImage(
+                albumArtUrl = preferredArtwork ?: choice?.remoteUrl,
+                localArtUrl = if (preferredArtwork != null) choice?.remoteUrl else null,
+                contentDescription = null,
+                targetSizePx = 128,
+                placeholderEmoji = "♫",
+                modifier = Modifier.size(44.dp).clip(MaterialTheme.shapes.medium),
             )
-            Text(
-                text = current.artist,
-                color = palette.mutedText,
-                style = MaterialTheme.typography.labelSmall,
-                maxLines = 1,
-                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-            )
-        }
-        if (checkedAtMs - current.updatedAtMs > 2 * 60_000L) {
-            Text(
-                text = stringResource(R.string.now_playing_last_detected),
-                color = palette.mutedText,
-                style = MaterialTheme.typography.labelSmall,
-                maxLines = 1,
-            )
-        } else {
-            Box(
-                modifier = Modifier.size(7.dp).background(
-                    if (current.playing) palette.accent else palette.mutedText,
-                    CircleShape,
-                ),
-            )
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                Text(
+                    text = current.title,
+                    color = foreground,
+                    style = MaterialTheme.typography.titleSmallEmphasized,
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                )
+                Text(
+                    text = current.artist,
+                    color = foreground.copy(alpha = 0.78f),
+                    style = MaterialTheme.typography.bodySmall,
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                )
+                Text(
+                    text = stateLabel,
+                    color = foreground.copy(alpha = 0.84f),
+                    style = MaterialTheme.typography.labelSmall,
+                    maxLines = 1,
+                )
+            }
+            Surface(
+                modifier = Modifier.size(42.dp),
+                shape = MaterialShapes.Cookie6Sided.toShape(),
+                color = foreground.copy(alpha = 0.10f),
+                contentColor = foreground,
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = when {
+                            playing -> Icons.Rounded.GraphicEq
+                            fresh -> Icons.Rounded.PauseCircle
+                            else -> Icons.Rounded.MusicNote
+                        },
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp),
+                    )
+                }
+            }
         }
     }
 }
-
