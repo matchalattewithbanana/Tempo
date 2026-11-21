@@ -40,7 +40,7 @@ import me.avinas.tempo.ui.spotlight.SpotlightPeriodFormatter
  * statements, which queries can share results, or how concurrency is bounded. That keeps query
  * executor tuning and dashboard composition in one place instead of leaking them into UI state.
  */
-internal class HomeDashboardLoader @Inject constructor(
+class HomeDashboardLoader @Inject constructor(
     private val statsRepository: StatsRepository,
     private val tokenStorage: SpotifyTokenStorage,
     private val preferencesRepository: PreferencesRepository,
