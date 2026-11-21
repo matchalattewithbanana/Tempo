@@ -89,4 +89,27 @@ class CuratedAppearancePresetsTest {
         assertEquals(original.fontStyle, signature.fontStyle)
         assertEquals(original.shape, signature.shape)
     }
+    @Test fun selectingAnyPresetWithoutSuggestedDetailsPreservesLayoutAndMotion() {
+        val original = AppearanceSettings(
+            preset = AppearancePreset.ABYSS,
+            accentSource = AppearanceAccentSource.CUSTOM,
+            customAccent = "19AACC",
+            fontStyle = AppearanceFontStyle.STUDIO_MONO,
+            backdrop = AppearanceBackdrop.FLAT,
+            shape = AppearanceShape.SHARP,
+            density = AppearanceDensity.COMPACT,
+            reduceMotion = true,
+            showNavigationLabels = false,
+            instantNavigation = true,
+        )
+        for (preset in AppearancePreset.entries) {
+            val selected = original.withCuratedPreset(preset, applySuggestedDetails = false)
+            assertEquals(
+                "Selecting $preset must not unexpectedly change type, shape, density or motion",
+                original.copy(preset = preset, accentSource = AppearanceAccentSource.PRESET),
+                selected,
+            )
+        }
+    }
+
 }
