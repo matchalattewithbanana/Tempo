@@ -10,12 +10,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
-/** A single featured destination plus compact, scannable category rows. */
+/** Featured and secondary destinations share a recognizable, playful language. */
 data class TempoSettingsDestination(
     val title: String,
     val subtitle: String,
@@ -23,12 +24,18 @@ data class TempoSettingsDestination(
     val style: TempoEmblemStyle,
     val onClick: () -> Unit,
     val featured: Boolean = false,
+    val tone: TempoTileTone = TempoTileTone.SKY,
 )
 
-/** Don't squeeze two text-heavy Settings destinations onto a phone screen. */
+/** Compact phones and accessibility text scales always get full-width cards. */
 internal fun settingsBentoColumns(widthDp: Float, fontScale: Float): Int =
-    if (widthDp < 680f || fontScale >= 1.3f) 1 else 2
+    if (widthDp < 360f || fontScale >= 1.3f) 1 else 2
 
+/**
+ * Original staggered Material bento. A featured full-width tile is followed
+ * by one tall destination beside two compact ones and a final paired row.
+ * All data, navigation actions and accessibility labels remain intact.
+ */
 @Composable
 fun TempoSettingsBento(
     destinations: List<TempoSettingsDestination>,
@@ -39,27 +46,148 @@ fun TempoSettingsBento(
         val columns = settingsBentoColumns(maxWidth.value, LocalDensity.current.fontScale)
         val featured = destinations.firstOrNull { it.featured }
         val regular = destinations.filterNot { it.featured }
-        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(
+            modifier = Modifier.widthIn(max = 850.dp).fillMaxWidth().align(Alignment.Center),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
             featured?.let {
                 TempoBentoDestination(
                     destination = it,
-                    hero = true,
+                    kind = BentoKind.FEATURED,
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
-            regular.chunked(columns).forEach { group ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    group.forEach { destination ->
+            if (columns == 1) {
+                regular.forEach { destination ->
+                    TempoBentoDestination(
+                        destination = destination,
+                        kind = BentoKind.SINGLE,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+            } else {
+                if (regular.size >= 3) {
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
                         TempoBentoDestination(
-                            destination = destination,
-                            hero = false,
+                            destination = regular[0],
+                            kind = BentoKind.TALL,
                             modifier = Modifier.weight(1f),
                         )
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(10.dp),
+                        ) {
+                            regular.subList(1, 3).forEach { destination ->
+                                TempoBentoDestination(
+                                    destination = destination,
+                                    kind = BentoKind.SHORT,
+                                    modifier = Modifier.fillMaxWidth(),
+                                )
+                            }
+                        }
                     }
-                    if (group.size < columns) Spacer(Modifier.weight(1f))
+                }
+                val remaining = if (regular.size >= 3) regular.drop(3) else regular
+                remaining.chunked(2).forEach { group ->
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        group.forEach { destination ->
+                            TempoBentoDestination(
+                                destination = destination,
+                                kind = BentoKind.SQUARE,
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
+                        if (group.size == 1) Spacer(Modifier.weight(1f))
+                    }
+                }
+            }
+        }
+    }
+}
+
+private enum class BentoKind { FEATURED, TALL, SHORT, SQUARE, SINGLE }
+
+@Composable
+private fun TempoBentoDestination(
+    destination: TempoSettingsDestination,
+    kind: BentoKind,
+    modifier: Modifier = Modifier,
+) {
+    val swatch = tempoTileSwatch(destination.tone)
+    val height = when (kind) {
+        BentoKind.FEATURED -> 168.dp
+        BentoKind.TALL -> 266.dp
+        BentoKind.SHORT -> 128.dp
+        BentoKind.SQUARE -> 168.dp
+        BentoKind.SINGLE -> 104.dp
+    }
+    Surface(
+        onClick = destination.onClick,
+        modifier = modifier.heightIn(min = height),
+        shape = MaterialTheme.shapes.extraExtraLarge,
+        color = swatch.container,
+        contentColor = swatch.foreground,
+    ) {
+        Box(
+            Modifier.fillMaxWidth().heightIn(min = height)
+                .clip(MaterialTheme.shapes.extraExtraLarge),
+        ) {
+            Box(
+                Modifier.align(Alignment.BottomEnd)
+                    .offset(x = 46.dp, y = 44.dp)
+                    .size(if (kind == BentoKind.FEATURED) 180.dp else 130.dp)
+                    .background(swatch.foreground.copy(alpha = 0.055f), swatch.shape),
+            )
+            when (kind) {
+                BentoKind.SHORT, BentoKind.SINGLE -> {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        BentoIcon(destination.icon, swatch, 40.dp)
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(3.dp),
+                        ) {
+                            BentoLabel(destination.title, false)
+                            Text(
+                                destination.subtitle,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = swatch.foreground.copy(alpha = 0.78f),
+                                maxLines = if (kind == BentoKind.SINGLE) 2 else 3,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                    }
+                }
+                else -> {
+                    Column(
+                        Modifier.fillMaxWidth().heightIn(min = height).padding(18.dp),
+                        verticalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        BentoIcon(
+                            destination.icon,
+                            swatch,
+                            if (kind == BentoKind.FEATURED) 52.dp else 46.dp,
+                        )
+                        Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                            BentoLabel(destination.title, kind == BentoKind.FEATURED)
+                            Text(
+                                destination.subtitle,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = swatch.foreground.copy(alpha = 0.8f),
+                                maxLines = if (kind == BentoKind.TALL) 4 else 3,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -67,90 +195,31 @@ fun TempoSettingsBento(
 }
 
 @Composable
-private fun TempoBentoDestination(
-    destination: TempoSettingsDestination,
-    hero: Boolean,
-    modifier: Modifier = Modifier,
+private fun BentoLabel(title: String, featured: Boolean) {
+    Text(
+        text = title,
+        style = if (featured) MaterialTheme.typography.headlineSmallEmphasized
+            else MaterialTheme.typography.titleMediumEmphasized,
+        color = MaterialTheme.colorScheme.onSurface,
+        maxLines = 3,
+        overflow = TextOverflow.Ellipsis,
+    )
+}
+
+@Composable
+private fun BentoIcon(
+    icon: ImageVector,
+    swatch: TempoTileSwatch,
+    size: androidx.compose.ui.unit.Dp,
 ) {
-    val scheme = MaterialTheme.colorScheme
-    val (accentContainer, accentForeground, emblemShape) = when (destination.style) {
-        TempoEmblemStyle.PULSE -> Triple(
-            scheme.primaryContainer, scheme.onPrimaryContainer, MaterialShapes.Cookie9Sided.toShape(),
-        )
-        TempoEmblemStyle.DISCOVERY -> Triple(
-            scheme.tertiaryContainer, scheme.onTertiaryContainer, MaterialShapes.Sunny.toShape(),
-        )
-        TempoEmblemStyle.MEMORY -> Triple(
-            scheme.secondaryContainer, scheme.onSecondaryContainer, MaterialShapes.Clover4Leaf.toShape(),
-        )
-        TempoEmblemStyle.WARNING -> Triple(
-            scheme.errorContainer, scheme.onErrorContainer, MaterialShapes.SoftBurst.toShape(),
-        )
-    }
-    val foreground = if (hero) accentForeground else scheme.onSurface
     Surface(
-        onClick = destination.onClick,
-        modifier = modifier.heightIn(min = if (hero) 124.dp else 76.dp),
-        shape = MaterialTheme.shapes.extraLarge,
-        color = if (hero) accentContainer else scheme.surfaceContainerLow,
-        contentColor = foreground,
+        modifier = Modifier.size(size),
+        shape = swatch.shape,
+        color = swatch.iconContainer,
+        contentColor = swatch.foreground,
     ) {
-        Box(Modifier.fillMaxWidth()) {
-            if (hero) {
-                Box(
-                    modifier = Modifier.align(Alignment.CenterEnd)
-                        .offset(x = 34.dp, y = 28.dp)
-                        .size(130.dp)
-                        .background(accentForeground.copy(alpha = 0.07f), emblemShape),
-                )
-            }
-            Row(
-                modifier = Modifier.fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = if (hero) 20.dp else 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(14.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Surface(
-                    modifier = Modifier.size(if (hero) 56.dp else 46.dp),
-                    shape = emblemShape,
-                    color = if (hero) accentForeground.copy(alpha = 0.12f) else accentContainer,
-                    contentColor = accentForeground,
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = destination.icon,
-                            contentDescription = null,
-                            modifier = Modifier.size(if (hero) 28.dp else 23.dp),
-                        )
-                    }
-                }
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                ) {
-                    Text(
-                        destination.title,
-                        style = if (hero) MaterialTheme.typography.titleLargeEmphasized
-                            else MaterialTheme.typography.titleMediumEmphasized,
-                        color = foreground,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                    Text(
-                        destination.subtitle,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = if (hero) foreground.copy(alpha = 0.82f) else scheme.onSurfaceVariant,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-                Icon(
-                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    contentDescription = null,
-                    tint = foreground.copy(alpha = 0.70f),
-                    modifier = Modifier.size(22.dp),
-                )
-            }
+        Box(contentAlignment = Alignment.Center) {
+            Icon(icon, contentDescription = null, modifier = Modifier.size(size * 0.47f))
         }
     }
 }
