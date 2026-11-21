@@ -39,6 +39,9 @@ data class AppearancePalette(
         onSecondaryContainer = onSurface,
         tertiary = tertiaryAccent ?: accent,
         onTertiary = tertiaryAccent?.let { if (it.luminance() >= 0.179f) Color.Black else Color.White } ?: onAccent,
+        // Keep the tertiary container/text pair together for every custom seed.
+        tertiaryContainer = tertiaryAccent?.let { lerp(elevatedSurface, it, 0.10f) } ?: elevatedSurface,
+        onTertiaryContainer = onSurface,
         background = background,
         onBackground = onSurface,
         surface = surface,
@@ -54,7 +57,9 @@ data class AppearancePalette(
         surfaceBright = elevatedSurface,
         inverseSurface = onSurface,
         inverseOnSurface = background,
-        inversePrimary = accent,
+        // Snackbar action text sits on inverseSurface, not on the app surface.
+        // onAccent is the contrasting polarity for the inverse surface.
+        inversePrimary = onAccent,
         surfaceTint = accent,
         outline = border,
         outlineVariant = border.copy(alpha = 0.55f),
