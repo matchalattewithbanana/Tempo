@@ -753,6 +753,7 @@ class LastFmImportService
                     _progress.value = ImportProgress.Processing("Syncing recent scrobbles...")
 
                     var newScrobbles = 0
+                    var reconciledScrobbles = 0
                     var page = 1
                     var hasMore = true
                     var skippedPages = 0
@@ -863,6 +864,7 @@ class LastFmImportService
                         if (eventsToInsert.isNotEmpty()) {
                             val insertResult = listeningEventDao.insertAllBatchedWithDedup(eventsToInsert)
                             newScrobbles += insertResult.newlyAdded
+                            reconciledScrobbles += insertResult.replaced
                             Log.d(
                                 TAG,
                                 "Sync page $page: inserted ${insertResult.inserted}, skipped ${insertResult.skipped}, replaced ${insertResult.replaced}",
@@ -905,8 +907,8 @@ class LastFmImportService
                         importMetadataDao.updateSyncCursor(id = lastImport.id, cursor = syncCursor, timestamp = now)
                     }
 
-                    // Invalidate cache if we added new scrobbles
-                    if (newScrobbles > 0) {
+                    // Upgrading a lower-authority play also changes the displayed totals.
+                    if (newScrobbles > 0 || reconciledScrobbles > 0) {
                         statsRepository.invalidateCache()
                     }
 
