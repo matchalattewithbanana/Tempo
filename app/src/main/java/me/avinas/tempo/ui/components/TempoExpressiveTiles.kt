@@ -2,19 +2,15 @@
 
 package me.avinas.tempo.ui.components
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -77,57 +73,75 @@ fun TempoMetricTile(
     val swatch = tempoTileSwatch(tone)
     val dense = LocalTempoAppearance.current.density == AppearanceDensity.COMPACT
     val tileHeight = if (dense) (minimumHeight - 20.dp).coerceAtLeast(108.dp) else minimumHeight
-    Surface(
-        modifier = modifier
-            .heightIn(min = tileHeight)
-            .then(if (onClick != null) Modifier.clickable(role = Role.Button, onClick = onClick) else Modifier),
-        shape = MaterialTheme.shapes.extraLarge,
-        color = swatch.container,
-        contentColor = swatch.foreground,
+    val surfaceModifier = modifier.heightIn(min = tileHeight)
+    if (onClick == null) {
+        Surface(
+            modifier = surfaceModifier,
+            shape = MaterialTheme.shapes.extraLarge,
+            color = swatch.container,
+            contentColor = swatch.foreground,
+        ) {
+            TempoMetricTileBody(value, label, icon, supportingText, swatch, dense)
+        }
+    } else {
+        // A directly actionable Material Surface provides its own ripple and
+        // semantics. Avoid stacking an extra clickable modifier on the card.
+        Surface(
+            onClick = onClick,
+            modifier = surfaceModifier,
+            shape = MaterialTheme.shapes.extraLarge,
+            color = swatch.container,
+            contentColor = swatch.foreground,
+        ) {
+            TempoMetricTileBody(value, label, icon, supportingText, swatch, dense)
+        }
+    }
+}
+
+@Composable
+private fun TempoMetricTileBody(
+    value: String,
+    label: String,
+    icon: ImageVector,
+    supportingText: String?,
+    swatch: TempoTileSwatch,
+    dense: Boolean,
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(if (dense) 12.dp else 16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Box(Modifier.fillMaxWidth().clip(MaterialTheme.shapes.extraLarge)) {
-            Box(
-                Modifier.align(Alignment.BottomEnd)
-                    .offset(x = 33.dp, y = 37.dp)
-                    .size(116.dp)
-                    .background(swatch.foreground.copy(alpha = 0.055f), swatch.shape),
-            )
-            Column(
-                Modifier.fillMaxWidth().padding(if (dense) 12.dp else 16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                Surface(
-                    modifier = Modifier.size(if (dense) 38.dp else 42.dp),
-                    shape = swatch.shape,
-                    color = swatch.iconContainer,
-                    contentColor = swatch.foreground,
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(icon, contentDescription = null, modifier = Modifier.size(23.dp))
-                    }
-                }
-                Text(
-                    text = value,
-                    style = MaterialTheme.typography.titleLargeEmphasized,
-                    color = swatch.foreground,
-                    maxLines = 3,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Text(
-                    text = label,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = swatch.foreground,
-                    maxLines = 2,
-                )
-                if (!supportingText.isNullOrBlank()) {
-                    Text(
-                        text = supportingText,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = swatch.foreground.copy(alpha = 0.8f),
-                        maxLines = 2,
-                    )
-                }
+        // Polygon shapes belong on decorative symbols, not behind text.
+        Surface(
+            modifier = Modifier.size(if (dense) 40.dp else 48.dp),
+            shape = swatch.shape,
+            color = swatch.iconContainer,
+            contentColor = swatch.foreground,
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(icon, contentDescription = null, modifier = Modifier.size(24.dp))
             }
+        }
+        Text(
+            text = value,
+            style = MaterialTheme.typography.titleLargeEmphasized,
+            color = swatch.foreground,
+            maxLines = 3,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = swatch.foreground,
+            maxLines = 2,
+        )
+        if (!supportingText.isNullOrBlank()) {
+            Text(
+                text = supportingText,
+                style = MaterialTheme.typography.labelSmall,
+                color = swatch.foreground,
+                maxLines = 3,
+            )
         }
     }
 }
