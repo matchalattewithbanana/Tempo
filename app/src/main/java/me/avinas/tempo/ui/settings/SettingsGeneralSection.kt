@@ -50,7 +50,11 @@ internal fun GeneralSettingsSection(
     onSelectLanguage: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    SettingsSectionList(state = state, modifier = modifier) {
+    SettingsSectionList(
+        state = state,
+        tone = SettingsSection.GENERAL.tone,
+        modifier = modifier,
+    ) {
         item(key = "general-profile") {
             SettingsSectionHeader(stringResource(R.string.settings_profile))
             TempoSettingsGroup(modifier = Modifier.clickable(onClick = onEditName)) {
