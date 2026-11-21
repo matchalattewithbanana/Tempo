@@ -110,13 +110,7 @@ internal object PlaybackTransitionPolicy {
             }
 
         return Decision(
-            action =
-                when {
-                    replay -> Action.NEW
-                    sameTrack -> Action.UPDATE
-                    isPlaying -> Action.NEW
-                    else -> Action.IGNORE
-                },
+            action = if (replay) Action.NEW else Action.UPDATE,
             replayDetected = replay,
         )
     }
