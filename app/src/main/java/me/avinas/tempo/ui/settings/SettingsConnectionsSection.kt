@@ -222,7 +222,6 @@ internal fun ConnectionsSettingsSection(
                             }
                         }
                     }
-                    )
                 }
             }
             Spacer(modifier = Modifier.height(24.dp))
