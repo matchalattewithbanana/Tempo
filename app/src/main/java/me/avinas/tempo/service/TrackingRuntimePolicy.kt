@@ -45,8 +45,14 @@ internal class TrackingRuntimePolicy(
     @Volatile
     private var appState = AppState()
 
+    private data class UserState(
+        val mergeAlternateVersions: Boolean = true,
+        val filterPodcasts: Boolean = true,
+        val filterAudiobooks: Boolean = true,
+    )
+
     @Volatile
-    private var userPreferences = UserPreferences()
+    private var userState = UserState()
 
     @Volatile
     private var manualContentMarks: List<ManualContentMark> = emptyList()
@@ -58,10 +64,11 @@ internal class TrackingRuntimePolicy(
         get() = trackingRules.minimumPlayDurationMs
 
     val mergeAlternateVersions: Boolean
-        get() = userPreferences.mergeAlternateVersions
+        get() = userState.mergeAlternateVersions
 
-    fun updateAppPreferences(apps: List<AppPreference>) {
-        appState =
+    /** Returns true when package eligibility changed and active sessions need re-evaluation. */
+    fun updateAppPreferences(apps: List<AppPreference>): Boolean {
+        val updated =
             AppState(
                 enabled = apps.asSequence()
                     .filter { it.isEnabled && !it.isBlocked }
@@ -77,15 +84,38 @@ internal class TrackingRuntimePolicy(
                     .toSet(),
                 initialized = true,
             )
+        val changed = updated != appState
+        appState = updated
+        return changed
     }
 
-    fun updateUserPreferences(preferences: UserPreferences?) {
-        userPreferences = preferences ?: UserPreferences()
+    /**
+     * Updates only tracking-relevant user preferences.
+     *
+     * Returns true only when current playback eligibility changed. A matching-only change does not
+     * justify rescanning MediaSessions/notifications already in progress.
+     */
+    fun updateUserPreferences(preferences: UserPreferences?): Boolean {
+        val source = preferences ?: UserPreferences()
+        val updated =
+            UserState(
+                mergeAlternateVersions = source.mergeAlternateVersions,
+                filterPodcasts = source.filterPodcasts,
+                filterAudiobooks = source.filterAudiobooks,
+            )
+        val previous = userState
+        userState = updated
+        return previous.filterPodcasts != updated.filterPodcasts ||
+            previous.filterAudiobooks != updated.filterAudiobooks
     }
 
-    fun updateManualContentMarks(marks: List<ManualContentMark>) {
+    /** Returns true when manual media eligibility changed. */
+    fun updateManualContentMarks(marks: List<ManualContentMark>): Boolean {
         // Room emits a fresh list. Copy once so callback reads never observe caller mutation.
-        manualContentMarks = marks.toList()
+        val updated = marks.toList()
+        val changed = updated != manualContentMarks
+        manualContentMarks = updated
+        return changed
     }
 
     fun decidePackage(packageName: String): TrackingDecision {
@@ -125,7 +155,7 @@ internal class TrackingRuntimePolicy(
             }
         }
 
-        val preferences = userPreferences
+        val preferences = userState
         if (preferences.filterPodcasts) {
             if (packageName in DefaultMusicApps.PODCAST_PACKAGES) return MediaVerdict.REJECT
             if (metadata?.isPodcast() == true) return MediaVerdict.REJECT
