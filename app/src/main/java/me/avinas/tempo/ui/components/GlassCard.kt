@@ -93,11 +93,12 @@ fun GlassCard(
         end = contentPadding.calculateEndPadding(direction) * 0.75f,
         bottom = contentPadding.calculateBottomPadding() * 0.75f,
     ) else contentPadding
-    // All ordinary low-prominence cards across Home, Stats, History, Profile,
-    // details and Settings should follow the same Material 3 tonal roles.
-    // Keep explicit artwork/accent/colored cards on the opt-in artistic path.
-    // This also avoids a gradient brush, border and draw pass for every row.
-    if (variant == GlassCardVariant.LowProminence &&
+    // App-wide M3 migration: all unaccented High/LowProminence cards are native
+    // tonal surfaces, rather than screen-specific gradients or drawn borders.
+    // Explicit artwork backgrounds, custom accents and the deliberately styled
+    // Obsidian/QuietGlass variants retain their original visual treatment.
+    // Most Home, Stats, History, Profile, detail and Settings cards share this path.
+    if (variant in setOf(GlassCardVariant.LowProminence, GlassCardVariant.HighProminence) &&
         backgroundColor == GlassFrostMedium &&
         accentColor == null &&
         borderColor == null &&
@@ -107,7 +108,10 @@ fun GlassCard(
         Surface(
             modifier = modifier,
             shape = shape,
-            color = MaterialTheme.colorScheme.surfaceContainerLow,
+            color = when (variant) {
+                GlassCardVariant.HighProminence -> MaterialTheme.colorScheme.surfaceContainerHigh
+                else -> MaterialTheme.colorScheme.surfaceContainerLow
+            },
             contentColor = MaterialTheme.colorScheme.onSurface,
         ) {
             Box(
