@@ -21,7 +21,6 @@ import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
 import androidx.core.app.NotificationCompat
-import androidx.core.graphics.drawable.toBitmap
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
@@ -51,9 +50,6 @@ import me.avinas.tempo.utils.ForegroundNotificationGuard
 import me.avinas.tempo.utils.TrackCandidate
 import me.avinas.tempo.utils.TrackMatcher
 import me.avinas.tempo.worker.EnrichmentWorker
-import java.io.File
-import java.io.FileOutputStream
-import java.security.MessageDigest
 import java.util.concurrent.atomic.AtomicLong
 
 /**
@@ -161,9 +157,6 @@ class MusicTrackingService : NotificationListenerService() {
         private const val EXTRA_INFO_TEXT = Notification.EXTRA_INFO_TEXT
         private const val EXTRA_BIG_TEXT = Notification.EXTRA_BIG_TEXT
 
-        // Album art directory name
-        private const val ALBUM_ART_DIR = "album_art"
-
         // Replay detection: maximum time between plays to consider it a replay (5 minutes)
         private const val REPLAY_THRESHOLD_MS = 5 * 60 * 1000L
 
@@ -245,6 +238,7 @@ class MusicTrackingService : NotificationListenerService() {
     private lateinit var trackingManager: MusicTrackingManager
     private lateinit var sessionJournal: ActiveSessionJournal
     private lateinit var durationEstimator: SmartDurationEstimator
+    private lateinit var localAlbumArtStore: LocalAlbumArtStore
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -797,6 +791,7 @@ class MusicTrackingService : NotificationListenerService() {
 
             // Initialize smart duration estimator
             durationEstimator = SmartDurationEstimator()
+            localAlbumArtStore = LocalAlbumArtStore(applicationContext, trackRepository)
 
             Log.d(TAG, "Enhanced tracking components initialized")
         } catch (e: Exception) {
@@ -813,6 +808,7 @@ class MusicTrackingService : NotificationListenerService() {
             )
             sessionJournal = ActiveSessionJournal(applicationContext, serviceScope)
             durationEstimator = SmartDurationEstimator()
+            localAlbumArtStore = LocalAlbumArtStore(applicationContext, trackRepository)
         }
     }
 
@@ -1645,7 +1641,7 @@ class MusicTrackingService : NotificationListenerService() {
                 }
 
                 // Try to get cached duration estimate for this track
-                val cachedDurationKey = generateHash("$title|$artist")
+                val cachedDurationKey = PlaybackIdentityKey.of(title, artist)
                 val cachedDuration = durationEstimateCache.get(cachedDurationKey)
 
                 // Re-apply policy when a reliable cached duration is available.
@@ -1725,8 +1721,7 @@ class MusicTrackingService : NotificationListenerService() {
                         // unparcelling the bitmap, JPEG encoding and the file write were all a
                         // jank/ANR risk on rapid track skips.
                         val localArtUrl =
-                            extractAlbumArtFromNotification(notification)
-                                ?.let { saveAlbumArtToStorage(it, title, artist) }
+                            localAlbumArtStore.extractAndSave(notification, title, artist)
                         if (localArtUrl != null) {
                             Log.d(TAG, "Saved notification art for '$title' by '$artist'")
                         }
@@ -1736,7 +1731,7 @@ class MusicTrackingService : NotificationListenerService() {
                         if (localArtUrl != null) {
                             // Wait for enrichment to complete (give it 10 seconds)
                             delay(10_000)
-                            updateTrackAlbumArtIfNeeded(track.id, localArtUrl)
+                            localAlbumArtStore.applyFallbackIfMissing(track.id, localArtUrl)
                         }
                     } catch (e: Exception) {
                         Log.e(TAG, "Error inserting track", e)
@@ -2010,7 +2005,7 @@ class MusicTrackingService : NotificationListenerService() {
             // Cache local bitmap to storage as offline backup even if remote URL exists
             val savedLocalArtUrl =
                 updatedLocalMetadata.albumArtBitmap?.let {
-                    saveAlbumArtToStorage(it, updatedLocalMetadata.title, updatedLocalMetadata.artist)
+                    localAlbumArtStore.save(it, updatedLocalMetadata.title, updatedLocalMetadata.artist)
                 }
 
             // Check if track already has enriched metadata from external sources
@@ -2135,137 +2130,6 @@ class MusicTrackingService : NotificationListenerService() {
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error saving local metadata fallback for track $trackId", e)
-        }
-    }
-
-    // Album art extraction from notifications
-
-    /**
-     * Extract album art bitmap from a notification.
-     * Tries multiple sources: large icon, extras, etc.
-     */
-    private fun extractAlbumArtFromNotification(notification: Notification): Bitmap? {
-        try {
-            val extras = notification.extras
-
-            // Try EXTRA_LARGE_ICON first (most common for media notifications)
-            @Suppress("DEPRECATION")
-            val largeIconBitmap = extras.getParcelable<Bitmap>(Notification.EXTRA_LARGE_ICON)
-            if (largeIconBitmap != null) {
-                Log.d(TAG, "Extracted album art from EXTRA_LARGE_ICON")
-                return largeIconBitmap
-            }
-
-            // Try getLargeIcon() for API 23+
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                notification.getLargeIcon()?.let { icon ->
-                    try {
-                        val drawable = icon.loadDrawable(applicationContext)
-                        drawable?.let {
-                            Log.d(TAG, "Extracted album art from getLargeIcon()")
-                            return it.toBitmap()
-                        }
-                    } catch (e: Exception) {
-                        Log.w(TAG, "Failed to load large icon drawable", e)
-                    }
-                }
-            }
-
-            // Try notification.largeIcon (deprecated but still works)
-            @Suppress("DEPRECATION")
-            notification.largeIcon?.let {
-                Log.d(TAG, "Extracted album art from largeIcon")
-                return it
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error extracting album art from notification", e)
-        }
-        return null
-    }
-
-    /**
-     * Save album art bitmap to local storage and return the file URI.
-     * Uses a hash of title+artist as filename for deduplication.
-     */
-    private fun saveAlbumArtToStorage(
-        bitmap: Bitmap,
-        title: String,
-        artist: String,
-    ): String? {
-        try {
-            // Create album art directory
-            val albumArtDir = File(applicationContext.filesDir, ALBUM_ART_DIR)
-            if (!albumArtDir.exists()) {
-                albumArtDir.mkdirs()
-            }
-
-            // Generate unique filename based on title + artist hash
-            val hash = generateHash("$title|$artist")
-            val fileName = "art_$hash.jpg"
-            val file = File(albumArtDir, fileName)
-
-            // If file already exists, just return the URI
-            if (file.exists()) {
-                Log.d(TAG, "Album art already saved: ${file.absolutePath}")
-                return "file://${file.absolutePath}"
-            }
-
-            // Save bitmap to file (downsampled — huge cover art bitmaps previously
-            // caused OOM/TransactionTooLarge-style failures when saved + reloaded)
-            val toSave = downsampleBitmap(bitmap, 512)
-            FileOutputStream(file).use { out ->
-                toSave.compress(Bitmap.CompressFormat.JPEG, 85, out)
-            }
-            if (toSave !== bitmap) toSave.recycle()
-
-            Log.i(TAG, "Saved album art to: ${file.absolutePath}")
-            return "file://${file.absolutePath}"
-        } catch (e: Exception) {
-            Log.e(TAG, "Error saving album art", e)
-            return null
-        }
-    }
-
-    private fun downsampleBitmap(
-        bitmap: Bitmap,
-        maxDimension: Int,
-    ): Bitmap {
-        val w = bitmap.width.toFloat()
-        val h = bitmap.height.toFloat()
-        if (w <= maxDimension && h <= maxDimension) return bitmap
-        val ratio = (maxDimension / maxOf(w, h)).coerceAtMost(1f)
-        return Bitmap.createScaledBitmap(bitmap, (w * ratio).toInt(), (h * ratio).toInt(), true)
-    }
-
-    /**
-     * Generate MD5 hash for filename.
-     */
-    private fun generateHash(input: String): String {
-        val md = MessageDigest.getInstance("MD5")
-        val digest = md.digest(input.lowercase().toByteArray())
-        return digest.joinToString("") { "%02x".format(it) }.take(16)
-    }
-
-    /**
-     * Update track with album art URL if it doesn't have one and enrichment didn't find one.
-     * This is used as a fallback after enrichment completes.
-     */
-    private suspend fun updateTrackAlbumArtIfNeeded(
-        trackId: Long,
-        localArtUrl: String,
-    ) {
-        try {
-            val track = trackRepository.getById(trackId).first() ?: return
-
-            // Only update if track doesn't have album art URL
-            if (track.albumArtUrl.isNullOrBlank()) {
-                Log.i(TAG, "Updating track $trackId with local album art: $localArtUrl")
-                trackRepository.updateAutomaticAlbumArtUrl(trackId, localArtUrl)
-            } else {
-                Log.d(TAG, "Track $trackId already has album art, skipping local art update")
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error updating track album art", e)
         }
     }
 
@@ -2456,7 +2320,7 @@ class MusicTrackingService : NotificationListenerService() {
         // Legacy duration cache update for backward compatibility
         session.estimatedDurationMs?.let { duration ->
             if (duration > 0) {
-                val key = generateHash("${session.title}|${session.artist}")
+                val key = PlaybackIdentityKey.of(session.title, session.artist)
                 durationEstimateCache.put(key, duration)
             }
         }
@@ -3166,7 +3030,7 @@ class MusicTrackingService : NotificationListenerService() {
                         // JPEG encode + file write there was a jank/ANR risk on rapid track skips.
                         val localArtUrl =
                             richMetadata.albumArtBitmap
-                                ?.let { saveAlbumArtToStorage(it, title, artist) }
+                                ?.let { localAlbumArtStore.save(it, title, artist) }
 
                         // Cache local art URI for downstream metadata fallback
                         if (localArtUrl != null) {
@@ -3185,7 +3049,7 @@ class MusicTrackingService : NotificationListenerService() {
                             saveLocalMetadataFallback(track.id, latestMetadata)
                         } else if (localArtUrl != null) {
                             delay(20_000)
-                            updateTrackAlbumArtIfNeeded(track.id, localArtUrl)
+                            localAlbumArtStore.applyFallbackIfMissing(track.id, localArtUrl)
                         }
                     } catch (e: Exception) {
                         Log.e(TAG, "Error inserting track", e)
