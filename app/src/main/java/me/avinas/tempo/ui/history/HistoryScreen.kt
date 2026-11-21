@@ -148,16 +148,8 @@ fun HistoryScreen(
             onDismissRequest = { showFilterSheet = false },
             sheetState = sheetState,
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-            shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
-            dragHandle = {
-                Box(
-                    modifier = Modifier
-                        .padding(vertical = 12.dp)
-                        .size(width = 36.dp, height = 4.dp)
-                        .clip(RoundedCornerShape(2.dp))
-                        .background(GlassBorderMedium)
-                )
-            }
+            shape = MaterialTheme.shapes.extraLarge,
+            dragHandle = { androidx.compose.material3.BottomSheetDefaults.DragHandle() }
         ) {
             HistoryFilterSheetContent(
                 currentShowSkips = uiState.showSkips,
