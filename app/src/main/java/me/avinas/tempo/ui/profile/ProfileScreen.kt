@@ -1450,7 +1450,7 @@ private fun MasterStatMasthead(
                                 Box(contentAlignment = Alignment.Center) {
                                     Icon(
                                         if (index < earnedCount) Icons.Rounded.MilitaryTech
-                                        else Icons.Rounded.LockOutline,
+                                        else Icons.Rounded.Lock,
                                         contentDescription = null,
                                         modifier = Modifier.size(22.dp),
                                     )
