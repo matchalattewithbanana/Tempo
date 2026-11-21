@@ -222,9 +222,6 @@ class MusicTrackingService : NotificationListenerService() {
     private lateinit var analyticsDailyReporter: AnalyticsDailyReporter
     private lateinit var trackingRules: TrackingRulesPreferences
 
-    /** Set during component init, read by [recoverPersistedSessions] later in onCreate. */
-    private var needsSessionRecovery = false
-
     private lateinit var trackingPolicy: TrackingRuntimePolicy
 
     /**
@@ -807,14 +804,10 @@ class MusicTrackingService : NotificationListenerService() {
                 },
             )
 
-            // Initialize session persistence for recovery.
-            // Capture the unclean-shutdown flag BEFORE marking the service active:
-            // markServiceActive() sets the same timestamp wasUncleanShutdown() reads,
-            // so reading it afterwards would always report true and re-recover the
-            // previous run's autosaved sessions, duplicating listening events.
+            // Initialize session persistence only. Reading/writing its SharedPreferences
+            // marker is deferred to the IO-owned recovery coroutine below so service onCreate
+            // never performs a synchronous disk commit.
             sessionPersistence = SessionPersistence(applicationContext)
-            needsSessionRecovery = sessionPersistence.wasUncleanShutdown()
-            sessionPersistence.markServiceActive()
 
             // Initialize smart duration estimator
             durationEstimator = SmartDurationEstimator()
@@ -840,6 +833,11 @@ class MusicTrackingService : NotificationListenerService() {
     private fun recoverPersistedSessions() {
         serviceScope.launch {
             try {
+                // Capture the previous marker before marking this service instance active.
+                // Both calls may hit disk and therefore stay on the IO service scope.
+                val needsSessionRecovery = sessionPersistence.wasUncleanShutdown()
+                sessionPersistence.markServiceActive()
+
                 if (needsSessionRecovery) {
                     Log.i(TAG, "Detected unclean shutdown, attempting session recovery")
                     val recoveredSessions = sessionPersistence.loadSessions()
