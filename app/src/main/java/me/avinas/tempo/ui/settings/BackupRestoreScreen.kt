@@ -184,8 +184,15 @@ fun BackupRestoreScreen(
                         BackupAppearanceStatus.UNCHANGED -> R.string.backup_appearance_unchanged
                         null -> null
                     }
+                    val reconciliation = if (result.eventsSkipped > 0 || result.eventsReplaced > 0) {
+                        resources.getString(
+                            R.string.backup_restore_reconciliation_result,
+                            result.eventsCount, result.eventsReplaced, result.eventsSkipped,
+                        )
+                    } else null
                     snackbarHostState.showSnackbar(
-                        if (appearance == null) summary else "$summary\n${resources.getString(appearance)}"
+                        listOfNotNull(summary, reconciliation,
+                            appearance?.let { resources.getString(it) }).joinToString("\\n")
                     )
                 }
                 is ImportExportResult.Error -> {
@@ -372,7 +379,13 @@ fun BackupRestoreScreen(
             shape = RoundedCornerShape(24.dp),
             title = { Text("Import Options", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold) },
             text = {
-                Text("What should happen when importing data that already exists in the app?", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(stringResource(R.string.settings_import_conflict_msg),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.backup_restore_duplicate_explanation),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodySmall)
+                }
             },
             confirmButton = {
                 TextButton(
@@ -422,8 +435,8 @@ fun BackupRestoreScreen(
                     }
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        text = "How should duplicates be handled?",
-                        style = MaterialTheme.typography.bodyMedium,
+                        text = stringResource(R.string.backup_restore_duplicate_explanation),
+                        style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
