@@ -1329,6 +1329,18 @@ private data class ProfileMetricSpec(
     val supportingText: String? = null,
 )
 
+@Composable
+private fun ProfileProgressTile(spec: ProfileMetricSpec, modifier: Modifier) {
+    me.avinas.tempo.ui.components.TempoMetricTile(
+        modifier = modifier,
+        icon = spec.icon,
+        value = spec.value,
+        label = spec.label,
+        tone = spec.tone,
+        supportingText = spec.supportingText,
+    )
+}
+
 /**
  * A listener's progress should be something worth returning to, not three
  * numbers compressed into one black panel. Music progress gets an adaptive,
@@ -1394,24 +1406,13 @@ private fun MasterStatMasthead(
     )
     BoxWithConstraints(Modifier.fillMaxWidth()) {
         val singleColumn = maxWidth < 360.dp || LocalDensity.current.fontScale >= 1.3f
-        @Composable
-        fun Metric(spec: ProfileMetricSpec, modifier: Modifier) {
-            me.avinas.tempo.ui.components.TempoMetricTile(
-                modifier = modifier,
-                icon = spec.icon,
-                value = spec.value,
-                label = spec.label,
-                tone = spec.tone,
-                supportingText = spec.supportingText,
-            )
-        }
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             if (singleColumn) {
-                metrics.forEach { metric -> Metric(metric, Modifier.fillMaxWidth()) }
+                metrics.forEach { metric -> ProfileProgressTile(metric, Modifier.fillMaxWidth()) }
             } else {
                 metrics.chunked(2).forEach { pair ->
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        pair.forEach { metric -> Metric(metric, Modifier.weight(1f)) }
+                        pair.forEach { metric -> ProfileProgressTile(metric, Modifier.weight(1f)) }
                     }
                 }
             }
