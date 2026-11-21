@@ -15,5 +15,9 @@ interface StatsDao :
     StatsRankingQueries,
     StatsTemporalQueries,
     StatsHistoryQueries,
-    StatsEntityQueries,
+    StatsSingleEntityQueries,
+    StatsExtendedArtistQueries,
+    StatsPartialArtistQueries,
+    StatsArtistIdQueries,
+    StatsFilteredQueries,
     StatsSearchQueries
