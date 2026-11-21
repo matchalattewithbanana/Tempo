@@ -457,11 +457,6 @@ class SettingsViewModel
         }
 
         /**
-         * Toggle Spotify-API-Only mode.
-         * When enabled: Spotify listening data is fetched from API instead of notifications.
-         * When disabled (default): All apps including Spotify use notification tracking.
-         */
-        /**
          * Owns Settings' platform/runtime observations. The composable only supplies lifecycle
          * visibility; permission, heartbeat, battery, OEM and Spotify reads stay below the UI.
          */
@@ -595,6 +590,10 @@ class SettingsViewModel
             _uiState.update { it.copy(spotifyApiOnlyMode = false) }
         }
 
+        /**
+         * Toggle Spotify-API-Only mode.
+         * When enabled, Spotify listening data is fetched from the API instead of notifications.
+         */
         fun toggleSpotifyApiOnlyMode(enabled: Boolean) {
             viewModelScope.launch {
                 val currentPrefs =
