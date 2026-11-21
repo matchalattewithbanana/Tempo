@@ -732,6 +732,9 @@
     <string name="settings_disconnect_spotify_msg">This will remove your Spotify connection. Audio features and mood tracking will no longer be available.</string>
     <string name="settings_disconnect">Disconnect</string>
     <string name="settings_import_success">Successfully processed %1$d records and %2$d images</string>
+    <string name="backup_restore_warning_profile">Profile identity could not be restored.</string>
+    <string name="backup_restore_warning_appearance">Appearance settings could not be restored.</string>
+    <string name="backup_restore_warning_image_cache">Image cache could not be scheduled.</string>
     <string name="backup_restore_reconciliation_result">%1$d new plays · %2$d existing plays replaced · %3$d duplicates skipped</string>
     <string name="backup_restore_duplicate_explanation">Skip Duplicates keeps existing listening records. Replace Existing updates matching records from the backup, without overwriting more reliable live sessions. Both import new plays and reconcile overlaps.</string>
     <string name="settings_notification_settings_error">Unable to open notification settings</string>
