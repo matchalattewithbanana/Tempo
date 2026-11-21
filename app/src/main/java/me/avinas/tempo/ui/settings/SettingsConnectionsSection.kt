@@ -52,7 +52,11 @@ internal fun ConnectionsSettingsSection(
     val resources = LocalResources.current
     val scope = rememberCoroutineScope()
 
-    SettingsSectionList(state = state, modifier = modifier) {
+    SettingsSectionList(
+        state = state,
+        tone = SettingsSection.CONNECTIONS.tone,
+        modifier = modifier,
+    ) {
         item(key = "connections-services") {
             SettingsSectionHeader(stringResource(R.string.settings_connected_accounts))
             TempoSettingsGroup {
