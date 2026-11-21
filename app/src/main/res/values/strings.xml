@@ -1988,4 +1988,17 @@
     <string name="appearance_palette_tone_preview">Preview in each tone</string>
     <string name="appearance_palette_preview_hint">Colors are adjusted when necessary to remain readable against your selected surfaces.</string>
     <string name="appearance_palette_auto">Automatic</string>
+
+    <!-- Expressive listening passport and progress bento. -->
+    <string name="profile_bento_current_streak">Current streak</string>
+    <string name="profile_bento_best_streak">Best streak</string>
+    <string name="profile_bento_total_xp">Total XP</string>
+    <string name="profile_bento_level">Listener level</string>
+    <string name="profile_bento_badge_collection">Badge collection</string>
+    <string name="profile_bento_badge_progress">%1$d of %2$d unlocked</string>
+    <string name="profile_bento_streak_warning">Streak at risk</string>
+    <plurals name="profile_bento_streak_day">
+        <item quantity="one">%d day</item>
+        <item quantity="other">%d days</item>
+    </plurals>
 </resources>
