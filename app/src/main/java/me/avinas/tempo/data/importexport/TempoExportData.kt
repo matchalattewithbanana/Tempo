@@ -91,8 +91,8 @@ data class TempoExportData(
  * Conflict resolution strategy for imports.
  */
 enum class ImportConflictStrategy {
-    SKIP,    // Keep existing data, skip duplicates
-    REPLACE  // Replace existing data with imported data
+    SKIP,    // Preserve local listening rows and skip equivalent incoming records
+    REPLACE  // Refresh matching same-source plays; never downgrade a more reliable observation
 }
 
 /**
@@ -104,6 +104,8 @@ sealed class ImportExportResult {
         val artistsCount: Int = 0,
         val albumsCount: Int = 0,
         val eventsCount: Int = 0,
+        val eventsSkipped: Int = 0,
+        val eventsReplaced: Int = 0,
         val imagesCount: Int = 0,
         val appearanceStatus: BackupAppearanceStatus? = null,
     ) : ImportExportResult() {
