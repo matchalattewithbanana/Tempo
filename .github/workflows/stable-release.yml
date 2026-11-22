@@ -18,7 +18,8 @@ on:
 
 concurrency:
   group: stable-release-${{ github.ref }}
-  cancel-in-progress: false
+  # A newer explicit release request supersedes obsolete retries for the same branch.
+  cancel-in-progress: true
 
 permissions:
   contents: read
