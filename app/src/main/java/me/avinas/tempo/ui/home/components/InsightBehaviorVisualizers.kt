@@ -1,6 +1,7 @@
 @file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 
 package me.avinas.tempo.ui.home.components
+import me.avinas.tempo.ui.util.observableLocale
 
 import androidx.compose.animation.core.*
 import androidx.compose.animation.Crossfade
@@ -196,7 +197,7 @@ internal fun GenreVisualizer(genre: String, color: Color) {
 
         // Genre Headline with clean ellipsis protection
         Text(
-            text = safeGenre.uppercase(java.util.Locale.getDefault()),
+            text = safeGenre.uppercase(observableLocale()),
             style = MaterialTheme.typography.titleLarge.copy(
                 fontFamily = DisplayFontFamily,
                 fontWeight = FontWeight.Bold,
@@ -267,7 +268,7 @@ internal fun FeatureGaugeVisualizer(value: Float, color: Color, label: String) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = label.uppercase(java.util.Locale.getDefault()),
+                text = label.uppercase(observableLocale()),
                 style = KickerSmall,
                 color = appearancePalette.mutedText
             )

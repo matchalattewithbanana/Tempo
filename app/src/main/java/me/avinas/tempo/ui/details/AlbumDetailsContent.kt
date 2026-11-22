@@ -1,6 +1,8 @@
 @file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 
 package me.avinas.tempo.ui.details
+import me.avinas.tempo.ui.util.capitalizeForObservableLocale
+import me.avinas.tempo.ui.util.observableLocale
 
 import me.avinas.tempo.ui.effects.tempoAmbientBackdrop
 import me.avinas.tempo.ui.effects.tempoTiltSurface
@@ -175,7 +177,7 @@ internal fun AlbumHeroEditorialStage(
             albumDetails.album.releaseYear?.toString(),
             albumDetails.album.releaseType
                 ?.takeIf { it.isNotBlank() }
-                ?.replaceFirstChar { it.uppercase(Locale.getDefault()) },
+                ?.capitalizeForObservableLocale(),
         )
         if (metaParts.isNotEmpty()) {
             Spacer(modifier = Modifier.height(14.dp))
@@ -191,7 +193,7 @@ internal fun AlbumHeroEditorialStage(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = metaParts.joinToString("  ·  ").uppercase(Locale.getDefault()),
+                    text = metaParts.joinToString("  ·  ").uppercase(observableLocale()),
                     style = KickerSmall,
                     color = appearancePalette.mutedText,
                     letterSpacing = 1.4.sp,
@@ -227,7 +229,7 @@ internal fun AlbumStatMasthead(
     val hasPlays = albumDetails.totalPlayCount > 0
     val completion = albumDetails.completionRate
     val completionText = if (hasPlays) {
-        String.format(Locale.getDefault(), "%.0f%%", completion)
+        String.format(observableLocale(), "%.0f%%", completion)
     } else {
         "—"
     }
@@ -255,7 +257,7 @@ internal fun AlbumStatMasthead(
             // display-size play count with the listening time as its suffix.
             MastheadHeroMetric(
                 label = stringResource(R.string.details_total_plays),
-                value = String.format(Locale.getDefault(), "%,d", albumDetails.totalPlayCount),
+                value = String.format(observableLocale(), "%,d", albumDetails.totalPlayCount),
                 suffix = stringResource(
                     R.string.details_together_suffix,
                     me.avinas.tempo.ui.stats.displayStatsDuration(albumDetails.totalTimeMs),
@@ -500,7 +502,7 @@ internal fun AlbumTrackRow(
                             color = appearancePalette.onSurface
                         )
                         Text(
-                            text = stringResource(R.string.details_plays).uppercase(Locale.getDefault()),
+                            text = stringResource(R.string.details_plays).uppercase(observableLocale()),
                             style = CaptionSmall,
                             color = appearancePalette.mutedText,
                         )
@@ -573,7 +575,7 @@ internal fun AlbumDetailsFooter() {
         )
         Spacer(modifier = Modifier.height(14.dp))
         Text(
-            text = stringResource(R.string.album_footer).uppercase(Locale.getDefault()),
+            text = stringResource(R.string.album_footer).uppercase(observableLocale()),
             style = KickerSmall,
             color = appearancePalette.mutedText,
             letterSpacing = 2.sp,

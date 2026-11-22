@@ -1,4 +1,5 @@
 package me.avinas.tempo.ui.history
+import me.avinas.tempo.ui.util.observableLocale
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -77,7 +78,7 @@ fun HistoryFilterSheetContent(
 
         // Time Range Kicker
         Text(
-            text = stringResource(R.string.history_time_range).uppercase(Locale.getDefault()),
+            text = stringResource(R.string.history_time_range).uppercase(observableLocale()),
             style = KickerSmall,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurfaceVariant,

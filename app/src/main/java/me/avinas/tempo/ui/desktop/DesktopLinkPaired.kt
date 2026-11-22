@@ -1,4 +1,5 @@
 package me.avinas.tempo.ui.desktop
+import me.avinas.tempo.ui.util.observableLocale
 
 import android.Manifest
 import android.content.ActivityNotFoundException
@@ -177,7 +178,7 @@ internal fun PairedContent(
             ) {
                 InfoRow(
                     label = stringResource(R.string.desktop_last_sync),
-                    value = SimpleDateFormat("MMM d, HH:mm", Locale.getDefault()).format(Date(lastSeen))
+                    value = SimpleDateFormat("MMM d, HH:mm", observableLocale()).format(Date(lastSeen))
                 )
             }
         }

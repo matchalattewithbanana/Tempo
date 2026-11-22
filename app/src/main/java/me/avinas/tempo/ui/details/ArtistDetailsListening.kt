@@ -1,6 +1,7 @@
 @file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 
 package me.avinas.tempo.ui.details
+import me.avinas.tempo.ui.util.observableLocale
 
 import me.avinas.tempo.ui.effects.tempoAmbientBackdrop
 import me.avinas.tempo.ui.effects.tempoTiltSurface
@@ -259,7 +260,7 @@ fun TopSongsPanel(
                                 color = appearancePalette.onSurface
                             )
                             Text(
-                                text = stringResource(R.string.details_plays).uppercase(Locale.getDefault()),
+                                text = stringResource(R.string.details_plays).uppercase(observableLocale()),
                                 style = CaptionSmall,
                                 color = appearancePalette.mutedText,
                             )
@@ -405,7 +406,7 @@ internal fun ArtistDetailsFooter() {
         )
         Spacer(modifier = Modifier.height(14.dp))
         Text(
-            text = stringResource(R.string.details_footer).uppercase(Locale.getDefault()),
+            text = stringResource(R.string.details_footer).uppercase(observableLocale()),
             style = KickerSmall,
             color = appearancePalette.mutedText,
             letterSpacing = 2.sp,

@@ -1,6 +1,7 @@
 @file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 
 package me.avinas.tempo.ui.details
+import me.avinas.tempo.ui.util.observableLocale
 
 import me.avinas.tempo.ui.effects.tempoAmbientBackdrop
 import me.avinas.tempo.ui.effects.tempoTiltSurface
@@ -278,7 +279,7 @@ fun ArtistHeroSection(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = metaParts.joinToString("  ·  ").uppercase(Locale.getDefault()),
+                    text = metaParts.joinToString("  ·  ").uppercase(observableLocale()),
                     style = KickerSmall,
                     color = appearancePalette.mutedText,
                     letterSpacing = 1.4.sp,
@@ -320,7 +321,7 @@ fun ArtistStatMasthead(artistDetails: ArtistDetails, accent: Color = LocalTempoP
             // Total play count hero metric — same anatomy as the song masthead.
             MastheadHeroMetric(
                 label = stringResource(R.string.details_total_plays),
-                value = String.format(Locale.getDefault(), "%,d", artistDetails.personalPlayCount),
+                value = String.format(observableLocale(), "%,d", artistDetails.personalPlayCount),
                 suffix = stringResource(
                     R.string.details_together_suffix,
                     me.avinas.tempo.ui.stats.displayStatsDuration(artistDetails.personalTotalTimeMs),
@@ -489,7 +490,7 @@ fun FanStandingCard(
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = tier.status.uppercase(Locale.getDefault()),
+                    text = tier.status.uppercase(observableLocale()),
                     style = KickerSmall,
                     color = tierAccent,
                     fontWeight = FontWeight.Bold,

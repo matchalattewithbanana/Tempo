@@ -1,4 +1,5 @@
 package me.avinas.tempo.ui.components
+import me.avinas.tempo.ui.util.observableLocale
 
 import android.graphics.Bitmap
 import androidx.compose.foundation.background
@@ -262,7 +263,7 @@ fun BadgeShareCard(
                                 .padding(horizontal = 6.dp, vertical = 2.dp),
                     ) {
                         Text(
-                            text = rarity.label.uppercase(Locale.getDefault()),
+                            text = rarity.label.uppercase(observableLocale()),
                             style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                             fontWeight = FontWeight.Black,
                             color = if (palette.isDark) rarityColor else palette.textStrong,
