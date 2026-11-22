@@ -44,7 +44,7 @@ import me.avinas.tempo.ui.components.*
 import me.avinas.tempo.ui.theme.*
 import java.util.Locale
 
-private val RelativeDateFormatter = java.time.format.DateTimeFormatter.ofPattern("MMM d", Locale.getDefault())
+internal val RelativeDateFormatter = java.time.format.DateTimeFormatter.ofPattern("MMM d", Locale.getDefault())
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable

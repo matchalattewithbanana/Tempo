@@ -15,6 +15,7 @@ import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -471,7 +472,7 @@ internal fun AppearancePresetCard(
                 if (selected || active) {
                     Surface(
                         modifier = Modifier.align(Alignment.TopEnd).padding(7.dp).size(24.dp),
-                        shape = MaterialTheme.shapes.full,
+                        shape = CircleShape,
                         color = if (selected) palette.accent else scheme.surfaceContainerHighest,
                         contentColor = if (selected) palette.onAccent else scheme.onSurface,
                     ) {

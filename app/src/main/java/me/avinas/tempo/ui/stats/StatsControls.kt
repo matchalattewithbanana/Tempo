@@ -279,7 +279,7 @@ internal fun StatsTopBar(
     }
 }
 
-private val StatsAvailableRanges = TimeRange.entries.toList()
+internal val StatsAvailableRanges = TimeRange.entries.toList()
 
 /**
  * Listening analytics deserve a visual dashboard rather than three tightly

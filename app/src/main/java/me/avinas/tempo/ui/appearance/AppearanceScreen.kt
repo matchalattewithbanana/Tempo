@@ -28,6 +28,7 @@ import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.*
@@ -73,6 +74,7 @@ fun AppearanceScreen(
     val saveFailed by viewModel.saveFailed.collectAsStateWithLifecycle()
     val looks by viewModel.savedLooks.collectAsStateWithLifecycle()
     val saved = loaded
+    val context = LocalContext.current
     if (saved == null) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             TempoCircularLoadingIndicator()
@@ -324,7 +326,7 @@ fun AppearanceScreen(
                                             )
                                         },
                                         modifier = Modifier.width(184.dp),
-                                        tone = preview.tone,
+                                        tone = draft.tone,
                                         enabled = !busy,
                                     )
                                 }
@@ -354,7 +356,7 @@ fun AppearanceScreen(
                                             )
                                         },
                                         modifier = Modifier.width(184.dp),
-                                        tone = preview.tone,
+                                        tone = draft.tone,
                                         enabled = !busy,
                                     )
                                 }

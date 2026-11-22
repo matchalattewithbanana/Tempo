@@ -721,8 +721,4 @@ private fun ScrubbableRhythmChart(
     }
 }
 
-// ──────────────────────────────────────────────────────────────
-// 4. Audio Features
-// ──────────────────────────────────────────────────────────────
 
-@OptIn(ExperimentalLayoutApi::class)
