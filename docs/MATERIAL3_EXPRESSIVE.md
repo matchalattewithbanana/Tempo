@@ -109,3 +109,7 @@ Reduced-motion and Instant Navigation overrides remain authoritative. The app wa
 The native Kotlin/Compose Orion reference inspired a targeted Spotlight hero, story control, album-cover source selection, and Backup & Restore presentation pass. Changes use Material's tonal roles, native buttons and motion-scheme spring types. All existing playback, cover selection, Spotify settings, and backup operations remain in their original ownership paths.
 
 The backup layout policy stacks local actions below 440dp or at ≥1.3× font scaling (a Tempo-specific design choice, not an official Material token). The new Spotlight story surface and picker selection should be tested in Light, Dark, OLED and saved custom looks. Source tests were added but not run, and no build, CI or release was triggered.
+
+## Song Details native action refinement — November 23, 2026
+
+`SongDetailsHero.kt` now uses native Material3 Expressive icon buttons for title and artwork edits, a theme-aware clickable preview pill, and 48dp artist/album link targets. Audio progress renders the supplied fraction directly instead of following it with a spring. These actions preserve their original callbacks and data behavior. Verify play/pause and title/cover-edit interactions on-device; no build or release ran.

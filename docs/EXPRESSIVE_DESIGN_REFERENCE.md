@@ -105,6 +105,17 @@ Reference checked against the **new Orion Store** Kotlin/Compose `Detail.kt`, `S
 
 **Validation still required:** compile Kotlin/Android resources; verify layouts at 320/360/440/960dp, 1.3–2× font scale, Light/Dark/OLED/custom palettes, TalkBack, disabled story state, and interruptions while changing cover choices. Do not claim measured performance improvements before on-device traces.
 
+## November 23, 2026 — Song Details action consistency
+
+The music-detail follow-up updates `SongDetailsHero.kt`:
+
+- Artwork and title editing use native `FilledTonalIconButton` with dynamic Material color roles, expressive pressed shapes and full 48dp targets. Callbacks and the edit dialogs remain unchanged.
+- The short audio-preview control uses one native clickable `Surface` (primary container while playing, surface container while idle) with emphasized labels. It no longer relies on fixed glass/pill colors that could clash with Light/OLED/custom palettes.
+- The progress fill now reflects the actual provided playback fraction directly; a fast spring that chased each update caused visual lag. The underlying audio preview clock/player was not changed.
+- Artist and album links retain their existing navigation callbacks but have at least 48dp target height.
+
+This is a source-level refactor. The visual/touch result has **not** yet been compiled or validated on Android. Review text wrapping, click targets, playback progress, and skin contrasts at multiple font scales before release.
+
 ## Next visual milestones
 
 Retune the remaining visual duplicates on track/artist/album details, import/restore flows and Spotlight story editor. Choose deliberately where a shape or action morph helps recognition; do not add permanent shimmer, blur or animated gradients merely to look expressive.
