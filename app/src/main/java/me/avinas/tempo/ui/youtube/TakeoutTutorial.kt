@@ -130,7 +130,7 @@ internal val ScreenW = 246.dp
 // ── Cue table ─────────────────────────────────────────────────
 // Every beat of the walkthrough, in seconds. Screens read these so a
 // timing tweak never needs two edits.
-private object Cue {
+internal object Cue {
     const val DeselectTap = 1.15f
     const val DeselectRun = 1.45f
     const val ScrollStart = 2.6f
