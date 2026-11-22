@@ -156,6 +156,19 @@ internal fun ConnectionsSettingsSection(
                         )
                     }
 
+                    // Local Spotify playback broadcasts do not require a Spotify API
+                    // login, and must remain configurable even while disconnected.
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    SettingsSwitch(
+                        title = stringResource(R.string.settings_spotify_device_broadcasts),
+                        subtitle = stringResource(R.string.settings_spotify_device_broadcasts_desc),
+                        checked = spotifyBroadcastEnabled,
+                        onCheckedChange = { enabled ->
+                            SpotifyBroadcastPresence.setEnabled(context, enabled)
+                            onSpotifyBroadcastEnabledChange(enabled)
+                        },
+                    )
+
                     if (spotifyConnected) {
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                         SettingsSwitch(
@@ -167,20 +180,6 @@ internal fun ConnectionsSettingsSection(
                             ),
                             checked = uiState.spotifyApiOnlyMode,
                             onCheckedChange = viewModel::toggleSpotifyApiOnlyMode,
-                        )
-
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-
-                        SettingsSwitch(
-                            title = stringResource(R.string.settings_spotify_device_broadcasts),
-                            subtitle = stringResource(
-                                R.string.settings_spotify_device_broadcasts_desc,
-                            ),
-                            checked = spotifyBroadcastEnabled,
-                            onCheckedChange = { enabled ->
-                                SpotifyBroadcastPresence.setEnabled(context, enabled)
-                                onSpotifyBroadcastEnabledChange(enabled)
-                            },
                         )
 
                         Row(

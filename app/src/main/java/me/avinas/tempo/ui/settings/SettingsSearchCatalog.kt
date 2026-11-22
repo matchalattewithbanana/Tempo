@@ -56,7 +56,7 @@ internal object SettingsSearchCatalog {
         SettingsSearchEntry(SettingsSection.CONNECTIONS, R.string.settings_spotify_history_verification, 0,
             R.string.settings_spotify_history_verification_desc, SettingsSearchRequirement.SPOTIFY_CONNECTED),
         SettingsSearchEntry(SettingsSection.CONNECTIONS, R.string.settings_spotify_device_broadcasts, 0,
-            R.string.settings_spotify_device_broadcasts_desc, SettingsSearchRequirement.SPOTIFY_CONNECTED),
+            R.string.settings_spotify_device_broadcasts_desc),
 
         SettingsSearchEntry(SettingsSection.DATA, R.string.settings_smart_merge, 1,
             R.string.settings_smart_merge_desc),
