@@ -1,4 +1,5 @@
 package me.avinas.tempo.ui.profile
+import me.avinas.tempo.ui.util.observableLocale
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.*
@@ -91,7 +92,7 @@ internal fun SectionCatalogKicker(
                     .background(appearancePalette.border.copy(alpha = 0.65f)),
         )
         Text(
-            text = label.uppercase(Locale.getDefault()),
+            text = label.uppercase(observableLocale()),
             style = KickerSmall,
             color = appearancePalette.mutedText,
             letterSpacing = 1.2.sp,
@@ -155,7 +156,7 @@ internal fun MastheadHeroMetric(
                         .background(accentTint),
             )
             Text(
-                text = label.uppercase(Locale.getDefault()),
+                text = label.uppercase(observableLocale()),
                 style = KickerSmall,
                 color = appearancePalette.mutedText,
                 letterSpacing = 1.4.sp,
@@ -202,7 +203,7 @@ internal fun MastheadSecondaryStat(
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         Text(
-            text = label.uppercase(Locale.getDefault()),
+            text = label.uppercase(observableLocale()),
             style = KickerSmall,
             color = appearancePalette.mutedText,
             letterSpacing = 1.2.sp,

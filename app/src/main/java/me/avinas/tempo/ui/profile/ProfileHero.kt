@@ -1,4 +1,5 @@
 package me.avinas.tempo.ui.profile
+import me.avinas.tempo.ui.util.observableLocale
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
@@ -160,7 +161,7 @@ internal fun HeroProfileSection(
                     color = swatch.foreground,
                 )
                 Text(
-                    text = String.format(Locale.getDefault(), "%,d", userLevel.totalXp),
+                    text = String.format(observableLocale(), "%,d", userLevel.totalXp),
                     style = MaterialTheme.typography.labelLargeEmphasized,
                     color = swatch.foreground,
                 )
@@ -182,7 +183,7 @@ internal fun HeroProfileSection(
                     color = swatch.foreground,
                 )
                 Text(
-                    text = String.format(Locale.getDefault(), "%,d XP to next level", userLevel.xpRemaining),
+                    text = String.format(observableLocale(), "%,d XP to next level", userLevel.xpRemaining),
                     style = MaterialTheme.typography.labelSmall,
                     color = swatch.foreground,
                     modifier = Modifier.weight(1f),

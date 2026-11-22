@@ -1,4 +1,5 @@
 package me.avinas.tempo.ui.profile
+import me.avinas.tempo.ui.util.observableLocale
 
 import me.avinas.tempo.ui.effects.tempoListMotion
 import androidx.compose.animation.core.*
@@ -258,7 +259,7 @@ private fun ChallengeCard(challenge: DailyChallenge) {
                                 .padding(horizontal = 7.dp, vertical = 3.dp),
                     ) {
                         Text(
-                            text = challenge.difficulty.uppercase(Locale.getDefault()),
+                            text = challenge.difficulty.uppercase(observableLocale()),
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
                             color = profileTextColor(accent, difficultySurface),
@@ -272,7 +273,7 @@ private fun ChallengeCard(challenge: DailyChallenge) {
                         color = appearancePalette.mutedText,
                     )
                     Text(
-                        text = challenge.category.replace("_", " ").uppercase(Locale.getDefault()),
+                        text = challenge.category.replace("_", " ").uppercase(observableLocale()),
                         style = KickerSmall,
                         fontWeight = FontWeight.Medium,
                         color = appearancePalette.mutedText,

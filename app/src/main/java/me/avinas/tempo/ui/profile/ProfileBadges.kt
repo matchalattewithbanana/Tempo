@@ -1,4 +1,5 @@
 package me.avinas.tempo.ui.profile
+import me.avinas.tempo.ui.util.observableLocale
 
 import me.avinas.tempo.ui.effects.tempoListMotion
 import androidx.compose.animation.core.*
@@ -404,7 +405,7 @@ private fun BadgeCard(
                 modifier = Modifier.heightIn(min = 32.dp),
             )
             Text(
-                text = rarity.label.uppercase(Locale.getDefault()),
+                text = rarity.label.uppercase(observableLocale()),
                 style = MaterialTheme.typography.labelSmall,
                 fontWeight = FontWeight.Bold,
                 color = profileTextColor(if (isEarned) rarityColor else appearancePalette.mutedText),

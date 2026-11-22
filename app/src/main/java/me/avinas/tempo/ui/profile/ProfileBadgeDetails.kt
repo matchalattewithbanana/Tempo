@@ -1,4 +1,5 @@
 package me.avinas.tempo.ui.profile
+import me.avinas.tempo.ui.util.observableLocale
 
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.animation.core.*
@@ -248,9 +249,9 @@ fun BadgeDetailsOverlay(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        DetailsChip(text = rarity.label.uppercase(Locale.getDefault()), color = rarityColor)
+                        DetailsChip(text = rarity.label.uppercase(observableLocale()), color = rarityColor)
                         DetailsChip(
-                            text = getCategoryLabel(badge.category).uppercase(Locale.getDefault()),
+                            text = getCategoryLabel(badge.category).uppercase(observableLocale()),
                             color = getCategoryColor(badge.category),
                         )
                         if (badge.isMaxed) DetailsChip(text = "MAXED", color = TempoWarningBright)

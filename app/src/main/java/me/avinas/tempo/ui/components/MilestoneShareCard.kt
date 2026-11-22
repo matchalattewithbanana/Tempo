@@ -1,4 +1,5 @@
 package me.avinas.tempo.ui.components
+import me.avinas.tempo.ui.util.observableLocale
 
 import android.graphics.Bitmap
 import androidx.compose.foundation.background
@@ -251,7 +252,7 @@ fun MilestoneShareCard(
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = String.format(Locale.getDefault(), "%,d", totalXp),
+                                text = String.format(observableLocale(), "%,d", totalXp),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = palette.headlineWeight ?: FontWeight.Bold,
                                 color = palette.textPrimary,

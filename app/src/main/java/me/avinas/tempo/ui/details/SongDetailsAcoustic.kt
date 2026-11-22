@@ -1,6 +1,7 @@
 @file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 
 package me.avinas.tempo.ui.details
+import me.avinas.tempo.ui.util.observableLocale
 
 import me.avinas.tempo.ui.effects.tempoAmbientBackdrop
 import me.avinas.tempo.ui.effects.tempoTiltSurface
@@ -329,7 +330,7 @@ private fun AcousticHeaderMetric(
                 modifier = Modifier.size(14.dp)
             )
             Text(
-                text = label.uppercase(Locale.getDefault()),
+                text = label.uppercase(observableLocale()),
                 style = KickerSmall,
                 color = appearancePalette.mutedText,
             )
