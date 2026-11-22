@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+
 package me.avinas.tempo.ui.settings
 
 import android.app.Activity
@@ -80,12 +82,15 @@ internal fun GoogleDriveSection(
     onDelete: (DriveBackupInfo) -> Unit,
     onRefreshBackups: () -> Unit
 ) {
-    SettingsSectionHeader("Google Drive")
+    SettingsSectionHeader(stringResource(R.string.backup_restore_google_drive_title))
     
-    GlassCard(
+    // Static tonal container: Drive state and backup history should not pay
+    // for repeated glass compositing on every scroll or theme transition.
+    Surface(
         modifier = Modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(0.dp),
-        variant = GlassCardVariant.LowProminence
+        shape = MaterialTheme.shapes.extraLarge,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        contentColor = MaterialTheme.colorScheme.onSurface,
     ) {
         Column {
             if (!isSignedIn) {
@@ -101,7 +106,7 @@ internal fun GoogleDriveSection(
                         modifier = Modifier
                             .size(48.dp)
                             .background(
-                                color = TempoInfo.copy(alpha = 0.2f),
+                                color = MaterialTheme.colorScheme.primaryContainer,
                                 shape = CircleShape
                             ),
                         contentAlignment = Alignment.Center
@@ -109,7 +114,7 @@ internal fun GoogleDriveSection(
                         Icon(
                             Icons.Default.Cloud,
                             contentDescription = null,
-                            tint = TempoInfo,
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
                             modifier = Modifier.size(24.dp)
                         )
                     }
@@ -157,13 +162,13 @@ internal fun GoogleDriveSection(
                         Box(
                             modifier = Modifier
                                 .size(48.dp)
-                                .background(TempoInfo, CircleShape),
+                                .background(MaterialTheme.colorScheme.primaryContainer, CircleShape),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = googleAccount?.email?.first()?.uppercase() ?: "G",
+                                text = googleAccount?.email?.firstOrNull()?.uppercase() ?: "G",
                                 style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.onSurface
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                         }
                     }
@@ -185,12 +190,12 @@ internal fun GoogleDriveSection(
                         )
                     }
                     
-                    TextButton(onClick = onSignOut) {
+                    TextButton(onClick = onSignOut, modifier = Modifier.heightIn(min = 48.dp)) {
                         Text("Sign Out", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
                 
-                HorizontalDivider(color = GlassBorderSoft)
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 
                 // The primary action belongs beneath its status text. Keeping
                 // them in one narrow Row squeezed the backup description down
@@ -238,7 +243,7 @@ internal fun GoogleDriveSection(
                         onClick = onBackupNow,
                         enabled = driveOperation == DriveOperationState.Idle &&
                             backupSettings.isGoogleDriveEnabled,
-                        shape = MaterialTheme.shapes.large,
+                        shapes = ButtonDefaults.shapes(),
                     ) {
                         Icon(
                             Icons.Default.CloudUpload,
@@ -246,13 +251,13 @@ internal fun GoogleDriveSection(
                             modifier = Modifier.size(18.dp),
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Backup Now")
+                        Text(stringResource(R.string.backup_restore_backup_now))
                     }
                 }
 
                 // Backup history
                 if (driveBackups.isNotEmpty()) {
-                    HorizontalDivider(color = GlassBorderSoft)
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                     
                     Row(
                         modifier = Modifier
@@ -262,12 +267,12 @@ internal fun GoogleDriveSection(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Backup History (${driveBackups.size})",
+                            text = stringResource(R.string.backup_restore_drive_history_count, driveBackups.size),
                             style = MaterialTheme.typography.titleSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         
-                        IconButton(onClick = onRefreshBackups, modifier = Modifier.size(24.dp)) {
+                        IconButton(onClick = onRefreshBackups, modifier = Modifier.size(48.dp)) {
                             Icon(
                                 Icons.Default.Refresh,
                                 contentDescription = "Refresh",
@@ -296,12 +301,15 @@ internal fun AutomaticBackupSection(
     onSetInterval: (BackupInterval) -> Unit,
     onSetWifiOnly: (Boolean) -> Unit
 ) {
-    SettingsSectionHeader("Automatic Backups")
+    SettingsSectionHeader(stringResource(R.string.backup_restore_automatic_backups_title))
 
-    GlassCard(
+    // Static tonal container: Drive state and backup history should not pay
+    // for repeated glass compositing on every scroll or theme transition.
+    Surface(
         modifier = Modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(0.dp),
-        variant = GlassCardVariant.LowProminence
+        shape = MaterialTheme.shapes.extraLarge,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        contentColor = MaterialTheme.colorScheme.onSurface,
     ) {
         Column {
             var intervalExpanded by remember { mutableStateOf(false) }
@@ -349,11 +357,11 @@ internal fun AutomaticBackupSection(
                 }
             }
 
-            HorizontalDivider(color = GlassBorderSoft)
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
             SettingsSwitch(
-                title = "Drive on Wi-Fi only",
-                subtitle = "Device backups still run offline; only the Google Drive upload waits for Wi-Fi",
+                title = stringResource(R.string.backup_restore_drive_wifi_only),
+                subtitle = stringResource(R.string.backup_restore_drive_wifi_desc),
                 checked = backupSettings.wifiOnly,
                 onCheckedChange = onSetWifiOnly
             )
@@ -402,7 +410,7 @@ private fun DriveBackupItem(
                 Icon(
                     Icons.Default.CloudDownload,
                     contentDescription = "Restore",
-                    tint = TempoInfo
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             }
             IconButton(onClick = onDelete) {

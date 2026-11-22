@@ -2040,6 +2040,12 @@
     <string name="spotlight_story_locked_hint">Unlocks at the end of this period</string>
     <string name="spotlight_story_loading_hint">Composing your story…</string>
     <string name="spotlight_story_play_hint">Play your listening story</string>
+    <string name="backup_restore_google_drive_title">Google Drive</string>
+    <string name="backup_restore_automatic_backups_title">Automatic backups</string>
+    <string name="backup_restore_drive_wifi_only">Drive on Wi-Fi only</string>
+    <string name="backup_restore_drive_wifi_desc">Device backups still run offline; only Google Drive uploads wait for Wi-Fi</string>
+    <string name="backup_restore_backup_now">Back up now</string>
+    <string name="backup_restore_drive_history_count">Backup history (%1$d)</string>
     <string name="backup_restore_folder_title">Automatic backup folder</string>
     <string name="backup_restore_folder_desc">Choose where scheduled device backups are saved</string>
     <string name="backup_restore_choose_folder">Choose folder</string>
