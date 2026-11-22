@@ -49,6 +49,7 @@ internal fun SettingsOverview(
     gamificationEnabled: Boolean,
     analyticsConfigured: Boolean,
     spotifyConnected: Boolean,
+    spotifyAccountLoaded: Boolean,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier.fillMaxSize()) {
@@ -121,6 +122,7 @@ internal fun SettingsOverview(
                 gamificationEnabled = gamificationEnabled,
                 analyticsConfigured = analyticsConfigured,
                 spotifyConnected = spotifyConnected,
+                spotifyAccountLoaded = spotifyAccountLoaded,
             ).map { entry ->
                 Triple(
                     entry,

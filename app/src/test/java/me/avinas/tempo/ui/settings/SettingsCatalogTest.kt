@@ -20,6 +20,7 @@ class SettingsCatalogTest {
             gamificationEnabled = true,
             analyticsConfigured = true,
             spotifyConnected = true,
+            spotifyAccountLoaded = true,
         )
         val titles = items.map { it.titleRes }.toSet()
         assertTrue(me.avinas.tempo.R.string.settings_manage_permissions in titles)
@@ -36,11 +37,13 @@ class SettingsCatalogTest {
             gamificationEnabled = false,
             analyticsConfigured = false,
             spotifyConnected = false,
+            spotifyAccountLoaded = true,
         )
         val labels = limited.map { it.titleRes }.toSet()
         assertTrue(me.avinas.tempo.R.string.settings_achievements !in labels)
         assertTrue(me.avinas.tempo.R.string.settings_analytics_toggle !in labels)
         assertTrue(me.avinas.tempo.R.string.settings_spotify_device_broadcasts !in labels)
+        assertTrue(me.avinas.tempo.R.string.settings_spotify_client_id_label in labels)
         assertEquals(3, limited.single {
             it.titleRes == me.avinas.tempo.R.string.settings_clear_all
         }.groupIndex)
@@ -48,6 +51,7 @@ class SettingsCatalogTest {
             gamificationEnabled = false,
             analyticsConfigured = true,
             spotifyConnected = false,
+            spotifyAccountLoaded = true,
         )
         assertEquals(4, configured.single {
             it.titleRes == me.avinas.tempo.R.string.settings_clear_all

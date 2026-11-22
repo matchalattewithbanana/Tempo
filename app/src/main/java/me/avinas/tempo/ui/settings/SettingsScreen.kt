@@ -232,6 +232,7 @@ fun SettingsScreen(
                         gamificationEnabled = uiState.isGamificationEnabled,
                         analyticsConfigured = uiState.analyticsConfigured,
                         spotifyConnected = runtimeStatus.spotifyConnected,
+                        spotifyAccountLoaded = runtimeStatus.spotifyAccountLoaded,
                         modifier = Modifier.weight(1f),
                     )
                 } else {
