@@ -164,7 +164,7 @@ fun TempoBottomNavigation(
                                 ) {
                                     Box(
                                         modifier = Modifier
-                                            .width(indicatorWidth)
+                                            .width(indicatorWidth.coerceIn(0.dp, 64.dp))
                                             .height(32.dp)
                                             .clip(MaterialTheme.shapes.extraLarge)
                                             .background(scheme.secondaryContainer),
