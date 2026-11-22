@@ -2036,6 +2036,10 @@
     <string name="settings_spotify_client_id_help">Register tempo://spotify-callback as the redirect URI in your Spotify Developer app.</string>
     <string name="settings_spotify_history_verification">Automatic history verification</string>
     <string name="settings_spotify_history_verification_desc">Periodically reconciles Spotify history with local tracking instead of adding another copy of the same play.</string>
+    <string name="spotlight_story_locked_title">Story locked</string>
+    <string name="spotlight_story_locked_hint">Unlocks at the end of this period</string>
+    <string name="spotlight_story_loading_hint">Composing your story…</string>
+    <string name="spotlight_story_play_hint">Play your listening story</string>
     <string name="settings_spotify_device_broadcasts">Device broadcasts</string>
     <string name="settings_spotify_device_broadcasts_desc">Use Spotify’s local playback broadcasts for real-time device status. Enable the matching option in Spotify’s Playback settings.</string>
     <string name="settings_spotify_verify_now">Verify now</string>

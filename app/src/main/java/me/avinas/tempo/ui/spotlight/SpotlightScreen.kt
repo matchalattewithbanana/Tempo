@@ -413,166 +413,111 @@ fun SpotlightStoryHeroCard(
     storyLoading: Boolean,
     modifier: Modifier = Modifier
 ) {
-    val cardShape = RoundedCornerShape(22.dp)
-    val cardBlendBrush = remember(isLocked) {
-        if (isLocked) {
-            Brush.linearGradient(
-                colors = listOf(
-                    Color.White.copy(alpha = 0.03f),
-                    Color.White.copy(alpha = 0.01f)
-                )
-            )
-        } else {
-            Brush.linearGradient(
-                colors = listOf(
-                    TempoPrimary.copy(alpha = 0.14f),
-                    Color(0xFFA855F7).copy(alpha = 0.10f),
-                    Color(0xFFEC4899).copy(alpha = 0.06f)
-                )
-            )
-        }
-    }
-    val cardBorderBrush = remember(isLocked) {
-        if (isLocked) {
-            Brush.linearGradient(
-                colors = listOf(GlassBorderMedium, GlassBorderSoft)
-            )
-        } else {
-            Brush.linearGradient(
-                colors = listOf(
-                    TempoPrimary.copy(alpha = 0.45f),
-                    Color(0xFFA855F7).copy(alpha = 0.35f),
-                    Color(0xFFEC4899).copy(alpha = 0.22f)
-                )
-            )
-        }
-    }
-
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(cardShape)
-            .background(TempoDarkSurfaceElevated.copy(alpha = 0.94f))
-            .background(cardBlendBrush)
-            .border(0.8.dp, cardBorderBrush, cardShape)
-            .then(
-                if (!isLocked) Modifier.premiumClickable(onClick = onClick, pressedScale = 0.98f)
-                else Modifier
-            )
-            .padding(16.dp)
+    val scheme = MaterialTheme.colorScheme
+    // One coherent M3 surface replaces the fixed dark/gradient stack.
+    // It adapts to Light, Dark, OLED and user-defined accent palettes.
+    val container by androidx.compose.animation.animateColorAsState(
+        targetValue = if (isLocked) scheme.surfaceContainerLow else scheme.tertiaryContainer,
+        animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
+        label = "spotlightStoryContainer",
+    )
+    val foreground by androidx.compose.animation.animateColorAsState(
+        targetValue = if (isLocked) scheme.onSurface else scheme.onTertiaryContainer,
+        animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
+        label = "spotlightStoryForeground",
+    )
+    Surface(
+        onClick = onClick,
+        enabled = !isLocked && !storyLoading,
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.extraExtraLarge,
+        color = container,
+        contentColor = foreground,
     ) {
         Row(
+            modifier = Modifier.fillMaxWidth().heightIn(min = 92.dp)
+                .padding(horizontal = 18.dp, vertical = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier.fillMaxWidth()
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            // Visual Story Avatar (Ring, Cover Preview, or Lock)
+            // The irregular shape belongs to this decorative glyph, never to
+            // the text container; artwork keeps a predictable crop.
+            val avatarShape = if (!leadArtUrl.isNullOrBlank() && !isLocked) {
+                RoundedCornerShape(16.dp)
+            } else {
+                MaterialShapes.Cookie9Sided.toShape()
+            }
             Box(
-                modifier = Modifier
-                    .size(52.dp)
-                    .clip(CircleShape)
-                    .background(
-                        if (isLocked) TempoDarkSurfaceSunken
-                        else Color(0xFFA855F7).copy(alpha = 0.2f)
-                    )
-                    .border(
-                        1.dp,
-                        if (isLocked) SolidColor(GlassBorderSoft)
-                        else Brush.linearGradient(
-                            listOf(TempoPrimary, Color(0xFFA855F7), Color(0xFFEC4899))
-                        ),
-                        CircleShape
-                    ),
-                contentAlignment = Alignment.Center
+                modifier = Modifier.size(56.dp).clip(avatarShape)
+                    .background(if (isLocked) scheme.surfaceContainerHigh else scheme.tertiary),
+                contentAlignment = Alignment.Center,
             ) {
-                if (isLocked) {
-                    Icon(
-                        imageVector = Icons.Default.Lock,
+                when {
+                    isLocked -> Icon(
+                        Icons.Default.Lock,
                         contentDescription = null,
-                        tint = TextTertiary,
-                        modifier = Modifier.size(20.dp)
+                        tint = scheme.onSurfaceVariant,
+                        modifier = Modifier.size(26.dp),
                     )
-                } else if (!leadArtUrl.isNullOrBlank()) {
-                    CachedAsyncImage(
+                    !leadArtUrl.isNullOrBlank() -> CachedAsyncImage(
                         imageUrl = leadArtUrl,
-                        contentDescription = "Story preview",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clip(CircleShape)
-                    )
-                } else {
-                    Icon(
-                        imageVector = Icons.Rounded.PlayArrow,
                         contentDescription = null,
-                        tint = TextPrimary,
-                        modifier = Modifier.size(24.dp)
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                    else -> Icon(
+                        Icons.Rounded.PlayArrow,
+                        contentDescription = null,
+                        tint = scheme.onTertiary,
+                        modifier = Modifier.size(28.dp),
                     )
                 }
             }
-
-            // Headline & Description
-            Column(modifier = Modifier.weight(1f)) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
                 Text(
-                    text = if (isLocked) "Story Locked" else buttonText,
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontFamily = DisplayFontFamily,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 17.sp
-                    ),
-                    color = if (isLocked) TextSecondary else TextPrimary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    text = if (isLocked) stringResource(R.string.spotlight_story_locked_title) else buttonText,
+                    style = MaterialTheme.typography.titleLargeEmphasized,
+                    color = foreground,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
                 )
-                Spacer(modifier = Modifier.height(3.dp))
                 Text(
                     text = when {
-                        isLocked -> lockMessage.ifBlank { "Unlocks at the end of the period" }
-                        storyLoading -> "Composing your story..."
-                        else -> "Tap to play your interactive story"
+                        isLocked -> lockMessage.ifBlank {
+                            stringResource(R.string.spotlight_story_locked_hint)
+                        }
+                        storyLoading -> stringResource(R.string.spotlight_story_loading_hint)
+                        else -> stringResource(R.string.spotlight_story_play_hint)
                     },
                     style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary,
+                    color = foreground.copy(alpha = 0.84f),
                     maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
-
-            // Trailing Action Cue
             if (!isLocked) {
-                val buttonBlendBrush = remember {
-                    Brush.linearGradient(
-                        colors = listOf(
-                            TempoPrimary.copy(alpha = 0.20f),
-                            Color(0xFFA855F7).copy(alpha = 0.22f),
-                            Color(0xFFEC4899).copy(alpha = 0.18f)
-                        )
-                    )
-                }
-                val buttonBorderBrush = remember {
-                    Brush.linearGradient(
-                        colors = listOf(
-                            TempoPrimary.copy(alpha = 0.48f),
-                            Color(0xFFA855F7).copy(alpha = 0.38f),
-                            Color(0xFFEC4899).copy(alpha = 0.30f)
-                        )
-                    )
-                }
-
                 Box(
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clip(CircleShape)
-                        .background(buttonBlendBrush)
-                        .border(0.8.dp, buttonBorderBrush, CircleShape),
-                    contentAlignment = Alignment.Center
+                    modifier = Modifier.size(42.dp)
+                        .clip(MaterialTheme.shapes.full)
+                        .background(scheme.tertiary),
+                    contentAlignment = Alignment.Center,
                 ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Rounded.ArrowForwardIos,
-                        contentDescription = null,
-                        tint = TextPrimary,
-                        modifier = Modifier.size(12.dp)
-                    )
+                    if (storyLoading) {
+                        androidx.compose.material3.CircularWavyProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = scheme.onTertiary,
+                        )
+                    } else {
+                        Icon(
+                            Icons.AutoMirrored.Rounded.ArrowForwardIos,
+                            contentDescription = null,
+                            tint = scheme.onTertiary,
+                            modifier = Modifier.size(18.dp),
+                        )
+                    }
                 }
             }
         }
