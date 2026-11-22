@@ -29,6 +29,7 @@ import kotlinx.coroutines.flow.first
 import me.avinas.tempo.MainActivity
 import me.avinas.tempo.R
 import me.avinas.tempo.data.DefaultMusicApps
+import me.avinas.tempo.data.TrackingDecision
 import me.avinas.tempo.data.analytics.AnalyticsDailyReporter
 import me.avinas.tempo.data.local.dao.ManualContentMarkDao
 import me.avinas.tempo.data.local.dao.UserPreferencesDao
@@ -1599,6 +1600,8 @@ class MusicTrackingService : NotificationListenerService() {
                 return
             }
 
+            PlaybackTransitionPolicy.Action.IGNORE -> return
+
             PlaybackTransitionPolicy.Action.NEW -> {
                 // Check if this is likely an advertisement - skip tracking ads
                 if (artist.isNotBlank() &&
@@ -2714,6 +2717,8 @@ class MusicTrackingService : NotificationListenerService() {
                     currentSession.estimatedDurationMs = duration
                 }
             }
+            PlaybackTransitionPolicy.Action.IGNORE -> return
+
 
             PlaybackTransitionPolicy.Action.NEW -> {
                 // Detach previous session before saving so subsequent callbacks cannot re-save it.

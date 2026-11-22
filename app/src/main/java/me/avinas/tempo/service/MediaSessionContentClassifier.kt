@@ -16,11 +16,11 @@ internal class MediaSessionContentClassifier(
 ) {
     fun isMusic(controller: MediaController): Boolean {
         val packageName = controller.packageName
-        val metadata = controller.metadata
+        val metadata = controller.metadata ?: return false
 
         val title =
-            metadata?.getString(MediaMetadata.METADATA_KEY_TITLE)
-                ?: metadata?.getString(MediaMetadata.METADATA_KEY_DISPLAY_TITLE)
+            metadata.getString(MediaMetadata.METADATA_KEY_TITLE)
+                ?: metadata.getString(MediaMetadata.METADATA_KEY_DISPLAY_TITLE)
                 ?: return false
         val duration = metadata.getLong(MediaMetadata.METADATA_KEY_DURATION)
 

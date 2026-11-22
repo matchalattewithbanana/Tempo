@@ -69,8 +69,8 @@ internal class TempoExportJsonCodec(private val moshi: Moshi) {
      * is consumed by the codec.
     */
     data class StreamHandlers(
-        val onListeningEvent: (suspend (ListeningEvent) -> Unit)? = null,
-        val onScrobbleArchiveRow: (suspend (ScrobbleArchive) -> Unit)? = null
+        val onListeningEvent: ((ListeningEvent) -> Unit)? = null,
+        val onScrobbleArchiveRow: ((ScrobbleArchive) -> Unit)? = null
     )
 
     /**
@@ -147,7 +147,7 @@ internal class TempoExportJsonCodec(private val moshi: Moshi) {
      * `listeningEvents`/`scrobbleArchive` are always empty lists). Unknown fields are
      * skipped, so backups written by newer app versions degrade gracefully.
      */
-    suspend fun read(reader: JsonReader, handlers: StreamHandlers): TempoExportData {
+    fun read(reader: JsonReader, handlers: StreamHandlers): TempoExportData {
         var version = TempoExportData.CURRENT_VERSION
         var exportedAt = 0L
         var appVersion = ""
@@ -304,7 +304,7 @@ internal class TempoExportJsonCodec(private val moshi: Moshi) {
         return out
     }
 
-    private suspend fun <T> streamArray(reader: JsonReader, adapter: JsonAdapter<T>, onRow: suspend (T) -> Unit) {
+    private fun <T> streamArray(reader: JsonReader, adapter: JsonAdapter<T>, onRow: (T) -> Unit) {
         if (reader.peek() == JsonReader.Token.NULL) {
             reader.skipValue()
             return

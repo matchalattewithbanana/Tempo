@@ -34,8 +34,8 @@ internal class LocalAlbumArtStore(
         bitmap: Bitmap,
         title: String,
         artist: String,
-    ): String? =
-        try {
+    ): String? {
+        return try {
             if (!directory.isDirectory && !directory.mkdirs()) {
                 throw java.io.IOException("Could not create local album-art directory")
             }
@@ -59,6 +59,7 @@ internal class LocalAlbumArtStore(
             Log.e(TAG, "Unable to save local album art", failure)
             null
         }
+    }
 
     suspend fun applyFallbackIfMissing(
         trackId: Long,

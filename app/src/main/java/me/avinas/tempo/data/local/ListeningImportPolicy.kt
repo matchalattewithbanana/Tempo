@@ -2,7 +2,7 @@ package me.avinas.tempo.data.local
 
 import me.avinas.tempo.data.local.entities.ListeningEvent
 
-internal enum class ReconciliationTrackScope {
+enum class ReconciliationTrackScope {
     SOURCE_DEFAULT,
     COMPATIBLE_ALIASES,
 }

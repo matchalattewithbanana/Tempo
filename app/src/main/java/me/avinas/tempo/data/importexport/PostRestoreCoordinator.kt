@@ -42,7 +42,10 @@ class PostRestoreCoordinator @Inject constructor(
 
         if (conflictStrategy == ImportConflictStrategy.REPLACE) {
             try {
-                data.userName?.takeIf { it.isNotBlank() }?.let(profileIdentityManager::updateUserName)
+                val restoredName = data.userName?.takeIf { it.isNotBlank() }
+                if (restoredName != null) {
+                    profileIdentityManager.updateUserName(restoredName)
+                }
                 profileIdentityManager.restoreProfileImagePath(
                     resolveRestoredProfileImagePath(
                         exportedProfileImagePath = data.userProfileImagePath,
