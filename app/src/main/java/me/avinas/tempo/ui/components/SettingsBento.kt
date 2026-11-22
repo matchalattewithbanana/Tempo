@@ -3,19 +3,27 @@
 package me.avinas.tempo.ui.components
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import me.avinas.tempo.ui.theme.LocalTempoAppearance
 import me.avinas.tempo.ui.appearance.AppearanceDensity
+import me.avinas.tempo.ui.appearance.LocalAppearanceRuntimePolicy
 
 /** Tempo's original featured/staggered Settings mosaic, preserved from the shipped beta. */
 data class TempoSettingsDestination(
@@ -129,9 +137,29 @@ private fun TempoBentoDestination(
         BentoKind.SINGLE -> 104.dp
     }
     val height = if (dense) (regularHeight - 14.dp).coerceAtLeast(92.dp) else regularHeight
+    // Keep feedback local to the tapped tile. The spring is a layer transform,
+    // so the surrounding bento grid never reflows or interrupts navigation.
+    val interactionSource = remember { MutableInteractionSource() }
+    val pressed by interactionSource.collectIsPressedAsState()
+    val focused by interactionSource.collectIsFocusedAsState()
+    val allowMotion = !LocalAppearanceRuntimePolicy.current.reduceMotion
+    val scale by animateFloatAsState(
+        targetValue = when {
+            !allowMotion -> 1f
+            pressed -> 0.98f
+            focused -> 1.012f
+            else -> 1f
+        },
+        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+        label = "settingsDestinationPressScale",
+    )
     Surface(
         onClick = destination.onClick,
-        modifier = modifier.heightIn(min = height),
+        interactionSource = interactionSource,
+        modifier = modifier.heightIn(min = height).graphicsLayer {
+            scaleX = scale
+            scaleY = scale
+        },
         shape = MaterialTheme.shapes.extraExtraLarge,
         // One featured destination earns the accent surface. Other destinations
         // use a quieter Material surface so hierarchy survives custom palettes.

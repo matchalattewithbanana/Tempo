@@ -164,13 +164,43 @@ fun AppearanceScreen(
             } },
         ) },
         bottomBar = {
-            if (draft != saved) Surface(shadowElevation = 8.dp) {
-                Row(Modifier.fillMaxWidth().navigationBarsPadding().padding(16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    OutlinedButton(onClick = { draft = saved }, enabled = !busy, modifier = Modifier.weight(1f)) {
-                        Text(stringResource(R.string.appearance_cancel))
-                    }
-                    Button(onClick = { viewModel.apply(draft) }, enabled = !busy, modifier = Modifier.weight(1f)) {
-                        Text(stringResource(R.string.appearance_apply))
+            // The unsaved-changes actions enter from the bottom rather than
+            // suddenly pushing the preview's last rows upward.
+            AnimatedVisibility(
+                visible = draft != saved,
+                enter = expandVertically(
+                    expandFrom = Alignment.Bottom,
+                    animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
+                ) + fadeIn(animationSpec = MaterialTheme.motionScheme.fastEffectsSpec()),
+                exit = shrinkVertically(
+                    shrinkTowards = Alignment.Bottom,
+                    animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
+                ) + fadeOut(animationSpec = MaterialTheme.motionScheme.fastEffectsSpec()),
+            ) {
+                Surface(
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    shadowElevation = 3.dp,
+                ) {
+                    Row(
+                        Modifier.fillMaxWidth().navigationBarsPadding().padding(16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        OutlinedButton(
+                            onClick = { draft = saved },
+                            enabled = !busy,
+                            modifier = Modifier.weight(1f),
+                            shapes = ButtonDefaults.shapes(),
+                        ) {
+                            Text(stringResource(R.string.appearance_cancel))
+                        }
+                        Button(
+                            onClick = { viewModel.apply(draft) },
+                            enabled = !busy,
+                            modifier = Modifier.weight(1f),
+                            shapes = ButtonDefaults.shapes(),
+                        ) {
+                            Text(stringResource(R.string.appearance_apply))
+                        }
                     }
                 }
             }
