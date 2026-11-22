@@ -651,7 +651,7 @@ private fun FidelityLegendItem(
 }
 
 @Composable
-private fun TelemetryMiniCell(
+internal fun TelemetryMiniCell(
     label: String,
     value: String,
     modifier: Modifier = Modifier,

@@ -103,9 +103,9 @@ internal fun todayMutedText(): Color {
 }
 
 /* Rank medal accents — shared by podium rows on the overview. */
-private val RankGold = Color(0xFFFFD479)
-private val RankSilver = Color(0xFFC7CCD4)
-private val RankBronze = Color(0xFFCD8B5A)
+internal val RankGold = Color(0xFFFFD479)
+internal val RankSilver = Color(0xFFC7CCD4)
+internal val RankBronze = Color(0xFFCD8B5A)
 
 /**
  * Staggered content entrance: each section fades and lifts in smoothly once
