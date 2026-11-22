@@ -70,10 +70,14 @@ class AlbumArtAggregationTest {
 
     @Test
     fun `every album-grouped query aggregates its art column`() {
-        val daoDir = File("src/main/java/me/avinas/tempo/data/local/dao")
-        check(daoDir.isDirectory) {
-            "DAO directory not found at ${daoDir.absolutePath} (unit tests run from the app module dir)"
-        }
+        val daoDir =
+            sequenceOf(
+                File("src/main/java/me/avinas/tempo/data/local/dao"),
+                File("app/src/main/java/me/avinas/tempo/data/local/dao"),
+            ).firstOrNull(File::isDirectory)
+                ?: error(
+                    "DAO directory not found from working directory ${File(".").absolutePath}",
+                )
         val sourceFiles =
             daoDir.listFiles()
                 .orEmpty()
