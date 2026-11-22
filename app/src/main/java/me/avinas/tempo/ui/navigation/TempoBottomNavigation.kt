@@ -93,25 +93,35 @@ fun TempoBottomNavigation(
     Column(modifier = modifier.fillMaxWidth()) {
         CompactNowPlayingStrip()
         Box(
-            modifier = Modifier.fillMaxWidth().navigationBarsPadding()
-                .padding(
-                    horizontal = if (floating) 16.dp else 0.dp,
-                    vertical = if (floating) 8.dp else 0.dp,
-                ),
+            modifier = Modifier.fillMaxWidth().then(
+                if (floating) {
+                    Modifier.navigationBarsPadding()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                } else {
+                    Modifier
+                },
+            ),
             contentAlignment = Alignment.Center,
         ) {
             Surface(
                 modifier = if (floating) Modifier.widthIn(max = 460.dp).fillMaxWidth()
                     else Modifier.fillMaxWidth(),
-                shape = if (floating) MaterialTheme.shapes.extraExtraLarge
-                    else MaterialTheme.shapes.extraSmall,
+                shape = if (floating) {
+                    MaterialTheme.shapes.extraExtraLarge
+                } else {
+                    androidx.compose.foundation.shape.RectangleShape
+                },
                 color = if (floating) scheme.surfaceContainerHigh else scheme.surfaceContainer,
             ) {
                 androidx.compose.material3.NavigationBar(
                     modifier = Modifier.fillMaxWidth(),
                     containerColor = androidx.compose.ui.graphics.Color.Transparent,
                     contentColor = scheme.onSurface,
-                    windowInsets = WindowInsets(0, 0, 0, 0),
+                    windowInsets = if (floating) {
+                        WindowInsets(0, 0, 0, 0)
+                    } else {
+                        androidx.compose.material3.NavigationBarDefaults.windowInsets
+                    },
                     tonalElevation = 0.dp,
                 ) {
                     destinations.forEachIndexed { index, destination ->
