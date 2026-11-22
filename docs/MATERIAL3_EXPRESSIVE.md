@@ -15,7 +15,7 @@
 | Area | Expressive component / system | Intent |
 | --- | --- | --- |
 | App theme | `MaterialExpressiveTheme` + `MotionScheme` | coherent motion and current color/shape/type tokens |
-| Main navigation | `ShortNavigationBar` + collapsed `WideNavigationRail` (≥840dp primary windows) | adaptive phone/tablet destinations with shared back stack and compact now-playing strip |
+| Main navigation | native `NavigationBarItem` in the standard/floating bars, optional `HorizontalFloatingToolbar` expressive dock, adaptive `WideNavigationRail` | stable accessible phone/tablet destinations with one back stack and independent compact now-playing strip |
 | Home / Stats periods | responsive connected `ToggleButton` groups | 2–5 controls per row based on available width and font scale |
 | Stats / Profile tabs | `PrimaryTabRow` and `Tab` | accessible selection without shadow compositing |
 | History filters | connected `ToggleButton` group | single-select date range, 48dp minimum tap heights |
@@ -49,7 +49,7 @@ Under **Appearance Studio → Effects**, three independent options are **off by 
 - **Move featured cards with device tilt** — one lifecycle-bound gravity-sensor listener per visible app theme, never a sensor per list row. `SensorManager.SENSOR_DELAY_UI`, a 50 ms event throttle and low-pass filtering drive only small `graphicsLayer` transforms. It is optional hardware; unsupported devices remain static.
 - **Animate list items as they appear** — short, bounded staggered enter transitions for Home highlights, Stats, History, Profile collections and Album/Artist lists. Not a continuous animation per row.
 
-**Gentle / Expressive** intensity and the optional **Short bar / Floating dock** navigation selection are saved in the same versioned appearance settings, backup and saved looks. Existing settings decode with every new effect off; the source-level version is now `AppearanceCodec.VERSION = 5`. The floating dock uses a native `HorizontalFloatingToolbar` on phones; expanded 840dp+ layouts retain their rail.
+**Gentle / Expressive** intensity and the optional **Short bar / Floating dock / Expressive dock** navigation selection are saved in the same versioned appearance settings, backup and saved looks. Existing settings decode with every new effect off; the source-level version is now `AppearanceCodec.VERSION = 5`. The floating dock uses a native `HorizontalFloatingToolbar` on phones; expanded 840dp+ layouts retain their rail.
 
 **Hard safety gates:** Optional ambient/list/tilt effects are denied when animations are system-disabled, Tempo's Reduce Motion is enabled, battery saver is on, the device is low-RAM or thermally limited, or the UI is not foreground. This remains true even if the older `adaptiveEffects` preference is disabled. The sensor is registered only while a supported, enabled app window is RESUMED and is unregistered on backgrounding, disposal, or disabling the option.
 
@@ -97,3 +97,9 @@ Since the original migration checklist, the following source refinements were ma
 - [Short navigation bar](https://developer.android.com/develop/ui/compose/components/navigation-bar)
 - [Wide navigation rail](https://developer.android.com/reference/kotlin/androidx/compose/material3/WideNavigationRail.composable)
 - [Material connected button groups](https://developer.android.com/develop/ui/compose/components/button-group)
+
+## November 23, 2026 motion refinement
+
+This source-only pass uses the current Orion Store Compose implementation, **never Orion Legacy**, as an interaction reference. It introduces an opt-in native floating-toolbar dock; Material top-level fade-through without lateral swiping implications; animated, accessible Appearance Studio expansion and save actions; and bounded press springs on Settings bento destinations and listening tiles.
+
+Reduced-motion and Instant Navigation overrides remain authoritative. The app was **not compiled, installed or instrumented**, and no build/release CI was triggered. Do not mark navigation overlap, frame pacing, touch targets or TalkBack acceptance complete until verified on a running Android build.

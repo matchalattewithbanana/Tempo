@@ -82,6 +82,17 @@ Artwork-led Song/Artist/Album headers can respond to optional tilt and ambient a
 
 These are original Tempo implementations using Android/Compose APIs, not a source transfer from Orion Store. No device captures or benchmarking results are available yet.
 
+## November 23, 2026 — native Orion-inspired motion refinement
+
+Only the **current Kotlin/Jetpack Compose Orion Store** under `app/src/main/java/com/orion/store/ui/` is a reference. `Orion Legacy/` is expressly excluded.
+
+- **Primary navigation:** Home, Stats and History use a brief top-level fade-through, instead of a lateral slide or instantaneous hard cut. Detail transitions retain spatial/effects springs. Tempo's Instant Navigation and reduced-motion policies take priority.
+- **Expressive dock:** opt-in third style alongside the standard bar and floating dock; uses a native Material floating toolbar, stable labels, animated selected shape/color and fixed-size destination slots.
+- **Settings and Appearance Studio:** expandable category chevrons rotate using the spatial spring, with explicit TalkBack expanded/collapsed state. Preset selections use effects-spring tonal feedback. Unsaved changes reveal the bottom Apply/Cancel action using a localized vertical transition.
+- **Tactile tap response:** both listening statistic tiles and Settings bento destinations use press feedback through local graphics-layer transforms, without relaying changes to the surrounding grid.
+- **Safeguards:** no background tracking, playback, data or import changes; no new external assets or permissions. All new animations inherit the shared reduced-motion policy. Source references inform the design; no `Orion Legacy/` implementation or assets are used.
+- **Acceptance gate:** compile, instrumentation tests, TalkBack, large text, both themes, OLED, 320dp compact phone, large-screen rail, gesture insets, and animation-interruption testing are still pending. Source inspection alone is not visual or runtime verification.
+
 ## Next visual milestones
 
 Retune the remaining visual duplicates on track/artist/album details, import/restore flows and Spotlight story editor. Choose deliberately where a shape or action morph helps recognition; do not add permanent shimmer, blur or animated gradients merely to look expressive.

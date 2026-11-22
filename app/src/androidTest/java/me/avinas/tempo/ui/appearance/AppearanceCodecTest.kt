@@ -30,6 +30,18 @@ class AppearanceCodecTest {
         assertEquals(settings, AppearanceCodec.decode(AppearanceCodec.encode(settings)))
     }
 
+    @Test fun expressiveNavigationStyleRoundTripsThroughSavedLookCodec() {
+        val settings = AppearanceSettings(
+            navigationStyle = AppearanceNavigationStyle.EXPRESSIVE,
+            tone = AppearanceTone.LIGHT,
+            reduceMotion = true,
+        )
+        val decoded = AppearanceCodec.decode(AppearanceCodec.encode(settings))
+        assertEquals(AppearanceNavigationStyle.EXPRESSIVE, decoded.navigationStyle)
+        assertTrue(decoded.reduceMotion)
+        assertEquals(AppearanceTone.LIGHT, decoded.tone)
+    }
+
     @Test fun oldAndUnknownFieldsFallBackWithoutDuplicatingCards() {
         val decoded = AppearanceCodec.decode("""{"version":1,"preset":"future","density":"future",
             "homeOrder":["INSIGHTS","INSIGHTS","unknown"],"hiddenHome":["unknown","TODAY"]}""")
