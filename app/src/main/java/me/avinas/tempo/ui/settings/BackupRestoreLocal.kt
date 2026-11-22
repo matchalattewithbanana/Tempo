@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+
 package me.avinas.tempo.ui.settings
 
 import android.app.Activity
@@ -62,9 +64,11 @@ import java.util.*
 import androidx.compose.ui.res.stringResource
 import me.avinas.tempo.R
 
-/**
- * Dedicated Backup & Restore screen with Google Drive integration.
- */
+/** A narrow phone or large accessibility text gets a full-width action button. */
+internal fun backupActionsStack(widthDp: Float, fontScale: Float): Boolean =
+    widthDp < 440f || fontScale >= 1.3f
+
+/** Device backup actions remain separate from Google's authentication state. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun LocalBackupSection(
@@ -72,158 +76,176 @@ internal fun LocalBackupSection(
     onToggleLocalImages: (Boolean) -> Unit,
     onChooseAutoBackupFolder: () -> Unit,
     onExport: () -> Unit,
-    onImport: () -> Unit
+    onImport: () -> Unit,
 ) {
     SettingsSectionHeader(stringResource(R.string.backup_restore_local_backup_header))
-    
-    GlassCard(
+    Surface(
         modifier = Modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(0.dp),
-        variant = GlassCardVariant.LowProminence
+        shape = MaterialTheme.shapes.extraLarge,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        contentColor = MaterialTheme.colorScheme.onSurface,
     ) {
         Column {
-            // Automatic local backup destination
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "Automatic backup folder",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "Choose or change where scheduled device backups are saved",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                OutlinedButton(onClick = onChooseAutoBackupFolder) {
-                    Icon(Icons.Default.FolderOpen, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Choose folder")
-                }
-            }
-
-            HorizontalDivider(color = GlassBorderSoft)
-
-            // Local images toggle
+            LocalBackupActionRow(
+                title = stringResource(R.string.backup_restore_folder_title),
+                supporting = stringResource(R.string.backup_restore_folder_desc),
+                buttonLabel = stringResource(R.string.backup_restore_choose_folder),
+                icon = Icons.Default.FolderOpen,
+                primary = false,
+                onClick = onChooseAutoBackupFolder,
+            )
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             SettingsSwitch(
                 title = stringResource(R.string.backup_restore_include_local_images),
                 subtitle = if (uiState.localImageCount > 0) {
-                    stringResource(R.string.backup_restore_local_images_desc, uiState.localImageCount, uiState.localImageSizeFormatted)
+                    stringResource(
+                        R.string.backup_restore_local_images_desc,
+                        uiState.localImageCount, uiState.localImageSizeFormatted,
+                    )
                 } else {
                     stringResource(R.string.backup_restore_no_local_images)
                 },
                 checked = uiState.includeLocalImages,
-                onCheckedChange = onToggleLocalImages
+                onCheckedChange = onToggleLocalImages,
             )
-            
-            HorizontalDivider(color = GlassBorderSoft)
-            
-            // Export button
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            LocalBackupActionRow(
+                title = stringResource(R.string.backup_restore_export_device),
+                supporting = stringResource(R.string.backup_restore_estimated_size,
+                    uiState.estimatedExportSizeFormatted),
+                buttonLabel = stringResource(R.string.backup_restore_export_button),
+                icon = Icons.Default.Save,
+                primary = true,
+                onClick = onExport,
+            )
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            LocalBackupActionRow(
+                title = stringResource(R.string.backup_restore_import_device),
+                supporting = stringResource(R.string.backup_restore_import_file_desc),
+                buttonLabel = stringResource(R.string.backup_restore_import_button),
+                icon = Icons.Default.FolderOpen,
+                primary = false,
+                onClick = onImport,
+            )
+        }
+    }
+}
+
+/**
+ * One responsive action pattern for choose-folder, export and import.
+ * Buttons never steal the width needed for the supporting description.
+ */
+@Composable
+private fun LocalBackupActionRow(
+    title: String,
+    supporting: String,
+    buttonLabel: String,
+    icon: ImageVector,
+    primary: Boolean,
+    onClick: () -> Unit,
+) {
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val stacked = backupActionsStack(maxWidth.value, androidx.compose.ui.platform.LocalDensity.current.fontScale)
+        if (stacked) {
+            Column(
+                Modifier.fillMaxWidth().padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = stringResource(R.string.backup_restore_export_device),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = stringResource(R.string.backup_restore_estimated_size, uiState.estimatedExportSizeFormatted),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                
-                Button(
-                    onClick = onExport,
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Icon(Icons.Default.Save, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(stringResource(R.string.backup_restore_export_button))
-                }
+                LocalBackupActionDescription(title, supporting)
+                LocalBackupActionButton(buttonLabel, icon, primary, true, onClick)
             }
-            
-            HorizontalDivider(color = GlassBorderSoft)
-            
-            // Import button
+        } else {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = stringResource(R.string.backup_restore_import_device),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = stringResource(R.string.backup_restore_import_file_desc),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                Column(Modifier.weight(1f)) {
+                    LocalBackupActionDescription(title, supporting)
                 }
-                
-                OutlinedButton(
-                    onClick = onImport,
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onSurface),
-                    border = BorderStroke(
-                        width = 1.dp,
-                        brush = Brush.horizontalGradient(
-                            listOf(GlassBorderMedium, GlassBorderMedium)
-                        )
-                    ),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Icon(Icons.Default.FolderOpen, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(stringResource(R.string.backup_restore_import_button))
-                }
+                LocalBackupActionButton(buttonLabel, icon, primary, false, onClick)
             }
         }
     }
 }
 
 @Composable
+private fun LocalBackupActionDescription(title: String, supporting: String) {
+    Text(title, style = MaterialTheme.typography.titleMediumEmphasized)
+    Spacer(Modifier.height(4.dp))
+    Text(
+        supporting,
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+}
+
+@Composable
+private fun LocalBackupActionButton(
+    label: String,
+    icon: ImageVector,
+    primary: Boolean,
+    fullWidth: Boolean,
+    onClick: () -> Unit,
+) {
+    val modifier = Modifier.heightIn(min = 48.dp)
+        .then(if (fullWidth) Modifier.fillMaxWidth() else Modifier)
+    if (primary) {
+        Button(onClick = onClick, modifier = modifier, shapes = ButtonDefaults.shapes()) {
+            Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp))
+            Spacer(Modifier.width(8.dp))
+            Text(label)
+        }
+    } else {
+        OutlinedButton(onClick = onClick, modifier = modifier, shapes = ButtonDefaults.shapes()) {
+            Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp))
+            Spacer(Modifier.width(8.dp))
+            Text(label)
+        }
+    }
+}
+
+@Composable
 internal fun BackupTipsCard() {
-    GlassCard(
+    val scheme = MaterialTheme.colorScheme
+    Surface(
         modifier = Modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(16.dp),
-        variant = GlassCardVariant.LowProminence,
-        backgroundColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+        color = scheme.secondaryContainer,
+        contentColor = scheme.onSecondaryContainer,
+        shape = MaterialTheme.shapes.extraLarge,
     ) {
-        Column {
+        Column(
+            Modifier.fillMaxWidth().padding(18.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Surface(
+                    modifier = Modifier.size(40.dp),
+                    shape = MaterialShapes.Cookie6Sided.toShape(),
+                    color = scheme.secondary,
+                    contentColor = scheme.onSecondary,
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(Icons.Default.Lightbulb, contentDescription = null,
+                            modifier = Modifier.size(22.dp))
+                    }
+                }
+                Text(
+                    stringResource(R.string.backup_restore_tips_title),
+                    style = MaterialTheme.typography.titleMediumEmphasized,
+                )
+            }
             Text(
-                text = "💡 Backup Tips",
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurface,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "• Google Drive backups are stored in your Drive account\n" +
-                       "• Only the 5 most recent backups are kept\n" +
-                       "• Album art from streaming services will be re-downloaded\n" +
-                       "• Local album art is only included if toggled on",
+                "• Google Drive backups are stored in your Drive account\n" +
+                    "• Only the 5 most recent backups are kept\n" +
+                    "• Album art from streaming services will be re-downloaded\n" +
+                    "• Local album art is only included if toggled on",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                lineHeight = MaterialTheme.typography.bodySmall.lineHeight * 1.3
+                color = scheme.onSecondaryContainer,
+                lineHeight = MaterialTheme.typography.bodySmall.lineHeight * 1.3,
             )
         }
     }

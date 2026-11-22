@@ -2040,6 +2040,10 @@
     <string name="spotlight_story_locked_hint">Unlocks at the end of this period</string>
     <string name="spotlight_story_loading_hint">Composing your story…</string>
     <string name="spotlight_story_play_hint">Play your listening story</string>
+    <string name="backup_restore_folder_title">Automatic backup folder</string>
+    <string name="backup_restore_folder_desc">Choose where scheduled device backups are saved</string>
+    <string name="backup_restore_choose_folder">Choose folder</string>
+    <string name="backup_restore_tips_title">Backup tips</string>
     <string name="settings_spotify_device_broadcasts">Device broadcasts</string>
     <string name="settings_spotify_device_broadcasts_desc">Use Spotify’s local playback broadcasts for real-time device status. Enable the matching option in Spotify’s Playback settings.</string>
     <string name="settings_spotify_verify_now">Verify now</string>
