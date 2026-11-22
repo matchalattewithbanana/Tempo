@@ -14,13 +14,15 @@ import me.avinas.tempo.ui.components.NowPlayingArtworkIdentity
 import androidx.hilt.navigation.compose.hiltViewModel
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Home
@@ -52,9 +54,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.selected
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 
@@ -126,26 +127,29 @@ fun TempoBottomNavigation(
                     },
                     tonalElevation = 0.dp,
                 ) {
+                    Row(modifier = Modifier.fillMaxWidth().selectableGroup()) {
                     destinations.forEachIndexed { index, destination ->
                         val selected = currentDestination?.hierarchy?.any {
                             it.route == destination.first
                         } == true
-                        // Render the destination directly: Material3 no longer exposes the former NavigationBarItem API.
-                        // Fix each slot's height explicitly: fillMaxHeight in this
-                        // context expands the navigation row to screen height.
                         val selectedContent = if (selected) scheme.onSecondaryContainer else scheme.onSurfaceVariant
+                        // Animate the indicator along its horizontal axis only. The
+                        // theme's motion scheme becomes instant in reduced-motion mode.
+                        val indicatorWidth by animateDpAsState(
+                            targetValue = if (selected) 64.dp else 0.dp,
+                            animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+                            label = "navigationIndicatorWidth",
+                        )
                         Box(
                             modifier = Modifier
                                 .weight(1f)
                                 .height(80.dp)
-                                .semantics { this.selected = selected }
-                                .clickable(
+                                .selectable(
+                                    selected = selected,
                                     role = androidx.compose.ui.semantics.Role.Tab,
                                     onClick = {
-                                        if (!selected) {
-                                            haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                            actions[index]()
-                                        }
+                                        haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                        actions[index]()
                                     },
                                 ),
                             contentAlignment = Alignment.Center,
@@ -155,12 +159,16 @@ fun TempoBottomNavigation(
                                 verticalArrangement = Arrangement.spacedBy(4.dp),
                             ) {
                                 Box(
-                                    modifier = Modifier
-                                        .clip(MaterialTheme.shapes.extraLarge)
-                                        .background(if (selected) scheme.secondaryContainer else Color.Transparent)
-                                        .padding(horizontal = 20.dp, vertical = 4.dp),
+                                    modifier = Modifier.size(width = 64.dp, height = 32.dp),
                                     contentAlignment = Alignment.Center,
                                 ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .width(indicatorWidth)
+                                            .height(32.dp)
+                                            .clip(MaterialTheme.shapes.extraLarge)
+                                            .background(scheme.secondaryContainer),
+                                    )
                                     Icon(
                                         imageVector = if (selected) destination.second.first else destination.second.second,
                                         contentDescription = null,
@@ -171,11 +179,14 @@ fun TempoBottomNavigation(
                                 Text(
                                     text = destination.third,
                                     color = if (selected) scheme.onSurface else scheme.onSurfaceVariant,
-                                    style = MaterialTheme.typography.labelMedium,
-                                    maxLines = 2,
+                                    style = if (selected) MaterialTheme.typography.labelLargeEmphasized
+                                        else MaterialTheme.typography.labelLarge,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
                                 )
                             }
                         }
+                    }
                     }
                 }
             }
