@@ -74,7 +74,7 @@ internal fun TempoMainNavigationRail(
                 it.route == destination.route
             } == true
             WideNavigationRailItem(
-                railExpanded = expanded,
+                railExpanded = railState.targetValue == WideNavigationRailValue.Expanded,
                 selected = selected,
                 onClick = {
                     if (!selected) {

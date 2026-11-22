@@ -84,6 +84,8 @@ fun GlassCard(
 ) {
     val scheme = MaterialTheme.colorScheme
     val appearance = LocalTempoAppearance.current
+    val runtimePolicy = LocalAppearanceRuntimePolicy.current
+    val palette = LocalTempoPalette.current
     val direction = LocalLayoutDirection.current
     val effectivePadding =
         if (appearance.density == AppearanceDensity.COMPACT && contentPadding == PaddingValues(16.dp)) {
@@ -101,6 +103,8 @@ fun GlassCard(
     // app content resolves to stable Material tonal surfaces.
     val accent = accentColor ?: scheme.primary
     val color = when {
+        backgroundColor != GlassFrostMedium && runtimePolicy.solidSurfaces && backgroundColor.alpha < 1f ->
+            palette.surface
         backgroundColor != GlassFrostMedium -> backgroundColor
         variant == GlassCardVariant.Obsidian -> scheme.surfaceContainerLowest
         variant == GlassCardVariant.TintedSolid ->

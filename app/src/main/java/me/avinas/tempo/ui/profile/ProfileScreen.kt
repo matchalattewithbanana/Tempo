@@ -255,17 +255,15 @@ fun ProfileScreen(
                     }
                 }
 
-                TopAppBar(
+                CenterAlignedTopAppBar(
                     modifier = Modifier.align(Alignment.TopCenter).fillMaxWidth(),
                     title = {
-                        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                            CollapsingProfileTitle(
-                                visible = heroScrolledPast,
-                                userName = uiState.userName,
-                                level = uiState.userLevel.currentLevel,
-                                title = uiState.userTitle,
-                            )
-                        }
+                        CollapsingProfileTitle(
+                            visible = heroScrolledPast,
+                            userName = uiState.userName,
+                            level = uiState.userLevel.currentLevel,
+                            title = uiState.userTitle,
+                        )
                     },
                     navigationIcon = {
                         IconButton(onClick = onBack) {
