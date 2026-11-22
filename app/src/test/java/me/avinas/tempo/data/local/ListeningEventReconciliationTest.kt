@@ -79,6 +79,7 @@ class ListeningEventReconciliationTest {
             track_id = 1L,
             timestamp = 1_700_000_000_000L,
             playDuration = 120_000L,
+                completionPercentage = 100,
             source = "com.spotify.music.import.json",
         )
         val second = first.copy(timestamp = first.timestamp + 86_400_000L)
@@ -92,6 +93,7 @@ class ListeningEventReconciliationTest {
                 track_id = 10L,
                 timestamp = 1_700_000_000_000L,
                 playDuration = 120_000L,
+                completionPercentage = 100,
                 source = "com.spotify.music",
             )
         val existing =
@@ -120,6 +122,7 @@ class ListeningEventReconciliationTest {
                 track_id = 10L,
                 timestamp = 1_700_000_000_000L,
                 playDuration = 120_000L,
+                completionPercentage = 100,
                 source = "com.spotify.music.import.json",
             )
         val existing =
@@ -148,6 +151,7 @@ class ListeningEventReconciliationTest {
                 track_id = 10L,
                 timestamp = 1_700_000_000_000L,
                 playDuration = 120_000L,
+                completionPercentage = 100,
                 source = "com.spotify.music.import.json",
             )
         val duplicate = first.copy(id = 99L)
