@@ -44,7 +44,11 @@ internal fun SettingsOverview(
     onQueryChange: (String) -> Unit,
     listState: LazyListState,
     onSectionSelected: (SettingsSection) -> Unit,
+    onSettingSelected: (SettingsSection, Int) -> Unit,
     onNavigate: (SettingsDestination) -> Unit,
+    gamificationEnabled: Boolean,
+    analyticsConfigured: Boolean,
+    spotifyConnected: Boolean,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier.fillMaxSize()) {
@@ -110,6 +114,27 @@ internal fun SettingsOverview(
             }
         }
 
+        val optionMatches = if (tokens.isEmpty()) {
+            emptyList()
+        } else {
+            SettingsSearchCatalog.available(
+                gamificationEnabled = gamificationEnabled,
+                analyticsConfigured = analyticsConfigured,
+                spotifyConnected = spotifyConnected,
+            ).map { entry ->
+                Triple(
+                    entry,
+                    stringResource(entry.titleRes),
+                    entry.subtitleRes?.let { stringResource(it) }.orEmpty(),
+                )
+            }.filter { (_, title, subtitle) ->
+                tokens.all { token ->
+                    title.contains(token, ignoreCase = true) ||
+                        subtitle.contains(token, ignoreCase = true)
+                }
+            }
+        }
+
         Box(
             modifier = Modifier.weight(1f).fillMaxWidth(),
             contentAlignment = Alignment.TopCenter,
@@ -159,6 +184,18 @@ internal fun SettingsOverview(
                         )
                     }
                     items(
+                        items = optionMatches,
+                        key = { (entry, _, _) -> "setting-${entry.section.name}-${entry.titleRes}" },
+                    ) { (entry, title, subtitle) ->
+                        val sectionName = stringResource(entry.section.titleRes)
+                        SettingsOption(
+                            title = title,
+                            subtitle = if (subtitle.isBlank()) sectionName
+                                else "$sectionName · $subtitle",
+                            onClick = { onSettingSelected(entry.section, entry.groupIndex) },
+                        )
+                    }
+                    items(
                         items = sectionMatches,
                         key = { (section, _, _) -> "section-${section.name}" },
                     ) { (section, title, terms) ->
@@ -168,7 +205,7 @@ internal fun SettingsOverview(
                             onClick = { onSectionSelected(section) },
                         )
                     }
-                    if (directMatches.isEmpty() && sectionMatches.isEmpty()) {
+                    if (directMatches.isEmpty() && sectionMatches.isEmpty() && optionMatches.isEmpty()) {
                         item(key = "settings-search-empty") {
                             Text(stringResource(R.string.settings_search_empty))
                         }

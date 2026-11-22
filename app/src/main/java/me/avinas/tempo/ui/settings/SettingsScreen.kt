@@ -48,14 +48,25 @@ fun SettingsScreen(
     // Settings home is intentionally a small category navigator.
     var settingsSection by rememberSaveable { mutableStateOf<SettingsSection?>(null) }
     var settingsSearch by rememberSaveable { mutableStateOf("") }
+    var requestedSettingGroup by rememberSaveable { mutableStateOf<Int?>(null) }
     val settingsScrollState = key(settingsSection) { rememberLazyListState() }
+    LaunchedEffect(settingsSection, requestedSettingGroup) {
+        val group = requestedSettingGroup
+        if (settingsSection != null && group != null) {
+            settingsScrollState.scrollToItem(group)
+            requestedSettingGroup = null
+        }
+    }
     LaunchedEffect(settingsSearch) {
         // Search results and the unfiltered navigator both start at the top.
         settingsScrollState.scrollToItem(0)
     }
     val clearOrClose = {
         when {
-            settingsSection != null -> settingsSection = null
+            settingsSection != null -> {
+                settingsSection = null
+                requestedSettingGroup = null
+            }
             settingsSearch.isNotEmpty() -> settingsSearch = ""
             else -> onNavigateBack()
         }
@@ -209,8 +220,18 @@ fun SettingsScreen(
                         query = settingsSearch,
                         onQueryChange = { settingsSearch = it },
                         listState = settingsScrollState,
-                        onSectionSelected = { settingsSection = it },
+                        onSectionSelected = {
+                            requestedSettingGroup = null
+                            settingsSection = it
+                        },
+                        onSettingSelected = { section, group ->
+                            requestedSettingGroup = group
+                            settingsSection = section
+                        },
                         onNavigate = onNavigate,
+                        gamificationEnabled = uiState.isGamificationEnabled,
+                        analyticsConfigured = uiState.analyticsConfigured,
+                        spotifyConnected = runtimeStatus.spotifyConnected,
                         modifier = Modifier.weight(1f),
                     )
                 } else {
