@@ -14,15 +14,11 @@ import me.avinas.tempo.ui.components.NowPlayingArtworkIdentity
 import androidx.hilt.navigation.compose.hiltViewModel
 
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.background
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Home
@@ -65,11 +61,9 @@ import androidx.compose.material3.toShape
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 
 /**
- * Stable Material navigation for the three top-level destinations.
- *
- * Destination labels stay visible as required by the Material navigation
- * contract. The compact now-playing strip remains independent so tracking
- * never waits on navigation or animation state.
+ * Three stable top-level destinations using Material's own navigation item layout.
+ * Floating mode changes only the surrounding surface and system insets; it does
+ * not implement a second navigation system with independent item measurements.
  */
 @Composable
 fun TempoBottomNavigation(
@@ -80,8 +74,7 @@ fun TempoBottomNavigation(
     modifier: Modifier = Modifier,
 ) {
     val haptics = LocalHapticFeedback.current
-    val appearance = LocalTempoAppearance.current
-    val floating = appearance.navigationStyle == AppearanceNavigationStyle.FLOATING
+    val floating = LocalTempoAppearance.current.navigationStyle == AppearanceNavigationStyle.FLOATING
     val scheme = MaterialTheme.colorScheme
     val destinations = listOf(
         Triple(Screen.Home.route, Icons.Rounded.Home to Icons.Outlined.Home, stringResource(R.string.nav_home)),
@@ -90,9 +83,6 @@ fun TempoBottomNavigation(
     )
     val actions = listOf(onNavigateToHome, onNavigateToStats, onNavigateToHistory)
 
-    // A stable three-slot Material navigation bar avoids the experimental Short
-    // Navigation Bar's disappearing sibling items on compact devices. No slot
-    // depends on the selected destination's measured width or animation state.
     Column(modifier = modifier.fillMaxWidth()) {
         CompactNowPlayingStrip()
         Box(
@@ -107,86 +97,52 @@ fun TempoBottomNavigation(
             contentAlignment = Alignment.Center,
         ) {
             Surface(
-                modifier = if (floating) Modifier.widthIn(max = 460.dp).fillMaxWidth()
-                    else Modifier.fillMaxWidth(),
-                shape = if (floating) {
-                    MaterialTheme.shapes.extraExtraLarge
+                modifier = if (floating) {
+                    Modifier.widthIn(max = 460.dp).fillMaxWidth()
                 } else {
-                    androidx.compose.foundation.shape.RoundedCornerShape(0.dp)
+                    Modifier.fillMaxWidth()
                 },
+                shape = if (floating) MaterialTheme.shapes.extraExtraLarge
+                    else androidx.compose.foundation.shape.RoundedCornerShape(0.dp),
                 color = if (floating) scheme.surfaceContainerHigh else scheme.surfaceContainer,
+                shadowElevation = if (floating) 3.dp else 0.dp,
             ) {
+                // NavigationBarItem owns hit targets, item spacing, active indicator
+                // animation, labels and accessibility selection semantics.
                 androidx.compose.material3.NavigationBar(
                     modifier = Modifier.fillMaxWidth(),
-                    containerColor = androidx.compose.ui.graphics.Color.Transparent,
+                    containerColor = Color.Transparent,
                     contentColor = scheme.onSurface,
-                    windowInsets = if (floating) {
-                        WindowInsets(0, 0, 0, 0)
-                    } else {
-                        androidx.compose.material3.NavigationBarDefaults.windowInsets
-                    },
+                    windowInsets = if (floating) WindowInsets(0, 0, 0, 0)
+                        else androidx.compose.material3.NavigationBarDefaults.windowInsets,
                     tonalElevation = 0.dp,
                 ) {
-                    Row(modifier = Modifier.fillMaxWidth().selectableGroup()) {
-                        destinations.forEachIndexed { index, destination ->
+                    destinations.forEachIndexed { index, destination ->
                         val selected = currentDestination?.hierarchy?.any {
                             it.route == destination.first
                         } == true
-                        val selectedContent = if (selected) scheme.onSecondaryContainer else scheme.onSurfaceVariant
-                        // Animate the indicator along its horizontal axis only. The
-                        // theme's motion scheme becomes instant in reduced-motion mode.
-                        val indicatorWidth by animateDpAsState(
-                            targetValue = if (selected) 64.dp else 0.dp,
-                            animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
-                            label = "navigationIndicatorWidth",
-                        )
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .heightIn(min = 80.dp)
-                                .selectable(
-                                    selected = selected,
-                                    role = androidx.compose.ui.semantics.Role.Tab,
-                                    onClick = {
-                                        haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                        actions[index]()
-                                    },
-                                ),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(4.dp),
-                            ) {
-                                Box(
-                                    modifier = Modifier.size(width = 64.dp, height = 32.dp),
-                                    contentAlignment = Alignment.Center,
-                                ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .width(indicatorWidth.coerceIn(0.dp, 64.dp))
-                                            .height(32.dp)
-                                            .clip(MaterialTheme.shapes.extraLarge)
-                                            .background(scheme.secondaryContainer),
-                                    )
-                                    Icon(
-                                        imageVector = if (selected) destination.second.first else destination.second.second,
-                                        contentDescription = null,
-                                        tint = selectedContent,
-                                        modifier = Modifier.size(24.dp),
-                                    )
-                                }
+                        androidx.compose.material3.NavigationBarItem(
+                            selected = selected,
+                            onClick = {
+                                haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                actions[index]()
+                            },
+                            icon = {
+                                Icon(
+                                    imageVector = if (selected) destination.second.first
+                                        else destination.second.second,
+                                    contentDescription = null,
+                                )
+                            },
+                            label = {
                                 Text(
                                     text = destination.third,
-                                    color = if (selected) scheme.onSurface else scheme.onSurfaceVariant,
-                                    style = if (selected) MaterialTheme.typography.labelLargeEmphasized
-                                        else MaterialTheme.typography.labelLarge,
                                     maxLines = 2,
                                     overflow = TextOverflow.Ellipsis,
                                 )
-                            }
-                        }
-                    }
+                            },
+                            alwaysShowLabel = true,
+                        )
                     }
                 }
             }
