@@ -77,10 +77,8 @@ internal fun TempoMainNavigationRail(
                 railExpanded = railState.targetValue == WideNavigationRailValue.Expanded,
                 selected = selected,
                 onClick = {
-                    if (!selected) {
-                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                        destination.onClick()
-                    }
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    destination.onClick()
                 },
                 icon = {
                     Icon(
