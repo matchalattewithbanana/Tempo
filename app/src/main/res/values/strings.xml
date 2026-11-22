@@ -1994,6 +1994,8 @@
     <!-- Optional expressive effects: default off; system and performance limits always win. -->
     <string name="appearance_effects_opt_in_heading">Effects Studio · optional</string>
     <string name="appearance_effects_opt_in_description">Enable the extra movement you enjoy. Ambient animation, tilt, and list entrances are off by default; battery saver, thermal limits, low-memory devices, backgrounding and reduced motion override them automatically.</string>
+    <string name="appearance_section_expanded">Expanded</string>
+    <string name="appearance_section_collapsed">Collapsed</string>
     <string name="appearance_navigation_style">Navigation style</string>
     <string name="appearance_floating_dock">Floating dock</string>
     <string name="appearance_expressive_dock">Expressive dock</string>

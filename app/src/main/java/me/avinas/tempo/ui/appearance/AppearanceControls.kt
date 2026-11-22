@@ -29,6 +29,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
@@ -51,6 +52,13 @@ internal fun AppearanceSection(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     var expanded by rememberSaveable(title) { mutableStateOf(initiallyExpanded) }
+    val expandedLabel = stringResource(R.string.appearance_section_expanded)
+    val collapsedLabel = stringResource(R.string.appearance_section_collapsed)
+    val chevronDegrees by androidx.compose.animation.core.animateFloatAsState(
+        targetValue = if (expanded) 180f else 0f,
+        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+        label = "appearance_section_chevron",
+    )
     val colors = MaterialTheme.colorScheme
     val container by animateColorAsState(
         targetValue = if (expanded) colors.surfaceContainerHigh else colors.surfaceContainerLow,
@@ -65,6 +73,9 @@ internal fun AppearanceSection(
         Column {
             Row(
                 modifier = Modifier.fillMaxWidth()
+                    .semantics {
+                        stateDescription = if (expanded) expandedLabel else collapsedLabel
+                    }
                     .clickable(role = Role.Button) { expanded = !expanded }
                     .heightIn(min = 60.dp)
                     .padding(horizontal = 18.dp, vertical = 14.dp),
@@ -77,8 +88,10 @@ internal fun AppearanceSection(
                     color = colors.onSurface,
                 )
                 Icon(
-                    if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                    contentDescription = null, tint = colors.onSurfaceVariant,
+                    Icons.Default.KeyboardArrowDown,
+                    contentDescription = null,
+                    tint = colors.onSurfaceVariant,
+                    modifier = Modifier.graphicsLayer { rotationZ = chevronDegrees },
                 )
             }
             AnimatedVisibility(
@@ -377,6 +390,16 @@ internal fun AppearancePresetCard(
         AppearancePreset.LILAC -> stringResource(R.string.appearance_lilac_desc)
     }
     val scheme = MaterialTheme.colorScheme
+    val selectedContainer by animateColorAsState(
+        targetValue = if (selected) scheme.secondaryContainer else scheme.surfaceContainerLow,
+        animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
+        label = "appearancePresetSelectionContainer",
+    )
+    val selectedForeground by animateColorAsState(
+        targetValue = if (selected) scheme.onSecondaryContainer else scheme.onSurface,
+        animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
+        label = "appearancePresetSelectionForeground",
+    )
     Surface(
         onClick = onClick,
         enabled = enabled,
@@ -386,8 +409,8 @@ internal fun AppearancePresetCard(
                 this.selected = selected
             },
         shape = shape,
-        color = if (selected) scheme.secondaryContainer else scheme.surfaceContainerLow,
-        contentColor = if (selected) scheme.onSecondaryContainer else scheme.onSurface,
+        color = selectedContainer,
+        contentColor = selectedForeground,
     ) {
         Column(
             modifier = Modifier.fillMaxWidth().padding(8.dp),
