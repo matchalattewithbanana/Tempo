@@ -264,7 +264,6 @@ fun SongHeroEditorialStage(
                 progress = previewProgress,
                 positionMs = previewPositionMs,
                 onToggle = onTogglePreview,
-                accentColor = dominantColor,
             )
         }
 
@@ -384,7 +383,6 @@ private fun AudioPreviewPill(
     progress: Float,
     positionMs: Long,
     onToggle: () -> Unit,
-    accentColor: Color,
 ) {
     val secondsElapsed = (positionMs / 1000).toInt().coerceIn(0, 30)
     val timecode = stringResource(R.string.details_preview_timecode, secondsElapsed)
