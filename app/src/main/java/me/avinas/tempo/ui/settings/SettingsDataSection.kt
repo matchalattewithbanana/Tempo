@@ -108,8 +108,8 @@ internal fun DataSettingsSection(
             TempoSettingsGroup {
                 Column {
                     SettingsOption(
-                        title = "Check listening-history accuracy",
-                        subtitle = "Check duplicates and inaccurate estimates before repairing your backed-up history.",
+                        title = stringResource(R.string.settings_history_accuracy_audit_title),
+                        subtitle = stringResource(R.string.settings_history_accuracy_audit_desc),
                         onClick = onOpenHistoryAudit,
                     )
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)

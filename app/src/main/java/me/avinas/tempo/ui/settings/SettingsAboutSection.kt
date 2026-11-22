@@ -118,9 +118,21 @@ internal fun AboutSettingsSection(
                     )
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                     SettingsOption(
+                        title = stringResource(R.string.settings_data_diagnostics),
+                        subtitle = stringResource(R.string.settings_data_diagnostics_desc),
+                        onClick = { onNavigate(SettingsDestination.YOUR_DATA) },
+                    )
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    SettingsOption(
                         title = stringResource(R.string.update_check_now),
                         subtitle = versionName,
                         onClick = { onNavigate(SettingsDestination.UPDATES) },
+                    )
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    SettingsOption(
+                        title = stringResource(R.string.settings_version),
+                        subtitle = versionName,
+                        showArrow = false,
                     )
                 }
             }

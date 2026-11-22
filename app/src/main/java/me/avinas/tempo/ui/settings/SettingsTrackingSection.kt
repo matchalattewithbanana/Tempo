@@ -76,14 +76,28 @@ internal fun TrackingSettingsSection(
                     )
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                     SettingsOption(
-                        title = stringResource(R.string.settings_tracking_access_title),
-                        subtitle = stringResource(
-                            if (notificationListenerGranted) {
-                                R.string.settings_tracking_access_granted
-                            } else {
-                                R.string.settings_tracking_access_missing
-                            },
+                        title = stringResource(R.string.settings_health_last_signal),
+                        subtitle = trackingHealth?.lastPlayerSignalAgeMs?.let { ageMs ->
+                            val minutes = ageMs / 60_000L
+                            if (minutes < 1L) stringResource(R.string.settings_health_just_now)
+                            else stringResource(R.string.settings_health_minutes_ago, minutes)
+                        } ?: stringResource(
+                            if (trackingHealth == null) R.string.ui_loading
+                            else R.string.settings_health_no_signal,
                         ),
+                        showArrow = false,
+                    )
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    SettingsOption(
+                        title = stringResource(R.string.settings_manage_permissions),
+                        subtitle = stringResource(R.string.settings_tracking_access_title) + " · " +
+                            stringResource(
+                                if (notificationListenerGranted) {
+                                    R.string.settings_tracking_access_granted
+                                } else {
+                                    R.string.settings_tracking_access_missing
+                                },
+                            ),
                         onClick = {
                             try {
                                 val intent = Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)

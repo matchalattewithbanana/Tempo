@@ -1922,6 +1922,8 @@
     <string name="settings_search_general_terms">Profile, appearance, theme, colors, listening time, stats, notifications, language</string>
     <string name="settings_search_tracking_terms">Tracking, permissions, battery, background, apps, scrobbling</string>
     <string name="settings_search_connections_terms">Spotify, Last.fm, connections, accounts, desktop</string>
+    <string name="settings_history_accuracy_audit_title">Check listening-history accuracy</string>
+    <string name="settings_history_accuracy_audit_desc">Check duplicates and inaccurate estimates before repairing your backed-up history.</string>
     <string name="settings_search_data_terms">Import, export, backup, restore, Apple Music, YouTube, Deezer, history, privacy</string>
     <string name="settings_search_about_terms">About, version, help, community, licenses</string>
     <string name="appearance_profile_streak_warning">Show streak warning banner</string>
