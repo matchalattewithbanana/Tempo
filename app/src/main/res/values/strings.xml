@@ -1996,6 +1996,7 @@
     <string name="appearance_effects_opt_in_description">Enable the extra movement you enjoy. Ambient animation, tilt, and list entrances are off by default; battery saver, thermal limits, low-memory devices, backgrounding and reduced motion override them automatically.</string>
     <string name="appearance_navigation_style">Navigation style</string>
     <string name="appearance_floating_dock">Floating dock</string>
+    <string name="appearance_expressive_dock">Expressive dock</string>
     <string name="appearance_short_bar">Short bar</string>
     <string name="appearance_ambient_animation">Ambient animated accents</string>
     <string name="appearance_sensor_tilt">Move featured cards with device tilt</string>

@@ -26,7 +26,7 @@ enum class AppearanceSurface { SATIN, SOLID }
 enum class AppearanceBackdrop { GRADIENT, FLAT, WASH }
 enum class AppearanceNowListening { INLINE, COMPACT, HIDDEN }
 /** Navigation style only changes the UI; routes and back stack remain identical. */
-enum class AppearanceNavigationStyle { BAR, FLOATING }
+enum class AppearanceNavigationStyle { BAR, FLOATING, EXPRESSIVE }
 /** Individual expensive effects are always opt-in. */
 enum class AppearanceEffectIntensity { GENTLE, EXPRESSIVE }
 enum class AppearanceHomeSection { SUMMARY, SPOTLIGHT, QUICK_STATS, TODAY, INSIGHTS }

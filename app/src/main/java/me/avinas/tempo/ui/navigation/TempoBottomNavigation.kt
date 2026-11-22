@@ -19,6 +19,10 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Home
@@ -61,9 +65,11 @@ import androidx.compose.material3.toShape
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 
 /**
- * Three stable top-level destinations using Material's own navigation item layout.
- * Floating mode changes only the surrounding surface and system insets; it does
- * not implement a second navigation system with independent item measurements.
+ * Three stable destinations. Standard and floating navigation use Material's
+ * native NavigationBarItem; the optional expressive dock uses one shared,
+ * accessible selectable group with theme-driven spring and color transitions.
+ *
+ * No animation owns routing state or changes the size of a navigation slot.
  */
 @Composable
 fun TempoBottomNavigation(
@@ -74,7 +80,8 @@ fun TempoBottomNavigation(
     modifier: Modifier = Modifier,
 ) {
     val haptics = LocalHapticFeedback.current
-    val floating = LocalTempoAppearance.current.navigationStyle == AppearanceNavigationStyle.FLOATING
+    val style = LocalTempoAppearance.current.navigationStyle
+    val floating = style != AppearanceNavigationStyle.BAR
     val scheme = MaterialTheme.colorScheme
     val destinations = listOf(
         Triple(Screen.Home.route, Icons.Rounded.Home to Icons.Outlined.Home, stringResource(R.string.nav_home)),
@@ -88,61 +95,130 @@ fun TempoBottomNavigation(
         Box(
             modifier = Modifier.fillMaxWidth().then(
                 if (floating) {
-                    Modifier.navigationBarsPadding()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                    Modifier.navigationBarsPadding().padding(horizontal = 16.dp, vertical = 8.dp)
                 } else {
                     Modifier
                 },
             ),
             contentAlignment = Alignment.Center,
         ) {
-            Surface(
-                modifier = if (floating) {
-                    Modifier.widthIn(max = 460.dp).fillMaxWidth()
-                } else {
-                    Modifier.fillMaxWidth()
-                },
-                shape = if (floating) MaterialTheme.shapes.extraExtraLarge
-                    else androidx.compose.foundation.shape.RoundedCornerShape(0.dp),
-                color = if (floating) scheme.surfaceContainerHigh else scheme.surfaceContainer,
-                shadowElevation = if (floating) 3.dp else 0.dp,
-            ) {
-                // NavigationBarItem owns hit targets, item spacing, active indicator
-                // animation, labels and accessibility selection semantics.
-                androidx.compose.material3.NavigationBar(
-                    modifier = Modifier.fillMaxWidth(),
-                    containerColor = Color.Transparent,
-                    contentColor = scheme.onSurface,
-                    windowInsets = if (floating) WindowInsets(0, 0, 0, 0)
-                        else androidx.compose.material3.NavigationBarDefaults.windowInsets,
-                    tonalElevation = 0.dp,
+            if (style == AppearanceNavigationStyle.EXPRESSIVE) {
+                // Inspired by the new Kotlin/Compose Orion dock, not Orion Legacy.
+                // The floating toolbar is the container; items stay fixed-width
+                // and retain labels even when another destination is selected.
+                androidx.compose.material3.HorizontalFloatingToolbar(
+                    expanded = true,
+                    modifier = Modifier.widthIn(max = 420.dp).fillMaxWidth().selectableGroup(),
+                    colors = androidx.compose.material3.FloatingToolbarDefaults
+                        .standardFloatingToolbarColors(toolbarContainerColor = scheme.surfaceContainerHigh),
                 ) {
                     destinations.forEachIndexed { index, destination ->
                         val selected = currentDestination?.hierarchy?.any {
                             it.route == destination.first
                         } == true
-                        androidx.compose.material3.NavigationBarItem(
-                            selected = selected,
-                            onClick = {
-                                haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                actions[index]()
-                            },
-                            icon = {
+                        val corner by androidx.compose.animation.core.animateDpAsState(
+                            targetValue = if (selected) 15.dp else 24.dp,
+                            animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+                            label = "dockShape",
+                        )
+                        val indicatorColor by animateColorAsState(
+                            targetValue = if (selected) scheme.secondaryContainer else Color.Transparent,
+                            animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
+                            label = "dockColor",
+                        )
+                        val iconScale by androidx.compose.animation.core.animateFloatAsState(
+                            targetValue = if (selected) 1.08f else 1f,
+                            animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+                            label = "dockIconScale",
+                        )
+                        Column(
+                            modifier = Modifier
+                                .weight(1f)
+                                .heightIn(min = 72.dp)
+                                .selectable(
+                                    selected = selected,
+                                    role = androidx.compose.ui.semantics.Role.Tab,
+                                    onClick = {
+                                        haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                        actions[index]()
+                                    },
+                                )
+                                .padding(horizontal = 4.dp, vertical = 4.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(3.dp),
+                        ) {
+                            Box(
+                                modifier = Modifier.size(48.dp)
+                                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(corner))
+                                    .background(indicatorColor),
+                                contentAlignment = Alignment.Center,
+                            ) {
                                 Icon(
                                     imageVector = if (selected) destination.second.first
                                         else destination.second.second,
                                     contentDescription = null,
+                                    tint = if (selected) scheme.onSecondaryContainer else scheme.onSurfaceVariant,
+                                    modifier = Modifier.size(24.dp).graphicsLayer {
+                                        scaleX = iconScale
+                                        scaleY = iconScale
+                                    },
                                 )
-                            },
-                            label = {
-                                Text(
-                                    text = destination.third,
-                                    maxLines = 2,
-                                    overflow = TextOverflow.Ellipsis,
-                                )
-                            },
-                            alwaysShowLabel = true,
-                        )
+                            }
+                            Text(
+                                text = destination.third,
+                                style = if (selected) MaterialTheme.typography.labelLargeEmphasized
+                                    else MaterialTheme.typography.labelLarge,
+                                color = if (selected) scheme.onSurface else scheme.onSurfaceVariant,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                    }
+                }
+            } else {
+                Surface(
+                    modifier = if (floating) Modifier.widthIn(max = 460.dp).fillMaxWidth()
+                        else Modifier.fillMaxWidth(),
+                    shape = if (floating) MaterialTheme.shapes.extraExtraLarge
+                        else androidx.compose.foundation.shape.RoundedCornerShape(0.dp),
+                    color = if (floating) scheme.surfaceContainerHigh else scheme.surfaceContainer,
+                    shadowElevation = if (floating) 3.dp else 0.dp,
+                ) {
+                    androidx.compose.material3.NavigationBar(
+                        modifier = Modifier.fillMaxWidth(),
+                        containerColor = Color.Transparent,
+                        contentColor = scheme.onSurface,
+                        windowInsets = if (floating) WindowInsets(0, 0, 0, 0)
+                            else androidx.compose.material3.NavigationBarDefaults.windowInsets,
+                        tonalElevation = 0.dp,
+                    ) {
+                        destinations.forEachIndexed { index, destination ->
+                            val selected = currentDestination?.hierarchy?.any {
+                                it.route == destination.first
+                            } == true
+                            androidx.compose.material3.NavigationBarItem(
+                                selected = selected,
+                                onClick = {
+                                    haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    actions[index]()
+                                },
+                                icon = {
+                                    Icon(
+                                        imageVector = if (selected) destination.second.first
+                                            else destination.second.second,
+                                        contentDescription = null,
+                                    )
+                                },
+                                label = {
+                                    Text(
+                                        text = destination.third,
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                },
+                                alwaysShowLabel = true,
+                            )
+                        }
                     }
                 }
             }

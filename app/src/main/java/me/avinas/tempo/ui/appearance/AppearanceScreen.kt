@@ -424,8 +424,11 @@ fun AppearanceScreen(
                     R.string.appearance_navigation_style,
                     AppearanceNavigationStyle.entries,
                     draft.navigationStyle, !busy,
-                    { if (it == AppearanceNavigationStyle.FLOATING)
-                        R.string.appearance_floating_dock else R.string.appearance_short_bar },
+                    { when (it) {
+                        AppearanceNavigationStyle.BAR -> R.string.appearance_short_bar
+                        AppearanceNavigationStyle.FLOATING -> R.string.appearance_floating_dock
+                        AppearanceNavigationStyle.EXPRESSIVE -> R.string.appearance_expressive_dock
+                    } },
                 ) { draft = draft.copy(navigationStyle = it) }
                 SettingToggle(R.string.appearance_ambient_animation, draft.ambientAnimation, !busy) {
                     draft = draft.copy(ambientAnimation = it)
