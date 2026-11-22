@@ -5,6 +5,15 @@ package me.avinas.tempo.ui.appearance
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.History
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Leaderboard
+import androidx.compose.material.icons.rounded.History
+import androidx.compose.material.icons.rounded.Home
+import androidx.compose.material.icons.rounded.Leaderboard
+import androidx.compose.ui.graphics.Color
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -64,10 +73,104 @@ internal fun AppearancePreviewPanel(settings: AppearanceSettings) {
                         AppearancePreviewTarget.STATS -> StatsAppearancePreview()
                         AppearancePreviewTarget.PROFILE -> ProfileAppearancePreview()
                     }
+                    NavigationAppearancePreview(
+                        style = settings.navigationStyle,
+                        selectedStats = target == AppearancePreviewTarget.STATS,
+                    )
                     Text(
                         stringResource(R.string.appearance_preview_pending),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Lightweight, non-interactive navigation sample in Appearance Studio.
+ * Keep the dock geometry recognizable without starting playback collectors,
+ * creating a NavController, or installing click targets in a visual preview.
+ */
+@Composable
+private fun NavigationAppearancePreview(
+    style: AppearanceNavigationStyle,
+    selectedStats: Boolean,
+) {
+    val colors = MaterialTheme.colorScheme
+    val items = listOf(
+        Triple(
+            stringResource(R.string.nav_home),
+            Icons.Rounded.Home to Icons.Outlined.Home,
+            !selectedStats,
+        ),
+        Triple(
+            stringResource(R.string.nav_stats),
+            Icons.Rounded.Leaderboard to Icons.Outlined.Leaderboard,
+            selectedStats,
+        ),
+        Triple(
+            stringResource(R.string.nav_history),
+            Icons.Rounded.History to Icons.Outlined.History,
+            false,
+        ),
+    )
+    Text(
+        text = stringResource(R.string.appearance_navigation_style),
+        style = MaterialTheme.typography.labelMedium,
+        color = colors.onSurfaceVariant,
+    )
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = if (style == AppearanceNavigationStyle.BAR) RoundedCornerShape(8.dp)
+            else MaterialTheme.shapes.extraExtraLarge,
+        color = if (style == AppearanceNavigationStyle.BAR) colors.surfaceContainer
+            else colors.surfaceContainerHigh,
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(
+                horizontal = if (style == AppearanceNavigationStyle.EXPRESSIVE) 10.dp else 4.dp,
+                vertical = 8.dp,
+            ),
+            horizontalArrangement = Arrangement.spacedBy(2.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            items.forEach { (label, icons, selected) ->
+                val corner by androidx.compose.animation.core.animateDpAsState(
+                    targetValue = if (style == AppearanceNavigationStyle.EXPRESSIVE && selected) 15.dp
+                        else 24.dp,
+                    animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+                    label = "previewDockCorner",
+                )
+                val color by androidx.compose.animation.animateColorAsState(
+                    targetValue = if (selected) colors.secondaryContainer else Color.Transparent,
+                    animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
+                    label = "previewDockIndicator",
+                )
+                Column(
+                    modifier = Modifier.weight(1f).heightIn(min = 72.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Box(
+                        modifier = Modifier.size(if (style == AppearanceNavigationStyle.EXPRESSIVE) 48.dp else 52.dp)
+                            .background(color, RoundedCornerShape(corner)),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            imageVector = if (selected) icons.first else icons.second,
+                            contentDescription = null,
+                            tint = if (selected) colors.onSecondaryContainer else colors.onSurfaceVariant,
+                            modifier = Modifier.size(24.dp),
+                        )
+                    }
+                    Text(
+                        text = label,
+                        style = if (selected) MaterialTheme.typography.labelLargeEmphasized
+                            else MaterialTheme.typography.labelLarge,
+                        color = if (selected) colors.onSurface else colors.onSurfaceVariant,
+                        maxLines = 2,
                     )
                 }
             }

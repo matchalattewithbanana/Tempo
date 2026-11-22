@@ -83,4 +83,57 @@ class TempoBottomNavigationTest {
         assertTrue("Touch target height must be >= 48dp", bounds.height >= 48.dp)
         assertTrue("Touch target must not cover content above the bar", bounds.height < 150.dp)
     }
+    @Test fun expressiveDockPreservesSelectionAndNavigationCallbacks() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val home = context.getString(R.string.nav_home)
+        val stats = context.getString(R.string.nav_stats)
+        val history = context.getString(R.string.nav_history)
+        val route = mutableStateOf(Screen.Home.route)
+        compose.setContent {
+            TempoTheme(appearance = AppearanceSettings(
+                tone = AppearanceTone.LIGHT,
+                navigationStyle = AppearanceNavigationStyle.EXPRESSIVE,
+            )) {
+                Box(Modifier.width(320.dp)) {
+                    TempoBottomNavigation(
+                        currentDestination = NavDestination("test").apply { this.route = route.value },
+                        onNavigateToHome = { route.value = Screen.Home.route },
+                        onNavigateToStats = { route.value = Screen.Stats.route },
+                        onNavigateToHistory = { route.value = Screen.History.route },
+                    )
+                }
+            }
+        }
+        compose.onNodeWithText(home).assertIsSelected()
+        compose.onNodeWithText(stats).assertIsNotSelected().performClick().assertIsSelected()
+        compose.onNodeWithText(home).assertIsNotSelected()
+        compose.onNodeWithText(history).assertIsNotSelected().performClick().assertIsSelected()
+    }
+
+    @Test fun expressiveDockKeepsLargeTextTouchTargetsAccessible() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val home = context.getString(R.string.nav_home)
+        compose.setContent {
+            CompositionLocalProvider(
+                LocalDensity provides Density(LocalDensity.current.density, fontScale = 2f),
+            ) {
+                TempoTheme(appearance = AppearanceSettings(
+                    tone = AppearanceTone.LIGHT,
+                    navigationStyle = AppearanceNavigationStyle.EXPRESSIVE,
+                )) {
+                    Box(Modifier.width(320.dp)) {
+                        TempoBottomNavigation(
+                            currentDestination = NavDestination("test").apply { route = Screen.Home.route },
+                            onNavigateToHome = {},
+                            onNavigateToStats = {},
+                            onNavigateToHistory = {},
+                        )
+                    }
+                }
+            }
+        }
+        val bounds = compose.onNodeWithText(home).assertIsSelected().getUnclippedBoundsInRoot()
+        assertTrue("Expressive dock target must be >= 48dp", bounds.height >= 48.dp)
+    }
+
 }
