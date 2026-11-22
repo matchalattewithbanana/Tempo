@@ -39,11 +39,11 @@ internal fun AboutSettingsSection(
         tone = SettingsSection.ABOUT.tone,
         modifier = modifier,
     ) {
-        item(key = "about-credits") {
+        item(key = SettingsGroup.ABOUT_CREDITS.itemKey) {
             TempoAboutCredits(modifier = Modifier.fillMaxWidth())
             Spacer(modifier = Modifier.height(24.dp))
         }
-        item(key = "about-community") {
+        item(key = SettingsGroup.ABOUT_COMMUNITY.itemKey) {
             SettingsSectionHeader(stringResource(R.string.settings_community))
             TempoSettingsGroup {
                 Column {
@@ -83,7 +83,7 @@ internal fun AboutSettingsSection(
             }
             Spacer(modifier = Modifier.height(24.dp))
         }
-        item(key = "about-links") {
+        item(key = SettingsGroup.ABOUT_LINKS.itemKey) {
             SettingsSectionHeader(stringResource(R.string.settings_about_resources))
             TempoSettingsGroup {
                 Column {

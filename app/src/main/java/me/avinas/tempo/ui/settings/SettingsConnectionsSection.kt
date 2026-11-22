@@ -60,7 +60,7 @@ internal fun ConnectionsSettingsSection(
         tone = SettingsSection.CONNECTIONS.tone,
         modifier = modifier,
     ) {
-        item(key = "connections-services") {
+        item(key = SettingsGroup.CONNECTIONS_SERVICES.itemKey) {
             SettingsSectionHeader(stringResource(R.string.settings_connected_accounts))
             TempoSettingsGroup {
                 Column {
@@ -226,7 +226,7 @@ internal fun ConnectionsSettingsSection(
             Spacer(modifier = Modifier.height(24.dp))
         }
 
-        item(key = "connections-desktop") {
+        item(key = SettingsGroup.CONNECTIONS_DESKTOP.itemKey) {
             SettingsSectionHeader(stringResource(R.string.desktop_link_section_header))
             TempoSettingsGroup {
                 Column {

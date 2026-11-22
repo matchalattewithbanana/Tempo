@@ -7,16 +7,17 @@ import me.avinas.tempo.R
  * Search entries for controls that live inside section screens.
  * Full-page destinations are indexed by SettingsDestination instead.
  *
- * The index points at the section's stable LazyColumn group, not at individual
- * switches; search only navigates and never duplicates preference state.
+ * Each entry points to a typed section group rather than a numeric scroll index;
+ * search navigates and never duplicates preference state.
  */
 internal data class SettingsSearchEntry(
-    val section: SettingsSection,
+    val group: SettingsGroup,
     @StringRes val titleRes: Int,
-    val groupIndex: Int,
     @StringRes val subtitleRes: Int? = null,
     val requires: SettingsSearchRequirement = SettingsSearchRequirement.ALWAYS,
-)
+) {
+    val section: SettingsSection get() = group.section
+}
 
 internal enum class SettingsSearchRequirement {
     ALWAYS, GAMIFICATION, ANALYTICS, SPOTIFY_CONNECTED, SPOTIFY_CONFIGURABLE
@@ -24,57 +25,57 @@ internal enum class SettingsSearchRequirement {
 
 internal object SettingsSearchCatalog {
     private val controls = listOf(
-        SettingsSearchEntry(SettingsSection.GENERAL, R.string.settings_profile, 0),
-        SettingsSearchEntry(SettingsSection.GENERAL, R.string.settings_language_title, 1),
-        SettingsSearchEntry(SettingsSection.GENERAL, R.string.settings_daily_summary, 2,
+        SettingsSearchEntry(SettingsGroup.GENERAL_PROFILE, R.string.settings_profile),
+        SettingsSearchEntry(SettingsGroup.GENERAL_LANGUAGE, R.string.settings_language_title),
+        SettingsSearchEntry(SettingsGroup.GENERAL_NOTIFICATIONS, R.string.settings_daily_summary,
             R.string.settings_daily_summary_desc),
-        SettingsSearchEntry(SettingsSection.GENERAL, R.string.settings_weekly_recap, 2,
+        SettingsSearchEntry(SettingsGroup.GENERAL_NOTIFICATIONS, R.string.settings_weekly_recap,
             R.string.settings_weekly_recap_desc),
-        SettingsSearchEntry(SettingsSection.GENERAL, R.string.settings_daily_challenges, 2,
+        SettingsSearchEntry(SettingsGroup.GENERAL_NOTIFICATIONS, R.string.settings_daily_challenges,
             R.string.settings_daily_challenges_desc, SettingsSearchRequirement.GAMIFICATION),
-        SettingsSearchEntry(SettingsSection.GENERAL, R.string.settings_achievements, 2,
+        SettingsSearchEntry(SettingsGroup.GENERAL_NOTIFICATIONS, R.string.settings_achievements,
             R.string.settings_achievements_desc, SettingsSearchRequirement.GAMIFICATION),
-        SettingsSearchEntry(SettingsSection.GENERAL, R.string.settings_enable_gamification, 3,
+        SettingsSearchEntry(SettingsGroup.GENERAL_PROGRESS, R.string.settings_enable_gamification,
             R.string.settings_enable_gamification_desc),
-        SettingsSearchEntry(SettingsSection.GENERAL, R.string.settings_hide_streaks, 3,
+        SettingsSearchEntry(SettingsGroup.GENERAL_PROGRESS, R.string.settings_hide_streaks,
             R.string.settings_hide_streaks_desc),
 
-        SettingsSearchEntry(SettingsSection.TRACKING, R.string.settings_manage_permissions, 0,
+        SettingsSearchEntry(SettingsGroup.TRACKING_SOURCE, R.string.settings_manage_permissions,
             R.string.settings_manage_permissions_desc),
-        SettingsSearchEntry(SettingsSection.TRACKING, R.string.settings_health_last_signal, 0),
-        SettingsSearchEntry(SettingsSection.TRACKING, R.string.settings_pause_tracking_low_battery, 0),
-        SettingsSearchEntry(SettingsSection.TRACKING, R.string.settings_filter_podcasts, 1,
+        SettingsSearchEntry(SettingsGroup.TRACKING_SOURCE, R.string.settings_health_last_signal),
+        SettingsSearchEntry(SettingsGroup.TRACKING_SOURCE, R.string.settings_pause_tracking_low_battery),
+        SettingsSearchEntry(SettingsGroup.TRACKING_FILTERING, R.string.settings_filter_podcasts,
             R.string.settings_filter_podcasts_desc),
-        SettingsSearchEntry(SettingsSection.TRACKING, R.string.settings_filter_audiobooks, 1,
+        SettingsSearchEntry(SettingsGroup.TRACKING_FILTERING, R.string.settings_filter_audiobooks,
             R.string.settings_filter_audiobooks_desc),
-        SettingsSearchEntry(SettingsSection.TRACKING, R.string.settings_extended_audio, 2,
+        SettingsSearchEntry(SettingsGroup.TRACKING_STATISTICS, R.string.settings_extended_audio,
             R.string.settings_extended_audio_desc),
 
-        SettingsSearchEntry(SettingsSection.CONNECTIONS, R.string.settings_spotify_service_title, 0),
-        SettingsSearchEntry(SettingsSection.CONNECTIONS, R.string.settings_spotify_client_id_label, 0,
+        SettingsSearchEntry(SettingsGroup.CONNECTIONS_SERVICES, R.string.settings_spotify_service_title),
+        SettingsSearchEntry(SettingsGroup.CONNECTIONS_SERVICES, R.string.settings_spotify_client_id_label,
             requires = SettingsSearchRequirement.SPOTIFY_CONFIGURABLE),
-        SettingsSearchEntry(SettingsSection.CONNECTIONS, R.string.settings_spotify_history_verification, 0,
+        SettingsSearchEntry(SettingsGroup.CONNECTIONS_SERVICES, R.string.settings_spotify_history_verification,
             R.string.settings_spotify_history_verification_desc, SettingsSearchRequirement.SPOTIFY_CONNECTED),
-        SettingsSearchEntry(SettingsSection.CONNECTIONS, R.string.settings_spotify_device_broadcasts, 0,
+        SettingsSearchEntry(SettingsGroup.CONNECTIONS_SERVICES, R.string.settings_spotify_device_broadcasts,
             R.string.settings_spotify_device_broadcasts_desc),
 
-        SettingsSearchEntry(SettingsSection.DATA, R.string.settings_smart_merge, 1,
+        SettingsSearchEntry(SettingsGroup.DATA_IMPORTS, R.string.settings_smart_merge,
             R.string.settings_smart_merge_desc),
-        SettingsSearchEntry(SettingsSection.DATA, R.string.settings_history_accuracy_audit_title, 2,
+        SettingsSearchEntry(SettingsGroup.DATA_ACCURACY, R.string.settings_history_accuracy_audit_title,
             R.string.settings_history_accuracy_audit_desc),
-        SettingsSearchEntry(SettingsSection.DATA, R.string.settings_cover_source_title, 2),
-        SettingsSearchEntry(SettingsSection.DATA, R.string.settings_analytics_toggle, 3,
+        SettingsSearchEntry(SettingsGroup.DATA_ACCURACY, R.string.settings_cover_source_title),
+        SettingsSearchEntry(SettingsGroup.DATA_PRIVACY, R.string.settings_analytics_toggle,
             R.string.settings_analytics_toggle_desc, SettingsSearchRequirement.ANALYTICS),
-        SettingsSearchEntry(SettingsSection.DATA, R.string.settings_analytics_reset_id, 3,
+        SettingsSearchEntry(SettingsGroup.DATA_PRIVACY, R.string.settings_analytics_reset_id,
             R.string.settings_analytics_reset_id_desc, SettingsSearchRequirement.ANALYTICS),
 
-        SettingsSearchEntry(SettingsSection.ABOUT, R.string.settings_reddit, 1),
-        SettingsSearchEntry(SettingsSection.ABOUT, R.string.settings_github, 1),
-        SettingsSearchEntry(SettingsSection.ABOUT, R.string.settings_contribute, 1),
-        SettingsSearchEntry(SettingsSection.ABOUT, R.string.settings_privacy_policy, 2),
-        SettingsSearchEntry(SettingsSection.ABOUT, R.string.settings_data_diagnostics, 2,
+        SettingsSearchEntry(SettingsGroup.ABOUT_COMMUNITY, R.string.settings_reddit),
+        SettingsSearchEntry(SettingsGroup.ABOUT_COMMUNITY, R.string.settings_github),
+        SettingsSearchEntry(SettingsGroup.ABOUT_COMMUNITY, R.string.settings_contribute),
+        SettingsSearchEntry(SettingsGroup.ABOUT_LINKS, R.string.settings_privacy_policy),
+        SettingsSearchEntry(SettingsGroup.ABOUT_LINKS, R.string.settings_data_diagnostics,
             R.string.settings_data_diagnostics_desc),
-        SettingsSearchEntry(SettingsSection.ABOUT, R.string.settings_version, 2),
+        SettingsSearchEntry(SettingsGroup.ABOUT_LINKS, R.string.settings_version),
     )
 
     fun available(
@@ -94,8 +95,7 @@ internal object SettingsSearchCatalog {
         }
         // The optional analytics group is inserted before Reset only when configured.
         return visible + SettingsSearchEntry(
-            SettingsSection.DATA, R.string.settings_clear_all,
-            groupIndex = if (analyticsConfigured) 4 else 3,
+            SettingsGroup.DATA_RESET, R.string.settings_clear_all,
         )
     }
 }

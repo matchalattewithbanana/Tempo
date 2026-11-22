@@ -48,12 +48,16 @@ fun SettingsScreen(
     // Settings home is intentionally a small category navigator.
     var settingsSection by rememberSaveable { mutableStateOf<SettingsSection?>(null) }
     var settingsSearch by rememberSaveable { mutableStateOf("") }
-    var requestedSettingGroup by rememberSaveable { mutableStateOf<Int?>(null) }
+    var requestedSettingGroup by rememberSaveable { mutableStateOf<SettingsGroup?>(null) }
     val settingsScrollState = key(settingsSection) { rememberLazyListState() }
-    LaunchedEffect(settingsSection, requestedSettingGroup) {
+    LaunchedEffect(settingsSection, requestedSettingGroup, uiState.analyticsConfigured) {
         val group = requestedSettingGroup
-        if (settingsSection != null && group != null) {
-            settingsScrollState.scrollToItem(group)
+        if (group != null && settingsSection == group.section) {
+            // Search targets semantic groups; compute their index only once
+            // the current visibility policy is known.
+            settingsScrollState.scrollToItem(
+                group.scrollIndexOrNull(uiState.analyticsConfigured) ?: 0,
+            )
             requestedSettingGroup = null
         }
     }
@@ -224,9 +228,9 @@ fun SettingsScreen(
                             requestedSettingGroup = null
                             settingsSection = it
                         },
-                        onSettingSelected = { section, group ->
+                        onSettingSelected = { group ->
                             requestedSettingGroup = group
-                            settingsSection = section
+                            settingsSection = group.section
                         },
                         onNavigate = onNavigate,
                         gamificationEnabled = uiState.isGamificationEnabled,

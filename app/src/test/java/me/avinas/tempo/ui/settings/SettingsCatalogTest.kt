@@ -47,7 +47,7 @@ class SettingsCatalogTest {
         assertTrue(me.avinas.tempo.R.string.settings_spotify_client_id_label in labels)
         assertEquals(3, limited.single {
             it.titleRes == me.avinas.tempo.R.string.settings_clear_all
-        }.groupIndex)
+        }.group.scrollIndexOrNull(false))
         val configured = SettingsSearchCatalog.available(
             gamificationEnabled = false,
             analyticsConfigured = true,
@@ -56,7 +56,7 @@ class SettingsCatalogTest {
         )
         assertEquals(4, configured.single {
             it.titleRes == me.avinas.tempo.R.string.settings_clear_all
-        }.groupIndex)
+        }.group.scrollIndexOrNull(true))
     }
 
     @Test fun deviceBroadcastsRemainDiscoverableWithoutSpotifyAccount() {
@@ -69,11 +69,32 @@ class SettingsCatalogTest {
             )
             assertTrue(entries.any {
                 it.titleRes == me.avinas.tempo.R.string.settings_spotify_device_broadcasts &&
-                    it.section == SettingsSection.CONNECTIONS && it.groupIndex == 0
+                    it.group == SettingsGroup.CONNECTIONS_SERVICES
             })
             assertTrue(entries.none {
                 it.titleRes == me.avinas.tempo.R.string.settings_spotify_history_verification
             })
+        }
+    }
+
+    @Test fun settingsGroupsHaveUniqueStableKeysAndCorrectOptionalPositions() {
+        val groups = SettingsGroup.entries
+        assertEquals(groups.size, groups.map { it.itemKey }.toSet().size)
+        assertEquals(SettingsSection.entries.toSet(), groups.map { it.section }.toSet())
+        assertEquals(null, SettingsGroup.DATA_PRIVACY.scrollIndexOrNull(false))
+        assertEquals(3, SettingsGroup.DATA_PRIVACY.scrollIndexOrNull(true))
+        assertEquals(3, SettingsGroup.DATA_RESET.scrollIndexOrNull(false))
+        assertEquals(4, SettingsGroup.DATA_RESET.scrollIndexOrNull(true))
+        for (analyticsEnabled in listOf(false, true)) {
+            for (section in SettingsSection.entries) {
+                val visible = groups.filter {
+                    it.section == section && (!it.requiresAnalytics || analyticsEnabled)
+                }
+                assertEquals(
+                    visible.indices.toList(),
+                    visible.map { it.scrollIndexOrNull(analyticsEnabled) },
+                )
+            }
         }
     }
 

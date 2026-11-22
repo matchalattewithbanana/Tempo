@@ -44,7 +44,7 @@ internal fun SettingsOverview(
     onQueryChange: (String) -> Unit,
     listState: LazyListState,
     onSectionSelected: (SettingsSection) -> Unit,
-    onSettingSelected: (SettingsSection, Int) -> Unit,
+    onSettingSelected: (SettingsGroup) -> Unit,
     onNavigate: (SettingsDestination) -> Unit,
     gamificationEnabled: Boolean,
     analyticsConfigured: Boolean,
@@ -194,7 +194,7 @@ internal fun SettingsOverview(
                             title = title,
                             subtitle = if (subtitle.isBlank()) sectionName
                                 else "$sectionName · $subtitle",
-                            onClick = { onSettingSelected(entry.section, entry.groupIndex) },
+                            onClick = { onSettingSelected(entry.group) },
                         )
                     }
                     items(

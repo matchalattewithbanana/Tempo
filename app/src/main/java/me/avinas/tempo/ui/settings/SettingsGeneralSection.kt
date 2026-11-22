@@ -55,7 +55,7 @@ internal fun GeneralSettingsSection(
         tone = SettingsSection.GENERAL.tone,
         modifier = modifier,
     ) {
-        item(key = "general-profile") {
+        item(key = SettingsGroup.GENERAL_PROFILE.itemKey) {
             SettingsSectionHeader(stringResource(R.string.settings_profile))
             TempoSettingsGroup {
                 Column(modifier = Modifier.padding(16.dp)) {
@@ -161,7 +161,7 @@ internal fun GeneralSettingsSection(
             Spacer(modifier = Modifier.height(16.dp))
         }
 
-        item(key = "general-language") {
+        item(key = SettingsGroup.GENERAL_LANGUAGE.itemKey) {
             SettingsSectionHeader(stringResource(R.string.settings_language))
             TempoSettingsGroup {
                 SettingsOption(
@@ -173,7 +173,7 @@ internal fun GeneralSettingsSection(
             Spacer(modifier = Modifier.height(24.dp))
         }
 
-        item(key = "general-notifications") {
+        item(key = SettingsGroup.GENERAL_NOTIFICATIONS.itemKey) {
             SettingsSectionHeader(stringResource(R.string.settings_notifications))
             TempoSettingsGroup {
                 Column {
@@ -211,7 +211,7 @@ internal fun GeneralSettingsSection(
             Spacer(modifier = Modifier.height(24.dp))
         }
 
-        item(key = "general-progress") {
+        item(key = SettingsGroup.GENERAL_PROGRESS.itemKey) {
             SettingsSectionHeader(stringResource(R.string.settings_listening_goals))
             TempoSettingsGroup {
                 Column {

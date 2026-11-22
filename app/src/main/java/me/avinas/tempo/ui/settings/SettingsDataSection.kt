@@ -38,7 +38,7 @@ internal fun DataSettingsSection(
         tone = SettingsSection.DATA.tone,
         modifier = modifier,
     ) {
-        item(key = "data-backups") {
+        item(key = SettingsGroup.DATA_BACKUPS.itemKey) {
             SettingsSectionHeader(stringResource(R.string.settings_data_backup_section))
             val backupStatus = if (!backupOverview.isGoogleDriveEnabled) {
                 R.string.settings_backup_overview_disabled
@@ -69,7 +69,7 @@ internal fun DataSettingsSection(
             Spacer(Modifier.height(16.dp))
         }
 
-        item(key = "data-imports") {
+        item(key = SettingsGroup.DATA_IMPORTS.itemKey) {
             SettingsSectionHeader(stringResource(R.string.settings_import_history))
             TempoSettingsGroup {
                 Column {
@@ -103,7 +103,7 @@ internal fun DataSettingsSection(
             Spacer(Modifier.height(16.dp))
         }
 
-        item(key = "data-accuracy") {
+        item(key = SettingsGroup.DATA_ACCURACY.itemKey) {
             SettingsSectionHeader(stringResource(R.string.settings_history_tools))
             TempoSettingsGroup {
                 Column {
@@ -136,7 +136,7 @@ internal fun DataSettingsSection(
         }
 
         if (uiState.analyticsConfigured) {
-            item(key = "data-privacy") {
+            item(key = SettingsGroup.DATA_PRIVACY.itemKey) {
                 SettingsSectionHeader(stringResource(R.string.settings_privacy_controls))
                 TempoSettingsGroup {
                     Column {
@@ -158,7 +158,7 @@ internal fun DataSettingsSection(
             }
         }
 
-        item(key = "data-reset") {
+        item(key = SettingsGroup.DATA_RESET.itemKey) {
             SettingsSectionHeader(stringResource(R.string.settings_data_reset_section))
             TempoSettingsGroup {
                 SettingsOption(

@@ -45,7 +45,7 @@ internal fun TrackingSettingsSection(
         tone = SettingsSection.TRACKING.tone,
         modifier = modifier,
     ) {
-        item(key = "tracking-source") {
+        item(key = SettingsGroup.TRACKING_SOURCE.itemKey) {
             val trackingHealth = trackingHeartbeat?.let { heartbeat ->
                 evaluateTrackingHealth(
                     permissionGranted = notificationListenerGranted,
@@ -150,7 +150,7 @@ internal fun TrackingSettingsSection(
             }
         }
 
-        item(key = "tracking-filtering") {
+        item(key = SettingsGroup.TRACKING_FILTERING.itemKey) {
             SettingsSectionHeader(stringResource(R.string.settings_content_filtering))
             TempoSettingsGroup {
                 Column {
@@ -172,7 +172,7 @@ internal fun TrackingSettingsSection(
             Spacer(modifier = Modifier.height(24.dp))
         }
 
-        item(key = "tracking-statistics") {
+        item(key = SettingsGroup.TRACKING_STATISTICS.itemKey) {
             SettingsSectionHeader(stringResource(R.string.settings_advanced_stats))
             TempoSettingsGroup {
                 SettingsSwitch(
