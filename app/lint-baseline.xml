@@ -247,10 +247,10 @@
         <location file="src/main/java/me/avinas/tempo/ui/profile/ProfileChallenges.kt" line="275" column="79" />
     </issue>
     <issue id="NonObservableLocale" message="Reading locale in a non-observable way in a composable function">
-        <location file="src/main/java/me/avinas/tempo/ui/profile/ProfileHero.kt" line="163" column="43" />
+        <location file="src/main/java/me/avinas/tempo/ui/profile/ProfileHero.kt" line="163" column="42" />
     </issue>
     <issue id="NonObservableLocale" message="Reading locale in a non-observable way in a composable function">
-        <location file="src/main/java/me/avinas/tempo/ui/profile/ProfileHero.kt" line="185" column="67" />
+        <location file="src/main/java/me/avinas/tempo/ui/profile/ProfileHero.kt" line="185" column="42" />
     </issue>
     <issue id="NonObservableLocale" message="Reading locale in a non-observable way in a composable function">
         <location file="src/main/java/me/avinas/tempo/ui/profile/ProfilePrimitives.kt" line="94" column="36" />
@@ -262,25 +262,25 @@
         <location file="src/main/java/me/avinas/tempo/ui/profile/ProfilePrimitives.kt" line="205" column="36" />
     </issue>
     <issue id="NonObservableLocale" message="Reading locale in a non-observable way in a composable function">
-        <location file="src/main/java/me/avinas/tempo/ui/details/SongDetailsAcoustic.kt" line="332" column="74" />
+        <location file="src/main/java/me/avinas/tempo/ui/details/SongDetailsAcoustic.kt" line="332" column="40" />
     </issue>
     <issue id="NonObservableLocale" message="Reading locale in a non-observable way in a composable function">
         <location file="src/main/java/me/avinas/tempo/ui/details/SongDetailsDialogs.kt" line="375" column="70" />
     </issue>
     <issue id="NonObservableLocale" message="Reading locale in a non-observable way in a composable function">
-        <location file="src/main/java/me/avinas/tempo/ui/details/SongDetailsHero.kt" line="364" column="43" />
+        <location file="src/main/java/me/avinas/tempo/ui/details/SongDetailsHero.kt" line="364" column="70" />
     </issue>
     <issue id="NonObservableLocale" message="Reading locale in a non-observable way in a composable function">
-        <location file="src/main/java/me/avinas/tempo/ui/details/SongDetailsJourney.kt" line="234" column="40" />
+        <location file="src/main/java/me/avinas/tempo/ui/details/SongDetailsJourney.kt" line="234" column="46" />
     </issue>
     <issue id="NonObservableLocale" message="Reading locale in a non-observable way in a composable function">
-        <location file="src/main/java/me/avinas/tempo/ui/details/SongDetailsJourney.kt" line="250" column="36" />
+        <location file="src/main/java/me/avinas/tempo/ui/details/SongDetailsJourney.kt" line="250" column="84" />
     </issue>
     <issue id="NonObservableLocale" message="Reading locale in a non-observable way in a composable function">
-        <location file="src/main/java/me/avinas/tempo/ui/details/SongDetailsJourney.kt" line="479" column="36" />
+        <location file="src/main/java/me/avinas/tempo/ui/details/SongDetailsJourney.kt" line="479" column="50" />
     </issue>
     <issue id="NonObservableLocale" message="Reading locale in a non-observable way in a composable function">
-        <location file="src/main/java/me/avinas/tempo/ui/details/SongDetailsJourney.kt" line="608" column="23" />
+        <location file="src/main/java/me/avinas/tempo/ui/details/SongDetailsJourney.kt" line="608" column="43" />
     </issue>
     <issue id="NonObservableLocale" message="Reading locale in a non-observable way in a composable function">
         <location file="src/main/java/me/avinas/tempo/ui/details/SongDetailsJourney.kt" line="665" column="40" />
@@ -292,7 +292,7 @@
         <location file="src/main/java/me/avinas/tempo/ui/details/SongDetailsListeningStats.kt" line="186" column="43" />
     </issue>
     <issue id="NonObservableLocale" message="Reading locale in a non-observable way in a composable function">
-        <location file="src/main/java/me/avinas/tempo/ui/details/SongDetailsListeningStats.kt" line="265" column="36" />
+        <location file="src/main/java/me/avinas/tempo/ui/details/SongDetailsListeningStats.kt" line="265" column="40" />
     </issue>
     <issue id="NonObservableLocale" message="Reading locale in a non-observable way in a composable function">
         <location file="src/main/java/me/avinas/tempo/ui/details/SongDetailsListeningStats.kt" line="318" column="36" />
