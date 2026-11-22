@@ -19,7 +19,7 @@ import java.sql.DriverManager
  *
  * Two guards here:
  *  1. the SQL semantics (MAX recovers art, the bare form drops it), and
- *  2. a source scan asserting every album-grouped art column in StatsDao.kt is
+ *  2. a source scan asserting every album-grouped art column across the split Stats DAO query files is
  *     aggregated — so a future query can't silently reintroduce the bare form.
  */
 class AlbumArtAggregationTest {
@@ -70,13 +70,24 @@ class AlbumArtAggregationTest {
 
     @Test
     fun `every album-grouped query aggregates its art column`() {
-        val source = File("src/main/java/me/avinas/tempo/data/local/dao/StatsDao.kt")
-        check(source.isFile) { "StatsDao.kt not found at ${source.absolutePath} (unit tests run from the app module dir)" }
-        val sourceText = source.readText()
+        val daoDir = File("src/main/java/me/avinas/tempo/data/local/dao")
+        check(daoDir.isDirectory) {
+            "DAO directory not found at ${daoDir.absolutePath} (unit tests run from the app module dir)"
+        }
+        val sourceFiles =
+            daoDir.listFiles()
+                .orEmpty()
+                .filter { file ->
+                    file.isFile &&
+                        file.extension == "kt" &&
+                        (file.name == "StatsDaoSql.kt" || file.name.matches(Regex("Stats.*Queries\\.kt")))
+                }
+        check(sourceFiles.isNotEmpty()) { "No split Stats DAO query sources found in ${daoDir.absolutePath}" }
+        val sourceText = sourceFiles.joinToString(separator = "\n") { it.readText() }
         val albumGroups =
-            Regex("private const val RANKED_ALBUM_GROUPS = \\\"\\\"\\\"(.*?)\\\"\\\"\\\"", RegexOption.DOT_MATCHES_ALL)
+            Regex("(?:private|internal) const val RANKED_ALBUM_GROUPS = \\\"\\\"\\\"(.*?)\\\"\\\"\\\"", RegexOption.DOT_MATCHES_ALL)
                 .find(sourceText)?.groupValues?.get(1)
-                ?: error("RANKED_ALBUM_GROUPS not found")
+                ?: error("RANKED_ALBUM_GROUPS not found in split Stats DAO sources")
         val queries =
             Regex("@Query\\(\\s*\"\"\"(.*?)\"\"\"", RegexOption.DOT_MATCHES_ALL)
                 .findAll(sourceText)
