@@ -1,5 +1,6 @@
 package me.avinas.tempo.ui.profile
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -26,11 +27,13 @@ internal fun ProfileModal(
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(
+            dismissOnBackPress = false,
             usePlatformDefaultWidth = false,
             decorFitsSystemWindows = false,
             dismissOnClickOutside = false,
         ),
     ) {
+        BackHandler(onBack = onDismiss)
         val focus = remember { FocusRequester() }
         Box(
             modifier = modifier.fillMaxSize()
