@@ -107,17 +107,18 @@ fun TempoBottomNavigation(
                     else MaterialTheme.shapes.extraSmall,
                 color = if (floating) scheme.surfaceContainerHigh else scheme.surfaceContainer,
             ) {
-                androidx.compose.material3.ShortNavigationBar(
+                androidx.compose.material3.NavigationBar(
                     modifier = Modifier.fillMaxWidth(),
                     containerColor = androidx.compose.ui.graphics.Color.Transparent,
                     contentColor = scheme.onSurface,
                     windowInsets = WindowInsets(0, 0, 0, 0),
+                    tonalElevation = 0.dp,
                 ) {
                     destinations.forEachIndexed { index, destination ->
                         val selected = currentDestination?.hierarchy?.any {
                             it.route == destination.first
                         } == true
-                        androidx.compose.material3.ShortNavigationBarItem(
+                        androidx.compose.material3.NavigationBarItem(
                             selected = selected,
                             onClick = {
                                 if (!selected) {
@@ -138,6 +139,14 @@ fun TempoBottomNavigation(
                                     maxLines = 2,
                                 )
                             },
+                            alwaysShowLabel = true,
+                            colors = androidx.compose.material3.NavigationBarItemDefaults.colors(
+                                selectedIconColor = scheme.onSecondaryContainer,
+                                selectedTextColor = scheme.onSurface,
+                                indicatorColor = scheme.secondaryContainer,
+                                unselectedIconColor = scheme.onSurfaceVariant,
+                                unselectedTextColor = scheme.onSurfaceVariant,
+                            ),
                         )
                     }
                 }
