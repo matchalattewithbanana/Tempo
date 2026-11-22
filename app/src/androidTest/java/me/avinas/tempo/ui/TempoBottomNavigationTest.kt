@@ -80,8 +80,8 @@ class TempoBottomNavigationTest {
             }
         }
         val bounds = compose.onNodeWithText(home).assertIsSelected().getUnclippedBoundsInRoot()
-        assertTrue("Touch target height must be >= 48dp", bounds.height >= 48.dp)
-        assertTrue("Touch target must not cover content above the bar", bounds.height < 150.dp)
+        assertTrue("Touch target height must be >= 48dp", (bounds.bottom - bounds.top) >= 48.dp)
+        assertTrue("Touch target must not cover content above the bar", (bounds.bottom - bounds.top) < 150.dp)
     }
     @Test fun expressiveDockPreservesSelectionAndNavigationCallbacks() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -133,7 +133,7 @@ class TempoBottomNavigationTest {
             }
         }
         val bounds = compose.onNodeWithText(home).assertIsSelected().getUnclippedBoundsInRoot()
-        assertTrue("Expressive dock target must be >= 48dp", bounds.height >= 48.dp)
+        assertTrue("Expressive dock target must be >= 48dp", (bounds.bottom - bounds.top) >= 48.dp)
     }
 
 }

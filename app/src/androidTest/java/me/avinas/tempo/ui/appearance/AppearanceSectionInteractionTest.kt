@@ -1,12 +1,10 @@
 package me.avinas.tempo.ui.appearance
 
 import androidx.compose.material3.Text
-import androidx.compose.ui.test.assertDoesNotExist
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onNode
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.semantics.SemanticsProperties
@@ -46,6 +44,7 @@ class AppearanceSectionInteractionTest {
 
         header.performClick()
         header.assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, collapsed))
+        compose.waitForIdle()
         compose.onNodeWithText(body).assertDoesNotExist()
     }
 }
