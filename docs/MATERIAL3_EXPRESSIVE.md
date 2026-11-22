@@ -103,3 +103,9 @@ Since the original migration checklist, the following source refinements were ma
 This source-only pass uses the current Orion Store Compose implementation, **never Orion Legacy**, as an interaction reference. It introduces an opt-in native floating-toolbar dock; Material top-level fade-through without lateral swiping implications; animated, accessible Appearance Studio expansion and save actions; and bounded press springs on Settings bento destinations and listening tiles.
 
 Reduced-motion and Instant Navigation overrides remain authoritative. The app was **not compiled, installed or instrumented**, and no build/release CI was triggered. Do not mark navigation overlap, frame pacing, touch targets or TalkBack acceptance complete until verified on a running Android build.
+
+## Music & backup controls — November 23, 2026
+
+The native Kotlin/Compose Orion reference inspired a targeted Spotlight hero, story control, album-cover source selection, and Backup & Restore presentation pass. Changes use Material's tonal roles, native buttons and motion-scheme spring types. All existing playback, cover selection, Spotify settings, and backup operations remain in their original ownership paths.
+
+The backup layout policy stacks local actions below 440dp or at ≥1.3× font scaling (a Tempo-specific design choice, not an official Material token). The new Spotlight story surface and picker selection should be tested in Light, Dark, OLED and saved custom looks. Source tests were added but not run, and no build, CI or release was triggered.

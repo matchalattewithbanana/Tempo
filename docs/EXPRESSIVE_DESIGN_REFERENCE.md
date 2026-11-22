@@ -93,6 +93,18 @@ Only the **current Kotlin/Jetpack Compose Orion Store** under `app/src/main/java
 - **Safeguards:** no background tracking, playback, data or import changes; no new external assets or permissions. All new animations inherit the shared reduced-motion policy. Source references inform the design; no `Orion Legacy/` implementation or assets are used.
 - **Acceptance gate:** compile, instrumentation tests, TalkBack, large text, both themes, OLED, 320dp compact phone, large-screen rail, gesture insets, and animation-interruption testing are still pending. Source inspection alone is not visual or runtime verification.
 
+## November 23, 2026 — Spotlight, artwork and backup refinement
+
+Reference checked against the **new Orion Store** Kotlin/Compose `Detail.kt`, `Settings.kt`, `Sheets.kt` and `Common.kt` from the supplied archive. Nothing was taken from `Orion Legacy/`.
+
+- **Spotlight story entry:** replaced dark-purple gradients and thin borders with a single, semantic `Surface`. The unlocked state uses `tertiaryContainer` and emphasized typography; locked state uses a muted neutral surface. Localized state messages and a bounded progress icon remove abrupt, ambiguous loading treatment. Press handling delegates to the native clickable Material surface.
+- **Spotlight story overlay controls:** replaced black circles drawn inside icons with native `FilledTonalIconButton` components, preserving white-on-dark contrast over any generated story background and retaining a 48dp action surface.
+- **Album artwork source picker:** candidate selection morphs a corner radius using a fast spatial spring and fades its container/border using effects springs. The selected checkmark gains an opaque `primaryContainer` backing for artwork contrast. Selection is still announced via a single radio-button semantic state.
+- **Backup & Restore:** local file actions now stack their buttons on compact screens and at large font scales; Google Drive sections and backup tips use theme-aware tonal surfaces instead of old glass cards and hard-coded colors. The refresh icon has a full-sized tap target. Transfer, authorization, backup, restore and delete callbacks are unchanged.
+- **Regression protection:** added a pure width/font-scale test for local backup actions and a Compose instrumentation test for Spotlight's playable and locked states. Neither suite has been executed in this source-only pass.
+
+**Validation still required:** compile Kotlin/Android resources; verify layouts at 320/360/440/960dp, 1.3–2× font scale, Light/Dark/OLED/custom palettes, TalkBack, disabled story state, and interruptions while changing cover choices. Do not claim measured performance improvements before on-device traces.
+
 ## Next visual milestones
 
 Retune the remaining visual duplicates on track/artist/album details, import/restore flows and Spotlight story editor. Choose deliberately where a shape or action morph helps recognition; do not add permanent shimmer, blur or animated gradients merely to look expressive.
