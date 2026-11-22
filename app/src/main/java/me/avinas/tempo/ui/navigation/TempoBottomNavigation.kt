@@ -128,7 +128,7 @@ fun TempoBottomNavigation(
                     tonalElevation = 0.dp,
                 ) {
                     Row(modifier = Modifier.fillMaxWidth().selectableGroup()) {
-                    destinations.forEachIndexed { index, destination ->
+                        destinations.forEachIndexed { index, destination ->
                         val selected = currentDestination?.hierarchy?.any {
                             it.route == destination.first
                         } == true
@@ -143,7 +143,7 @@ fun TempoBottomNavigation(
                         Box(
                             modifier = Modifier
                                 .weight(1f)
-                                .height(80.dp)
+                                .heightIn(min = 80.dp)
                                 .selectable(
                                     selected = selected,
                                     role = androidx.compose.ui.semantics.Role.Tab,
@@ -181,12 +181,11 @@ fun TempoBottomNavigation(
                                     color = if (selected) scheme.onSurface else scheme.onSurfaceVariant,
                                     style = if (selected) MaterialTheme.typography.labelLargeEmphasized
                                         else MaterialTheme.typography.labelLarge,
-                                    maxLines = 1,
+                                    maxLines = 2,
                                     overflow = TextOverflow.Ellipsis,
                                 )
                             }
                         }
-                    }
                     }
                 }
             }
