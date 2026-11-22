@@ -3,8 +3,13 @@
 package me.avinas.tempo.ui.components
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -12,12 +17,14 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import me.avinas.tempo.ui.theme.LocalTempoPalette
 import me.avinas.tempo.ui.theme.LocalTempoAppearance
 import me.avinas.tempo.ui.appearance.AppearanceDensity
+import me.avinas.tempo.ui.appearance.LocalAppearanceRuntimePolicy
 
 /**
  * Tempo's own music-first tonal tiles, not a copied visual asset from another app.
@@ -105,11 +112,24 @@ fun TempoMetricTile(
             TempoMetricTileBody(value, label, icon, supportingText, swatch, dense)
         }
     } else {
-        // A directly actionable Material Surface provides its own ripple and
-        // semantics. Avoid stacking an extra clickable modifier on the card.
+        // Keep click semantics and ripple on one Material Surface. Scale just
+        // the tapped tile using its interaction source; no list-wide animation
+        // or per-frame recomposition of the metric text is needed.
+        val interactions = remember { MutableInteractionSource() }
+        val pressed by interactions.collectIsPressedAsState()
+        val allowMotion = !LocalAppearanceRuntimePolicy.current.reduceMotion
+        val scale by animateFloatAsState(
+            targetValue = if (allowMotion && pressed) 0.97f else 1f,
+            animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+            label = "metricTilePressScale",
+        )
         Surface(
             onClick = onClick,
-            modifier = surfaceModifier,
+            modifier = surfaceModifier.graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            },
+            interactionSource = interactions,
             shape = MaterialTheme.shapes.extraLarge,
             color = swatch.container,
             contentColor = swatch.foreground,
