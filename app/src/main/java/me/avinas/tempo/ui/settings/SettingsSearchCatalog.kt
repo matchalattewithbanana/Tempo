@@ -72,6 +72,8 @@ internal object SettingsSearchCatalog {
         SettingsSearchEntry(SettingsSection.ABOUT, R.string.settings_github, 1),
         SettingsSearchEntry(SettingsSection.ABOUT, R.string.settings_contribute, 1),
         SettingsSearchEntry(SettingsSection.ABOUT, R.string.settings_privacy_policy, 2),
+        SettingsSearchEntry(SettingsSection.ABOUT, R.string.settings_data_diagnostics, 2,
+            R.string.settings_data_diagnostics_desc),
         SettingsSearchEntry(SettingsSection.ABOUT, R.string.settings_version, 2),
     )
 
