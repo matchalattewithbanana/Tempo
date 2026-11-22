@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+
 package me.avinas.tempo.ui.details
 
 import android.net.Uri
@@ -26,6 +28,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.PhotoLibrary
@@ -367,8 +372,25 @@ private fun CoverProviderCard(
     onRetry: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
-    val shape = RoundedCornerShape(16.dp)
-    val borderColor = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
+    val scheme = MaterialTheme.colorScheme
+    // Selected candidates change shape and tone without resizing the grid.
+    val corner by animateDpAsState(
+        targetValue = if (selected) 28.dp else 16.dp,
+        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+        label = "coverCandidateCorner",
+    )
+    val shape = RoundedCornerShape(corner)
+    val borderColor by animateColorAsState(
+        targetValue = if (selected) scheme.primary else scheme.outlineVariant,
+        animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
+        label = "coverCandidateBorder",
+    )
+    val containerColor by animateColorAsState(
+        targetValue = if (selected) scheme.secondaryContainer else scheme.surfaceContainerLow,
+        animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
+        label = "coverCandidateContainer",
+    )
+    val onContainer = if (selected) scheme.onSecondaryContainer else scheme.onSurface
     val providerName = providerLabel(provider)
     val statusDescription = when {
         status == CoverArtLookupStatus.LOADING -> stringResource(R.string.details_cover_searching)
@@ -381,16 +403,13 @@ private fun CoverProviderCard(
         append(providerName)
         append(", ")
         append(statusDescription)
-        if (selected) {
-            append(", selected")
-        }
     }
 
     Column(
         modifier = modifier
             .clip(shape)
-            .background(if (selected) MaterialTheme.colorScheme.surfaceContainerHigh else MaterialTheme.colorScheme.surfaceContainerLow)
-            .border(if (selected) 1.5.dp else 0.8.dp, borderColor, shape)
+            .background(containerColor)
+            .border(if (selected) 2.dp else 1.dp, borderColor, shape)
             .semantics {
                 role = Role.RadioButton
                 this.selected = selected
@@ -411,7 +430,7 @@ private fun CoverProviderCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(1f)
-                .clip(RoundedCornerShape(12.dp))
+                .clip(RoundedCornerShape((corner - 4.dp).coerceAtLeast(12.dp)))
                 .background(MaterialTheme.colorScheme.surfaceContainerHigh),
             contentAlignment = Alignment.Center,
         ) {
@@ -424,15 +443,19 @@ private fun CoverProviderCard(
                         modifier = Modifier.fillMaxSize(),
                     )
                     if (selected) {
-                        Icon(
-                            imageVector = Icons.Rounded.CheckCircle,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier
-                                .align(Alignment.TopEnd)
-                                .padding(8.dp)
-                                .size(22.dp),
-                        )
+                        Box(
+                            modifier = Modifier.align(Alignment.TopEnd).padding(8.dp)
+                                .size(32.dp).clip(CircleShape)
+                                .background(scheme.primaryContainer),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.CheckCircle,
+                                contentDescription = null,
+                                tint = scheme.onPrimaryContainer,
+                                modifier = Modifier.size(23.dp),
+                            )
+                        }
                     }
                 }
                 status == CoverArtLookupStatus.LOADING -> {
@@ -483,9 +506,10 @@ private fun CoverProviderCard(
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = providerLabel(provider),
-            style = MaterialTheme.typography.labelLarge,
+            style = if (selected) MaterialTheme.typography.labelLargeEmphasized
+                else MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.SemiBold,
-            color = if (candidate != null) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
+            color = if (candidate != null || selected) onContainer else scheme.onSurfaceVariant,
             maxLines = 1,
         )
         Text(
@@ -502,7 +526,8 @@ private fun CoverProviderCard(
                 else -> ""
             },
             style = MaterialTheme.typography.labelSmall,
-            color = if (status == CoverArtLookupStatus.ERROR && onRetry != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+            color = if (status == CoverArtLookupStatus.ERROR && onRetry != null)
+                scheme.primary else if (selected) onContainer else scheme.onSurfaceVariant,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
