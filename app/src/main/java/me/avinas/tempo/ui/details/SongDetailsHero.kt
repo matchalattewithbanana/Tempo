@@ -235,23 +235,22 @@ fun SongHeroEditorialStage(
                     }
                 }
 
-                // Explicit affordance: artwork is editable without relying on a hidden gesture.
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(8.dp)
-                        .size(48.dp)
-                        .clip(CircleShape)
-                        .background(appearancePalette.surface.copy(alpha = 0.90f))
-                        .border(0.8.dp, appearancePalette.border.copy(alpha = 0.65f), CircleShape)
-                        .premiumClickable(onClick = onEditCover),
-                    contentAlignment = Alignment.Center,
+                // Native Material action makes artwork editing discoverable
+                // with a full-sized touch target, ripple and press morph.
+                FilledTonalIconButton(
+                    onClick = onEditCover,
+                    modifier = Modifier.align(Alignment.BottomEnd)
+                        .padding(8.dp).size(48.dp),
+                    shapes = IconButtonDefaults.shapes(),
+                    colors = IconButtonDefaults.filledTonalIconButtonColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                    ),
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.Edit,
                         contentDescription = stringResource(R.string.details_change_cover),
-                        tint = appearancePalette.onSurface,
-                        modifier = Modifier.size(18.dp),
+                        modifier = Modifier.size(20.dp),
                     )
                 }
             }
@@ -298,20 +297,15 @@ fun SongHeroEditorialStage(
             )
 
             Spacer(modifier = Modifier.width(8.dp))
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(GlassFrostSoft)
-                    .border(0.6.dp, appearancePalette.border.copy(alpha = 0.45f), CircleShape)
-                    .premiumClickable(onClick = onEditTitle),
-                contentAlignment = Alignment.Center,
+            FilledTonalIconButton(
+                onClick = onEditTitle,
+                modifier = Modifier.size(48.dp),
+                shapes = IconButtonDefaults.shapes(),
             ) {
                 Icon(
                     imageVector = Icons.Rounded.Edit,
                     contentDescription = stringResource(R.string.details_edit_title),
-                    tint = appearancePalette.mutedText,
-                    modifier = Modifier.size(15.dp),
+                    modifier = Modifier.size(20.dp),
                 )
             }
         }
@@ -394,68 +388,61 @@ private fun AudioPreviewPill(
 ) {
     val secondsElapsed = (positionMs / 1000).toInt().coerceIn(0, 30)
     val timecode = stringResource(R.string.details_preview_timecode, secondsElapsed)
-    // Source progress arrives frequently; use the theme's fast spatial spring,
-    // which snaps immediately under reduced motion.
-    val animatedProgress by animateFloatAsState(
-        targetValue = progress.coerceIn(0f, 1f),
-        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
-        label = "previewProgressFill",
+    val scheme = MaterialTheme.colorScheme
+    val background by androidx.compose.animation.animateColorAsState(
+        targetValue = if (isPlaying) scheme.primaryContainer else scheme.surfaceContainerHigh,
+        animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
+        label = "previewPillBackground",
     )
-
-    Box(
-        modifier = Modifier
-            .clip(RoundedCornerShape(14.dp))
-            .background(PillSurface)
-            .border(1.dp, PillBorder, RoundedCornerShape(14.dp))
-            .premiumClickable(onClick = onToggle, pressedScale = 0.96f),
+    val foreground by androidx.compose.animation.animateColorAsState(
+        targetValue = if (isPlaying) scheme.onPrimaryContainer else scheme.onSurface,
+        animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
+        label = "previewPillForeground",
+    )
+    // Display the actual preview position. A chasing spring introduced visual
+    // latency on frequent updates even though the playback clock was correct.
+    val fraction = progress.coerceIn(0f, 1f)
+    Surface(
+        onClick = onToggle,
+        modifier = Modifier.heightIn(min = 48.dp),
+        shape = MaterialTheme.shapes.full,
+        color = background,
+        contentColor = foreground,
     ) {
-        Row(
-            modifier = Modifier.padding(
-                start = 14.dp,
-                end = 14.dp,
-                top = 7.dp,
-                bottom = if (isPlaying || progress > 0f) 9.dp else 7.dp,
-            ),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-        ) {
-            Icon(
-                imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
-                contentDescription = stringResource(
-                    if (isPlaying) R.string.details_preview_pause_cd else R.string.details_preview_play_cd
+        Box {
+            Row(
+                modifier = Modifier.padding(
+                    start = 16.dp, end = 16.dp, top = 10.dp,
+                    bottom = if (isPlaying || fraction > 0f) 12.dp else 10.dp,
                 ),
-                tint = PillTextPrimary,
-                modifier = Modifier.size(15.dp),
-            )
-
-            Text(
-                text = if (isPlaying) timecode else stringResource(R.string.details_preview_label),
-                style = CaptionSmall,
-                fontWeight = FontWeight.Bold,
-                color = PillTextPrimary,
-            )
-
-            if (isPlaying) {
-                MiniEqualizer(color = PillTextPrimary)
-            }
-        }
-
-        // Hairline position indicator — appears only once listening has
-        // started; never on the untouched idle chip.
-        if (isPlaying || progress > 0f) {
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-                    .height(2.5.dp)
-                    .background(PillTextPrimary.copy(alpha = 0.14f))
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .fillMaxWidth(animatedProgress.coerceIn(0f, 1f))
-                        .background(PillTextPrimary)
+                Icon(
+                    imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                    contentDescription = stringResource(
+                        if (isPlaying) R.string.details_preview_pause_cd else R.string.details_preview_play_cd,
+                    ),
+                    modifier = Modifier.size(20.dp),
                 )
+                Text(
+                    text = if (isPlaying) timecode else stringResource(R.string.details_preview_label),
+                    style = MaterialTheme.typography.labelLargeEmphasized,
+                    color = foreground,
+                )
+                if (isPlaying) MiniEqualizer(color = foreground)
+            }
+            if (isPlaying || fraction > 0f) {
+                Box(
+                    modifier = Modifier.align(Alignment.BottomCenter)
+                        .fillMaxWidth().height(3.dp)
+                        .background(foreground.copy(alpha = 0.15f)),
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxHeight().fillMaxWidth(fraction)
+                            .background(foreground),
+                    )
+                }
             }
         }
     }
@@ -495,9 +482,10 @@ internal fun ClickableEntityRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
         modifier = Modifier
-            .clip(RoundedCornerShape(8.dp))
+            .clip(MaterialTheme.shapes.medium)
             .premiumClickable(onClick = onClick)
-            .padding(horizontal = 6.dp, vertical = 2.dp),
+            .heightIn(min = 48.dp)
+            .padding(horizontal = 8.dp, vertical = 8.dp),
     ) {
         Text(
             text = text,
