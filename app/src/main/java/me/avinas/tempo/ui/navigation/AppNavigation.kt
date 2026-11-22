@@ -563,27 +563,29 @@ fun AppNavigation(
 
                 if (showBottomBar) {
                     // Keep the same navigation back-stack semantics on all sizes.
-                    val goHome = {
-                        navController.navigate(Screen.Home.route) {
-                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                            launchSingleTop = true
-                            restoreState = true
+                    // Reselecting the active destination creates a fresh screen,
+                    // returning its scroll position to the top. Switching between
+                    // destinations still saves/restores each destination's state.
+                    val navigatePrimary: (String) -> Unit = { route ->
+                        if (currentRoute == route) {
+                            navController.navigate(route) {
+                                popUpTo(route) { inclusive = true }
+                                launchSingleTop = true
+                                restoreState = false
+                            }
+                        } else {
+                            navController.navigate(route) {
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
                         }
                     }
-                    val goStats = {
-                        navController.navigate(Screen.Stats.route) {
-                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    }
-                    val goHistory = {
-                        navController.navigate(Screen.History.route) {
-                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    }
+                    val goHome = { navigatePrimary(Screen.Home.route) }
+                    val goStats = { navigatePrimary(Screen.Stats.route) }
+                    val goHistory = { navigatePrimary(Screen.History.route) }
                     if (useWideRail) {
                         TempoMainNavigationRail(
                             currentDestination = currentDestination,
