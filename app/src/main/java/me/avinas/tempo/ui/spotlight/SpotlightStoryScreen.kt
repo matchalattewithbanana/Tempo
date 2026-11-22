@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+
 package me.avinas.tempo.ui.spotlight
 
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -601,15 +603,24 @@ fun SpotlightStoryScreen(
 
 @Composable
 private fun StoryControl(icon: ImageVector, label: String, enabled: Boolean, onClick: () -> Unit) {
-    IconButton(onClick = onClick, enabled = enabled, modifier = Modifier.size(48.dp)) {
+    // These controls sit above artwork and generated story colors: one
+    // translucent neutral Material surface retains contrast across pages.
+    FilledTonalIconButton(
+        onClick = onClick,
+        enabled = enabled,
+        modifier = Modifier.size(48.dp),
+        shapes = IconButtonDefaults.shapes(),
+        colors = IconButtonDefaults.filledTonalIconButtonColors(
+            containerColor = Color.Black.copy(alpha = 0.72f),
+            contentColor = Color.White,
+            disabledContainerColor = Color.Black.copy(alpha = 0.36f),
+            disabledContentColor = Color.White.copy(alpha = 0.46f),
+        ),
+    ) {
         Icon(
             imageVector = icon,
             contentDescription = label,
-            tint = Color.White.copy(alpha = if (enabled) 1f else 0.45f),
-            modifier = Modifier
-                .background(Color.Black.copy(alpha = 0.6f), CircleShape)
-                .padding(8.dp)
-                .size(22.dp)
+            modifier = Modifier.size(22.dp),
         )
     }
 }
