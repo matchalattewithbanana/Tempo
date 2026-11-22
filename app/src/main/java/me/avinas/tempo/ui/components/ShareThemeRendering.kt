@@ -375,7 +375,7 @@ private suspend fun buildAsciiArtGrid(
  * CPU-rendered into a single bitmap, so the live preview and the software-canvas
  * share capture stay pixel-identical.
  */
-private suspend fun buildAsciiArtBackdrop(
+internal suspend fun buildAsciiArtBackdrop(
     context: Context,
     imageUrl: String,
     aspect: Float,

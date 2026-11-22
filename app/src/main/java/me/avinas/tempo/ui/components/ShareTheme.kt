@@ -528,7 +528,7 @@ internal val ASCII_BAYER_4X4 =
  * preview and the software-canvas share capture render the identical
  * composition.
  */
-private class AsciiArtGrid(
+internal class AsciiArtGrid(
     val columns: Int,
     val rows: Int,
     /** Ramp index per cell; 0 (space) marks an empty cell. */
@@ -792,7 +792,7 @@ private fun Bitmap.renderFlutedGlass(): Bitmap {
  * approximate a Gaussian; the sliding-window sums keep the cost linear in
  * the pixel count regardless of radius.
  */
-private fun blurBoxPass(
+internal fun blurBoxPass(
     src: IntArray,
     w: Int,
     h: Int,
