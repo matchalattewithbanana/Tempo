@@ -20,7 +20,7 @@ internal data class SettingsSearchEntry(
 }
 
 internal enum class SettingsSearchRequirement {
-    ALWAYS, GAMIFICATION, ANALYTICS, SPOTIFY_CONNECTED, SPOTIFY_CONFIGURABLE
+    ALWAYS, GAMIFICATION, SPOTIFY_CONNECTED, SPOTIFY_CONFIGURABLE
 }
 
 internal object SettingsSearchCatalog {
@@ -65,9 +65,9 @@ internal object SettingsSearchCatalog {
             R.string.settings_history_accuracy_audit_desc),
         SettingsSearchEntry(SettingsGroup.DATA_ACCURACY, R.string.settings_cover_source_title),
         SettingsSearchEntry(SettingsGroup.DATA_PRIVACY, R.string.settings_analytics_toggle,
-            R.string.settings_analytics_toggle_desc, SettingsSearchRequirement.ANALYTICS),
+            R.string.settings_analytics_toggle_desc),
         SettingsSearchEntry(SettingsGroup.DATA_PRIVACY, R.string.settings_analytics_reset_id,
-            R.string.settings_analytics_reset_id_desc, SettingsSearchRequirement.ANALYTICS),
+            R.string.settings_analytics_reset_id_desc),
 
         SettingsSearchEntry(SettingsGroup.ABOUT_COMMUNITY, R.string.settings_reddit),
         SettingsSearchEntry(SettingsGroup.ABOUT_COMMUNITY, R.string.settings_github),
@@ -84,14 +84,15 @@ internal object SettingsSearchCatalog {
         spotifyConnected: Boolean,
         spotifyAccountLoaded: Boolean,
     ): List<SettingsSearchEntry> {
-        val visible = controls.filter {
-            when (it.requires) {
-                SettingsSearchRequirement.ALWAYS -> true
-                SettingsSearchRequirement.GAMIFICATION -> gamificationEnabled
-                SettingsSearchRequirement.ANALYTICS -> analyticsConfigured
-                SettingsSearchRequirement.SPOTIFY_CONNECTED -> spotifyConnected
-                SettingsSearchRequirement.SPOTIFY_CONFIGURABLE -> spotifyAccountLoaded && !spotifyConnected
-            }
+        val visible = controls.filter { entry ->
+            (!entry.group.requiresAnalytics || analyticsConfigured) &&
+                when (entry.requires) {
+                    SettingsSearchRequirement.ALWAYS -> true
+                    SettingsSearchRequirement.GAMIFICATION -> gamificationEnabled
+                    SettingsSearchRequirement.SPOTIFY_CONNECTED -> spotifyConnected
+                    SettingsSearchRequirement.SPOTIFY_CONFIGURABLE ->
+                        spotifyAccountLoaded && !spotifyConnected
+                }
         }
         // The optional analytics group is inserted before Reset only when configured.
         return visible + SettingsSearchEntry(
