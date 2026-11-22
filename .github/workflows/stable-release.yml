@@ -1,7 +1,13 @@
-name: Stable release (manual, main only)
+name: Stable release (explicit request, main only)
 
-# Validation and publication run only after an explicit manual dispatch.
+# Normal commits still do not build or publish. Stable publication starts only
+# from a manual dispatch or an explicit declarative request committed to main.
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/stable-release-request.json
   workflow_dispatch:
     inputs:
       publish_stable:
@@ -39,6 +45,21 @@ jobs:
       - name: Validate release version and package metadata
         id: release
         run: python3 .github/scripts/release-bundle.py stable >> "$GITHUB_OUTPUT"
+      - name: Validate declarative stable release request
+        if: github.event_name == 'push'
+        env:
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          request = json.loads(Path(".github/stable-release-request.json").read_text())
+          expected = {"channel": "stable", "version": os.environ["VERSION"], "publish": True}
+          if request != expected:
+              raise SystemExit(f"Invalid stable release request: expected {expected!r}, got {request!r}")
+          PY
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -48,11 +69,11 @@ jobs:
         env:
           TEMPO_DEBUG_KEYSTORE_BASE64: ${{ secrets.TEMPO_DEBUG_KEYSTORE_BASE64 }}
           TEMPO_BETA_SIGNER_SHA256: fa14beee34664d2c41bc5db00f630b564992da649fa66cb4e62c523915c95407
-          PUBLISH_BETA: ${{ inputs.publish_stable }}
+          PUBLISH_STABLE: ${{ github.event_name == 'push' || inputs.publish_stable }}
         shell: bash
         run: |
           set -euo pipefail
-          if [[ "$PUBLISH_BETA" == true ]]; then
+          if [[ "$PUBLISH_STABLE" == true ]]; then
             bash .github/scripts/beta-signing.sh check-config
           fi
           umask 077
@@ -83,7 +104,7 @@ jobs:
       - name: Verify APK and expected version
         env:
           TEMPO_BETA_SIGNER_SHA256: fa14beee34664d2c41bc5db00f630b564992da649fa66cb4e62c523915c95407
-          PUBLISH_BETA: ${{ inputs.publish_stable }}
+          PUBLISH_STABLE: ${{ github.event_name == 'push' || inputs.publish_stable }}
           VERSION: ${{ steps.release.outputs.version }}
           VERSION_CODE: ${{ steps.release.outputs.version_code }}
         shell: bash
@@ -96,7 +117,7 @@ jobs:
           build_tools="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -n1)"
           signer="$build_tools/apksigner"
           "$signer" verify --print-certs "$apk"
-          if [[ "$PUBLISH_BETA" == true ]]; then
+          if [[ "$PUBLISH_STABLE" == true ]]; then
             bash .github/scripts/beta-signing.sh verify "$signer" "$apk"
           else
             "$signer" verify "$apk"
@@ -173,7 +194,7 @@ jobs:
   publish:
     name: Publish immutable GitHub release
     needs: [validate, platform]
-    if: ${{ github.ref == 'refs/heads/main' && inputs.publish_stable }}
+    if: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'push' || inputs.publish_stable) }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
