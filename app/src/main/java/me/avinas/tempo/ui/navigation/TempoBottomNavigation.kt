@@ -130,13 +130,14 @@ fun TempoBottomNavigation(
                         val selected = currentDestination?.hierarchy?.any {
                             it.route == destination.first
                         } == true
-                        // Render the destination directly: recent Material3 versions no
-                        // longer expose the legacy NavigationBarItem API.
+                        // Render the destination directly: Material3 no longer exposes the former NavigationBarItem API.
+                        // Fix each slot's height explicitly: fillMaxHeight in this
+                        // context expands the navigation row to screen height.
                         val selectedContent = if (selected) scheme.onSecondaryContainer else scheme.onSurfaceVariant
                         Box(
                             modifier = Modifier
                                 .weight(1f)
-                                .fillMaxHeight()
+                                .height(80.dp)
                                 .semantics { this.selected = selected }
                                 .clickable(
                                     role = androidx.compose.ui.semantics.Role.Tab,
