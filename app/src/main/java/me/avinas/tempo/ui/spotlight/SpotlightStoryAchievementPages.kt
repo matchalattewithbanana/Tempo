@@ -117,8 +117,6 @@ import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.text.font.FontStyle
 
-internal val LocalStoryReducedMotion = compositionLocalOf { false }
-
 @Composable
 fun BadgesEarnedPage(page: SpotlightStoryPage.BadgesEarned) {
     // Helper: map category to accent color
