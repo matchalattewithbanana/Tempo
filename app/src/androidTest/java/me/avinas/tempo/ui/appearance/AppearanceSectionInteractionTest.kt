@@ -35,15 +35,24 @@ class AppearanceSectionInteractionTest {
         }
 
         val header = compose.onNode(hasText(title) and hasClickAction())
-        header.assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, collapsed))
+        compose.onNode(
+            hasText(title) and hasClickAction() and
+                SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, collapsed),
+        ).assertExists()
         compose.onNodeWithText(body).assertDoesNotExist()
 
         header.performClick()
-        header.assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, expanded))
+        compose.onNode(
+            hasText(title) and hasClickAction() and
+                SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, expanded),
+        ).assertExists()
         compose.onNodeWithText(body).assertIsDisplayed()
 
         header.performClick()
-        header.assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, collapsed))
+        compose.onNode(
+            hasText(title) and hasClickAction() and
+                SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, collapsed),
+        ).assertExists()
         compose.waitForIdle()
         compose.onNodeWithText(body).assertDoesNotExist()
     }
