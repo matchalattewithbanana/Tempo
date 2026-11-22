@@ -3,8 +3,9 @@ package me.avinas.tempo.ui
 import androidx.compose.material3.Text
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
-import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.espresso.Espresso
 import me.avinas.tempo.ui.profile.ProfileModal
 import org.junit.Rule
 import org.junit.Test
@@ -30,18 +31,22 @@ class ProfileModalTest {
         }
 
         compose.onNodeWithText("Share content").assertExists()
-        pressSystemBack()
-        compose.onNodeWithText("Share content").assertDoesNotExist()
+        // Espresso targets the focused Android dialog window and synchronizes
+        // with the main thread. A shell keyevent can race with window focus and
+        // composition, even when its file descriptor has already been read.
+        Espresso.pressBackUnconditionally()
+        awaitDismissed("Share content")
         compose.onNodeWithText("Details content").assertExists()
-        pressSystemBack()
-        compose.onNodeWithText("Details content").assertDoesNotExist()
+
+        Espresso.pressBackUnconditionally()
+        awaitDismissed("Details content")
         compose.onNodeWithText("Profile content").assertExists()
     }
 
-    private fun pressSystemBack() {
-        val command = InstrumentationRegistry.getInstrumentation().uiAutomation
-            .executeShellCommand("input keyevent KEYCODE_BACK")
-        android.os.ParcelFileDescriptor.AutoCloseInputStream(command).use { it.readBytes() }
-        compose.waitForIdle()
+    private fun awaitDismissed(text: String) {
+        compose.waitUntil(timeoutMillis = 5_000L) {
+            compose.onAllNodesWithText(text).fetchSemanticsNodes().isEmpty()
+        }
+        compose.onNodeWithText(text).assertDoesNotExist()
     }
 }
