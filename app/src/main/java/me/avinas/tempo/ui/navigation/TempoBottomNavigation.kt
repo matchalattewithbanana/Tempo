@@ -196,28 +196,58 @@ fun TempoBottomNavigation(
                             val selected = currentDestination?.hierarchy?.any {
                                 it.route == destination.first
                             } == true
-                            androidx.compose.material3.NavigationBarItem(
-                                selected = selected,
-                                onClick = {
-                                    haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                    actions[index]()
-                                },
-                                icon = {
-                                    Icon(
-                                        imageVector = if (selected) destination.second.first
-                                            else destination.second.second,
-                                        contentDescription = null,
-                                    )
-                                },
-                                label = {
+                            // Material3's newer NavigationBar no longer provides
+                            // NavigationBarItem. Explicitly sized selectable slots
+                            // also avoid collapsing siblings at compact widths.
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .heightIn(min = 80.dp)
+                                    .selectable(
+                                        selected = selected,
+                                        role = androidx.compose.ui.semantics.Role.Tab,
+                                        onClick = {
+                                            haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                            actions[index]()
+                                        },
+                                    ),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                                    modifier = Modifier.padding(vertical = 8.dp),
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(MaterialTheme.shapes.extraLarge)
+                                            .background(
+                                                if (selected) scheme.secondaryContainer
+                                                else Color.Transparent,
+                                            )
+                                            .padding(horizontal = 20.dp, vertical = 4.dp),
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        Icon(
+                                            imageVector = if (selected) destination.second.first
+                                                else destination.second.second,
+                                            contentDescription = null,
+                                            tint = if (selected) scheme.onSecondaryContainer
+                                                else scheme.onSurfaceVariant,
+                                            modifier = Modifier.size(24.dp),
+                                        )
+                                    }
                                     Text(
                                         text = destination.third,
+                                        style = if (selected) MaterialTheme.typography.labelLargeEmphasized
+                                            else MaterialTheme.typography.labelMedium,
+                                        color = if (selected) scheme.onSurface
+                                            else scheme.onSurfaceVariant,
                                         maxLines = 2,
                                         overflow = TextOverflow.Ellipsis,
                                     )
-                                },
-                                alwaysShowLabel = true,
-                            )
+                                }
+                            }
                         }
                     }
                 }
