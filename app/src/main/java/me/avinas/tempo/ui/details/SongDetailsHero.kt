@@ -1,6 +1,7 @@
 @file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 
 package me.avinas.tempo.ui.details
+import me.avinas.tempo.ui.util.observableLocale
 
 import me.avinas.tempo.ui.effects.tempoAmbientBackdrop
 import me.avinas.tempo.ui.effects.tempoTiltSurface
@@ -361,7 +362,7 @@ fun SongHeroEditorialStage(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = metaParts.joinToString("  ·  ").uppercase(Locale.getDefault()),
+                    text = metaParts.joinToString("  ·  ").uppercase(observableLocale()),
                     style = KickerSmall,
                     color = appearancePalette.mutedText,
                     letterSpacing = 1.4.sp,

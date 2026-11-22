@@ -1,6 +1,7 @@
 @file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 
 package me.avinas.tempo.ui.details
+import me.avinas.tempo.ui.util.observableLocale
 
 import me.avinas.tempo.ui.effects.tempoAmbientBackdrop
 import me.avinas.tempo.ui.effects.tempoTiltSurface
@@ -183,7 +184,7 @@ fun MasterStatMasthead(
             Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 20.dp)) {
                 MastheadHeroMetric(
                     label = stringResource(R.string.details_total_plays),
-                    value = String.format(Locale.getDefault(), "%,d", trackDetails.playCount),
+                    value = String.format(observableLocale(), "%,d", trackDetails.playCount),
                     suffix = stringResource(R.string.details_together_suffix, formattedTime),
                     accentTint = dominantColor,
                 )
@@ -262,7 +263,7 @@ internal fun EditorialStatBlock(
                     .background(accentTint)
             )
             Text(
-                text = label.uppercase(Locale.getDefault()),
+                text = label.uppercase(observableLocale()),
                 style = KickerSmall,
                 color = appearancePalette.mutedText,
             )
@@ -315,7 +316,7 @@ internal fun MastheadHeroMetric(
                 .background(accentTint)
         )
         Text(
-            text = label.uppercase(Locale.getDefault()),
+            text = label.uppercase(observableLocale()),
             style = KickerSmall,
             color = appearancePalette.mutedText,
         )
@@ -358,7 +359,7 @@ internal fun MastheadSecondaryStat(
     val appearancePalette = LocalTempoPalette.current
     Column(modifier = modifier) {
         Text(
-            text = label.uppercase(Locale.getDefault()),
+            text = label.uppercase(observableLocale()),
             style = KickerSmall,
             color = appearancePalette.mutedText,
         )
@@ -458,7 +459,7 @@ private fun ScrubbableRhythmChart(
     val activeDays = remember(history) { history.count { it.playCount > 0 } }
     val totalPlays = remember(history) { history.sumOf { it.playCount } }
     val avgPerActiveDay = if (activeDays > 0) {
-        String.format(Locale.getDefault(), "%.1f", totalPlays.toFloat() / activeDays)
+        String.format(observableLocale(), "%.1f", totalPlays.toFloat() / activeDays)
     } else {
         "1.0"
     }

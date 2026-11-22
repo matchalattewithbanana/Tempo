@@ -1,6 +1,7 @@
 @file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 
 package me.avinas.tempo.ui.details
+import me.avinas.tempo.ui.util.observableLocale
 
 import me.avinas.tempo.ui.effects.tempoAmbientBackdrop
 import me.avinas.tempo.ui.effects.tempoTiltSurface
@@ -231,7 +232,7 @@ fun ListenerAffinitySection(
                 color = appearancePalette.onSurface,
             )
             Text(
-                text = tier.status.uppercase(Locale.getDefault()),
+                text = tier.status.uppercase(observableLocale()),
                 style = KickerSmall,
                 color = appearancePalette.mutedText,
             )
@@ -247,7 +248,7 @@ fun ListenerAffinitySection(
                 color = appearancePalette.onSurface,
             )
             Text(
-                text = stringResource(R.string.details_engagement_score).uppercase(Locale.getDefault()),
+                text = stringResource(R.string.details_engagement_score).uppercase(observableLocale()),
                 style = KickerSmall,
                 color = appearancePalette.mutedText,
             )
@@ -476,7 +477,7 @@ internal fun FlatMilestoneRow(
                 modifier = Modifier.size(11.dp),
             )
             Text(
-                text = milestone.title.uppercase(Locale.getDefault()),
+                text = milestone.title.uppercase(observableLocale()),
                 style = KickerSmall,
                 color = ink.title,
                 maxLines = 1,
@@ -605,7 +606,7 @@ fun PlaybackFidelitySection(
 
                 TelemetryMiniCell(
                     label = stringResource(R.string.details_telemetry_pauses),
-                    value = String.format(Locale.getDefault(), "%.1f", engagement.averagePauseCount),
+                    value = String.format(observableLocale(), "%.1f", engagement.averagePauseCount),
                     modifier = Modifier.weight(1f),
                 )
 
@@ -662,7 +663,7 @@ internal fun TelemetryMiniCell(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = label.uppercase(Locale.getDefault()),
+            text = label.uppercase(observableLocale()),
             style = KickerSmall,
             color = appearancePalette.mutedText,
         )
@@ -746,7 +747,7 @@ internal fun SectionCatalogKicker(
                 .background(appearancePalette.border.copy(alpha = 0.65f)),
         )
         Text(
-            text = label.uppercase(Locale.getDefault()),
+            text = label.uppercase(observableLocale()),
             style = KickerSmall,
             color = appearancePalette.mutedText,
             letterSpacing = 1.2.sp,
