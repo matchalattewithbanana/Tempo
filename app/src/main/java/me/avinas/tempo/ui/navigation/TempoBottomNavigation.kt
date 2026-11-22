@@ -187,6 +187,7 @@ fun TempoBottomNavigation(
                             }
                         }
                     }
+                    }
                 }
             }
         }
