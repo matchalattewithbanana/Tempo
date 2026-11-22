@@ -78,6 +78,30 @@ fun SettingsScreen(
     val profileImageMessage by viewModel.profileImageMessage.collectAsStateWithLifecycle()
     val analyticsIdResetMessage = stringResource(R.string.settings_analytics_reset_id_done)
 
+    val coverSourceOptions: List<Pair<AlbumArtSource?, String>> =
+        listOf(
+            null to stringResource(R.string.settings_cover_source_automatic),
+            AlbumArtSource.MUSICBRAINZ to "MusicBrainz",
+            AlbumArtSource.ITUNES to "Apple Music / iTunes",
+            AlbumArtSource.DEEZER to "Deezer",
+        )
+    val selectedCoverSourceName =
+        coverSourceOptions.firstOrNull { it.first == uiState.preferredCoverSource }?.second
+            ?: stringResource(R.string.settings_cover_source_automatic)
+    val currentLocale = AppCompatDelegate.getApplicationLocales().get(0)?.language ?: "en"
+    val languages =
+        listOf(
+            "en" to stringResource(R.string.settings_language_english),
+            "fr" to stringResource(R.string.settings_language_french),
+            "de" to stringResource(R.string.settings_language_german),
+            "hu" to stringResource(R.string.settings_language_hungarian),
+            "pt" to stringResource(R.string.settings_language_portuguese),
+            "ru" to stringResource(R.string.settings_language_russian),
+        )
+    val currentLanguageSubtitle =
+        languages.firstOrNull { it.first == currentLocale }?.second
+            ?: stringResource(R.string.settings_language_english)
+
     val profileImageLauncher =
         rememberLauncherForActivityResult(
             contract = ActivityResultContracts.GetContent(),

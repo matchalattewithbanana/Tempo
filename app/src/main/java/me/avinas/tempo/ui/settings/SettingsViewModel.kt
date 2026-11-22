@@ -796,7 +796,6 @@ data class HistoryQualityUiState(
 )
 
 @Immutable
-@Immutable
 data class SettingsRuntimeStatus(
     val notificationListenerGranted: Boolean = false,
     val trackingHeartbeat: TrackingServiceHeartbeat.Snapshot? = null,

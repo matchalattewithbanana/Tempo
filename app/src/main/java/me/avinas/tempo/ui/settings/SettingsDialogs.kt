@@ -233,11 +233,12 @@ internal fun SettingsDialogs(
                 text = {
                     Column {
                         languages.forEach { (langTag, langName) ->
-                            val selectLanguage = {
+                            val selectLanguage: () -> Unit = {
                                 val localeList = LocaleListCompat.forLanguageTags(langTag)
                                 AppCompatDelegate.setApplicationLocales(localeList)
                                 onDismissLocalDialog()
                                 (context as? Activity)?.recreate()
+                                Unit
                             }
                             Row(
                                 modifier = Modifier
