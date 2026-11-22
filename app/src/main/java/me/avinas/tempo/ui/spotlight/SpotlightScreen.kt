@@ -501,7 +501,7 @@ fun SpotlightStoryHeroCard(
             if (!isLocked) {
                 Box(
                     modifier = Modifier.size(42.dp)
-                        .clip(MaterialTheme.shapes.full)
+                        .clip(CircleShape)
                         .background(scheme.tertiary),
                     contentAlignment = Alignment.Center,
                 ) {

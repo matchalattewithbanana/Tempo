@@ -403,7 +403,7 @@ private fun AudioPreviewPill(
     Surface(
         onClick = onToggle,
         modifier = Modifier.heightIn(min = 48.dp),
-        shape = MaterialTheme.shapes.full,
+        shape = CircleShape,
         color = background,
         contentColor = foreground,
     ) {
